@@ -1,0 +1,27 @@
+name: aoa-context-scan-quality
+category: capability
+status: bounded
+object_under_evaluation: repository context scan workflow
+claim_type: bounded
+baseline_mode: none
+verdict_shape: pass-fail
+report_format: summary
+maturity_score: 3
+rigor_level: light
+repeatability: high
+portability_level: portable
+review_required: false
+validation_strength: source_backed
+export_ready: true
+blind_spot_disclosure: required-and-present
+score_interpretation_bound: explicit
+technique_dependencies:
+  - id: AOA-T-0002
+    repo: git@github.com:8Dionysus/aoa-techniques.git
+    path: techniques/docs/context-scan/TECHNIQUE.md
+skill_dependencies:
+  - name: aoa-context-scan
+    repo: aoa-skills
+    path: skills/aoa-context-scan/SKILL.md
+relations: []
+evidence: []

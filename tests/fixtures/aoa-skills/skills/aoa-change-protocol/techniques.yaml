@@ -1,0 +1,11 @@
+skill_name: aoa-change-protocol
+composition_mode: bounded
+techniques:
+  - id: AOA-T-0001
+    repo: 8Dionysus/aoa-techniques
+    path: techniques/agent-workflows/plan-diff-apply-verify-report/TECHNIQUE.md
+    source_ref: deadbeef
+  - id: AOA-T-0002
+    repo: aoa-techniques
+    path: techniques/docs/context-scan/TECHNIQUE.md
+    source_ref: deadbeef
