@@ -1,0 +1,7 @@
+skill_name: aoa-context-scan
+composition_mode: bounded
+techniques:
+  - id: AOA-T-0002
+    repo: https://github.com/8Dionysus/aoa-techniques.git
+    path: techniques/docs/context-scan/TECHNIQUE.md
+    source_ref: feedface
