@@ -38,6 +38,30 @@ class ValidationIssue:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Validate aoa-routing generated outputs.")
     parser.add_argument(
+        "--techniques-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-techniques",
+        help="Path to the aoa-techniques repository root.",
+    )
+    parser.add_argument(
+        "--skills-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-skills",
+        help="Path to the aoa-skills repository root.",
+    )
+    parser.add_argument(
+        "--evals-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-evals",
+        help="Path to the aoa-evals repository root.",
+    )
+    parser.add_argument(
+        "--memo-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-memo",
+        help="Path to the aoa-memo repository root. Reserved only in v0.1.",
+    )
+    parser.add_argument(
         "--generated-dir",
         type=Path,
         default=REPO_ROOT / "generated",
@@ -227,7 +251,109 @@ def validate_registry_dependencies(
                     )
 
 
-def validate_generated_outputs(generated_dir: Path) -> list[ValidationIssue]:
+def capsule_array_key(kind: str) -> str:
+    if kind == "technique":
+        return "techniques"
+    if kind == "skill":
+        return "skills"
+    if kind == "eval":
+        return "evals"
+    raise RouterError(f"capsule surfaces do not support kind '{kind}' in v0.1")
+
+
+def validate_inspect_targets(
+    registry_entries: list[dict[str, Any]],
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    source_roots = {
+        "aoa-techniques": techniques_root.resolve(),
+        "aoa-skills": skills_root.resolve(),
+        "aoa-evals": evals_root.resolve(),
+        "aoa-memo": memo_root.resolve(),
+    }
+    hints_payload = build_task_to_surface_hints_payload()
+    for hint in hints_payload["hints"]:
+        if not hint["enabled"]:
+            continue
+        actions = hint.get("actions")
+        if not isinstance(actions, dict):
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"hint for kind '{hint['kind']}' must define actions",
+                )
+            )
+            continue
+        inspect = actions.get("inspect")
+        if not isinstance(inspect, dict) or not inspect.get("enabled"):
+            continue
+        source_repo = hint["source_repo"]
+        source_root = source_roots[source_repo]
+        surface_file = inspect["surface_file"]
+        match_field = inspect["match_field"]
+        surface_path = source_root / surface_file
+        location = f"{source_repo}/{surface_file}"
+        try:
+            payload = ensure_mapping(load_json_file(surface_path), location)
+            entries = ensure_list(payload.get(capsule_array_key(hint["kind"])), location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            continue
+
+        seen_matches: set[str] = set()
+        for index, raw_entry in enumerate(entries):
+            entry_location = f"{location}[{index}]"
+            try:
+                capsule_entry = ensure_mapping(raw_entry, entry_location)
+                match_value = capsule_entry.get(match_field)
+                if not isinstance(match_value, str) or not match_value.strip():
+                    raise RouterError(f"{entry_location}.{match_field} must be a non-empty string")
+            except RouterError as exc:
+                issues.append(ValidationIssue(location, str(exc)))
+                continue
+            if match_value in seen_matches:
+                issues.append(
+                    ValidationIssue(
+                        location,
+                        f"duplicate inspect match '{match_value}' for kind '{hint['kind']}'",
+                    )
+                )
+            seen_matches.add(match_value)
+
+        expected_matches = {
+            entry["id"] if match_field == "id" else entry["name"]
+            for entry in registry_entries
+            if entry["kind"] == hint["kind"]
+        }
+        missing_matches = sorted(expected_matches - seen_matches)
+        for match_value in missing_matches:
+            issues.append(
+                ValidationIssue(
+                    location,
+                    f"inspect surface is missing {hint['kind']} match '{match_value}'",
+                )
+            )
+        unexpected_matches = sorted(seen_matches - expected_matches)
+        for match_value in unexpected_matches:
+            issues.append(
+                ValidationIssue(
+                    location,
+                    f"inspect surface contains unexpected {hint['kind']} match '{match_value}'",
+                )
+            )
+
+
+def validate_generated_outputs(
+    generated_dir: Path,
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     generated_dir = generated_dir.resolve()
 
@@ -274,6 +400,13 @@ def validate_generated_outputs(generated_dir: Path) -> list[ValidationIssue]:
             issues.append(ValidationIssue(location, "memo entries are not allowed in v0.1"))
         if entry.get("repo") == "aoa-memo":
             issues.append(ValidationIssue(location, "aoa-memo repo entries are not allowed in v0.1"))
+        if entry.get("kind") in ACTIVE_KINDS and entry.get("source_type") != "generated-catalog":
+            issues.append(
+                ValidationIssue(
+                    location,
+                    "active registry entries must use source_type 'generated-catalog'",
+                )
+            )
         validate_registry_entry_attributes(entry, location, issues)
         normalized_registry_entries.append(entry)
 
@@ -313,6 +446,14 @@ def validate_generated_outputs(generated_dir: Path) -> list[ValidationIssue]:
 
     if hints_payload != build_task_to_surface_hints_payload():
         issues.append(ValidationIssue(hints_path.name, "task_to_surface_hints.json does not match the expected static dispatch surface"))
+    validate_inspect_targets(
+        normalized_registry_entries,
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        issues,
+    )
 
     if recommended_payload.get("version") != 1:
         issues.append(ValidationIssue(recommended_path.name, "version must be 1"))
@@ -366,7 +507,13 @@ def validate_generated_outputs(generated_dir: Path) -> list[ValidationIssue]:
 
 def main() -> int:
     args = parse_args()
-    issues = validate_generated_outputs(args.generated_dir)
+    issues = validate_generated_outputs(
+        args.generated_dir,
+        args.techniques_root,
+        args.skills_root,
+        args.evals_root,
+        args.memo_root,
+    )
     if issues:
         for issue in issues:
             print(f"[error] {issue.location}: {issue.message}")
