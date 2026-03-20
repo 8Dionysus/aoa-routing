@@ -20,11 +20,7 @@ from router_core import (
     ensure_repo_relative_path,
     ensure_string,
     ensure_string_list,
-    is_pending_technique_id,
     load_json_file,
-    load_yaml_file,
-    normalize_repo_name,
-    parse_frontmatter_markdown,
     relative_posix,
     require_keys,
     sort_registry_entries,
@@ -33,7 +29,8 @@ from router_core import (
 
 
 TECHNIQUE_SOURCE_TYPE = "generated-catalog"
-HYBRID_SOURCE_TYPE = "markdown-frontmatter+manifest"
+SKILL_SOURCE_TYPE = "generated-catalog"
+EVAL_SOURCE_TYPE = "generated-catalog"
 
 
 def parse_args() -> argparse.Namespace:
@@ -135,271 +132,127 @@ def collect_technique_entries(techniques_root: Path) -> list[dict[str, Any]]:
 
 
 def collect_skill_entries(skills_root: Path) -> list[dict[str, Any]]:
-    skills_dir = skills_root / "skills"
-    if not skills_dir.is_dir():
-        raise RouterError(f"{relative_posix(skills_dir)} is missing")
-
+    catalog_path = skills_root / "generated" / "skill_catalog.min.json"
+    payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
+    skills = ensure_list(payload.get("skills"), f"{relative_posix(catalog_path)}.skills")
     entries: list[dict[str, Any]] = []
-    for skill_dir in sorted(path for path in skills_dir.iterdir() if path.is_dir()):
-        skill_md_path = skill_dir / "SKILL.md"
-        techniques_path = skill_dir / "techniques.yaml"
-
-        metadata, _body = parse_frontmatter_markdown(skill_md_path)
-        metadata = ensure_mapping(metadata, relative_posix(skill_md_path))
-        require_keys(
-            metadata,
-            ("name", "scope", "status", "summary", "invocation_mode", "technique_dependencies"),
-            relative_posix(skill_md_path),
+    required_keys = (
+        "name",
+        "scope",
+        "status",
+        "summary",
+        "invocation_mode",
+        "technique_dependencies",
+        "skill_path",
+    )
+    for index, item in enumerate(skills):
+        location = f"{relative_posix(catalog_path)}.skills[{index}]"
+        skill = ensure_mapping(item, location)
+        require_keys(skill, required_keys, location)
+        skill_name = ensure_string(skill["name"], f"{location}.name")
+        technique_dependencies = ensure_string_list(
+            skill["technique_dependencies"],
+            f"{location}.technique_dependencies",
         )
-
-        manifest = ensure_mapping(
-            load_yaml_file(techniques_path),
-            relative_posix(techniques_path),
-        )
-        require_keys(manifest, ("skill_name", "techniques"), relative_posix(techniques_path))
-
-        skill_name = ensure_string(metadata["name"], f"{relative_posix(skill_md_path)}.name")
-        if skill_name != skill_dir.name:
-            raise RouterError(
-                f"{relative_posix(skill_md_path)} frontmatter name '{skill_name}' does not match directory '{skill_dir.name}'"
-            )
-        manifest_name = ensure_string(
-            manifest["skill_name"], f"{relative_posix(techniques_path)}.skill_name"
-        )
-        if manifest_name != skill_name:
-            raise RouterError(
-                f"{relative_posix(techniques_path)} skill_name '{manifest_name}' does not match '{skill_name}'"
-            )
-
-        frontmatter_dependency_ids = ensure_string_list(
-            metadata["technique_dependencies"],
-            f"{relative_posix(skill_md_path)}.technique_dependencies",
-        )
-        manifest_techniques = ensure_list(
-            manifest["techniques"], f"{relative_posix(techniques_path)}.techniques"
-        )
-        manifest_dependency_ids: list[str] = []
-        for index, item in enumerate(manifest_techniques):
-            location = f"{relative_posix(techniques_path)}.techniques[{index}]"
-            dependency = ensure_mapping(item, location)
-            require_keys(dependency, ("id", "repo", "path"), location)
-            dependency_id = ensure_string(dependency["id"], f"{location}.id")
-            manifest_dependency_ids.append(dependency_id)
-            repo_name = normalize_repo_name(ensure_string(dependency["repo"], f"{location}.repo"))
-            if repo_name != "aoa-techniques":
-                raise RouterError(f"{location}.repo must resolve to aoa-techniques")
-            raw_path = ensure_string(dependency["path"], f"{location}.path")
-            if is_pending_technique_id(dependency_id):
-                if raw_path != "TBD":
-                    ensure_repo_relative_path(raw_path, f"{location}.path")
-            else:
-                ensure_repo_relative_path(raw_path, f"{location}.path")
-
-        if frontmatter_dependency_ids != manifest_dependency_ids:
-            raise RouterError(
-                f"{relative_posix(skill_md_path)} technique_dependencies do not match {relative_posix(techniques_path)}"
-            )
-
         entries.append(
             {
                 "kind": "skill",
                 "id": skill_name,
                 "name": skill_name,
                 "repo": "aoa-skills",
-                "path": skill_md_path.relative_to(skills_root).as_posix(),
-                "status": ensure_string(metadata["status"], f"{relative_posix(skill_md_path)}.status"),
-                "summary": ensure_string(metadata["summary"], f"{relative_posix(skill_md_path)}.summary"),
-                "source_type": HYBRID_SOURCE_TYPE,
+                "path": ensure_repo_relative_path(skill["skill_path"], f"{location}.skill_path"),
+                "status": ensure_string(skill["status"], f"{location}.status"),
+                "summary": ensure_string(skill["summary"], f"{location}.summary"),
+                "source_type": SKILL_SOURCE_TYPE,
                 "attributes": {
-                    "scope": ensure_string(metadata["scope"], f"{relative_posix(skill_md_path)}.scope"),
+                    "scope": ensure_string(skill["scope"], f"{location}.scope"),
                     "invocation_mode": ensure_string(
-                        metadata["invocation_mode"],
-                        f"{relative_posix(skill_md_path)}.invocation_mode",
+                        skill["invocation_mode"],
+                        f"{location}.invocation_mode",
                     ),
-                    "technique_dependencies": frontmatter_dependency_ids,
+                    "technique_dependencies": technique_dependencies,
                 },
             }
         )
     return entries
 
 
-def compare_eval_field(
-    metadata: dict[str, Any],
-    manifest: dict[str, Any],
-    field_name: str,
-    eval_md_path: Path,
-    eval_yaml_path: Path,
-) -> Any:
-    left = metadata.get(field_name)
-    right = manifest.get(field_name)
-    if left != right:
-        raise RouterError(
-            f"{relative_posix(eval_md_path)} field '{field_name}' does not match {relative_posix(eval_yaml_path)}"
-        )
-    return left
-
-
 def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
-    bundles_dir = evals_root / "bundles"
-    if not bundles_dir.is_dir():
-        raise RouterError(f"{relative_posix(bundles_dir)} is missing")
-
+    catalog_path = evals_root / "generated" / "eval_catalog.min.json"
+    payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
+    evals = ensure_list(payload.get("evals"), f"{relative_posix(catalog_path)}.evals")
     entries: list[dict[str, Any]] = []
-    for bundle_dir in sorted(path for path in bundles_dir.iterdir() if path.is_dir()):
-        eval_md_path = bundle_dir / "EVAL.md"
-        eval_yaml_path = bundle_dir / "eval.yaml"
-
-        metadata, _body = parse_frontmatter_markdown(eval_md_path)
-        metadata = ensure_mapping(metadata, relative_posix(eval_md_path))
-        require_keys(
-            metadata,
-            (
-                "name",
-                "category",
-                "status",
-                "summary",
-                "object_under_evaluation",
-                "claim_type",
-                "baseline_mode",
-                "report_format",
-                "technique_dependencies",
-                "skill_dependencies",
-            ),
-            relative_posix(eval_md_path),
+    required_keys = (
+        "name",
+        "category",
+        "status",
+        "summary",
+        "object_under_evaluation",
+        "claim_type",
+        "baseline_mode",
+        "verdict_shape",
+        "report_format",
+        "review_required",
+        "validation_strength",
+        "export_ready",
+        "technique_dependencies",
+        "skill_dependencies",
+        "eval_path",
+    )
+    for index, item in enumerate(evals):
+        location = f"{relative_posix(catalog_path)}.evals[{index}]"
+        evaluation = ensure_mapping(item, location)
+        require_keys(evaluation, required_keys, location)
+        eval_name = ensure_string(evaluation["name"], f"{location}.name")
+        technique_dependencies = ensure_string_list(
+            evaluation["technique_dependencies"],
+            f"{location}.technique_dependencies",
         )
-        manifest = ensure_mapping(load_yaml_file(eval_yaml_path), relative_posix(eval_yaml_path))
-        require_keys(
-            manifest,
-            (
-                "name",
-                "category",
-                "status",
-                "object_under_evaluation",
-                "claim_type",
-                "baseline_mode",
-                "verdict_shape",
-                "report_format",
-                "review_required",
-                "validation_strength",
-                "export_ready",
-                "technique_dependencies",
-                "skill_dependencies",
-            ),
-            relative_posix(eval_yaml_path),
+        skill_dependencies = ensure_string_list(
+            evaluation["skill_dependencies"],
+            f"{location}.skill_dependencies",
         )
-
-        eval_name = ensure_string(metadata["name"], f"{relative_posix(eval_md_path)}.name")
-        if eval_name != bundle_dir.name:
-            raise RouterError(
-                f"{relative_posix(eval_md_path)} frontmatter name '{eval_name}' does not match directory '{bundle_dir.name}'"
-            )
-        for field_name in (
-            "name",
-            "category",
-            "status",
-            "object_under_evaluation",
-            "claim_type",
-            "baseline_mode",
-            "report_format",
-        ):
-            compare_eval_field(metadata, manifest, field_name, eval_md_path, eval_yaml_path)
-
-        frontmatter_techniques = ensure_string_list(
-            metadata["technique_dependencies"],
-            f"{relative_posix(eval_md_path)}.technique_dependencies",
-        )
-        manifest_technique_items = ensure_list(
-            manifest["technique_dependencies"],
-            f"{relative_posix(eval_yaml_path)}.technique_dependencies",
-        )
-        manifest_techniques: list[str] = []
-        for index, item in enumerate(manifest_technique_items):
-            location = f"{relative_posix(eval_yaml_path)}.technique_dependencies[{index}]"
-            dependency = ensure_mapping(item, location)
-            require_keys(dependency, ("id", "repo", "path"), location)
-            dependency_id = ensure_string(dependency["id"], f"{location}.id")
-            manifest_techniques.append(dependency_id)
-            repo_name = normalize_repo_name(ensure_string(dependency["repo"], f"{location}.repo"))
-            if repo_name != "aoa-techniques":
-                raise RouterError(f"{location}.repo must resolve to aoa-techniques")
-            raw_path = ensure_string(dependency["path"], f"{location}.path")
-            if is_pending_technique_id(dependency_id):
-                if raw_path != "TBD":
-                    ensure_repo_relative_path(raw_path, f"{location}.path")
-            else:
-                ensure_repo_relative_path(raw_path, f"{location}.path")
-
-        if frontmatter_techniques != manifest_techniques:
-            raise RouterError(
-                f"{relative_posix(eval_md_path)} technique_dependencies do not match {relative_posix(eval_yaml_path)}"
-            )
-
-        frontmatter_skills = ensure_string_list(
-            metadata["skill_dependencies"],
-            f"{relative_posix(eval_md_path)}.skill_dependencies",
-        )
-        manifest_skill_items = ensure_list(
-            manifest["skill_dependencies"],
-            f"{relative_posix(eval_yaml_path)}.skill_dependencies",
-        )
-        manifest_skills: list[str] = []
-        for index, item in enumerate(manifest_skill_items):
-            location = f"{relative_posix(eval_yaml_path)}.skill_dependencies[{index}]"
-            dependency = ensure_mapping(item, location)
-            require_keys(dependency, ("name", "repo", "path"), location)
-            dependency_name = ensure_string(dependency["name"], f"{location}.name")
-            manifest_skills.append(dependency_name)
-            repo_name = normalize_repo_name(ensure_string(dependency["repo"], f"{location}.repo"))
-            if repo_name != "aoa-skills":
-                raise RouterError(f"{location}.repo must resolve to aoa-skills")
-            ensure_repo_relative_path(dependency["path"], f"{location}.path")
-
-        if frontmatter_skills != manifest_skills:
-            raise RouterError(
-                f"{relative_posix(eval_md_path)} skill_dependencies do not match {relative_posix(eval_yaml_path)}"
-            )
-
         entries.append(
             {
                 "kind": "eval",
                 "id": eval_name,
                 "name": eval_name,
                 "repo": "aoa-evals",
-                "path": eval_md_path.relative_to(evals_root).as_posix(),
-                "status": ensure_string(metadata["status"], f"{relative_posix(eval_md_path)}.status"),
-                "summary": ensure_string(metadata["summary"], f"{relative_posix(eval_md_path)}.summary"),
-                "source_type": HYBRID_SOURCE_TYPE,
+                "path": ensure_repo_relative_path(evaluation["eval_path"], f"{location}.eval_path"),
+                "status": ensure_string(evaluation["status"], f"{location}.status"),
+                "summary": ensure_string(evaluation["summary"], f"{location}.summary"),
+                "source_type": EVAL_SOURCE_TYPE,
                 "attributes": {
                     "category": ensure_string(
-                        metadata["category"], f"{relative_posix(eval_md_path)}.category"
+                        evaluation["category"], f"{location}.category"
                     ),
                     "object_under_evaluation": ensure_string(
-                        metadata["object_under_evaluation"],
-                        f"{relative_posix(eval_md_path)}.object_under_evaluation",
+                        evaluation["object_under_evaluation"],
+                        f"{location}.object_under_evaluation",
                     ),
                     "claim_type": ensure_string(
-                        metadata["claim_type"], f"{relative_posix(eval_md_path)}.claim_type"
+                        evaluation["claim_type"], f"{location}.claim_type"
                     ),
                     "baseline_mode": ensure_string(
-                        metadata["baseline_mode"],
-                        f"{relative_posix(eval_md_path)}.baseline_mode",
+                        evaluation["baseline_mode"],
+                        f"{location}.baseline_mode",
                     ),
                     "verdict_shape": ensure_string(
-                        manifest["verdict_shape"], f"{relative_posix(eval_yaml_path)}.verdict_shape"
+                        evaluation["verdict_shape"], f"{location}.verdict_shape"
                     ),
                     "review_required": ensure_bool(
-                        manifest["review_required"],
-                        f"{relative_posix(eval_yaml_path)}.review_required",
+                        evaluation["review_required"],
+                        f"{location}.review_required",
                     ),
                     "validation_strength": ensure_string(
-                        manifest["validation_strength"],
-                        f"{relative_posix(eval_yaml_path)}.validation_strength",
+                        evaluation["validation_strength"],
+                        f"{location}.validation_strength",
                     ),
                     "export_ready": ensure_bool(
-                        manifest["export_ready"], f"{relative_posix(eval_yaml_path)}.export_ready"
+                        evaluation["export_ready"], f"{location}.export_ready"
                     ),
-                    "technique_dependencies": frontmatter_techniques,
-                    "skill_dependencies": frontmatter_skills,
+                    "technique_dependencies": technique_dependencies,
+                    "skill_dependencies": skill_dependencies,
                 },
             }
         )

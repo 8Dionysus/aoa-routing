@@ -22,14 +22,15 @@ The core rule for this repository is:
 
 ## Current ingestion model
 
-The build is intentionally hybrid:
+The build reads only repo-local generated catalogs:
 
-- `aoa-techniques` is read from `generated/technique_catalog.min.json`
-- `aoa-skills` is read from `SKILL.md` frontmatter plus `techniques.yaml`
-- `aoa-evals` is read from `EVAL.md` frontmatter plus `eval.yaml`
+- `aoa-techniques` from `generated/technique_catalog.min.json`
+- `aoa-skills` from `generated/skill_catalog.min.json`
+- `aoa-evals` from `generated/eval_catalog.min.json`
 
-This keeps v0.1 compatible with the current maturity of the sibling repositories
-without turning `aoa-routing` into a second source-of-truth.
+`aoa-routing` no longer parses live `SKILL.md`, `techniques.yaml`, `EVAL.md`, or `eval.yaml`.
+That contract keeps source meaning inside the source repositories while letting routing stay
+deterministic and small.
 
 Explicit `AOA-T-PENDING-*` technique placeholders are allowed in source manifests.
 They remain future-only references and do not produce concrete `recommended_paths`
@@ -41,8 +42,17 @@ The builder writes these tracked artifacts under `generated/`:
 
 - `cross_repo_registry.min.json` - normalized registry of all routeable objects
 - `aoa_router.min.json` - minimal entry routing projection
-- `task_to_surface_hints.json` - static dispatch hints by surface kind
+- `task_to_surface_hints.json` - static dispatch hints by surface kind, including inspect actions
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
+
+Inspect actions point to repo-local capsule surfaces:
+
+- `aoa-techniques/generated/technique_capsules.json`
+- `aoa-skills/generated/skill_capsules.json`
+- `aoa-evals/generated/eval_capsules.json`
+
+`aoa-routing` does not copy capsule text into its own outputs.
+It only tells an agent which source-owned surface to inspect next.
 
 ## Repository layout
 
@@ -94,8 +104,8 @@ python scripts/build_router.py --techniques-root ../custom-techniques --generate
 
 These are intentionally out of scope for the first foundation release:
 
-- capsules
 - pairings
+- section expansion
 - tiny-model entrypoints
 - same-kind relation graphs
 - memo recall surfaces

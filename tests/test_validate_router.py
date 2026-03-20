@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import shutil
 from pathlib import Path
 
 import build_router
@@ -15,38 +16,60 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
 
 
-def build_fixture_generated(tmp_path: Path) -> Path:
+def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
+    roots: dict[str, Path] = {}
+    for repo_name in ("aoa-techniques", "aoa-skills", "aoa-evals"):
+        target = tmp_path / repo_name
+        shutil.copytree(FIXTURES_ROOT / repo_name, target)
+        roots[repo_name] = target
+    roots["aoa-memo"] = tmp_path / "aoa-memo"
+    roots["aoa-memo"].mkdir(parents=True, exist_ok=True)
+    return roots
+
+
+def build_fixture_generated(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
+    roots = copy_fixture_roots(tmp_path)
     generated_dir = tmp_path / "generated"
     outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        FIXTURES_ROOT / "aoa-memo",
+        roots["aoa-techniques"],
+        roots["aoa-skills"],
+        roots["aoa-evals"],
+        roots["aoa-memo"],
     )
     for filename, payload in outputs.items():
         write_json(generated_dir / filename, payload)
-    return generated_dir
+    return generated_dir, roots
+
+
+def validate_fixture_generated(generated_dir: Path, roots: dict[str, Path]) -> list[validate_router.ValidationIssue]:
+    return validate_router.validate_generated_outputs(
+        generated_dir,
+        roots["aoa-techniques"],
+        roots["aoa-skills"],
+        roots["aoa-evals"],
+        roots["aoa-memo"],
+    )
 
 
 def test_validate_generated_outputs_accepts_fixture_build(tmp_path: Path) -> None:
-    generated_dir = build_fixture_generated(tmp_path)
-    issues = validate_router.validate_generated_outputs(generated_dir)
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    issues = validate_fixture_generated(generated_dir, roots)
     assert issues == []
 
 
 def test_validate_generated_outputs_rejects_duplicate_registry_entry(tmp_path: Path) -> None:
-    generated_dir = build_fixture_generated(tmp_path)
+    generated_dir, roots = build_fixture_generated(tmp_path)
     registry_path = generated_dir / "cross_repo_registry.min.json"
     payload = json.loads(registry_path.read_text(encoding="utf-8"))
     payload["entries"].append(dict(payload["entries"][0]))
     write_json(registry_path, payload)
 
-    issues = validate_router.validate_generated_outputs(generated_dir)
+    issues = validate_fixture_generated(generated_dir, roots)
     assert any("duplicate registry entry" in issue.message for issue in issues)
 
 
 def test_validate_generated_outputs_rejects_unresolved_skill_dependency(tmp_path: Path) -> None:
-    generated_dir = build_fixture_generated(tmp_path)
+    generated_dir, roots = build_fixture_generated(tmp_path)
     registry_path = generated_dir / "cross_repo_registry.min.json"
     payload = json.loads(registry_path.read_text(encoding="utf-8"))
     for entry in payload["entries"]:
@@ -55,23 +78,34 @@ def test_validate_generated_outputs_rejects_unresolved_skill_dependency(tmp_path
             break
     write_json(registry_path, payload)
 
-    issues = validate_router.validate_generated_outputs(generated_dir)
+    issues = validate_fixture_generated(generated_dir, roots)
     assert any("unresolved skill dependency 'aoa-missing-skill'" in issue.message for issue in issues)
 
 
+def test_validate_generated_outputs_rejects_non_generated_source_type(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    payload["entries"][0]["source_type"] = "markdown-frontmatter+manifest"
+    write_json(registry_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("source_type 'generated-catalog'" in issue.message for issue in issues)
+
+
 def test_validate_generated_outputs_rejects_broken_repo_name(tmp_path: Path) -> None:
-    generated_dir = build_fixture_generated(tmp_path)
+    generated_dir, roots = build_fixture_generated(tmp_path)
     router_path = generated_dir / "aoa_router.min.json"
     payload = json.loads(router_path.read_text(encoding="utf-8"))
     payload["entries"][0]["repo"] = "github.com/8Dionysus/aoa-techniques"
     write_json(router_path, payload)
 
-    issues = validate_router.validate_generated_outputs(generated_dir)
+    issues = validate_fixture_generated(generated_dir, roots)
     assert any("schema violation" in issue.message for issue in issues)
 
 
 def test_validate_generated_outputs_rejects_invalid_recommended_paths(tmp_path: Path) -> None:
-    generated_dir = build_fixture_generated(tmp_path)
+    generated_dir, roots = build_fixture_generated(tmp_path)
     recommended_path = generated_dir / "recommended_paths.min.json"
     payload = json.loads(recommended_path.read_text(encoding="utf-8"))
     payload["entries"][0]["downstream"].append(
@@ -79,12 +113,25 @@ def test_validate_generated_outputs_rejects_invalid_recommended_paths(tmp_path: 
     )
     write_json(recommended_path, payload)
 
-    issues = validate_router.validate_generated_outputs(generated_dir)
+    issues = validate_fixture_generated(generated_dir, roots)
     assert any("same-kind hops are not allowed" in issue.message for issue in issues)
 
 
+def test_validate_generated_outputs_rejects_missing_inspect_target(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    capsules_path = roots["aoa-skills"] / "generated" / "skill_capsules.json"
+    payload = json.loads(capsules_path.read_text(encoding="utf-8"))
+    payload["skills"] = [
+        entry for entry in payload["skills"] if entry["name"] != "aoa-context-scan"
+    ]
+    write_json(capsules_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("inspect surface is missing skill match 'aoa-context-scan'" in issue.message for issue in issues)
+
+
 def test_validate_generated_outputs_rejects_memo_objects_in_v0_1(tmp_path: Path) -> None:
-    generated_dir = build_fixture_generated(tmp_path)
+    generated_dir, roots = build_fixture_generated(tmp_path)
     registry_path = generated_dir / "cross_repo_registry.min.json"
     payload = json.loads(registry_path.read_text(encoding="utf-8"))
     payload["entries"].append(
@@ -102,5 +149,5 @@ def test_validate_generated_outputs_rejects_memo_objects_in_v0_1(tmp_path: Path)
     )
     write_json(registry_path, payload)
 
-    issues = validate_router.validate_generated_outputs(generated_dir)
+    issues = validate_fixture_generated(generated_dir, roots)
     assert any("memo entries are not allowed in v0.1" in issue.message for issue in issues)

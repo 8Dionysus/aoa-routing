@@ -216,6 +216,25 @@ def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, An
 
 
 def build_task_to_surface_hints_payload() -> dict[str, Any]:
+    def action_flags(
+        *,
+        inspect_enabled: bool,
+        surface_file: str | None = None,
+        match_field: str | None = None,
+        pick_enabled: bool = True,
+    ) -> dict[str, dict[str, Any]]:
+        inspect: dict[str, Any] = {"enabled": inspect_enabled}
+        if inspect_enabled:
+            inspect["surface_file"] = surface_file
+            inspect["match_field"] = match_field
+        return {
+            "pick": {"enabled": pick_enabled},
+            "inspect": inspect,
+            "expand": {"enabled": False},
+            "pair": {"enabled": False},
+            "recall": {"enabled": False},
+        }
+
     return {
         "version": 1,
         "hints": [
@@ -224,24 +243,40 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                 "enabled": True,
                 "source_repo": "aoa-techniques",
                 "use_when": "need a reusable engineering practice or minimal technique selection",
+                "actions": action_flags(
+                    inspect_enabled=True,
+                    surface_file="generated/technique_capsules.json",
+                    match_field="id",
+                ),
             },
             {
                 "kind": "skill",
                 "enabled": True,
                 "source_repo": "aoa-skills",
                 "use_when": "need a bounded agent-facing workflow to execute",
+                "actions": action_flags(
+                    inspect_enabled=True,
+                    surface_file="generated/skill_capsules.json",
+                    match_field="name",
+                ),
             },
             {
                 "kind": "eval",
                 "enabled": True,
                 "source_repo": "aoa-evals",
                 "use_when": "need a bounded proof or quality-check surface",
+                "actions": action_flags(
+                    inspect_enabled=True,
+                    surface_file="generated/eval_capsules.json",
+                    match_field="name",
+                ),
             },
             {
                 "kind": "memo",
                 "enabled": False,
                 "source_repo": "aoa-memo",
                 "use_when": "reserved for future recall and memory-routing surfaces",
+                "actions": action_flags(inspect_enabled=False, pick_enabled=False),
             },
         ],
     }
