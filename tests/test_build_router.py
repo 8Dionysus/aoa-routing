@@ -69,6 +69,30 @@ def test_collect_eval_entries_raises_on_missing_required_field(tmp_path: Path) -
         build_router.collect_eval_entries(evals_root)
 
 
+def test_collect_skill_entries_rejects_parent_directory_skill_path(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
+    catalog_path = skills_root / "generated" / "skill_catalog.min.json"
+    payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    payload["skills"][0]["skill_path"] = "../secret.md"
+    write_json(catalog_path, payload)
+
+    with pytest.raises(build_router.RouterError, match="must not traverse outside the repository root"):
+        build_router.collect_skill_entries(skills_root)
+
+
+def test_collect_eval_entries_rejects_parent_directory_eval_path(tmp_path: Path) -> None:
+    evals_root = tmp_path / "aoa-evals"
+    shutil.copytree(FIXTURES_ROOT / "aoa-evals", evals_root)
+    catalog_path = evals_root / "generated" / "eval_catalog.min.json"
+    payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    payload["evals"][0]["eval_path"] = "../secret.md"
+    write_json(catalog_path, payload)
+
+    with pytest.raises(build_router.RouterError, match="must not traverse outside the repository root"):
+        build_router.collect_eval_entries(evals_root)
+
+
 def test_build_outputs_from_fixtures() -> None:
     outputs = build_router.build_outputs(
         FIXTURES_ROOT / "aoa-techniques",

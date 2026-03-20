@@ -180,7 +180,10 @@ def ensure_repo_relative_path(raw_path: str, location: str) -> str:
     value = ensure_string(raw_path, location)
     if re.match(r"^[A-Za-z]:[/\\\\]", value) or value.startswith(("/", "\\\\")):
         raise RouterError(f"{location} must be repo-relative, not absolute")
-    return value.replace("\\", "/")
+    normalized = value.replace("\\", "/")
+    if ".." in Path(normalized).parts:
+        raise RouterError(f"{location} must not traverse outside the repository root")
+    return normalized
 
 
 def is_pending_technique_id(identifier: str) -> bool:

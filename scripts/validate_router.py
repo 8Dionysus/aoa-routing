@@ -133,13 +133,16 @@ def validate_registry_entry_attributes(
     entry: dict[str, Any],
     location: str,
     issues: list[ValidationIssue],
-) -> None:
+) -> bool:
     attributes = entry.get("attributes")
     if not isinstance(attributes, dict):
         issues.append(ValidationIssue(location, "attributes must be an object"))
-        return
+        return False
 
-    kind = entry["kind"]
+    kind = entry.get("kind")
+    if not isinstance(kind, str):
+        return False
+
     if kind == "technique":
         expected_keys = {
             "domain",
@@ -152,7 +155,7 @@ def validate_registry_entry_attributes(
         }
         if set(attributes) != expected_keys:
             issues.append(ValidationIssue(location, "technique attributes do not match the expected shape"))
-            return
+            return False
         if not isinstance(attributes["domain"], str):
             issues.append(ValidationIssue(location, "technique domain must be a string"))
         if not isinstance(attributes["maturity_score"], int):
@@ -163,13 +166,13 @@ def validate_registry_entry_attributes(
         for key in ("review_required", "export_ready"):
             if not isinstance(attributes[key], bool):
                 issues.append(ValidationIssue(location, f"technique {key} must be a boolean"))
-        return
+        return True
 
     if kind == "skill":
         expected_keys = {"scope", "invocation_mode", "technique_dependencies"}
         if set(attributes) != expected_keys:
             issues.append(ValidationIssue(location, "skill attributes do not match the expected shape"))
-            return
+            return False
         for key in ("scope", "invocation_mode"):
             if not isinstance(attributes[key], str):
                 issues.append(ValidationIssue(location, f"skill {key} must be a string"))
@@ -177,7 +180,8 @@ def validate_registry_entry_attributes(
             ensure_string_list(attributes["technique_dependencies"], f"{location}.technique_dependencies")
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
-        return
+            return False
+        return True
 
     if kind == "eval":
         expected_keys = {
@@ -194,7 +198,7 @@ def validate_registry_entry_attributes(
         }
         if set(attributes) != expected_keys:
             issues.append(ValidationIssue(location, "eval attributes do not match the expected shape"))
-            return
+            return False
         for key in (
             "category",
             "object_under_evaluation",
@@ -213,38 +217,71 @@ def validate_registry_entry_attributes(
             ensure_string_list(attributes["skill_dependencies"], f"{location}.skill_dependencies")
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
-        return
+            return False
+        return True
 
     issues.append(ValidationIssue(location, f"unsupported entry kind '{kind}'"))
+    return False
+
+
+def registry_entry_key(entry: dict[str, Any]) -> tuple[str, str] | None:
+    kind = entry.get("kind")
+    identifier = entry.get("id")
+    if not isinstance(kind, str) or not isinstance(identifier, str):
+        return None
+    return kind, identifier
+
+
+def is_projection_safe_registry_entry(entry: dict[str, Any]) -> bool:
+    key = registry_entry_key(entry)
+    if key is None or key[0] not in ALL_KINDS:
+        return False
+    return all(
+        isinstance(entry.get(field), str)
+        for field in ("name", "repo", "path", "status", "summary")
+    )
 
 
 def validate_registry_dependencies(
     registry_entries: list[dict[str, Any]],
+    dependency_entries: list[dict[str, Any]],
     issues: list[ValidationIssue],
 ) -> None:
     entries_by_kind: dict[str, set[str]] = {kind: set() for kind in ACTIVE_KINDS}
     for entry in registry_entries:
-        entries_by_kind.setdefault(entry["kind"], set()).add(entry["id"])
+        key = registry_entry_key(entry)
+        if key is None:
+            continue
+        kind, identifier = key
+        if kind in entries_by_kind:
+            entries_by_kind[kind].add(identifier)
 
-    for entry in registry_entries:
-        location = f"cross_repo_registry.min.json:{entry['kind']}:{entry['id']}"
-        if entry["kind"] == "skill":
-            for dependency_id in entry["attributes"]["technique_dependencies"]:
+    for entry in dependency_entries:
+        key = registry_entry_key(entry)
+        if key is None:
+            continue
+        kind, identifier = key
+        location = f"cross_repo_registry.min.json:{kind}:{identifier}"
+        attributes = entry.get("attributes")
+        if not isinstance(attributes, dict):
+            continue
+        if kind == "skill":
+            for dependency_id in attributes.get("technique_dependencies", []):
                 if is_pending_technique_id(dependency_id):
                     continue
                 if dependency_id not in entries_by_kind["technique"]:
                     issues.append(
                         ValidationIssue(location, f"unresolved technique dependency '{dependency_id}'")
                     )
-        elif entry["kind"] == "eval":
-            for dependency_id in entry["attributes"]["technique_dependencies"]:
+        elif kind == "eval":
+            for dependency_id in attributes.get("technique_dependencies", []):
                 if is_pending_technique_id(dependency_id):
                     continue
                 if dependency_id not in entries_by_kind["technique"]:
                     issues.append(
                         ValidationIssue(location, f"unresolved technique dependency '{dependency_id}'")
                     )
-            for dependency_name in entry["attributes"]["skill_dependencies"]:
+            for dependency_name in attributes.get("skill_dependencies", []):
                 if dependency_name not in entries_by_kind["skill"]:
                     issues.append(
                         ValidationIssue(location, f"unresolved skill dependency '{dependency_name}'")
@@ -380,6 +417,9 @@ def validate_generated_outputs(
         return issues
 
     normalized_registry_entries: list[dict[str, Any]] = []
+    dependency_safe_registry_entries: list[dict[str, Any]] = []
+    projection_safe_registry_entries: list[dict[str, Any]] = []
+    recommended_safe_registry_entries: list[dict[str, Any]] = []
     seen_registry_keys: set[tuple[str, str]] = set()
     for index, raw_entry in enumerate(registry_entries):
         location = f"{registry_path.name}.entries[{index}]"
@@ -388,7 +428,9 @@ def validate_generated_outputs(
         except RouterError as exc:
             issues.append(ValidationIssue(registry_path.name, str(exc)))
             continue
+        schema_issue_count = len(issues)
         validate_against_schema(entry, "router-entry.schema.json", location, issues)
+        schema_valid = len(issues) == schema_issue_count
         key = (entry.get("kind"), entry.get("id"))
         if key in seen_registry_keys:
             issues.append(ValidationIssue(location, f"duplicate registry entry for {key[0]}:{key[1]}"))
@@ -407,10 +449,20 @@ def validate_generated_outputs(
                     "active registry entries must use source_type 'generated-catalog'",
                 )
             )
-        validate_registry_entry_attributes(entry, location, issues)
+        attributes_valid = validate_registry_entry_attributes(entry, location, issues)
         normalized_registry_entries.append(entry)
+        if attributes_valid:
+            dependency_safe_registry_entries.append(entry)
+        if schema_valid and is_projection_safe_registry_entry(entry):
+            projection_safe_registry_entries.append(entry)
+            if entry.get("kind") not in {"skill", "eval"} or attributes_valid:
+                recommended_safe_registry_entries.append(entry)
 
-    validate_registry_dependencies(normalized_registry_entries, issues)
+    validate_registry_dependencies(
+        normalized_registry_entries,
+        dependency_safe_registry_entries,
+        issues,
+    )
 
     if router_payload.get("router_version") != 1:
         issues.append(ValidationIssue(router_path.name, "router_version must be 1"))
@@ -441,13 +493,13 @@ def validate_generated_outputs(
             issues.append(ValidationIssue(location, "router entries must stay as the thin projection surface"))
         normalized_router_entries.append(entry)
 
-    if router_payload != build_router_payload(normalized_registry_entries):
+    if router_payload != build_router_payload(projection_safe_registry_entries):
         issues.append(ValidationIssue(router_path.name, "aoa_router.min.json does not match the registry projection"))
 
     if hints_payload != build_task_to_surface_hints_payload():
         issues.append(ValidationIssue(hints_path.name, "task_to_surface_hints.json does not match the expected static dispatch surface"))
     validate_inspect_targets(
-        normalized_registry_entries,
+        projection_safe_registry_entries,
         techniques_root,
         skills_root,
         evals_root,
@@ -495,7 +547,7 @@ def validate_generated_outputs(
                     issues.append(ValidationIssue(hop_location, "memo hops are not allowed in v0.1"))
 
     try:
-        expected_recommended = build_recommended_paths_payload(normalized_registry_entries)
+        expected_recommended = build_recommended_paths_payload(recommended_safe_registry_entries)
     except RouterError as exc:
         issues.append(ValidationIssue(recommended_path.name, str(exc)))
     else:
