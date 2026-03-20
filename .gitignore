@@ -2,3 +2,5 @@ __pycache__/
 .pytest_cache/
 *.pyc
 .venv/
+TODO.local.md
+PLANS.local.md
