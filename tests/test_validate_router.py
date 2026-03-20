@@ -104,6 +104,51 @@ def test_validate_generated_outputs_rejects_broken_repo_name(tmp_path: Path) -> 
     assert any("schema violation" in issue.message for issue in issues)
 
 
+def test_validate_generated_outputs_rejects_registry_entry_missing_kind_without_crashing(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    del payload["entries"][0]["kind"]
+    write_json(registry_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("schema violation" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_missing_attributes_without_crashing(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    for entry in payload["entries"]:
+        if entry["kind"] == "skill":
+            del entry["attributes"]
+            break
+    write_json(registry_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("attributes must be an object" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_invalid_dependency_attributes_without_crashing(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    for entry in payload["entries"]:
+        if entry["kind"] == "eval":
+            entry["attributes"]["technique_dependencies"] = "AOA-T-0001"
+            break
+    write_json(registry_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("technique_dependencies must be a list" in issue.message for issue in issues)
+
+
 def test_validate_generated_outputs_rejects_invalid_recommended_paths(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     recommended_path = generated_dir / "recommended_paths.min.json"
