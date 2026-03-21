@@ -107,6 +107,33 @@ def test_validate_generated_outputs_rejects_non_generated_source_type(tmp_path: 
     assert any("source_type 'generated-catalog'" in issue.message for issue in issues)
 
 
+def test_validate_generated_outputs_rejects_stale_registry_and_router_against_rebuild(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    router_path = generated_dir / "aoa_router.min.json"
+
+    registry_payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    router_payload = json.loads(router_path.read_text(encoding="utf-8"))
+    registry_payload["entries"][0]["summary"] = "stale routing snapshot"
+    router_payload["entries"][0]["summary"] = "stale routing snapshot"
+    write_json(registry_path, registry_payload)
+    write_json(router_path, router_payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "cross_repo_registry.min.json"
+        and "canonical rebuild from current sibling catalogs" in issue.message
+        for issue in issues
+    )
+    assert any(
+        issue.location == "aoa_router.min.json"
+        and "canonical rebuild from current sibling catalogs" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_broken_repo_name(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     router_path = generated_dir / "aoa_router.min.json"
@@ -116,6 +143,42 @@ def test_validate_generated_outputs_rejects_broken_repo_name(tmp_path: Path) -> 
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any("schema violation" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_canonical_repo_mismatch_even_if_consistent(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    router_path = generated_dir / "aoa_router.min.json"
+
+    registry_payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    router_payload = json.loads(router_path.read_text(encoding="utf-8"))
+    registry_payload["entries"][0]["repo"] = "aoa-skills"
+    router_payload["entries"][0]["repo"] = "aoa-skills"
+    write_json(registry_path, registry_payload)
+    write_json(router_path, router_payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("canonical repo 'aoa-techniques'" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_absolute_path_even_if_consistent(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    router_path = generated_dir / "aoa_router.min.json"
+
+    registry_payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    router_payload = json.loads(router_path.read_text(encoding="utf-8"))
+    registry_payload["entries"][0]["path"] = "C:/secret/TECHNIQUE.md"
+    router_payload["entries"][0]["path"] = "C:/secret/TECHNIQUE.md"
+    write_json(registry_path, registry_payload)
+    write_json(router_path, router_payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("must be repo-relative, not absolute" in issue.message for issue in issues)
 
 
 def test_validate_generated_outputs_rejects_router_projection_shape_drift_via_schema(tmp_path: Path) -> None:
@@ -192,6 +255,19 @@ def test_validate_generated_outputs_rejects_malformed_inspect_action_shape_via_s
         or "must define match_field" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_missing_hint_enabled_without_crashing(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    del payload["hints"][0]["enabled"]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("schema violation" in issue.message and "enabled" in issue.message for issue in issues)
 
 
 def test_validate_generated_outputs_rejects_malformed_expand_action_shape_via_schema(

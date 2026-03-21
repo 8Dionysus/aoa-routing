@@ -101,6 +101,7 @@ The validator enforces both:
 
 - schema contracts for all public generated outputs
 - integrity checks across registry, router, hints, recommended paths, and source-owned inspect/expand targets
+- rebuild parity between committed routing artifacts and the current sibling source catalogs
 
 Run tests:
 

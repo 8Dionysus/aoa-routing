@@ -15,28 +15,94 @@
     "entries": {
       "type": "array",
       "items": {
-        "allOf": [
+        "oneOf": [
           {
-            "$ref": "https://aoa-routing/schemas/router-entry.schema.json"
+            "$ref": "#/$defs/techniqueEntry"
           },
           {
-            "not": {
-              "anyOf": [
-                {
-                  "required": [
-                    "source_type"
-                  ]
-                },
-                {
-                  "required": [
-                    "attributes"
-                  ]
-                }
-              ]
-            }
+            "$ref": "#/$defs/skillEntry"
+          },
+          {
+            "$ref": "#/$defs/evalEntry"
           }
         ]
       }
+    }
+  },
+  "$defs": {
+    "thinProjectionEntry": {
+      "allOf": [
+        {
+          "$ref": "https://aoa-routing/schemas/router-entry.schema.json"
+        },
+        {
+          "not": {
+            "anyOf": [
+              {
+                "required": [
+                  "source_type"
+                ]
+              },
+              {
+                "required": [
+                  "attributes"
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    "techniqueEntry": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/thinProjectionEntry"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "technique"
+            },
+            "repo": {
+              "const": "aoa-techniques"
+            }
+          }
+        }
+      ]
+    },
+    "skillEntry": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/thinProjectionEntry"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "skill"
+            },
+            "repo": {
+              "const": "aoa-skills"
+            }
+          }
+        }
+      ]
+    },
+    "evalEntry": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/thinProjectionEntry"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "eval"
+            },
+            "repo": {
+              "const": "aoa-evals"
+            }
+          }
+        }
+      ]
     }
   }
 }

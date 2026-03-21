@@ -13,9 +13,11 @@ from typing import Any, Iterable
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
+from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
     ALL_KINDS,
+    CANONICAL_REPO_BY_KIND,
     REPO_ROOT,
     RESERVED_KINDS,
     RouterError,
@@ -24,6 +26,7 @@ from router_core import (
     build_task_to_surface_hints_payload,
     ensure_list,
     ensure_mapping,
+    ensure_repo_relative_path,
     ensure_string_list,
     is_pending_technique_id,
     load_json_file,
@@ -171,6 +174,66 @@ def load_output(path: Path, issues: list[ValidationIssue]) -> dict[str, Any] | N
     except RouterError as exc:
         issues.append(ValidationIssue(path.name, str(exc)))
         return None
+
+
+def validate_rebuild_parity(
+    outputs: dict[str, dict[str, Any]],
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    try:
+        expected_outputs = build_outputs(
+            techniques_root.resolve(),
+            skills_root.resolve(),
+            evals_root.resolve(),
+            memo_root.resolve(),
+        )
+    except RouterError as exc:
+        issues.append(
+            ValidationIssue(
+                "generated",
+                f"could not rebuild canonical outputs from current sibling catalogs: {exc}",
+            )
+        )
+        return
+
+    for filename, expected_payload in expected_outputs.items():
+        actual_payload = outputs.get(filename)
+        if actual_payload is not None and actual_payload != expected_payload:
+            issues.append(
+                ValidationIssue(
+                    filename,
+                    "published output does not match the canonical rebuild from current sibling catalogs",
+                )
+            )
+
+
+def validate_entry_repo_and_path(
+    entry: dict[str, Any],
+    location: str,
+    issues: list[ValidationIssue],
+) -> None:
+    kind = entry.get("kind")
+    if not isinstance(kind, str):
+        return
+
+    repo = entry.get("repo")
+    expected_repo = CANONICAL_REPO_BY_KIND.get(kind)
+    if expected_repo is not None and repo != expected_repo:
+        issues.append(
+            ValidationIssue(
+                location,
+                f"{kind} entries must use canonical repo '{expected_repo}'",
+            )
+        )
+
+    try:
+        ensure_repo_relative_path(entry.get("path"), f"{location}.path")
+    except RouterError as exc:
+        issues.append(ValidationIssue(location, str(exc)))
 
 
 def validate_registry_entry_attributes(
@@ -378,14 +441,20 @@ def validate_inspect_targets(
         except RouterError as exc:
             issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
             continue
-        if not hint["enabled"]:
+        kind = hint.get("kind")
+        enabled = hint.get("enabled")
+        if not isinstance(kind, str) or kind not in ALL_KINDS:
+            continue
+        if not isinstance(enabled, bool):
+            continue
+        if not enabled:
             continue
         actions = hint.get("actions")
         if not isinstance(actions, dict):
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"hint for kind '{hint['kind']}' must define actions",
+                    f"hint for kind '{kind}' must define actions",
                 )
             )
             continue
@@ -397,7 +466,7 @@ def validate_inspect_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"hint for kind '{hint.get('kind')}' has an invalid source_repo",
+                    f"hint for kind '{kind}' has an invalid source_repo",
                 )
             )
             continue
@@ -408,7 +477,7 @@ def validate_inspect_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"enabled inspect action for kind '{hint.get('kind')}' must define surface_file",
+                    f"enabled inspect action for kind '{kind}' must define surface_file",
                 )
             )
             continue
@@ -416,7 +485,7 @@ def validate_inspect_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"enabled inspect action for kind '{hint.get('kind')}' must define match_field",
+                    f"enabled inspect action for kind '{kind}' must define match_field",
                 )
             )
             continue
@@ -424,7 +493,7 @@ def validate_inspect_targets(
         location = f"{source_repo}/{surface_file}"
         try:
             payload = ensure_mapping(load_json_file(surface_path), location)
-            entries = ensure_list(payload.get(capsule_array_key(hint["kind"])), location)
+            entries = ensure_list(payload.get(capsule_array_key(kind)), location)
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
             continue
@@ -442,24 +511,24 @@ def validate_inspect_targets(
                 continue
             if match_value in seen_matches:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"duplicate inspect match '{match_value}' for kind '{hint['kind']}'",
+                        ValidationIssue(
+                            location,
+                            f"duplicate inspect match '{match_value}' for kind '{kind}'",
+                        )
                     )
-                )
             seen_matches.add(match_value)
 
         expected_matches = {
             entry["id"] if match_field == "id" else entry["name"]
             for entry in registry_entries
-            if entry["kind"] == hint["kind"]
+            if entry["kind"] == kind
         }
         missing_matches = sorted(expected_matches - seen_matches)
         for match_value in missing_matches:
             issues.append(
                 ValidationIssue(
                     location,
-                    f"inspect surface is missing {hint['kind']} match '{match_value}'",
+                    f"inspect surface is missing {kind} match '{match_value}'",
                 )
             )
         unexpected_matches = sorted(seen_matches - expected_matches)
@@ -467,7 +536,7 @@ def validate_inspect_targets(
             issues.append(
                 ValidationIssue(
                     location,
-                    f"inspect surface contains unexpected {hint['kind']} match '{match_value}'",
+                    f"inspect surface contains unexpected {kind} match '{match_value}'",
                 )
             )
 
@@ -498,7 +567,13 @@ def validate_expand_targets(
         except RouterError as exc:
             issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
             continue
-        if not hint["enabled"]:
+        kind = hint.get("kind")
+        enabled = hint.get("enabled")
+        if not isinstance(kind, str) or kind not in ALL_KINDS:
+            continue
+        if not isinstance(enabled, bool):
+            continue
+        if not enabled:
             continue
         actions = hint.get("actions")
         if not isinstance(actions, dict):
@@ -511,7 +586,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"hint for kind '{hint.get('kind')}' has an invalid source_repo",
+                    f"hint for kind '{kind}' has an invalid source_repo",
                 )
             )
             continue
@@ -525,7 +600,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"enabled expand action for kind '{hint.get('kind')}' must define surface_file",
+                    f"enabled expand action for kind '{kind}' must define surface_file",
                 )
             )
             continue
@@ -533,7 +608,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"enabled expand action for kind '{hint.get('kind')}' must define match_field",
+                    f"enabled expand action for kind '{kind}' must define match_field",
                 )
             )
             continue
@@ -541,7 +616,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"enabled expand action for kind '{hint.get('kind')}' must define section_key_field",
+                    f"enabled expand action for kind '{kind}' must define section_key_field",
                 )
             )
             continue
@@ -551,7 +626,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"enabled expand action for kind '{hint.get('kind')}' must define default_sections as a string list",
+                    f"enabled expand action for kind '{kind}' must define default_sections as a string list",
                 )
             )
             continue
@@ -561,7 +636,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"enabled expand action for kind '{hint.get('kind')}' must define supported_sections as a string list",
+                    f"enabled expand action for kind '{kind}' must define supported_sections as a string list",
                 )
             )
             continue
@@ -569,7 +644,7 @@ def validate_expand_targets(
         surface_path = source_root / surface_file
         try:
             payload = ensure_mapping(load_json_file(surface_path), location)
-            entries = ensure_list(payload.get(section_array_key(hint["kind"])), location)
+            entries = ensure_list(payload.get(section_array_key(kind)), location)
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
             continue
@@ -589,11 +664,11 @@ def validate_expand_targets(
                 continue
             if match_value in seen_matches:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"duplicate expand match '{match_value}' for kind '{hint['kind']}'",
+                        ValidationIssue(
+                            location,
+                            f"duplicate expand match '{match_value}' for kind '{kind}'",
+                        )
                     )
-                )
             seen_matches.add(match_value)
 
             section_keys: list[str] = []
@@ -621,24 +696,24 @@ def validate_expand_targets(
 
             if len(section_keys) != len(set(section_keys)):
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"expand surface contains duplicate section keys for {hint['kind']} match '{match_value}'",
-                    )
+                        ValidationIssue(
+                            location,
+                            f"expand surface contains duplicate section keys for {kind} match '{match_value}'",
+                        )
                 )
             section_keys_by_match[match_value] = section_keys
 
         expected_matches = {
             entry["id"] if match_field == "id" else entry["name"]
             for entry in registry_entries
-            if entry["kind"] == hint["kind"]
+            if entry["kind"] == kind
         }
         missing_matches = sorted(expected_matches - seen_matches)
         for match_value in missing_matches:
             issues.append(
                 ValidationIssue(
                     location,
-                    f"expand surface is missing {hint['kind']} match '{match_value}'",
+                    f"expand surface is missing {kind} match '{match_value}'",
                 )
             )
         unexpected_matches = sorted(seen_matches - expected_matches)
@@ -646,7 +721,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     location,
-                    f"expand surface contains unexpected {hint['kind']} match '{match_value}'",
+                    f"expand surface contains unexpected {kind} match '{match_value}'",
                 )
             )
 
@@ -654,7 +729,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"default expand sections for kind '{hint['kind']}' must be a subset of supported_sections",
+                    f"default expand sections for kind '{kind}' must be a subset of supported_sections",
                 )
             )
 
@@ -664,20 +739,20 @@ def validate_expand_targets(
             actual_keys = tuple(section_keys_by_match.get(match_value, []))
             if actual_keys != supported_tuple:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"expand surface for {hint['kind']} match '{match_value}' must expose the supported section order",
+                        ValidationIssue(
+                            location,
+                            f"expand surface for {kind} match '{match_value}' must expose the supported section order",
+                        )
                     )
-                )
                 continue
             missing_defaults = [section for section in default_tuple if section not in actual_keys]
             if missing_defaults:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"expand surface for {hint['kind']} match '{match_value}' is missing default sections: {', '.join(missing_defaults)}",
+                        ValidationIssue(
+                            location,
+                            f"expand surface for {kind} match '{match_value}' is missing default sections: {', '.join(missing_defaults)}",
+                        )
                     )
-                )
 
 
 def payload_contains_key(payload: Any, target_key: str) -> bool:
@@ -711,6 +786,20 @@ def validate_generated_outputs(
     recommended_payload = load_output(recommended_path, issues)
     if any(payload is None for payload in (registry_payload, router_payload, hints_payload, recommended_payload)):
         return issues
+
+    validate_rebuild_parity(
+        {
+            registry_path.name: registry_payload,
+            router_path.name: router_payload,
+            hints_path.name: hints_payload,
+            recommended_path.name: recommended_payload,
+        },
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        issues,
+    )
 
     for output_path, payload in (
         (registry_path, registry_payload),
@@ -765,6 +854,7 @@ def validate_generated_outputs(
                     "active registry entries must use source_type 'generated-catalog'",
                 )
             )
+        validate_entry_repo_and_path(entry, location, issues)
         attributes_valid = validate_registry_entry_attributes(entry, location, issues)
         normalized_registry_entries.append(entry)
         if attributes_valid:
@@ -806,6 +896,7 @@ def validate_generated_outputs(
             issues.append(ValidationIssue(location, "memo router entries are not allowed in v0.1"))
         if "source_type" in entry or "attributes" in entry:
             issues.append(ValidationIssue(location, "router entries must stay as the thin projection surface"))
+        validate_entry_repo_and_path(entry, location, issues)
         normalized_router_entries.append(entry)
 
     if router_payload != build_router_payload(projection_safe_registry_entries):
