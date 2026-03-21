@@ -337,6 +337,29 @@ def test_validate_generated_outputs_rejects_malformed_recommended_hop_via_schema
     )
 
 
+def test_validate_generated_outputs_rejects_invalid_kag_relation_hints(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
+    payload = json.loads(relation_hints_path.read_text(encoding="utf-8"))
+    payload["entries"].append(
+        {
+            "kind": "technique",
+            "id": "AOA-T-0018",
+            "name": "markdown-technique-section-lift",
+            "summary": "Lift stable technique markdown sections into derived section-level units while keeping the bundle markdown authoritative.",
+            "relations": [{"type": "complements", "target": "AOA-T-9999"}],
+        }
+    )
+    write_json(relation_hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "kag_source_lift_relation_hints.min.json does not match the live direct relation surface"
+        in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_missing_inspect_target(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     capsules_path = roots["aoa-skills"] / "generated" / "skill_capsules.json"

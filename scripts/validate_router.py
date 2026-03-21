@@ -21,6 +21,7 @@ from router_core import (
     REPO_ROOT,
     RESERVED_KINDS,
     RouterError,
+    build_kag_source_lift_relation_hints_payload,
     build_recommended_paths_payload,
     build_router_payload,
     build_task_to_surface_hints_payload,
@@ -30,6 +31,7 @@ from router_core import (
     ensure_string_list,
     is_pending_technique_id,
     load_json_file,
+    load_technique_catalog_entries,
 )
 
 
@@ -779,12 +781,23 @@ def validate_generated_outputs(
     router_path = generated_dir / "aoa_router.min.json"
     hints_path = generated_dir / "task_to_surface_hints.json"
     recommended_path = generated_dir / "recommended_paths.min.json"
+    relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
 
     registry_payload = load_output(registry_path, issues)
     router_payload = load_output(router_path, issues)
     hints_payload = load_output(hints_path, issues)
     recommended_payload = load_output(recommended_path, issues)
-    if any(payload is None for payload in (registry_payload, router_payload, hints_payload, recommended_payload)):
+    relation_hints_payload = load_output(relation_hints_path, issues)
+    if any(
+        payload is None
+        for payload in (
+            registry_payload,
+            router_payload,
+            hints_payload,
+            recommended_payload,
+            relation_hints_payload,
+        )
+    ):
         return issues
 
     validate_rebuild_parity(
@@ -819,6 +832,10 @@ def validate_generated_outputs(
     except RouterError as exc:
         issues.append(ValidationIssue(registry_path.name, str(exc)))
         return issues
+
+    technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
+        techniques_root
+    )
 
     normalized_registry_entries: list[dict[str, Any]] = []
     dependency_safe_registry_entries: list[dict[str, Any]] = []
@@ -968,11 +985,29 @@ def validate_generated_outputs(
         if recommended_payload != expected_recommended:
             issues.append(ValidationIssue(recommended_path.name, "recommended_paths.min.json does not match registry-derived dependencies"))
 
+    try:
+        expected_relation_hints = build_kag_source_lift_relation_hints_payload(
+            normalized_registry_entries,
+            technique_catalog_source,
+            technique_catalog_entries,
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue(relation_hints_path.name, str(exc)))
+    else:
+        if relation_hints_payload != expected_relation_hints:
+            issues.append(
+                ValidationIssue(
+                    relation_hints_path.name,
+                    "kag_source_lift_relation_hints.min.json does not match the live direct relation surface",
+                )
+            )
+
     for filename, payload in (
         (registry_path.name, registry_payload),
         (router_path.name, router_payload),
         (hints_path.name, hints_payload),
         (recommended_path.name, recommended_payload),
+        (relation_hints_path.name, relation_hints_payload),
     ):
         for key in SOURCE_OWNED_PAYLOAD_KEYS:
             if payload_contains_key(payload, key):
