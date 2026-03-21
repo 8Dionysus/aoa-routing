@@ -10,6 +10,10 @@ The core rule for this repository is:
 
 **Source repos own meaning. Routing repo owns navigation.**
 
+The current runtime path is:
+
+`pick -> inspect -> expand -> object use`
+
 ## Scope
 
 `aoa-routing` v0.1 covers:
@@ -42,7 +46,7 @@ The builder writes these tracked artifacts under `generated/`:
 
 - `cross_repo_registry.min.json` - normalized registry of all routeable objects
 - `aoa_router.min.json` - minimal entry routing projection
-- `task_to_surface_hints.json` - static dispatch hints by surface kind, including inspect actions
+- `task_to_surface_hints.json` - static dispatch hints by surface kind, including inspect and expand actions
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
 
 Inspect actions point to repo-local capsule surfaces:
@@ -53,6 +57,15 @@ Inspect actions point to repo-local capsule surfaces:
 
 `aoa-routing` does not copy capsule text into its own outputs.
 It only tells an agent which source-owned surface to inspect next.
+
+Expand actions point to repo-local section surfaces:
+
+- `aoa-techniques/generated/technique_sections.full.json`
+- `aoa-skills/generated/skill_sections.full.json`
+- `aoa-evals/generated/eval_sections.full.json`
+
+`aoa-routing` does not copy section payloads into its own outputs.
+It only tells an agent which source-owned section surface to expand next.
 
 ## Repository layout
 
@@ -105,7 +118,6 @@ python scripts/build_router.py --techniques-root ../custom-techniques --generate
 These are intentionally out of scope for the first foundation release:
 
 - pairings
-- section expansion
 - tiny-model entrypoints
 - same-kind relation graphs
 - memo recall surfaces
