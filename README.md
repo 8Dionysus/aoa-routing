@@ -61,6 +61,9 @@ For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadat
 The new relation-hint surface stays family-scoped to that seam and does not introduce graph traversal,
 rationale layers, or same-kind exploration.
 
+These public outputs are schema-backed and validator-checked.
+`aoa-routing` treats them as stable navigation contracts, not ad hoc helper files.
+
 Inspect actions point to repo-local capsule surfaces:
 
 - `aoa-techniques/generated/technique_capsules.json`
@@ -82,7 +85,7 @@ It only tells an agent which source-owned section surface to expand next.
 ## Repository layout
 
 - `scripts/` - builder, validator, and shared helpers
-- `schemas/` - local schema contracts for generated entry shapes
+- `schemas/` - local schema contracts for the public output envelopes, entries, actions, and hops
 - `generated/` - committed derived routing surfaces
 - `tests/` - unit and integration coverage for build and validate flows
 
@@ -105,6 +108,12 @@ Validate the generated outputs:
 ```bash
 python scripts/validate_router.py
 ```
+
+The validator enforces both:
+
+- schema contracts for all public generated outputs
+- integrity checks across registry, router, hints, recommended paths, and source-owned inspect/expand targets
+- rebuild parity between committed routing artifacts and the current sibling source catalogs
 
 Run tests:
 
@@ -142,3 +151,5 @@ These are intentionally out of scope for the first foundation release:
 - models ask which surface kind they need
 - routing points them to the smallest next object
 - meaning stays in the source repositories
+
+The next cross-repo waves start with bounded pairing and adjacency surfaces, then tiny-model entry surfaces, and only later memo dispatch readiness.

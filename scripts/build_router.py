@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from router_core import (
+    CANONICAL_REPO_BY_KIND,
     REPO_ROOT,
     RouterError,
     build_kag_source_lift_relation_hints_payload,
@@ -99,7 +100,7 @@ def collect_technique_entries(techniques_root: Path) -> list[dict[str, Any]]:
                 "kind": "technique",
                 "id": ensure_string(technique["id"], f"{location}.id"),
                 "name": ensure_string(technique["name"], f"{location}.name"),
-                "repo": "aoa-techniques",
+                "repo": CANONICAL_REPO_BY_KIND["technique"],
                 "path": ensure_repo_relative_path(
                     technique["technique_path"], f"{location}.technique_path"
                 ),
@@ -161,7 +162,7 @@ def collect_skill_entries(skills_root: Path) -> list[dict[str, Any]]:
                 "kind": "skill",
                 "id": skill_name,
                 "name": skill_name,
-                "repo": "aoa-skills",
+                "repo": CANONICAL_REPO_BY_KIND["skill"],
                 "path": ensure_repo_relative_path(skill["skill_path"], f"{location}.skill_path"),
                 "status": ensure_string(skill["status"], f"{location}.status"),
                 "summary": ensure_string(skill["summary"], f"{location}.summary"),
@@ -219,7 +220,7 @@ def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
                 "kind": "eval",
                 "id": eval_name,
                 "name": eval_name,
-                "repo": "aoa-evals",
+                "repo": CANONICAL_REPO_BY_KIND["eval"],
                 "path": ensure_repo_relative_path(evaluation["eval_path"], f"{location}.eval_path"),
                 "status": ensure_string(evaluation["status"], f"{location}.status"),
                 "summary": ensure_string(evaluation["summary"], f"{location}.summary"),

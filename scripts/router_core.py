@@ -15,13 +15,13 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ACTIVE_KINDS = ("technique", "skill", "eval")
 RESERVED_KINDS = ("memo",)
 ALL_KINDS = ACTIVE_KINDS + RESERVED_KINDS
-KNOWN_REPOS = (
-    "aoa-routing",
-    "aoa-techniques",
-    "aoa-skills",
-    "aoa-evals",
-    "aoa-memo",
-)
+CANONICAL_REPO_BY_KIND = {
+    "technique": "aoa-techniques",
+    "skill": "aoa-skills",
+    "eval": "aoa-evals",
+    "memo": "aoa-memo",
+}
+KNOWN_REPOS = ("aoa-routing",) + tuple(CANONICAL_REPO_BY_KIND.values())
 KIND_ORDER = {kind: index for index, kind in enumerate(ALL_KINDS)}
 RELATION_REQUIRES = "requires"
 RELATION_REQUIRED_BY = "required_by"

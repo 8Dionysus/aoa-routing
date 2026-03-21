@@ -1,7 +1,7 @@
 # aoa-routing Roadmap
 
 `aoa-routing` exists to make the AoA stack usable through small, bounded, agent-friendly surfaces.
-It should stay a navigation, typing, dispatch, and adjacency layer rather than becoming a fourth source of meaning.
+It should stay a navigation, typing, dispatch, and adjacency layer rather than becoming a second source of meaning.
 
 The governing rule stays unchanged:
 
@@ -11,59 +11,25 @@ The governing rule stays unchanged:
 
 Already merged:
 
-- `aoa-routing` v0.1 foundation:
-  - `generated/aoa_router.min.json`
-  - `generated/task_to_surface_hints.json`
-  - `generated/recommended_paths.min.json`
-  - `generated/cross_repo_registry.min.json`
-- Stage 1 routing preparation in the active source repos:
-  - `aoa-techniques` as the stable technique-catalog source
-  - `aoa-skills` with repo-local skill catalogs
-  - `aoa-evals` with repo-local eval catalogs
+- symmetric catalog ingestion across the active source repos:
+  - `aoa-techniques` via `generated/technique_catalog.min.json`
+  - `aoa-skills` via `generated/skill_catalog.min.json`
+  - `aoa-evals` via `generated/eval_catalog.min.json`
+- capsule-aware inspect routing:
+  - `aoa-routing` points to repo-local capsule surfaces
+- section-aware expand routing:
+  - `aoa-routing` points to repo-local section surfaces
+- schema-backed public output validation:
+  - registry
+  - router projection
+  - task-to-surface hints
+  - recommended paths
 
-This gives the stack a working cross-repo router, but it is still early in the larger seed vision for lightweight agent surfaces.
+The current runtime path is:
 
-## Roadmap
+`pick -> inspect -> expand -> object use`
 
-### Milestone 1: Symmetric catalog ingestion
-
-Make `aoa-routing` consume generated source-repo catalogs symmetrically across active AoA repos:
-
-- `aoa-techniques` from `generated/technique_catalog.min.json`
-- `aoa-skills` from `generated/skill_catalog.min.json`
-- `aoa-evals` from `generated/eval_catalog.min.json`
-
-Goal:
-
-- remove remaining live markdown parsing from `aoa-routing`
-- keep source metadata authority inside the source repos
-- make routing depend on stable derived reader surfaces only
-
-### Milestone 2: Capsule-ready routing
-
-Enable the next runtime layer once source repos publish local capsules:
-
-- `generated/technique_capsules.json`
-- `generated/skill_capsules.json`
-- `generated/eval_capsules.json`
-
-`aoa-routing` should not author capsules itself. Its role is to know that capsules exist, route to the right object kind, and support an agent flow of:
-
-`pick -> inspect -> expand`
-
-### Milestone 3: Section expansion surfaces
-
-Support bounded section-level expansion once source repos publish local section shards:
-
-- `generated/technique_sections.full.json`
-- `generated/skill_sections.full.json`
-- `generated/eval_sections.full.json`
-
-Goal:
-
-- let small models pull one or two sections instead of full bundles
-- keep section scope standardized and predictable
-- avoid turning routing into a full-bundle mirror
+## Next Waves
 
 ### Milestone 4: Bounded adjacency and pairing surfaces
 
@@ -116,7 +82,7 @@ It must not own:
 These boundaries come directly from the seed and should remain hard constraints:
 
 - `aoa-routing` does not author doctrine, policy, or object meaning
-- capsules live beside the objects they describe, inside source repos
+- capsules and sections live beside the objects they describe, inside source repos
 - global transitions and cross-repo dispatch live in `aoa-routing`
 - `aoa-memo` should become a memory layer, not a second routing layer
 - `aoa-routing` should never duplicate full bundles as a convenience cache

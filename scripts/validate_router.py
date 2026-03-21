@@ -11,10 +11,13 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from jsonschema import Draft202012Validator
+from referencing import Registry, Resource
 
+from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
     ALL_KINDS,
+    CANONICAL_REPO_BY_KIND,
     REPO_ROOT,
     RESERVED_KINDS,
     RouterError,
@@ -24,6 +27,7 @@ from router_core import (
     build_task_to_surface_hints_payload,
     ensure_list,
     ensure_mapping,
+    ensure_repo_relative_path,
     ensure_string_list,
     is_pending_technique_id,
     load_json_file,
@@ -35,6 +39,37 @@ from router_core import (
 class ValidationIssue:
     location: str
     message: str
+
+
+OUTPUT_SCHEMA_NAMES = {
+    "cross_repo_registry.min.json": "cross-repo-registry.schema.json",
+    "aoa_router.min.json": "aoa-router.schema.json",
+    "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
+    "recommended_paths.min.json": "recommended-paths.schema.json",
+}
+
+SOURCE_OWNED_PAYLOAD_KEYS = (
+    "content_markdown",
+    "sections",
+    "technique_path",
+    "skill_path",
+    "eval_path",
+    "one_line_intent",
+    "use_when_short",
+    "do_not_use_short",
+    "inputs_short",
+    "outputs_short",
+    "core_contract_short",
+    "main_risk_short",
+    "validation_short",
+    "trigger_boundary_short",
+    "workflow_short",
+    "main_anti_patterns_short",
+    "verification_short",
+    "bounded_claim_short",
+    "blind_spot_short",
+    "what_this_does_not_prove",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -80,8 +115,20 @@ def load_schema(schema_name: str) -> dict[str, Any]:
 
 
 @lru_cache(maxsize=None)
+def get_schema_registry() -> Registry:
+    resources: list[tuple[str, Resource]] = []
+    for schema_path in sorted((REPO_ROOT / "schemas").glob("*.schema.json")):
+        schema = load_schema(schema_path.name)
+        schema_id = schema.get("$id")
+        if not isinstance(schema_id, str) or not schema_id.strip():
+            raise RouterError(f"{schema_path.name} is missing a usable $id")
+        resources.append((schema_id, Resource.from_contents(schema)))
+    return Registry().with_resources(resources)
+
+
+@lru_cache(maxsize=None)
 def get_schema_validator(schema_name: str) -> Draft202012Validator:
-    return Draft202012Validator(load_schema(schema_name))
+    return Draft202012Validator(load_schema(schema_name), registry=get_schema_registry())
 
 
 def format_schema_path(path_parts: Iterable[Any]) -> str:
@@ -129,6 +176,66 @@ def load_output(path: Path, issues: list[ValidationIssue]) -> dict[str, Any] | N
     except RouterError as exc:
         issues.append(ValidationIssue(path.name, str(exc)))
         return None
+
+
+def validate_rebuild_parity(
+    outputs: dict[str, dict[str, Any]],
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    try:
+        expected_outputs = build_outputs(
+            techniques_root.resolve(),
+            skills_root.resolve(),
+            evals_root.resolve(),
+            memo_root.resolve(),
+        )
+    except RouterError as exc:
+        issues.append(
+            ValidationIssue(
+                "generated",
+                f"could not rebuild canonical outputs from current sibling catalogs: {exc}",
+            )
+        )
+        return
+
+    for filename, expected_payload in expected_outputs.items():
+        actual_payload = outputs.get(filename)
+        if actual_payload is not None and actual_payload != expected_payload:
+            issues.append(
+                ValidationIssue(
+                    filename,
+                    "published output does not match the canonical rebuild from current sibling catalogs",
+                )
+            )
+
+
+def validate_entry_repo_and_path(
+    entry: dict[str, Any],
+    location: str,
+    issues: list[ValidationIssue],
+) -> None:
+    kind = entry.get("kind")
+    if not isinstance(kind, str):
+        return
+
+    repo = entry.get("repo")
+    expected_repo = CANONICAL_REPO_BY_KIND.get(kind)
+    if expected_repo is not None and repo != expected_repo:
+        issues.append(
+            ValidationIssue(
+                location,
+                f"{kind} entries must use canonical repo '{expected_repo}'",
+            )
+        )
+
+    try:
+        ensure_repo_relative_path(entry.get("path"), f"{location}.path")
+    except RouterError as exc:
+        issues.append(ValidationIssue(location, str(exc)))
 
 
 def validate_registry_entry_attributes(
@@ -312,6 +419,7 @@ def section_array_key(kind: str) -> str:
 
 def validate_inspect_targets(
     registry_entries: list[dict[str, Any]],
+    hints_payload: dict[str, Any],
     techniques_root: Path,
     skills_root: Path,
     evals_root: Path,
@@ -324,31 +432,70 @@ def validate_inspect_targets(
         "aoa-evals": evals_root.resolve(),
         "aoa-memo": memo_root.resolve(),
     }
-    hints_payload = build_task_to_surface_hints_payload()
-    for hint in hints_payload["hints"]:
-        if not hint["enabled"]:
+    try:
+        hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+        return
+    for index, raw_hint in enumerate(hints):
+        try:
+            hint = ensure_mapping(raw_hint, f"task_to_surface_hints.json.hints[{index}]")
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+        kind = hint.get("kind")
+        enabled = hint.get("enabled")
+        if not isinstance(kind, str) or kind not in ALL_KINDS:
+            continue
+        if not isinstance(enabled, bool):
+            continue
+        if not enabled:
             continue
         actions = hint.get("actions")
         if not isinstance(actions, dict):
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"hint for kind '{hint['kind']}' must define actions",
+                    f"hint for kind '{kind}' must define actions",
                 )
             )
             continue
         inspect = actions.get("inspect")
         if not isinstance(inspect, dict) or not inspect.get("enabled"):
             continue
-        source_repo = hint["source_repo"]
+        source_repo = hint.get("source_repo")
+        if not isinstance(source_repo, str) or source_repo not in source_roots:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"hint for kind '{kind}' has an invalid source_repo",
+                )
+            )
+            continue
         source_root = source_roots[source_repo]
-        surface_file = inspect["surface_file"]
-        match_field = inspect["match_field"]
+        surface_file = inspect.get("surface_file")
+        match_field = inspect.get("match_field")
+        if not isinstance(surface_file, str) or not surface_file.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled inspect action for kind '{kind}' must define surface_file",
+                )
+            )
+            continue
+        if not isinstance(match_field, str) or not match_field.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled inspect action for kind '{kind}' must define match_field",
+                )
+            )
+            continue
         surface_path = source_root / surface_file
         location = f"{source_repo}/{surface_file}"
         try:
             payload = ensure_mapping(load_json_file(surface_path), location)
-            entries = ensure_list(payload.get(capsule_array_key(hint["kind"])), location)
+            entries = ensure_list(payload.get(capsule_array_key(kind)), location)
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
             continue
@@ -366,24 +513,24 @@ def validate_inspect_targets(
                 continue
             if match_value in seen_matches:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"duplicate inspect match '{match_value}' for kind '{hint['kind']}'",
+                        ValidationIssue(
+                            location,
+                            f"duplicate inspect match '{match_value}' for kind '{kind}'",
+                        )
                     )
-                )
             seen_matches.add(match_value)
 
         expected_matches = {
             entry["id"] if match_field == "id" else entry["name"]
             for entry in registry_entries
-            if entry["kind"] == hint["kind"]
+            if entry["kind"] == kind
         }
         missing_matches = sorted(expected_matches - seen_matches)
         for match_value in missing_matches:
             issues.append(
                 ValidationIssue(
                     location,
-                    f"inspect surface is missing {hint['kind']} match '{match_value}'",
+                    f"inspect surface is missing {kind} match '{match_value}'",
                 )
             )
         unexpected_matches = sorted(seen_matches - expected_matches)
@@ -391,13 +538,14 @@ def validate_inspect_targets(
             issues.append(
                 ValidationIssue(
                     location,
-                    f"inspect surface contains unexpected {hint['kind']} match '{match_value}'",
+                    f"inspect surface contains unexpected {kind} match '{match_value}'",
                 )
             )
 
 
 def validate_expand_targets(
     registry_entries: list[dict[str, Any]],
+    hints_payload: dict[str, Any],
     techniques_root: Path,
     skills_root: Path,
     evals_root: Path,
@@ -410,9 +558,24 @@ def validate_expand_targets(
         "aoa-evals": evals_root.resolve(),
         "aoa-memo": memo_root.resolve(),
     }
-    hints_payload = build_task_to_surface_hints_payload()
-    for hint in hints_payload["hints"]:
-        if not hint["enabled"]:
+    try:
+        hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+        return
+    for index, raw_hint in enumerate(hints):
+        try:
+            hint = ensure_mapping(raw_hint, f"task_to_surface_hints.json.hints[{index}]")
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+        kind = hint.get("kind")
+        enabled = hint.get("enabled")
+        if not isinstance(kind, str) or kind not in ALL_KINDS:
+            continue
+        if not isinstance(enabled, bool):
+            continue
+        if not enabled:
             continue
         actions = hint.get("actions")
         if not isinstance(actions, dict):
@@ -420,18 +583,70 @@ def validate_expand_targets(
         expand = actions.get("expand")
         if not isinstance(expand, dict) or not expand.get("enabled"):
             continue
-        source_repo = hint["source_repo"]
+        source_repo = hint.get("source_repo")
+        if not isinstance(source_repo, str) or source_repo not in source_roots:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"hint for kind '{kind}' has an invalid source_repo",
+                )
+            )
+            continue
         source_root = source_roots[source_repo]
-        surface_file = expand["surface_file"]
-        match_field = expand["match_field"]
-        section_key_field = expand["section_key_field"]
-        default_sections = expand["default_sections"]
-        supported_sections = expand["supported_sections"]
+        surface_file = expand.get("surface_file")
+        match_field = expand.get("match_field")
+        section_key_field = expand.get("section_key_field")
+        default_sections = expand.get("default_sections")
+        supported_sections = expand.get("supported_sections")
+        if not isinstance(surface_file, str) or not surface_file.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled expand action for kind '{kind}' must define surface_file",
+                )
+            )
+            continue
+        if not isinstance(match_field, str) or not match_field.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled expand action for kind '{kind}' must define match_field",
+                )
+            )
+            continue
+        if not isinstance(section_key_field, str) or not section_key_field.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled expand action for kind '{kind}' must define section_key_field",
+                )
+            )
+            continue
+        if not isinstance(default_sections, list) or not all(
+            isinstance(section, str) and section.strip() for section in default_sections
+        ):
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled expand action for kind '{kind}' must define default_sections as a string list",
+                )
+            )
+            continue
+        if not isinstance(supported_sections, list) or not all(
+            isinstance(section, str) and section.strip() for section in supported_sections
+        ):
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled expand action for kind '{kind}' must define supported_sections as a string list",
+                )
+            )
+            continue
         location = f"{source_repo}/{surface_file}"
         surface_path = source_root / surface_file
         try:
             payload = ensure_mapping(load_json_file(surface_path), location)
-            entries = ensure_list(payload.get(section_array_key(hint["kind"])), location)
+            entries = ensure_list(payload.get(section_array_key(kind)), location)
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
             continue
@@ -451,11 +666,11 @@ def validate_expand_targets(
                 continue
             if match_value in seen_matches:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"duplicate expand match '{match_value}' for kind '{hint['kind']}'",
+                        ValidationIssue(
+                            location,
+                            f"duplicate expand match '{match_value}' for kind '{kind}'",
+                        )
                     )
-                )
             seen_matches.add(match_value)
 
             section_keys: list[str] = []
@@ -483,24 +698,24 @@ def validate_expand_targets(
 
             if len(section_keys) != len(set(section_keys)):
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"expand surface contains duplicate section keys for {hint['kind']} match '{match_value}'",
-                    )
+                        ValidationIssue(
+                            location,
+                            f"expand surface contains duplicate section keys for {kind} match '{match_value}'",
+                        )
                 )
             section_keys_by_match[match_value] = section_keys
 
         expected_matches = {
             entry["id"] if match_field == "id" else entry["name"]
             for entry in registry_entries
-            if entry["kind"] == hint["kind"]
+            if entry["kind"] == kind
         }
         missing_matches = sorted(expected_matches - seen_matches)
         for match_value in missing_matches:
             issues.append(
                 ValidationIssue(
                     location,
-                    f"expand surface is missing {hint['kind']} match '{match_value}'",
+                    f"expand surface is missing {kind} match '{match_value}'",
                 )
             )
         unexpected_matches = sorted(seen_matches - expected_matches)
@@ -508,7 +723,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     location,
-                    f"expand surface contains unexpected {hint['kind']} match '{match_value}'",
+                    f"expand surface contains unexpected {kind} match '{match_value}'",
                 )
             )
 
@@ -516,7 +731,7 @@ def validate_expand_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"default expand sections for kind '{hint['kind']}' must be a subset of supported_sections",
+                    f"default expand sections for kind '{kind}' must be a subset of supported_sections",
                 )
             )
 
@@ -526,20 +741,20 @@ def validate_expand_targets(
             actual_keys = tuple(section_keys_by_match.get(match_value, []))
             if actual_keys != supported_tuple:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"expand surface for {hint['kind']} match '{match_value}' must expose the supported section order",
+                        ValidationIssue(
+                            location,
+                            f"expand surface for {kind} match '{match_value}' must expose the supported section order",
+                        )
                     )
-                )
                 continue
             missing_defaults = [section for section in default_tuple if section not in actual_keys]
             if missing_defaults:
                 issues.append(
-                    ValidationIssue(
-                        location,
-                        f"expand surface for {hint['kind']} match '{match_value}' is missing default sections: {', '.join(missing_defaults)}",
+                        ValidationIssue(
+                            location,
+                            f"expand surface for {kind} match '{match_value}' is missing default sections: {', '.join(missing_defaults)}",
+                        )
                     )
-                )
 
 
 def payload_contains_key(payload: Any, target_key: str) -> bool:
@@ -585,10 +800,33 @@ def validate_generated_outputs(
     ):
         return issues
 
-    if registry_payload.get("registry_version") != 1:
-        issues.append(ValidationIssue(registry_path.name, "registry_version must be 1"))
-    if registry_payload.get("reserved_kinds") != list(RESERVED_KINDS):
-        issues.append(ValidationIssue(registry_path.name, "reserved_kinds must equal ['memo']"))
+    validate_rebuild_parity(
+        {
+            registry_path.name: registry_payload,
+            router_path.name: router_payload,
+            hints_path.name: hints_payload,
+            recommended_path.name: recommended_payload,
+        },
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        issues,
+    )
+
+    for output_path, payload in (
+        (registry_path, registry_payload),
+        (router_path, router_payload),
+        (hints_path, hints_payload),
+        (recommended_path, recommended_payload),
+    ):
+        validate_against_schema(
+            payload,
+            OUTPUT_SCHEMA_NAMES[output_path.name],
+            output_path.name,
+            issues,
+        )
+
     try:
         registry_entries = ensure_list(registry_payload.get("entries"), f"{registry_path.name}.entries")
     except RouterError as exc:
@@ -614,11 +852,12 @@ def validate_generated_outputs(
         schema_issue_count = len(issues)
         validate_against_schema(entry, "router-entry.schema.json", location, issues)
         schema_valid = len(issues) == schema_issue_count
-        key = (entry.get("kind"), entry.get("id"))
-        if key in seen_registry_keys:
-            issues.append(ValidationIssue(location, f"duplicate registry entry for {key[0]}:{key[1]}"))
-        else:
-            seen_registry_keys.add(key)
+        key = registry_entry_key(entry)
+        if key is not None:
+            if key in seen_registry_keys:
+                issues.append(ValidationIssue(location, f"duplicate registry entry for {key[0]}:{key[1]}"))
+            else:
+                seen_registry_keys.add(key)
         if entry.get("kind") not in ALL_KINDS:
             issues.append(ValidationIssue(location, f"invalid kind '{entry.get('kind')}'"))
         if entry.get("kind") == "memo":
@@ -632,6 +871,7 @@ def validate_generated_outputs(
                     "active registry entries must use source_type 'generated-catalog'",
                 )
             )
+        validate_entry_repo_and_path(entry, location, issues)
         attributes_valid = validate_registry_entry_attributes(entry, location, issues)
         normalized_registry_entries.append(entry)
         if attributes_valid:
@@ -647,8 +887,6 @@ def validate_generated_outputs(
         issues,
     )
 
-    if router_payload.get("router_version") != 1:
-        issues.append(ValidationIssue(router_path.name, "router_version must be 1"))
     try:
         router_entries = ensure_list(router_payload.get("entries"), f"{router_path.name}.entries")
     except RouterError as exc:
@@ -665,15 +903,17 @@ def validate_generated_outputs(
             issues.append(ValidationIssue(router_path.name, str(exc)))
             continue
         validate_against_schema(entry, "router-entry.schema.json", location, issues)
-        key = (entry.get("kind"), entry.get("id"))
-        if key in seen_router_keys:
-            issues.append(ValidationIssue(location, f"duplicate router entry for {key[0]}:{key[1]}"))
-        else:
-            seen_router_keys.add(key)
+        key = registry_entry_key(entry)
+        if key is not None:
+            if key in seen_router_keys:
+                issues.append(ValidationIssue(location, f"duplicate router entry for {key[0]}:{key[1]}"))
+            else:
+                seen_router_keys.add(key)
         if entry.get("kind") == "memo":
             issues.append(ValidationIssue(location, "memo router entries are not allowed in v0.1"))
         if "source_type" in entry or "attributes" in entry:
             issues.append(ValidationIssue(location, "router entries must stay as the thin projection surface"))
+        validate_entry_repo_and_path(entry, location, issues)
         normalized_router_entries.append(entry)
 
     if router_payload != build_router_payload(projection_safe_registry_entries):
@@ -683,6 +923,7 @@ def validate_generated_outputs(
         issues.append(ValidationIssue(hints_path.name, "task_to_surface_hints.json does not match the expected static dispatch surface"))
     validate_inspect_targets(
         projection_safe_registry_entries,
+        hints_payload,
         techniques_root,
         skills_root,
         evals_root,
@@ -691,6 +932,7 @@ def validate_generated_outputs(
     )
     validate_expand_targets(
         projection_safe_registry_entries,
+        hints_payload,
         techniques_root,
         skills_root,
         evals_root,
@@ -698,8 +940,6 @@ def validate_generated_outputs(
         issues,
     )
 
-    if recommended_payload.get("version") != 1:
-        issues.append(ValidationIssue(recommended_path.name, "version must be 1"))
     try:
         recommended_entries = ensure_list(
             recommended_payload.get("entries"),
@@ -769,13 +1009,14 @@ def validate_generated_outputs(
         (recommended_path.name, recommended_payload),
         (relation_hints_path.name, relation_hints_payload),
     ):
-        if payload_contains_key(payload, "content_markdown"):
-            issues.append(
-                ValidationIssue(
-                    filename,
-                    "routing outputs must not copy source-owned section content_markdown",
+        for key in SOURCE_OWNED_PAYLOAD_KEYS:
+            if payload_contains_key(payload, key):
+                issues.append(
+                    ValidationIssue(
+                        filename,
+                        f"routing outputs must not copy source-owned payload key '{key}'",
+                    )
                 )
-            )
 
     return issues
 
