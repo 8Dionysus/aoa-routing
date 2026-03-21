@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/schemas/aoa-router.schema.json",
+  "title": "aoa-routing thin router projection",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "router_version",
+    "entries"
+  ],
+  "properties": {
+    "router_version": {
+      "const": 1
+    },
+    "entries": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "https://aoa-routing/schemas/router-entry.schema.json"
+          },
+          {
+            "not": {
+              "anyOf": [
+                {
+                  "required": [
+                    "source_type"
+                  ]
+                },
+                {
+                  "required": [
+                    "attributes"
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

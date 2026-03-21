@@ -1,0 +1,193 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/schemas/task-to-surface-hints.schema.json",
+  "title": "aoa-routing task to surface hints",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "hints"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "hints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hint"
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stringList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/nonEmptyString"
+      },
+      "uniqueItems": true
+    },
+    "disabledAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "const": false
+        }
+      }
+    },
+    "pickAction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "inspectAction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/disabledAction"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "surface_file",
+            "match_field"
+          ],
+          "properties": {
+            "enabled": {
+              "const": true
+            },
+            "surface_file": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "match_field": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          }
+        }
+      ]
+    },
+    "expandAction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/disabledAction"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "surface_file",
+            "match_field",
+            "section_key_field",
+            "default_sections",
+            "supported_sections"
+          ],
+          "properties": {
+            "enabled": {
+              "const": true
+            },
+            "surface_file": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "match_field": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "section_key_field": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "default_sections": {
+              "$ref": "#/$defs/stringList"
+            },
+            "supported_sections": {
+              "$ref": "#/$defs/stringList"
+            }
+          }
+        }
+      ]
+    },
+    "actions": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pick",
+        "inspect",
+        "expand",
+        "pair",
+        "recall"
+      ],
+      "properties": {
+        "pick": {
+          "$ref": "#/$defs/pickAction"
+        },
+        "inspect": {
+          "$ref": "#/$defs/inspectAction"
+        },
+        "expand": {
+          "$ref": "#/$defs/expandAction"
+        },
+        "pair": {
+          "$ref": "#/$defs/disabledAction"
+        },
+        "recall": {
+          "$ref": "#/$defs/disabledAction"
+        }
+      }
+    },
+    "hint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "enabled",
+        "source_repo",
+        "use_when",
+        "actions"
+      ],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": [
+            "technique",
+            "skill",
+            "eval",
+            "memo"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "source_repo": {
+          "type": "string",
+          "enum": [
+            "aoa-techniques",
+            "aoa-skills",
+            "aoa-evals",
+            "aoa-memo"
+          ]
+        },
+        "use_when": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "actions": {
+          "$ref": "#/$defs/actions"
+        }
+      }
+    }
+  }
+}
