@@ -10,6 +10,7 @@ from typing import Any
 from router_core import (
     REPO_ROOT,
     RouterError,
+    build_kag_source_lift_relation_hints_payload,
     build_recommended_paths_payload,
     build_router_payload,
     build_task_to_surface_hints_payload,
@@ -20,6 +21,7 @@ from router_core import (
     ensure_repo_relative_path,
     ensure_string,
     ensure_string_list,
+    load_technique_catalog_entries,
     load_json_file,
     relative_posix,
     require_keys,
@@ -266,6 +268,9 @@ def build_outputs(
     memo_root: Path,
 ) -> dict[str, dict[str, Any]]:
     _ = memo_root
+    technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
+        techniques_root
+    )
     registry_entries = sort_registry_entries(
         collect_technique_entries(techniques_root)
         + collect_skill_entries(skills_root)
@@ -286,11 +291,17 @@ def build_outputs(
     router_payload = build_router_payload(registry_entries)
     hints_payload = build_task_to_surface_hints_payload()
     recommended_payload = build_recommended_paths_payload(registry_entries)
+    relation_hints_payload = build_kag_source_lift_relation_hints_payload(
+        registry_entries,
+        technique_catalog_source,
+        technique_catalog_entries,
+    )
     return {
         "cross_repo_registry.min.json": registry_payload,
         "aoa_router.min.json": router_payload,
         "task_to_surface_hints.json": hints_payload,
         "recommended_paths.min.json": recommended_payload,
+        "kag_source_lift_relation_hints.min.json": relation_hints_payload,
     }
 
 

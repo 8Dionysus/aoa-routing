@@ -10,11 +10,102 @@ import build_router
 
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
+KAG_SOURCE_LIFT_TECHNIQUE_IDS = [
+    "AOA-T-0018",
+    "AOA-T-0019",
+    "AOA-T-0020",
+    "AOA-T-0021",
+    "AOA-T-0022",
+]
 
 
 def write_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
+
+
+def build_kag_source_lift_technique_entries() -> list[dict[str, object]]:
+    return [
+        {
+            "id": "AOA-T-0018",
+            "name": "markdown-technique-section-lift",
+            "domain": "docs",
+            "status": "promoted",
+            "summary": "Lift stable technique markdown sections into derived section-level units while keeping the bundle markdown authoritative.",
+            "maturity_score": 3,
+            "rigor_level": "bounded",
+            "reversibility": "easy",
+            "review_required": True,
+            "validation_strength": "source_backed",
+            "export_ready": True,
+            "technique_path": "techniques/docs/markdown-technique-section-lift/TECHNIQUE.md",
+            "relations": [{"type": "complements", "target": "AOA-T-0019"}],
+        },
+        {
+            "id": "AOA-T-0019",
+            "name": "frontmatter-metadata-spine",
+            "domain": "docs",
+            "status": "canonical",
+            "summary": "Treat bounded frontmatter and derived catalog outputs as a metadata spine for bundle routing without replacing markdown meaning.",
+            "maturity_score": 5,
+            "rigor_level": "bounded",
+            "reversibility": "easy",
+            "review_required": True,
+            "validation_strength": "cross_context",
+            "export_ready": True,
+            "technique_path": "techniques/docs/frontmatter-metadata-spine/TECHNIQUE.md",
+            "relations": [
+                {"type": "complements", "target": "AOA-T-0018"},
+                {"type": "used_together_for", "target": "AOA-T-0020"},
+                {"type": "used_together_for", "target": "AOA-T-0021"},
+            ],
+        },
+        {
+            "id": "AOA-T-0020",
+            "name": "evidence-note-provenance-lift",
+            "domain": "docs",
+            "status": "promoted",
+            "summary": "Use typed evidence note kinds and note paths as bounded provenance handles in derived manifests without flattening them into a note graph.",
+            "maturity_score": 3,
+            "rigor_level": "bounded",
+            "reversibility": "easy",
+            "review_required": True,
+            "validation_strength": "source_backed",
+            "export_ready": True,
+            "technique_path": "techniques/docs/evidence-note-provenance-lift/TECHNIQUE.md",
+            "relations": [{"type": "requires", "target": "AOA-T-0019"}],
+        },
+        {
+            "id": "AOA-T-0021",
+            "name": "bounded-relation-lift-for-kag",
+            "domain": "docs",
+            "status": "promoted",
+            "summary": "Lift small typed direct relations into bounded edge hints for derived consumers without turning them into graph semantics.",
+            "maturity_score": 3,
+            "rigor_level": "bounded",
+            "reversibility": "easy",
+            "review_required": True,
+            "validation_strength": "source_backed",
+            "export_ready": True,
+            "technique_path": "techniques/docs/bounded-relation-lift-for-kag/TECHNIQUE.md",
+            "relations": [{"type": "requires", "target": "AOA-T-0019"}],
+        },
+        {
+            "id": "AOA-T-0022",
+            "name": "risk-and-negative-effect-lift",
+            "domain": "docs",
+            "status": "promoted",
+            "summary": "Lift richer `Risks` language into bounded caution-oriented lookup and reuse without turning caution into metadata or scoring.",
+            "maturity_score": 3,
+            "rigor_level": "bounded",
+            "reversibility": "easy",
+            "review_required": True,
+            "validation_strength": "source_backed",
+            "export_ready": True,
+            "technique_path": "techniques/docs/risk-and-negative-effect-lift/TECHNIQUE.md",
+            "relations": [{"type": "complements", "target": "AOA-T-0018"}],
+        },
+    ]
 
 
 def test_collect_technique_entries_reads_generated_catalog() -> None:
@@ -105,6 +196,7 @@ def test_build_outputs_from_fixtures() -> None:
     router = outputs["aoa_router.min.json"]
     hints = outputs["task_to_surface_hints.json"]
     recommended = outputs["recommended_paths.min.json"]
+    relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
 
     assert [entry["kind"] for entry in registry["entries"]] == [
         "technique",
@@ -116,6 +208,14 @@ def test_build_outputs_from_fixtures() -> None:
     ]
     assert all(entry["kind"] != "memo" for entry in router["entries"])
     assert {entry["source_type"] for entry in registry["entries"]} == {"generated-catalog"}
+    assert relation_hints == {
+        "version": 1,
+        "scope": "kag_source_lift_family",
+        "source_repo": "aoa-techniques",
+        "source_catalog": "generated/technique_catalog.min.json",
+        "family_ids": KAG_SOURCE_LIFT_TECHNIQUE_IDS,
+        "entries": [],
+    }
 
     technique_hint = next(hint for hint in hints["hints"] if hint["kind"] == "technique")
     assert technique_hint["actions"]["inspect"] == {
@@ -180,6 +280,37 @@ def test_build_outputs_from_fixtures() -> None:
     assert context_eval["upstream"] == [
         {"kind": "technique", "id": "AOA-T-0002", "relation": "requires"},
         {"kind": "skill", "id": "aoa-context-scan", "relation": "requires"},
+    ]
+
+
+def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None:
+    techniques_root = tmp_path / "aoa-techniques"
+    shutil.copytree(FIXTURES_ROOT / "aoa-techniques", techniques_root)
+    catalog_path = techniques_root / "generated" / "technique_catalog.min.json"
+    payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    payload["techniques"].extend(build_kag_source_lift_technique_entries())
+    write_json(catalog_path, payload)
+
+    outputs = build_router.build_outputs(
+        techniques_root,
+        FIXTURES_ROOT / "aoa-skills",
+        FIXTURES_ROOT / "aoa-evals",
+        FIXTURES_ROOT / "aoa-memo",
+    )
+
+    relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
+    assert relation_hints["family_ids"] == KAG_SOURCE_LIFT_TECHNIQUE_IDS
+    by_id = {entry["id"]: entry for entry in relation_hints["entries"]}
+    assert by_id["AOA-T-0018"]["relations"] == [
+        {"type": "complements", "target": "AOA-T-0019"}
+    ]
+    assert by_id["AOA-T-0019"]["relations"] == [
+        {"type": "complements", "target": "AOA-T-0018"},
+        {"type": "used_together_for", "target": "AOA-T-0020"},
+        {"type": "used_together_for", "target": "AOA-T-0021"},
+    ]
+    assert by_id["AOA-T-0021"]["relations"] == [
+        {"type": "requires", "target": "AOA-T-0019"}
     ]
 
 

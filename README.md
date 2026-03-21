@@ -36,6 +36,11 @@ The build reads only repo-local generated catalogs:
 That contract keeps source meaning inside the source repositories while letting routing stay
 deterministic and small.
 
+The builder also reads the relation-bearing `aoa-techniques/generated/technique_catalog.json`
+(with `generated/technique_catalog.min.json` as a fallback when needed) to emit one additional
+bounded navigation surface for the KAG/source-lift family.
+That surface uses direct typed relations only and does not change the thin-router contract.
+
 Explicit `AOA-T-PENDING-*` technique placeholders are allowed in source manifests.
 They remain future-only references and do not produce concrete `recommended_paths`
 until the upstream technique exists in `aoa-techniques`.
@@ -48,10 +53,13 @@ The builder writes these tracked artifacts under `generated/`:
 - `aoa_router.min.json` - minimal entry routing projection
 - `task_to_surface_hints.json` - static dispatch hints by surface kind, including inspect and expand actions
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
+- `kag_source_lift_relation_hints.min.json` - bounded one-hop direct relation hints for the KAG/source-lift family
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
 `AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,
 `AOA-T-0021` stays the direct relation hint companion, and `AOA-T-0022` stays the caution companion.
+The new relation-hint surface stays family-scoped to that seam and does not introduce graph traversal,
+rationale layers, or same-kind exploration.
 
 Inspect actions point to repo-local capsule surfaces:
 

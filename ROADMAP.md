@@ -71,6 +71,7 @@ Extend routing with richer, but still bounded, cross-object guidance:
 
 - skill-to-technique bridge hints
 - eval pairing hints
+- direct relation hints for the KAG/source-lift family
 - bounded relation surfaces
 - recommended next hops for `pair` and `expand` flows
 
