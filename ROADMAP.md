@@ -88,6 +88,8 @@ Add model-tier-friendly entrypoints for very small models:
 - stable query grammar for `pick`, `inspect`, `expand`, and `pair`
 - curated start surfaces for low-context agents
 
+For the current KAG/source-lift family, keep `AOA-T-0019` as the default bundle-level metadata entrypoint and treat `AOA-T-0018`, `AOA-T-0020`, `AOA-T-0021`, and `AOA-T-0022` as the explicit special-case companions.
+
 Goal:
 
 - make even small models navigate the stack without loading raw corpus prose

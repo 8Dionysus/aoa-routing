@@ -49,6 +49,10 @@ The builder writes these tracked artifacts under `generated/`:
 - `task_to_surface_hints.json` - static dispatch hints by surface kind, including inspect and expand actions
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
 
+For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
+`AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,
+`AOA-T-0021` stays the direct relation hint companion, and `AOA-T-0022` stays the caution companion.
+
 Inspect actions point to repo-local capsule surfaces:
 
 - `aoa-techniques/generated/technique_capsules.json`
