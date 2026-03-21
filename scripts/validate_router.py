@@ -298,6 +298,16 @@ def capsule_array_key(kind: str) -> str:
     raise RouterError(f"capsule surfaces do not support kind '{kind}' in v0.1")
 
 
+def section_array_key(kind: str) -> str:
+    if kind == "technique":
+        return "techniques"
+    if kind == "skill":
+        return "skills"
+    if kind == "eval":
+        return "evals"
+    raise RouterError(f"section surfaces do not support kind '{kind}' in v0.1")
+
+
 def validate_inspect_targets(
     registry_entries: list[dict[str, Any]],
     techniques_root: Path,
@@ -382,6 +392,162 @@ def validate_inspect_targets(
                     f"inspect surface contains unexpected {hint['kind']} match '{match_value}'",
                 )
             )
+
+
+def validate_expand_targets(
+    registry_entries: list[dict[str, Any]],
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    source_roots = {
+        "aoa-techniques": techniques_root.resolve(),
+        "aoa-skills": skills_root.resolve(),
+        "aoa-evals": evals_root.resolve(),
+        "aoa-memo": memo_root.resolve(),
+    }
+    hints_payload = build_task_to_surface_hints_payload()
+    for hint in hints_payload["hints"]:
+        if not hint["enabled"]:
+            continue
+        actions = hint.get("actions")
+        if not isinstance(actions, dict):
+            continue
+        expand = actions.get("expand")
+        if not isinstance(expand, dict) or not expand.get("enabled"):
+            continue
+        source_repo = hint["source_repo"]
+        source_root = source_roots[source_repo]
+        surface_file = expand["surface_file"]
+        match_field = expand["match_field"]
+        section_key_field = expand["section_key_field"]
+        default_sections = expand["default_sections"]
+        supported_sections = expand["supported_sections"]
+        location = f"{source_repo}/{surface_file}"
+        surface_path = source_root / surface_file
+        try:
+            payload = ensure_mapping(load_json_file(surface_path), location)
+            entries = ensure_list(payload.get(section_array_key(hint["kind"])), location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            continue
+
+        section_keys_by_match: dict[str, list[str]] = {}
+        seen_matches: set[str] = set()
+        for index, raw_entry in enumerate(entries):
+            entry_location = f"{location}[{index}]"
+            try:
+                section_entry = ensure_mapping(raw_entry, entry_location)
+                match_value = section_entry.get(match_field)
+                if not isinstance(match_value, str) or not match_value.strip():
+                    raise RouterError(f"{entry_location}.{match_field} must be a non-empty string")
+                sections = ensure_list(section_entry.get("sections"), f"{entry_location}.sections")
+            except RouterError as exc:
+                issues.append(ValidationIssue(location, str(exc)))
+                continue
+            if match_value in seen_matches:
+                issues.append(
+                    ValidationIssue(
+                        location,
+                        f"duplicate expand match '{match_value}' for kind '{hint['kind']}'",
+                    )
+                )
+            seen_matches.add(match_value)
+
+            section_keys: list[str] = []
+            for section_index, raw_section in enumerate(sections):
+                section_location = f"{entry_location}.sections[{section_index}]"
+                try:
+                    section = ensure_mapping(raw_section, section_location)
+                    section_key = section.get(section_key_field)
+                    if not isinstance(section_key, str) or not section_key.strip():
+                        raise RouterError(
+                            f"{section_location}.{section_key_field} must be a non-empty string"
+                        )
+                    heading = section.get("heading")
+                    content_markdown = section.get("content_markdown")
+                    if not isinstance(heading, str) or not heading.strip():
+                        raise RouterError(f"{section_location}.heading must be a non-empty string")
+                    if not isinstance(content_markdown, str) or not content_markdown.strip():
+                        raise RouterError(
+                            f"{section_location}.content_markdown must be a non-empty string"
+                        )
+                except RouterError as exc:
+                    issues.append(ValidationIssue(location, str(exc)))
+                    continue
+                section_keys.append(section_key)
+
+            if len(section_keys) != len(set(section_keys)):
+                issues.append(
+                    ValidationIssue(
+                        location,
+                        f"expand surface contains duplicate section keys for {hint['kind']} match '{match_value}'",
+                    )
+                )
+            section_keys_by_match[match_value] = section_keys
+
+        expected_matches = {
+            entry["id"] if match_field == "id" else entry["name"]
+            for entry in registry_entries
+            if entry["kind"] == hint["kind"]
+        }
+        missing_matches = sorted(expected_matches - seen_matches)
+        for match_value in missing_matches:
+            issues.append(
+                ValidationIssue(
+                    location,
+                    f"expand surface is missing {hint['kind']} match '{match_value}'",
+                )
+            )
+        unexpected_matches = sorted(seen_matches - expected_matches)
+        for match_value in unexpected_matches:
+            issues.append(
+                ValidationIssue(
+                    location,
+                    f"expand surface contains unexpected {hint['kind']} match '{match_value}'",
+                )
+            )
+
+        if any(section not in supported_sections for section in default_sections):
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"default expand sections for kind '{hint['kind']}' must be a subset of supported_sections",
+                )
+            )
+
+        supported_tuple = tuple(supported_sections)
+        default_tuple = tuple(default_sections)
+        for match_value in sorted(expected_matches & seen_matches):
+            actual_keys = tuple(section_keys_by_match.get(match_value, []))
+            if actual_keys != supported_tuple:
+                issues.append(
+                    ValidationIssue(
+                        location,
+                        f"expand surface for {hint['kind']} match '{match_value}' must expose the supported section order",
+                    )
+                )
+                continue
+            missing_defaults = [section for section in default_tuple if section not in actual_keys]
+            if missing_defaults:
+                issues.append(
+                    ValidationIssue(
+                        location,
+                        f"expand surface for {hint['kind']} match '{match_value}' is missing default sections: {', '.join(missing_defaults)}",
+                    )
+                )
+
+
+def payload_contains_key(payload: Any, target_key: str) -> bool:
+    if isinstance(payload, dict):
+        if target_key in payload:
+            return True
+        return any(payload_contains_key(value, target_key) for value in payload.values())
+    if isinstance(payload, list):
+        return any(payload_contains_key(item, target_key) for item in payload)
+    return False
 
 
 def validate_generated_outputs(
@@ -506,6 +672,14 @@ def validate_generated_outputs(
         memo_root,
         issues,
     )
+    validate_expand_targets(
+        projection_safe_registry_entries,
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        issues,
+    )
 
     if recommended_payload.get("version") != 1:
         issues.append(ValidationIssue(recommended_path.name, "version must be 1"))
@@ -553,6 +727,20 @@ def validate_generated_outputs(
     else:
         if recommended_payload != expected_recommended:
             issues.append(ValidationIssue(recommended_path.name, "recommended_paths.min.json does not match registry-derived dependencies"))
+
+    for filename, payload in (
+        (registry_path.name, registry_payload),
+        (router_path.name, router_payload),
+        (hints_path.name, hints_payload),
+        (recommended_path.name, recommended_payload),
+    ):
+        if payload_contains_key(payload, "content_markdown"):
+            issues.append(
+                ValidationIssue(
+                    filename,
+                    "routing outputs must not copy source-owned section content_markdown",
+                )
+            )
 
     return issues
 

@@ -224,16 +224,28 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
         inspect_enabled: bool,
         surface_file: str | None = None,
         match_field: str | None = None,
+        expand_enabled: bool = False,
+        expand_surface_file: str | None = None,
+        expand_match_field: str | None = None,
+        default_sections: list[str] | None = None,
+        supported_sections: list[str] | None = None,
         pick_enabled: bool = True,
     ) -> dict[str, dict[str, Any]]:
         inspect: dict[str, Any] = {"enabled": inspect_enabled}
         if inspect_enabled:
             inspect["surface_file"] = surface_file
             inspect["match_field"] = match_field
+        expand: dict[str, Any] = {"enabled": expand_enabled}
+        if expand_enabled:
+            expand["surface_file"] = expand_surface_file
+            expand["match_field"] = expand_match_field
+            expand["section_key_field"] = "key"
+            expand["default_sections"] = list(default_sections or [])
+            expand["supported_sections"] = list(supported_sections or [])
         return {
             "pick": {"enabled": pick_enabled},
             "inspect": inspect,
-            "expand": {"enabled": False},
+            "expand": expand,
             "pair": {"enabled": False},
             "recall": {"enabled": False},
         }
@@ -250,6 +262,36 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                     inspect_enabled=True,
                     surface_file="generated/technique_capsules.json",
                     match_field="id",
+                    expand_enabled=True,
+                    expand_surface_file="generated/technique_sections.full.json",
+                    expand_match_field="id",
+                    default_sections=[
+                        "intent",
+                        "when_to_use",
+                        "inputs",
+                        "outputs",
+                        "core_procedure",
+                        "contracts",
+                        "risks",
+                        "validation",
+                    ],
+                    supported_sections=[
+                        "intent",
+                        "when_to_use",
+                        "when_not_to_use",
+                        "inputs",
+                        "outputs",
+                        "core_procedure",
+                        "contracts",
+                        "risks",
+                        "validation",
+                        "adaptation_notes",
+                        "public_sanitization_notes",
+                        "example",
+                        "checks",
+                        "promotion_history",
+                        "future_evolution",
+                    ],
                 ),
             },
             {
@@ -261,6 +303,31 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                     inspect_enabled=True,
                     surface_file="generated/skill_capsules.json",
                     match_field="name",
+                    expand_enabled=True,
+                    expand_surface_file="generated/skill_sections.full.json",
+                    expand_match_field="name",
+                    default_sections=[
+                        "intent",
+                        "trigger_boundary",
+                        "inputs",
+                        "outputs",
+                        "procedure",
+                        "contracts",
+                        "risks_and_anti_patterns",
+                        "verification",
+                    ],
+                    supported_sections=[
+                        "intent",
+                        "trigger_boundary",
+                        "inputs",
+                        "outputs",
+                        "procedure",
+                        "contracts",
+                        "risks_and_anti_patterns",
+                        "verification",
+                        "technique_traceability",
+                        "adaptation_points",
+                    ],
                 ),
             },
             {
@@ -272,6 +339,38 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                     inspect_enabled=True,
                     surface_file="generated/eval_capsules.json",
                     match_field="name",
+                    expand_enabled=True,
+                    expand_surface_file="generated/eval_sections.full.json",
+                    expand_match_field="name",
+                    default_sections=[
+                        "bounded_claim",
+                        "trigger_boundary",
+                        "inputs",
+                        "scoring_or_verdict_logic",
+                        "outputs",
+                        "blind_spots",
+                        "interpretation_guidance",
+                        "verification",
+                    ],
+                    supported_sections=[
+                        "intent",
+                        "object_under_evaluation",
+                        "bounded_claim",
+                        "trigger_boundary",
+                        "inputs",
+                        "fixtures_and_case_surface",
+                        "scoring_or_verdict_logic",
+                        "baseline_or_comparison_mode",
+                        "execution_contract",
+                        "outputs",
+                        "failure_modes",
+                        "blind_spots",
+                        "interpretation_guidance",
+                        "verification",
+                        "technique_traceability",
+                        "skill_traceability",
+                        "adaptation_points",
+                    ],
                 ),
             },
             {

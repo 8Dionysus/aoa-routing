@@ -175,6 +175,30 @@ def test_validate_generated_outputs_rejects_missing_inspect_target(tmp_path: Pat
     assert any("inspect surface is missing skill match 'aoa-context-scan'" in issue.message for issue in issues)
 
 
+def test_validate_generated_outputs_rejects_missing_expand_target(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    sections_path = roots["aoa-skills"] / "generated" / "skill_sections.full.json"
+    payload = json.loads(sections_path.read_text(encoding="utf-8"))
+    payload["skills"] = [
+        entry for entry in payload["skills"] if entry["name"] != "aoa-context-scan"
+    ]
+    write_json(sections_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("expand surface is missing skill match 'aoa-context-scan'" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_section_payload_leakage(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    router_path = generated_dir / "aoa_router.min.json"
+    payload = json.loads(router_path.read_text(encoding="utf-8"))
+    payload["entries"][0]["content_markdown"] = "copied source text"
+    write_json(router_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("must not copy source-owned section content_markdown" in issue.message for issue in issues)
+
+
 def test_validate_generated_outputs_rejects_memo_objects_in_v0_1(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     registry_path = generated_dir / "cross_repo_registry.min.json"
