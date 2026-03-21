@@ -26,6 +26,24 @@ KIND_ORDER = {kind: index for index, kind in enumerate(ALL_KINDS)}
 RELATION_REQUIRES = "requires"
 RELATION_REQUIRED_BY = "required_by"
 PENDING_TECHNIQUE_PREFIX = "AOA-T-PENDING-"
+KAG_SOURCE_LIFT_TECHNIQUE_IDS = (
+    "AOA-T-0018",
+    "AOA-T-0019",
+    "AOA-T-0020",
+    "AOA-T-0021",
+    "AOA-T-0022",
+)
+KAG_SOURCE_LIFT_TECHNIQUE_SET = set(KAG_SOURCE_LIFT_TECHNIQUE_IDS)
+DIRECT_RELATION_TYPES = (
+    "requires",
+    "complements",
+    "supersedes",
+    "conflicts_with",
+    "used_together_for",
+    "derived_from",
+    "shares_contract_with",
+)
+DIRECT_RELATION_TYPES_SET = set(DIRECT_RELATION_TYPES)
 
 
 class RouterError(RuntimeError):
@@ -196,6 +214,21 @@ def sort_registry_entries(entries: list[dict[str, Any]]) -> list[dict[str, Any]]
 
 def sort_hops(hops: list[dict[str, str]]) -> list[dict[str, str]]:
     return sorted(hops, key=lambda hop: (KIND_ORDER[hop["kind"]], hop["id"], hop["relation"]))
+
+
+def load_technique_catalog_entries(techniques_root: Path) -> tuple[str, list[dict[str, Any]]]:
+    for filename in ("technique_catalog.json", "technique_catalog.min.json"):
+        catalog_path = techniques_root / "generated" / filename
+        if not catalog_path.exists():
+            continue
+        payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
+        return catalog_path.relative_to(techniques_root).as_posix(), ensure_list(
+            payload.get("techniques"),
+            f"{relative_posix(catalog_path)}.techniques",
+        )
+    raise RouterError(
+        f"{relative_posix(techniques_root / 'generated' / 'technique_catalog.json')} is missing"
+    )
 
 
 def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, Any]:
@@ -442,5 +475,93 @@ def build_recommended_paths_payload(registry_entries: list[dict[str, Any]]) -> d
         )
     return {
         "version": 1,
+        "entries": payload_entries,
+    }
+
+
+def build_kag_source_lift_relation_hints_payload(
+    registry_entries: list[dict[str, Any]],
+    source_catalog: str,
+    technique_catalog_entries: list[dict[str, Any]],
+) -> dict[str, Any]:
+    registry_index: dict[tuple[str, str], dict[str, Any]] = {}
+    for entry in registry_entries:
+        kind = entry.get("kind")
+        identifier = entry.get("id")
+        if not isinstance(kind, str) or not isinstance(identifier, str):
+            continue
+        registry_index[(kind, identifier)] = entry
+    techniques_by_id: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(technique_catalog_entries):
+        location = f"generated/technique_catalog.min.json.techniques[{index}]"
+        technique = ensure_mapping(item, location)
+        require_keys(technique, ("id", "name", "summary"), location)
+        technique_id = ensure_string(technique["id"], f"{location}.id")
+        if technique_id in techniques_by_id:
+            raise RouterError(f"duplicate technique catalog entry for {technique_id}")
+        techniques_by_id[technique_id] = technique
+
+    payload_entries: list[dict[str, Any]] = []
+    for technique_id in KAG_SOURCE_LIFT_TECHNIQUE_IDS:
+        technique = techniques_by_id.get(technique_id)
+        if technique is None:
+            continue
+
+        registry_entry = registry_index.get(("technique", technique_id))
+        if registry_entry is None:
+            raise RouterError(f"missing registry entry for technique relation hints {technique_id}")
+
+        raw_relations = technique.get("relations", [])
+        if raw_relations is None:
+            raw_relations = []
+        relations = ensure_list(
+            raw_relations,
+            f"generated/technique_catalog.min.json.techniques[{technique_id}].relations",
+        )
+        direct_relations: list[dict[str, str]] = []
+        seen_relations: set[tuple[str, str]] = set()
+        for relation_index, raw_relation in enumerate(relations):
+            relation_location = (
+                f"generated/technique_catalog.min.json.techniques[{technique_id}].relations[{relation_index}]"
+            )
+            relation = ensure_mapping(raw_relation, relation_location)
+            require_keys(relation, ("type", "target"), relation_location)
+            relation_type = ensure_string(relation["type"], f"{relation_location}.type")
+            target_id = ensure_string(relation["target"], f"{relation_location}.target")
+            if relation_type not in DIRECT_RELATION_TYPES_SET:
+                raise RouterError(f"{relation_location}.type must be a supported direct relation type")
+            if target_id == technique_id:
+                raise RouterError(f"{relation_location}.target must not point to the same technique")
+            if target_id not in KAG_SOURCE_LIFT_TECHNIQUE_SET:
+                raise RouterError(
+                    f"{relation_location}.target must stay within the KAG/source-lift family"
+                )
+            if (relation_type, target_id) in seen_relations:
+                raise RouterError(
+                    f"{relation_location} duplicates a direct relation already seen for {technique_id}"
+                )
+            if ("technique", target_id) not in registry_index:
+                raise RouterError(
+                    f"unresolved direct relation target: technique:{technique_id} -> technique:{target_id}"
+                )
+            seen_relations.add((relation_type, target_id))
+            direct_relations.append({"type": relation_type, "target": target_id})
+
+        payload_entries.append(
+            {
+                "kind": "technique",
+                "id": registry_entry["id"],
+                "name": registry_entry["name"],
+                "summary": registry_entry["summary"],
+                "relations": direct_relations,
+            }
+        )
+
+    return {
+        "version": 1,
+        "scope": "kag_source_lift_family",
+        "source_repo": "aoa-techniques",
+        "source_catalog": source_catalog,
+        "family_ids": list(KAG_SOURCE_LIFT_TECHNIQUE_IDS),
         "entries": payload_entries,
     }
