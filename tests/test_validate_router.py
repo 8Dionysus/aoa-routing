@@ -259,6 +259,26 @@ def test_validate_generated_outputs_rejects_malformed_inspect_action_shape_via_s
     )
 
 
+def test_validate_generated_outputs_reports_missing_model_tier_registry_without_crashing(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    (roots["aoa-agents"] / "generated" / "model_tier_registry.json").unlink()
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any(
+        issue.location == "task_to_tier_hints.json"
+        and "could not rebuild task_to_tier_hints.json from aoa-agents" in issue.message
+        for issue in issues
+    )
+    assert any(
+        issue.location == "task_to_tier_hints.json"
+        and "is missing" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_missing_hint_enabled_without_crashing(
     tmp_path: Path,
 ) -> None:
