@@ -18,7 +18,7 @@ def write_json(path: Path, payload: object) -> None:
 
 def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
     roots: dict[str, Path] = {}
-    for repo_name in ("aoa-techniques", "aoa-skills", "aoa-evals"):
+    for repo_name in ("aoa-techniques", "aoa-skills", "aoa-evals", "aoa-agents"):
         target = tmp_path / repo_name
         shutil.copytree(FIXTURES_ROOT / repo_name, target)
         roots[repo_name] = target
@@ -35,6 +35,7 @@ def build_fixture_generated(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
         roots["aoa-skills"],
         roots["aoa-evals"],
         roots["aoa-memo"],
+        roots["aoa-agents"],
     )
     for filename, payload in outputs.items():
         write_json(generated_dir / filename, payload)
@@ -48,6 +49,7 @@ def validate_fixture_generated(generated_dir: Path, roots: dict[str, Path]) -> l
         roots["aoa-skills"],
         roots["aoa-evals"],
         roots["aoa-memo"],
+        roots["aoa-agents"],
     )
 
 
@@ -268,6 +270,55 @@ def test_validate_generated_outputs_rejects_missing_hint_enabled_without_crashin
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any("schema violation" in issue.message and "enabled" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_malformed_tier_hint_shape_via_schema(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tier_hints_path = generated_dir / "task_to_tier_hints.json"
+    payload = json.loads(tier_hints_path.read_text(encoding="utf-8"))
+    del payload["hints"][0]["preferred_tier"]
+    write_json(tier_hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "schema violation" in issue.message and "preferred_tier" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_unknown_tier_reference(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tier_hints_path = generated_dir / "task_to_tier_hints.json"
+    payload = json.loads(tier_hints_path.read_text(encoding="utf-8"))
+    payload["hints"][0]["preferred_tier"] = "ghost-tier"
+    write_json(tier_hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "preferred_tier references unknown tier 'ghost-tier'" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_agents_registry_drift_for_tier_hints(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = roots["aoa-agents"] / "generated" / "model_tier_registry.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    payload["model_tiers"][0]["artifact_requirement"] = "triage_packet"
+    write_json(registry_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "task_to_tier_hints.json"
+        and "canonical rebuild from current sibling catalogs" in issue.message
+        for issue in issues
+    )
 
 
 def test_validate_generated_outputs_rejects_malformed_expand_action_shape_via_schema(

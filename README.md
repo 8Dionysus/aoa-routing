@@ -26,11 +26,12 @@ The current runtime path is:
 
 ## Current ingestion model
 
-The build reads only repo-local generated catalogs:
+The build reads only repo-local generated catalogs and registries:
 
 - `aoa-techniques` from `generated/technique_catalog.min.json`
 - `aoa-skills` from `generated/skill_catalog.min.json`
 - `aoa-evals` from `generated/eval_catalog.min.json`
+- `aoa-agents` from `generated/model_tier_registry.json` for task-to-tier dispatch hints only
 
 `aoa-routing` no longer parses live `SKILL.md`, `techniques.yaml`, `EVAL.md`, or `eval.yaml`.
 That contract keeps source meaning inside the source repositories while letting routing stay
@@ -52,6 +53,7 @@ The builder writes these tracked artifacts under `generated/`:
 - `cross_repo_registry.min.json` - normalized registry of all routeable objects
 - `aoa_router.min.json` - minimal entry routing projection
 - `task_to_surface_hints.json` - static dispatch hints by surface kind, including inspect and expand actions
+- `task_to_tier_hints.json` - task-family hints that derive tier IDs and artifact contracts from `aoa-agents/generated/model_tier_registry.json`
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
 - `kag_source_lift_relation_hints.min.json` - bounded one-hop direct relation hints for the KAG/source-lift family
 
@@ -127,6 +129,7 @@ The builder defaults to sibling repository roots:
 - `../aoa-skills`
 - `../aoa-evals`
 - `../aoa-memo`
+- `../aoa-agents`
 
 Override them when needed:
 

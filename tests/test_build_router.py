@@ -190,11 +190,13 @@ def test_build_outputs_from_fixtures() -> None:
         FIXTURES_ROOT / "aoa-skills",
         FIXTURES_ROOT / "aoa-evals",
         FIXTURES_ROOT / "aoa-memo",
+        FIXTURES_ROOT / "aoa-agents",
     )
 
     registry = outputs["cross_repo_registry.min.json"]
     router = outputs["aoa_router.min.json"]
     hints = outputs["task_to_surface_hints.json"]
+    tier_hints = outputs["task_to_tier_hints.json"]
     recommended = outputs["recommended_paths.min.json"]
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
 
@@ -269,6 +271,17 @@ def test_build_outputs_from_fixtures() -> None:
             "recall": {"enabled": False},
         },
     }
+    assert tier_hints["source_of_truth"] == {
+        "tier_registry_repo": "aoa-agents",
+        "tier_registry_path": "generated/model_tier_registry.json",
+    }
+    assert tier_hints["hints"][0] == {
+        "task_family": "task-triage",
+        "preferred_tier": "router",
+        "fallback_tier": "planner",
+        "use_when": "need the fastest classification of task shape, risk, and smallest next step",
+        "output_artifact": "route_decision",
+    }
 
     by_key = {(entry["kind"], entry["id"]): entry for entry in recommended["entries"]}
     change_skill = by_key[("skill", "aoa-change-protocol")]
@@ -296,6 +309,7 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
         FIXTURES_ROOT / "aoa-skills",
         FIXTURES_ROOT / "aoa-evals",
         FIXTURES_ROOT / "aoa-memo",
+        FIXTURES_ROOT / "aoa-agents",
     )
 
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
@@ -327,6 +341,7 @@ def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) 
         skills_root,
         evals_root,
         FIXTURES_ROOT / "aoa-memo",
+        FIXTURES_ROOT / "aoa-agents",
     )
 
     assert len(outputs["cross_repo_registry.min.json"]["entries"]) == 6
@@ -348,6 +363,7 @@ def test_build_allows_pending_technique_dependencies_without_creating_paths(tmp_
         skills_root,
         FIXTURES_ROOT / "aoa-evals",
         FIXTURES_ROOT / "aoa-memo",
+        FIXTURES_ROOT / "aoa-agents",
     )
 
     registry_entries = outputs["cross_repo_registry.min.json"]["entries"]
@@ -368,6 +384,7 @@ def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
         FIXTURES_ROOT / "aoa-skills",
         FIXTURES_ROOT / "aoa-evals",
         FIXTURES_ROOT / "aoa-memo",
+        FIXTURES_ROOT / "aoa-agents",
     )
     for filename, payload in outputs_a.items():
         write_json(generated_dir / filename, payload)
@@ -381,6 +398,7 @@ def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
         FIXTURES_ROOT / "aoa-skills",
         FIXTURES_ROOT / "aoa-evals",
         FIXTURES_ROOT / "aoa-memo",
+        FIXTURES_ROOT / "aoa-agents",
     )
     for filename, payload in outputs_b.items():
         write_json(generated_dir / filename, payload)
@@ -390,3 +408,22 @@ def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
     }
 
     assert snapshot_a == snapshot_b
+
+
+def test_build_task_to_tier_hints_reads_agents_registry_artifacts(tmp_path: Path) -> None:
+    agents_root = tmp_path / "aoa-agents"
+    shutil.copytree(FIXTURES_ROOT / "aoa-agents", agents_root)
+    registry_path = agents_root / "generated" / "model_tier_registry.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    payload["model_tiers"][0]["artifact_requirement"] = "triage_packet"
+    write_json(registry_path, payload)
+
+    outputs = build_router.build_outputs(
+        FIXTURES_ROOT / "aoa-techniques",
+        FIXTURES_ROOT / "aoa-skills",
+        FIXTURES_ROOT / "aoa-evals",
+        FIXTURES_ROOT / "aoa-memo",
+        agents_root,
+    )
+
+    assert outputs["task_to_tier_hints.json"]["hints"][0]["output_artifact"] == "triage_packet"
