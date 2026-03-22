@@ -14,6 +14,7 @@ from router_core import (
     build_kag_source_lift_relation_hints_payload,
     build_recommended_paths_payload,
     build_router_payload,
+    build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
     ensure_bool,
     ensure_int,
@@ -61,6 +62,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT.parent / "aoa-memo",
         help="Path to the aoa-memo repository root. Reserved only in v0.1.",
+    )
+    parser.add_argument(
+        "--agents-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-agents",
+        help="Path to the aoa-agents repository root for model-tier contracts.",
     )
     parser.add_argument(
         "--generated-dir",
@@ -267,6 +274,7 @@ def build_outputs(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    agents_root: Path,
 ) -> dict[str, dict[str, Any]]:
     _ = memo_root
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
@@ -291,6 +299,7 @@ def build_outputs(
     }
     router_payload = build_router_payload(registry_entries)
     hints_payload = build_task_to_surface_hints_payload()
+    tier_hints_payload = build_task_to_tier_hints_payload(agents_root)
     recommended_payload = build_recommended_paths_payload(registry_entries)
     relation_hints_payload = build_kag_source_lift_relation_hints_payload(
         registry_entries,
@@ -301,6 +310,7 @@ def build_outputs(
         "cross_repo_registry.min.json": registry_payload,
         "aoa_router.min.json": router_payload,
         "task_to_surface_hints.json": hints_payload,
+        "task_to_tier_hints.json": tier_hints_payload,
         "recommended_paths.min.json": recommended_payload,
         "kag_source_lift_relation_hints.min.json": relation_hints_payload,
     }
@@ -313,6 +323,7 @@ def main() -> int:
         args.skills_root.resolve(),
         args.evals_root.resolve(),
         args.memo_root.resolve(),
+        args.agents_root.resolve(),
     )
     generated_dir = args.generated_dir.resolve()
     generated_dir.mkdir(parents=True, exist_ok=True)

@@ -18,12 +18,14 @@ from router_core import (
     ACTIVE_KINDS,
     ALL_KINDS,
     CANONICAL_REPO_BY_KIND,
+    MODEL_TIER_SOURCE_REPO,
     REPO_ROOT,
     RESERVED_KINDS,
     RouterError,
     build_kag_source_lift_relation_hints_payload,
     build_recommended_paths_payload,
     build_router_payload,
+    build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
     ensure_list,
     ensure_mapping,
@@ -31,6 +33,7 @@ from router_core import (
     ensure_string_list,
     is_pending_technique_id,
     load_json_file,
+    load_model_tier_registry,
     load_technique_catalog_entries,
 )
 
@@ -45,6 +48,7 @@ OUTPUT_SCHEMA_NAMES = {
     "cross_repo_registry.min.json": "cross-repo-registry.schema.json",
     "aoa_router.min.json": "aoa-router.schema.json",
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
+    "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
     "recommended_paths.min.json": "recommended-paths.schema.json",
 }
 
@@ -97,6 +101,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT.parent / "aoa-memo",
         help="Path to the aoa-memo repository root. Reserved only in v0.1.",
+    )
+    parser.add_argument(
+        "--agents-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-agents",
+        help="Path to the aoa-agents repository root for model-tier contracts.",
     )
     parser.add_argument(
         "--generated-dir",
@@ -184,6 +194,7 @@ def validate_rebuild_parity(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    agents_root: Path,
     issues: list[ValidationIssue],
 ) -> None:
     try:
@@ -192,6 +203,7 @@ def validate_rebuild_parity(
             skills_root.resolve(),
             evals_root.resolve(),
             memo_root.resolve(),
+            agents_root.resolve(),
         )
     except RouterError as exc:
         issues.append(
@@ -767,12 +779,97 @@ def payload_contains_key(payload: Any, target_key: str) -> bool:
     return False
 
 
+def validate_task_tier_hints(
+    tier_hints_payload: dict[str, Any],
+    agents_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    try:
+        source_of_truth = ensure_mapping(
+            tier_hints_payload.get("source_of_truth"),
+            "task_to_tier_hints.json.source_of_truth",
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_tier_hints.json", str(exc)))
+        return
+
+    source_repo = source_of_truth.get("tier_registry_repo")
+    if source_repo != MODEL_TIER_SOURCE_REPO:
+        issues.append(
+            ValidationIssue(
+                "task_to_tier_hints.json",
+                f"tier source repo must stay '{MODEL_TIER_SOURCE_REPO}'",
+            )
+        )
+        return
+
+    try:
+        registry_relative_path = ensure_repo_relative_path(
+            source_of_truth.get("tier_registry_path"),
+            "task_to_tier_hints.json.source_of_truth.tier_registry_path",
+        )
+        _, tier_index = load_model_tier_registry(agents_root, registry_relative_path)
+        hints = ensure_list(tier_hints_payload.get("hints"), "task_to_tier_hints.json.hints")
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_tier_hints.json", str(exc)))
+        return
+
+    seen_task_families: set[str] = set()
+    for index, raw_hint in enumerate(hints):
+        location = f"task_to_tier_hints.json.hints[{index}]"
+        try:
+            hint = ensure_mapping(raw_hint, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_tier_hints.json", str(exc)))
+            continue
+
+        task_family = hint.get("task_family")
+        if isinstance(task_family, str):
+            if task_family in seen_task_families:
+                issues.append(
+                    ValidationIssue(
+                        "task_to_tier_hints.json",
+                        f"duplicate task_family '{task_family}' in task_to_tier_hints.json",
+                    )
+                )
+            else:
+                seen_task_families.add(task_family)
+
+        preferred_tier = hint.get("preferred_tier")
+        if isinstance(preferred_tier, str):
+            preferred_entry = tier_index.get(preferred_tier)
+            if preferred_entry is None:
+                issues.append(
+                    ValidationIssue(
+                        "task_to_tier_hints.json",
+                        f"{location}.preferred_tier references unknown tier '{preferred_tier}'",
+                    )
+                )
+            elif hint.get("output_artifact") != preferred_entry["artifact_requirement"]:
+                issues.append(
+                    ValidationIssue(
+                        "task_to_tier_hints.json",
+                        f"{location}.output_artifact must match artifact_requirement for tier '{preferred_tier}'",
+                    )
+                )
+
+        fallback_tier = hint.get("fallback_tier")
+        if isinstance(fallback_tier, str) and fallback_tier not in tier_index:
+            issues.append(
+                ValidationIssue(
+                    "task_to_tier_hints.json",
+                    f"{location}.fallback_tier references unknown tier '{fallback_tier}'",
+                )
+            )
+
+
 def validate_generated_outputs(
     generated_dir: Path,
     techniques_root: Path,
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    agents_root: Path,
 ) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     generated_dir = generated_dir.resolve()
@@ -780,12 +877,14 @@ def validate_generated_outputs(
     registry_path = generated_dir / "cross_repo_registry.min.json"
     router_path = generated_dir / "aoa_router.min.json"
     hints_path = generated_dir / "task_to_surface_hints.json"
+    tier_hints_path = generated_dir / "task_to_tier_hints.json"
     recommended_path = generated_dir / "recommended_paths.min.json"
     relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
 
     registry_payload = load_output(registry_path, issues)
     router_payload = load_output(router_path, issues)
     hints_payload = load_output(hints_path, issues)
+    tier_hints_payload = load_output(tier_hints_path, issues)
     recommended_payload = load_output(recommended_path, issues)
     relation_hints_payload = load_output(relation_hints_path, issues)
     if any(
@@ -794,6 +893,7 @@ def validate_generated_outputs(
             registry_payload,
             router_payload,
             hints_payload,
+            tier_hints_payload,
             recommended_payload,
             relation_hints_payload,
         )
@@ -805,12 +905,14 @@ def validate_generated_outputs(
             registry_path.name: registry_payload,
             router_path.name: router_payload,
             hints_path.name: hints_payload,
+            tier_hints_path.name: tier_hints_payload,
             recommended_path.name: recommended_payload,
         },
         techniques_root,
         skills_root,
         evals_root,
         memo_root,
+        agents_root,
         issues,
     )
 
@@ -818,6 +920,7 @@ def validate_generated_outputs(
         (registry_path, registry_payload),
         (router_path, router_payload),
         (hints_path, hints_payload),
+        (tier_hints_path, tier_hints_payload),
         (recommended_path, recommended_payload),
     ):
         validate_against_schema(
@@ -921,6 +1024,9 @@ def validate_generated_outputs(
 
     if hints_payload != build_task_to_surface_hints_payload():
         issues.append(ValidationIssue(hints_path.name, "task_to_surface_hints.json does not match the expected static dispatch surface"))
+    if tier_hints_payload != build_task_to_tier_hints_payload(agents_root):
+        issues.append(ValidationIssue(tier_hints_path.name, "task_to_tier_hints.json does not match the expected static tier dispatch surface"))
+    validate_task_tier_hints(tier_hints_payload, agents_root, issues)
     validate_inspect_targets(
         projection_safe_registry_entries,
         hints_payload,
@@ -1006,6 +1112,7 @@ def validate_generated_outputs(
         (registry_path.name, registry_payload),
         (router_path.name, router_payload),
         (hints_path.name, hints_payload),
+        (tier_hints_path.name, tier_hints_payload),
         (recommended_path.name, recommended_payload),
         (relation_hints_path.name, relation_hints_payload),
     ):
@@ -1029,6 +1136,7 @@ def main() -> int:
         args.skills_root,
         args.evals_root,
         args.memo_root,
+        args.agents_root,
     )
     if issues:
         for issue in issues:

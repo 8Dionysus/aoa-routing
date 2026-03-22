@@ -44,6 +44,52 @@ DIRECT_RELATION_TYPES = (
     "shares_contract_with",
 )
 DIRECT_RELATION_TYPES_SET = set(DIRECT_RELATION_TYPES)
+MODEL_TIER_SOURCE_REPO = "aoa-agents"
+MODEL_TIER_REGISTRY_PATH = "generated/model_tier_registry.json"
+TASK_TO_TIER_HINT_SPECS = (
+    {
+        "task_family": "task-triage",
+        "preferred_tier": "router",
+        "fallback_tier": "planner",
+        "use_when": "need the fastest classification of task shape, risk, and smallest next step",
+    },
+    {
+        "task_family": "bounded-plan-shaping",
+        "preferred_tier": "planner",
+        "fallback_tier": "conductor",
+        "use_when": "need an explicit bounded plan, checks, and escalation boundaries",
+    },
+    {
+        "task_family": "bounded-execution",
+        "preferred_tier": "executor",
+        "fallback_tier": "planner",
+        "use_when": "need the current bounded slice executed after the route and plan are already explicit",
+    },
+    {
+        "task_family": "verification-pass",
+        "preferred_tier": "verifier",
+        "fallback_tier": "conductor",
+        "use_when": "need contradiction checks, output review, or a named continue-stop-escalate decision",
+    },
+    {
+        "task_family": "tier-transition-governance",
+        "preferred_tier": "conductor",
+        "fallback_tier": "verifier",
+        "use_when": "need a route-level decision about continue, pause, escalate, or distill",
+    },
+    {
+        "task_family": "high-cost-synthesis",
+        "preferred_tier": "deep",
+        "fallback_tier": "conductor",
+        "use_when": "need rare deep synthesis, contradiction arbitration, or high-cost final judgment",
+    },
+    {
+        "task_family": "distillation-and-writeback-prep",
+        "preferred_tier": "archivist",
+        "fallback_tier": "conductor",
+        "use_when": "need summaries, decisions, and memory candidates distilled after a non-trivial run",
+    },
+)
 
 
 class RouterError(RuntimeError):
@@ -231,6 +277,33 @@ def load_technique_catalog_entries(techniques_root: Path) -> tuple[str, list[dic
     )
 
 
+def load_model_tier_registry(
+    agents_root: Path,
+    registry_relative_path: str = MODEL_TIER_REGISTRY_PATH,
+) -> tuple[str, dict[str, dict[str, str]]]:
+    normalized_path = ensure_repo_relative_path(registry_relative_path, "tier_registry_path")
+    registry_path = agents_root / normalized_path
+    location = relative_posix(registry_path, agents_root)
+    payload = ensure_mapping(load_json_file(registry_path), location)
+    model_tiers = ensure_list(payload.get("model_tiers"), f"{location}.model_tiers")
+
+    tier_index: dict[str, dict[str, str]] = {}
+    for index, item in enumerate(model_tiers):
+        tier_location = f"{location}.model_tiers[{index}]"
+        tier = ensure_mapping(item, tier_location)
+        require_keys(tier, ("id", "artifact_requirement"), tier_location)
+        tier_id = ensure_string(tier["id"], f"{tier_location}.id")
+        if tier_id in tier_index:
+            raise RouterError(f"{tier_location}.id duplicates tier '{tier_id}'")
+        tier_index[tier_id] = {
+            "artifact_requirement": ensure_string(
+                tier["artifact_requirement"],
+                f"{tier_location}.artifact_requirement",
+            )
+        }
+    return normalized_path, tier_index
+
+
 def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, Any]:
     projection = [
         {
@@ -414,6 +487,43 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                 "actions": action_flags(inspect_enabled=False, pick_enabled=False),
             },
         ],
+    }
+
+
+def build_task_to_tier_hints_payload(agents_root: Path) -> dict[str, Any]:
+    registry_relative_path, tier_index = load_model_tier_registry(agents_root)
+    hints: list[dict[str, Any]] = []
+    for spec in TASK_TO_TIER_HINT_SPECS:
+        preferred_tier = spec["preferred_tier"]
+        preferred_entry = tier_index.get(preferred_tier)
+        if preferred_entry is None:
+            raise RouterError(
+                f"task-to-tier hint spec references unknown preferred tier '{preferred_tier}'"
+            )
+
+        fallback_tier = spec["fallback_tier"]
+        if fallback_tier is not None and fallback_tier not in tier_index:
+            raise RouterError(
+                f"task-to-tier hint spec references unknown fallback tier '{fallback_tier}'"
+            )
+
+        hints.append(
+            {
+                "task_family": spec["task_family"],
+                "preferred_tier": preferred_tier,
+                "fallback_tier": fallback_tier,
+                "use_when": spec["use_when"],
+                "output_artifact": preferred_entry["artifact_requirement"],
+            }
+        )
+
+    return {
+        "version": 1,
+        "source_of_truth": {
+            "tier_registry_repo": MODEL_TIER_SOURCE_REPO,
+            "tier_registry_path": registry_relative_path,
+        },
+        "hints": hints,
     }
 
 
