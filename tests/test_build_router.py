@@ -139,6 +139,18 @@ def test_collect_eval_entries_reads_generated_catalog() -> None:
     assert entries[0]["attributes"]["skill_dependencies"] == ["aoa-change-protocol"]
 
 
+def test_collect_memo_entries_reads_generated_catalog() -> None:
+    entries = build_router.collect_memo_entries(FIXTURES_ROOT / "aoa-memo")
+
+    assert [entry["id"] for entry in entries] == ["AOA-M-0001", "AOA-M-0002"]
+    assert entries[0]["kind"] == "memo"
+    assert entries[0]["repo"] == "aoa-memo"
+    assert entries[0]["path"] == "CHARTER.md"
+    assert entries[0]["source_type"] == "generated-catalog"
+    assert entries[0]["attributes"]["recall_modes"] == ["semantic", "source_route"]
+    assert entries[0]["attributes"]["inspect_surface"] == "generated/memory_catalog.min.json"
+
+
 def test_collect_skill_entries_raises_on_missing_generated_catalog(tmp_path: Path) -> None:
     skills_root = tmp_path / "aoa-skills"
     shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
@@ -207,8 +219,19 @@ def test_build_outputs_from_fixtures() -> None:
         "skill",
         "eval",
         "eval",
+        "memo",
+        "memo",
     ]
-    assert all(entry["kind"] != "memo" for entry in router["entries"])
+    assert [entry["kind"] for entry in router["entries"]] == [
+        "technique",
+        "technique",
+        "skill",
+        "skill",
+        "eval",
+        "eval",
+        "memo",
+        "memo",
+    ]
     assert {entry["source_type"] for entry in registry["entries"]} == {"generated-catalog"}
     assert relation_hints == {
         "version": 1,
@@ -258,17 +281,34 @@ def test_build_outputs_from_fixtures() -> None:
             "future_evolution",
         ],
     }
-    assert hints["hints"][-1] == {
+    memo_hint = next(hint for hint in hints["hints"] if hint["kind"] == "memo")
+    assert memo_hint == {
         "kind": "memo",
-        "enabled": False,
+        "enabled": True,
         "source_repo": "aoa-memo",
-        "use_when": "reserved for future recall and memory-routing surfaces",
+        "use_when": "need bounded recall or memory-layer doctrine surfaces without copying memo truth into routing",
         "actions": {
-            "pick": {"enabled": False},
-            "inspect": {"enabled": False},
-            "expand": {"enabled": False},
+            "pick": {"enabled": True},
+            "inspect": {
+                "enabled": True,
+                "surface_file": "generated/memory_catalog.min.json",
+                "match_field": "id",
+            },
+            "expand": {
+                "enabled": True,
+                "surface_file": "generated/memory_sections.full.json",
+                "match_field": "id",
+                "section_key_field": "section_id",
+                "default_sections": [],
+                "supported_sections": [],
+            },
             "pair": {"enabled": False},
-            "recall": {"enabled": False},
+            "recall": {
+                "enabled": True,
+                "contract_file": "examples/recall_contract.router.semantic.json",
+                "default_mode": "semantic",
+                "supported_modes": ["semantic"],
+            },
         },
     }
     assert tier_hints["source_of_truth"] == {
@@ -294,6 +334,12 @@ def test_build_outputs_from_fixtures() -> None:
         {"kind": "technique", "id": "AOA-T-0002", "relation": "requires"},
         {"kind": "skill", "id": "aoa-context-scan", "relation": "requires"},
     ]
+    assert by_key[("memo", "AOA-M-0001")] == {
+        "kind": "memo",
+        "id": "AOA-M-0001",
+        "upstream": [],
+        "downstream": [],
+    }
 
 
 def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None:
@@ -344,7 +390,7 @@ def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) 
         FIXTURES_ROOT / "aoa-agents",
     )
 
-    assert len(outputs["cross_repo_registry.min.json"]["entries"]) == 6
+    assert len(outputs["cross_repo_registry.min.json"]["entries"]) == 8
 
 
 def test_build_allows_pending_technique_dependencies_without_creating_paths(tmp_path: Path) -> None:

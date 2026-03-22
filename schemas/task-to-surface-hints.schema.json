@@ -121,6 +121,37 @@
         }
       ]
     },
+    "recallAction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/disabledAction"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "contract_file",
+            "default_mode",
+            "supported_modes"
+          ],
+          "properties": {
+            "enabled": {
+              "const": true
+            },
+            "contract_file": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "default_mode": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "supported_modes": {
+              "$ref": "#/$defs/stringList"
+            }
+          }
+        }
+      ]
+    },
     "actions": {
       "type": "object",
       "additionalProperties": false,
@@ -145,7 +176,7 @@
           "$ref": "#/$defs/disabledAction"
         },
         "recall": {
-          "$ref": "#/$defs/disabledAction"
+          "$ref": "#/$defs/recallAction"
         }
       }
     },

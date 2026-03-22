@@ -21,8 +21,7 @@ The current runtime path is:
 - `aoa-techniques` as the practice canon
 - `aoa-skills` as the execution canon
 - `aoa-evals` as the proof canon
-
-`aoa-memo` is reserved as a future `kind`, but v0.1 does not ingest concrete memo objects.
+- `aoa-memo` as a bounded memo and recall routing surface
 
 ## Current ingestion model
 
@@ -31,6 +30,7 @@ The build reads only repo-local generated catalogs and registries:
 - `aoa-techniques` from `generated/technique_catalog.min.json`
 - `aoa-skills` from `generated/skill_catalog.min.json`
 - `aoa-evals` from `generated/eval_catalog.min.json`
+- `aoa-memo` from `generated/memory_catalog.min.json`
 - `aoa-agents` from `generated/model_tier_registry.json` for task-to-tier dispatch hints only
 
 `aoa-routing` no longer parses live `SKILL.md`, `techniques.yaml`, `EVAL.md`, or `eval.yaml`.
@@ -71,6 +71,7 @@ Inspect actions point to repo-local capsule surfaces:
 - `aoa-techniques/generated/technique_capsules.json`
 - `aoa-skills/generated/skill_capsules.json`
 - `aoa-evals/generated/eval_capsules.json`
+- `aoa-memo/generated/memory_catalog.min.json`
 
 `aoa-routing` does not copy capsule text into its own outputs.
 It only tells an agent which source-owned surface to inspect next.
@@ -80,9 +81,14 @@ Expand actions point to repo-local section surfaces:
 - `aoa-techniques/generated/technique_sections.full.json`
 - `aoa-skills/generated/skill_sections.full.json`
 - `aoa-evals/generated/eval_sections.full.json`
+- `aoa-memo/generated/memory_sections.full.json`
 
 `aoa-routing` does not copy section payloads into its own outputs.
 It only tells an agent which source-owned section surface to expand next.
+
+Recall stays bounded.
+`aoa-routing` points memo recall requests at source-owned `aoa-memo` contracts and surfaces,
+but it does not own recall policy authority, memory truth, or graph traversal.
 
 ## Repository layout
 
@@ -144,7 +150,6 @@ These are intentionally out of scope for the first foundation release:
 - pairings
 - tiny-model entrypoints
 - same-kind relation graphs
-- memo recall surfaces
 - broader KAG and graph views
 
 ## Intended role
@@ -155,4 +160,4 @@ These are intentionally out of scope for the first foundation release:
 - routing points them to the smallest next object
 - meaning stays in the source repositories
 
-The next cross-repo waves start with bounded pairing and adjacency surfaces, then tiny-model entry surfaces, and only later memo dispatch readiness.
+The next cross-repo waves start with bounded pairing and adjacency surfaces, then tiny-model entry surfaces, while memo stays constrained to inspect, expand, and recall dispatch.

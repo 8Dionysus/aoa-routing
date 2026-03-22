@@ -1,0 +1,48 @@
+{
+  "sections_version": 1,
+  "source_of_truth": "aoa-memo-doctrine-route-surfaces-v1",
+  "memo_surfaces": [
+    {
+      "id": "AOA-M-0001",
+      "name": "charter",
+      "source_path": "CHARTER.md",
+      "sections": [
+        {
+          "section_id": "AOA-M-0001#mission",
+          "heading": "Mission",
+          "ordinal": 1,
+          "summary": "Defines aoa-memo as the explicit memory and recall layer.",
+          "body": "`aoa-memo` is the explicit memory and recall layer of the AoA ecosystem."
+        },
+        {
+          "section_id": "AOA-M-0001#core-rules",
+          "heading": "Core rules",
+          "ordinal": 2,
+          "summary": "Names the layer's rules about memory, truth, provenance, and downstream graph work.",
+          "body": "Memory is not proof. Events come before claims. Provenance should stay visible."
+        }
+      ]
+    },
+    {
+      "id": "AOA-M-0002",
+      "name": "memory-model",
+      "source_path": "docs/MEMORY_MODEL.md",
+      "sections": [
+        {
+          "section_id": "AOA-M-0002#four-axes",
+          "heading": "Four axes",
+          "ordinal": 1,
+          "summary": "States the model's four axes: function, temperature, scope, and trust posture.",
+          "body": "`aoa-memo` uses four axes: function, temperature, scope, and trust posture."
+        },
+        {
+          "section_id": "AOA-M-0002#temperature-and-kag",
+          "heading": "Temperature and KAG orientation",
+          "ordinal": 2,
+          "summary": "Defines temperature as recall posture and keeps KAG lifts downstream.",
+          "body": "Temperature describes recall posture rather than truth, and KAG orientation remains downstream."
+        }
+      ]
+    }
+  ]
+}

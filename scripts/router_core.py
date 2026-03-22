@@ -12,9 +12,10 @@ import yaml
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-ACTIVE_KINDS = ("technique", "skill", "eval")
-RESERVED_KINDS = ("memo",)
+ACTIVE_KINDS = ("technique", "skill", "eval", "memo")
+RESERVED_KINDS: tuple[str, ...] = ()
 ALL_KINDS = ACTIVE_KINDS + RESERVED_KINDS
+RECOMMENDED_HOP_KINDS = ("technique", "skill", "eval")
 CANONICAL_REPO_BY_KIND = {
     "technique": "aoa-techniques",
     "skill": "aoa-skills",
@@ -316,7 +317,6 @@ def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, An
             "summary": entry["summary"],
         }
         for entry in sort_registry_entries(list(registry_entries))
-        if entry["kind"] != "memo"
     ]
     return {
         "router_version": 1,
@@ -333,9 +333,14 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
         expand_enabled: bool = False,
         expand_surface_file: str | None = None,
         expand_match_field: str | None = None,
+        expand_section_key_field: str = "key",
         default_sections: list[str] | None = None,
         supported_sections: list[str] | None = None,
         pick_enabled: bool = True,
+        recall_enabled: bool = False,
+        recall_contract_file: str | None = None,
+        recall_default_mode: str | None = None,
+        recall_supported_modes: list[str] | None = None,
     ) -> dict[str, dict[str, Any]]:
         inspect: dict[str, Any] = {"enabled": inspect_enabled}
         if inspect_enabled:
@@ -345,15 +350,20 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
         if expand_enabled:
             expand["surface_file"] = expand_surface_file
             expand["match_field"] = expand_match_field
-            expand["section_key_field"] = "key"
+            expand["section_key_field"] = expand_section_key_field
             expand["default_sections"] = list(default_sections or [])
             expand["supported_sections"] = list(supported_sections or [])
+        recall: dict[str, Any] = {"enabled": recall_enabled}
+        if recall_enabled:
+            recall["contract_file"] = recall_contract_file
+            recall["default_mode"] = recall_default_mode
+            recall["supported_modes"] = list(recall_supported_modes or [])
         return {
             "pick": {"enabled": pick_enabled},
             "inspect": inspect,
             "expand": expand,
             "pair": {"enabled": False},
-            "recall": {"enabled": False},
+            "recall": recall,
         }
 
     return {
@@ -481,10 +491,24 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
             },
             {
                 "kind": "memo",
-                "enabled": False,
+                "enabled": True,
                 "source_repo": "aoa-memo",
-                "use_when": "reserved for future recall and memory-routing surfaces",
-                "actions": action_flags(inspect_enabled=False, pick_enabled=False),
+                "use_when": "need bounded recall or memory-layer doctrine surfaces without copying memo truth into routing",
+                "actions": action_flags(
+                    inspect_enabled=True,
+                    surface_file="generated/memory_catalog.min.json",
+                    match_field="id",
+                    expand_enabled=True,
+                    expand_surface_file="generated/memory_sections.full.json",
+                    expand_match_field="id",
+                    expand_section_key_field="section_id",
+                    default_sections=[],
+                    supported_sections=[],
+                    recall_enabled=True,
+                    recall_contract_file="examples/recall_contract.router.semantic.json",
+                    recall_default_mode="semantic",
+                    recall_supported_modes=["semantic"],
+                ),
             },
         ],
     }
@@ -532,7 +556,6 @@ def build_recommended_paths_payload(registry_entries: list[dict[str, Any]]) -> d
     adjacency: dict[tuple[str, str], dict[str, list[dict[str, str]]]] = {
         (entry["kind"], entry["id"]): {"upstream": [], "downstream": []}
         for entry in registry_entries
-        if entry["kind"] != "memo"
     }
 
     def add_hop(
@@ -540,12 +563,12 @@ def build_recommended_paths_payload(registry_entries: list[dict[str, Any]]) -> d
         target_kind: str,
         target_id: str,
     ) -> None:
-        if target_kind == "memo":
-            raise RouterError("memo hops are not supported in v0.1")
         if target_kind == source_key[0]:
             raise RouterError(
                 f"same-kind hop is not allowed for {source_key[0]}:{source_key[1]} -> {target_id}"
             )
+        if target_kind not in RECOMMENDED_HOP_KINDS:
+            raise RouterError(f"{target_kind} hops are not supported in the bounded recommended path surface")
         if target_kind == "technique" and is_pending_technique_id(target_id):
             return
         target_key = (target_kind, target_id)
@@ -572,8 +595,6 @@ def build_recommended_paths_payload(registry_entries: list[dict[str, Any]]) -> d
 
     payload_entries = []
     for entry in sort_registry_entries(list(registry_entries)):
-        if entry["kind"] == "memo":
-            continue
         key = (entry["kind"], entry["id"])
         payload_entries.append(
             {

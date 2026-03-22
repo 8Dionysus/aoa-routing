@@ -1,0 +1,12 @@
+{
+  "id": "recall.semantic.router-ready",
+  "name": "Router-ready semantic recall",
+  "mode": "semantic",
+  "allowed_scopes": ["repo", "project", "ecosystem"],
+  "preferred_kinds": ["claim", "decision", "pattern", "anchor"],
+  "temperature_order": ["warm", "cool", "frozen", "cold", "hot"],
+  "inspect_surface": "generated/memory_catalog.min.json",
+  "expand_surface": "generated/memory_sections.full.json",
+  "source_route_required": true,
+  "notes": "Use when a router or smaller model needs a compact memo entry surface before opening source-owned memo sections."
+}

@@ -35,6 +35,7 @@ from router_core import (
 TECHNIQUE_SOURCE_TYPE = "generated-catalog"
 SKILL_SOURCE_TYPE = "generated-catalog"
 EVAL_SOURCE_TYPE = "generated-catalog"
+MEMO_SOURCE_TYPE = "generated-catalog"
 
 
 def parse_args() -> argparse.Namespace:
@@ -61,7 +62,7 @@ def parse_args() -> argparse.Namespace:
         "--memo-root",
         type=Path,
         default=REPO_ROOT.parent / "aoa-memo",
-        help="Path to the aoa-memo repository root. Reserved only in v0.1.",
+        help="Path to the aoa-memo repository root for bounded memo routing surfaces.",
     )
     parser.add_argument(
         "--agents-root",
@@ -269,6 +270,66 @@ def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def collect_memo_entries(memo_root: Path) -> list[dict[str, Any]]:
+    catalog_path = memo_root / "generated" / "memory_catalog.min.json"
+    payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
+    memo_surfaces = ensure_list(
+        payload.get("memo_surfaces"),
+        f"{relative_posix(catalog_path)}.memo_surfaces",
+    )
+    entries: list[dict[str, Any]] = []
+    required_keys = (
+        "id",
+        "name",
+        "surface_kind",
+        "summary",
+        "primary_focus",
+        "recall_modes",
+        "status",
+        "temperature",
+        "inspect_surface",
+        "expand_surface",
+        "source_path",
+    )
+    for index, item in enumerate(memo_surfaces):
+        location = f"{relative_posix(catalog_path)}.memo_surfaces[{index}]"
+        surface = ensure_mapping(item, location)
+        require_keys(surface, required_keys, location)
+        entries.append(
+            {
+                "kind": "memo",
+                "id": ensure_string(surface["id"], f"{location}.id"),
+                "name": ensure_string(surface["name"], f"{location}.name"),
+                "repo": CANONICAL_REPO_BY_KIND["memo"],
+                "path": ensure_repo_relative_path(surface["source_path"], f"{location}.source_path"),
+                "status": ensure_string(surface["status"], f"{location}.status"),
+                "summary": ensure_string(surface["summary"], f"{location}.summary"),
+                "source_type": MEMO_SOURCE_TYPE,
+                "attributes": {
+                    "surface_kind": ensure_string(
+                        surface["surface_kind"], f"{location}.surface_kind"
+                    ),
+                    "primary_focus": ensure_string(
+                        surface["primary_focus"], f"{location}.primary_focus"
+                    ),
+                    "recall_modes": ensure_string_list(
+                        surface["recall_modes"], f"{location}.recall_modes"
+                    ),
+                    "temperature": ensure_string(
+                        surface["temperature"], f"{location}.temperature"
+                    ),
+                    "inspect_surface": ensure_repo_relative_path(
+                        surface["inspect_surface"], f"{location}.inspect_surface"
+                    ),
+                    "expand_surface": ensure_repo_relative_path(
+                        surface["expand_surface"], f"{location}.expand_surface"
+                    ),
+                },
+            }
+        )
+    return entries
+
+
 def build_outputs(
     techniques_root: Path,
     skills_root: Path,
@@ -276,7 +337,6 @@ def build_outputs(
     memo_root: Path,
     agents_root: Path,
 ) -> dict[str, dict[str, Any]]:
-    _ = memo_root
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
         techniques_root
     )
@@ -284,6 +344,7 @@ def build_outputs(
         collect_technique_entries(techniques_root)
         + collect_skill_entries(skills_root)
         + collect_eval_entries(evals_root)
+        + collect_memo_entries(memo_root)
     )
     seen: set[tuple[str, str]] = set()
     for entry in registry_entries:
@@ -294,7 +355,7 @@ def build_outputs(
 
     registry_payload = {
         "registry_version": 1,
-        "reserved_kinds": ["memo"],
+        "reserved_kinds": [],
         "entries": registry_entries,
     }
     router_payload = build_router_payload(registry_entries)

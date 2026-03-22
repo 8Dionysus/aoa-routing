@@ -14,20 +14,23 @@
     },
     "entries": {
       "type": "array",
-      "items": {
-        "oneOf": [
-          {
-            "$ref": "#/$defs/techniqueEntry"
-          },
-          {
-            "$ref": "#/$defs/skillEntry"
-          },
-          {
-            "$ref": "#/$defs/evalEntry"
-          }
-        ]
+        "items": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/techniqueEntry"
+            },
+            {
+              "$ref": "#/$defs/skillEntry"
+            },
+            {
+              "$ref": "#/$defs/evalEntry"
+            },
+            {
+              "$ref": "#/$defs/memoEntry"
+            }
+          ]
+        }
       }
-    }
   },
   "$defs": {
     "thinProjectionEntry": {
@@ -99,6 +102,23 @@
             },
             "repo": {
               "const": "aoa-evals"
+            }
+          }
+        }
+      ]
+    },
+    "memoEntry": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/thinProjectionEntry"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "memo"
+            },
+            "repo": {
+              "const": "aoa-memo"
             }
           }
         }

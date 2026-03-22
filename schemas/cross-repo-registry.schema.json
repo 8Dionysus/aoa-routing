@@ -18,7 +18,7 @@
       "items": {
         "const": "memo"
       },
-      "minItems": 1,
+      "minItems": 0,
       "maxItems": 1,
       "uniqueItems": true
     },
@@ -34,6 +34,9 @@
           },
           {
             "$ref": "#/$defs/evalEntry"
+          },
+          {
+            "$ref": "#/$defs/memoEntry"
           }
         ]
       }
@@ -107,6 +110,23 @@
             },
             "repo": {
               "const": "aoa-evals"
+            }
+          }
+        }
+      ]
+    },
+    "memoEntry": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/generatedCatalogEntry"
+        },
+        {
+          "properties": {
+            "kind": {
+              "const": "memo"
+            },
+            "repo": {
+              "const": "aoa-memo"
             }
           }
         }

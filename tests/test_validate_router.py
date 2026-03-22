@@ -18,12 +18,10 @@ def write_json(path: Path, payload: object) -> None:
 
 def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
     roots: dict[str, Path] = {}
-    for repo_name in ("aoa-techniques", "aoa-skills", "aoa-evals", "aoa-agents"):
+    for repo_name in ("aoa-techniques", "aoa-skills", "aoa-evals", "aoa-memo", "aoa-agents"):
         target = tmp_path / repo_name
         shutil.copytree(FIXTURES_ROOT / repo_name, target)
         roots[repo_name] = target
-    roots["aoa-memo"] = tmp_path / "aoa-memo"
-    roots["aoa-memo"].mkdir(parents=True, exist_ok=True)
     return roots
 
 
@@ -358,14 +356,11 @@ def test_validate_generated_outputs_rejects_malformed_expand_action_shape_via_sc
     )
 
 
-def test_validate_generated_outputs_rejects_enabled_pair_or_recall_actions_via_schema(
-    tmp_path: Path,
-) -> None:
+def test_validate_generated_outputs_rejects_enabled_pair_action_via_schema(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     hints_path = generated_dir / "task_to_surface_hints.json"
     payload = json.loads(hints_path.read_text(encoding="utf-8"))
     payload["hints"][0]["actions"]["pair"]["enabled"] = True
-    payload["hints"][1]["actions"]["recall"]["enabled"] = True
     write_json(hints_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
@@ -373,8 +368,22 @@ def test_validate_generated_outputs_rejects_enabled_pair_or_recall_actions_via_s
         "schema violation" in issue.message and ".actions.pair.enabled" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_malformed_enabled_recall_action_via_schema(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    del memo_hint["actions"]["recall"]["contract_file"]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "schema violation" in issue.message and ".actions.recall.enabled" in issue.message
+        ("schema violation" in issue.message and "actions.recall" in issue.message)
+        or "must define contract_file" in issue.message
         for issue in issues
     )
 
@@ -485,24 +494,32 @@ def test_validate_generated_outputs_rejects_capsule_payload_leakage(tmp_path: Pa
     )
 
 
-def test_validate_generated_outputs_rejects_memo_objects_in_v0_1(tmp_path: Path) -> None:
+def test_validate_generated_outputs_rejects_invalid_recommended_memo_hop_kind(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    registry_path = generated_dir / "cross_repo_registry.min.json"
-    payload = json.loads(registry_path.read_text(encoding="utf-8"))
-    payload["entries"].append(
-        {
-            "kind": "memo",
-            "id": "memo-001",
-            "name": "memo-001",
-            "repo": "aoa-memo",
-            "path": "memory/memo-001.md",
-            "status": "draft",
-            "summary": "future memory object",
-            "source_type": "manual",
-            "attributes": {},
-        }
+    recommended_path = generated_dir / "recommended_paths.min.json"
+    payload = json.loads(recommended_path.read_text(encoding="utf-8"))
+    payload["entries"][0]["downstream"].append(
+        {"kind": "memo", "id": "AOA-M-0001", "relation": "requires"}
     )
-    write_json(registry_path, payload)
+    write_json(recommended_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
-    assert any("memo entries are not allowed in v0.1" in issue.message for issue in issues)
+    assert any(
+        ("schema violation" in issue.message and "downstream[1].kind" in issue.message)
+        or "hop kind must be technique, skill, or eval" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_missing_recall_contract_target(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    contract_path = roots["aoa-memo"] / "examples" / "recall_contract.router.semantic.json"
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+    payload["expand_surface"] = "generated/memory_capsules.json"
+    write_json(contract_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "recall contract expand_surface must match the memo expand surface hint" in issue.message
+        for issue in issues
+    )

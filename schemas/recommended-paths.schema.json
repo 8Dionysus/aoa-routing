@@ -65,7 +65,8 @@
           "enum": [
             "technique",
             "skill",
-            "eval"
+            "eval",
+            "memo"
           ]
         },
         "id": {

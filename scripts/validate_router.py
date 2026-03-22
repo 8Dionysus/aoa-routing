@@ -19,6 +19,7 @@ from router_core import (
     ALL_KINDS,
     CANONICAL_REPO_BY_KIND,
     MODEL_TIER_SOURCE_REPO,
+    RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
     RESERVED_KINDS,
     RouterError,
@@ -341,6 +342,30 @@ def validate_registry_entry_attributes(
             return False
         return True
 
+    if kind == "memo":
+        expected_keys = {
+            "surface_kind",
+            "primary_focus",
+            "recall_modes",
+            "temperature",
+            "inspect_surface",
+            "expand_surface",
+        }
+        if set(attributes) != expected_keys:
+            issues.append(ValidationIssue(location, "memo attributes do not match the expected shape"))
+            return False
+        for key in ("surface_kind", "primary_focus", "temperature", "inspect_surface", "expand_surface"):
+            if not isinstance(attributes[key], str):
+                issues.append(ValidationIssue(location, f"memo {key} must be a string"))
+        try:
+            ensure_string_list(attributes["recall_modes"], f"{location}.recall_modes")
+            ensure_repo_relative_path(attributes["inspect_surface"], f"{location}.inspect_surface")
+            ensure_repo_relative_path(attributes["expand_surface"], f"{location}.expand_surface")
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            return False
+        return True
+
     issues.append(ValidationIssue(location, f"unsupported entry kind '{kind}'"))
     return False
 
@@ -416,7 +441,9 @@ def capsule_array_key(kind: str) -> str:
         return "skills"
     if kind == "eval":
         return "evals"
-    raise RouterError(f"capsule surfaces do not support kind '{kind}' in v0.1")
+    if kind == "memo":
+        return "memo_surfaces"
+    raise RouterError(f"capsule surfaces do not support kind '{kind}'")
 
 
 def section_array_key(kind: str) -> str:
@@ -426,7 +453,15 @@ def section_array_key(kind: str) -> str:
         return "skills"
     if kind == "eval":
         return "evals"
-    raise RouterError(f"section surfaces do not support kind '{kind}' in v0.1")
+    if kind == "memo":
+        return "memo_surfaces"
+    raise RouterError(f"section surfaces do not support kind '{kind}'")
+
+
+def section_content_field(kind: str) -> str:
+    if kind == "memo":
+        return "body"
+    return "content_markdown"
 
 
 def validate_inspect_targets(
@@ -696,12 +731,13 @@ def validate_expand_targets(
                             f"{section_location}.{section_key_field} must be a non-empty string"
                         )
                     heading = section.get("heading")
-                    content_markdown = section.get("content_markdown")
+                    content_field = section_content_field(kind)
+                    content_markdown = section.get(content_field)
                     if not isinstance(heading, str) or not heading.strip():
                         raise RouterError(f"{section_location}.heading must be a non-empty string")
                     if not isinstance(content_markdown, str) or not content_markdown.strip():
                         raise RouterError(
-                            f"{section_location}.content_markdown must be a non-empty string"
+                            f"{section_location}.{content_field} must be a non-empty string"
                         )
                 except RouterError as exc:
                     issues.append(ValidationIssue(location, str(exc)))
@@ -749,6 +785,8 @@ def validate_expand_targets(
 
         supported_tuple = tuple(supported_sections)
         default_tuple = tuple(default_sections)
+        if not supported_tuple:
+            continue
         for match_value in sorted(expected_matches & seen_matches):
             actual_keys = tuple(section_keys_by_match.get(match_value, []))
             if actual_keys != supported_tuple:
@@ -767,6 +805,109 @@ def validate_expand_targets(
                             f"expand surface for {kind} match '{match_value}' is missing default sections: {', '.join(missing_defaults)}",
                         )
                     )
+
+
+def validate_recall_targets(
+    hints_payload: dict[str, Any],
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    try:
+        hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+        return
+    for index, raw_hint in enumerate(hints):
+        try:
+            hint = ensure_mapping(raw_hint, f"task_to_surface_hints.json.hints[{index}]")
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+        if hint.get("kind") != "memo" or hint.get("enabled") is not True:
+            continue
+        actions = hint.get("actions")
+        if not isinstance(actions, dict):
+            continue
+        recall = actions.get("recall")
+        inspect = actions.get("inspect")
+        expand = actions.get("expand")
+        if not isinstance(recall, dict) or not recall.get("enabled"):
+            continue
+        contract_file = recall.get("contract_file")
+        default_mode = recall.get("default_mode")
+        supported_modes = recall.get("supported_modes")
+        if not isinstance(contract_file, str) or not contract_file.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "enabled recall action for kind 'memo' must define contract_file",
+                )
+            )
+            continue
+        if not isinstance(default_mode, str) or not default_mode.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "enabled recall action for kind 'memo' must define default_mode",
+                )
+            )
+            continue
+        try:
+            supported_mode_values = ensure_string_list(
+                supported_modes, "task_to_surface_hints.json.memo.actions.recall.supported_modes"
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+        if default_mode not in supported_mode_values:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "memo default_mode must be included in supported_modes",
+                )
+            )
+        contract_path = memo_root.resolve() / contract_file
+        try:
+            contract = ensure_mapping(
+                load_json_file(contract_path),
+                f"aoa-memo/{contract_file}",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue(f"aoa-memo/{contract_file}", str(exc)))
+            continue
+        contract_mode = contract.get("mode")
+        inspect_surface = contract.get("inspect_surface")
+        expand_surface = contract.get("expand_surface")
+        if contract_mode != default_mode:
+            issues.append(
+                ValidationIssue(
+                    f"aoa-memo/{contract_file}",
+                    "recall contract mode must match memo default_mode",
+                )
+            )
+        if contract_mode not in supported_mode_values:
+            issues.append(
+                ValidationIssue(
+                    f"aoa-memo/{contract_file}",
+                    "recall contract mode must be included in supported_modes",
+                )
+            )
+        inspect_surface_file = inspect.get("surface_file") if isinstance(inspect, dict) else None
+        expand_surface_file = expand.get("surface_file") if isinstance(expand, dict) else None
+        if inspect_surface != inspect_surface_file:
+            issues.append(
+                ValidationIssue(
+                    f"aoa-memo/{contract_file}",
+                    "recall contract inspect_surface must match the memo inspect surface hint",
+                )
+            )
+        if expand_surface != expand_surface_file:
+            issues.append(
+                ValidationIssue(
+                    f"aoa-memo/{contract_file}",
+                    "recall contract expand_surface must match the memo expand surface hint",
+                )
+            )
 
 
 def payload_contains_key(payload: Any, target_key: str) -> bool:
@@ -963,10 +1104,6 @@ def validate_generated_outputs(
                 seen_registry_keys.add(key)
         if entry.get("kind") not in ALL_KINDS:
             issues.append(ValidationIssue(location, f"invalid kind '{entry.get('kind')}'"))
-        if entry.get("kind") == "memo":
-            issues.append(ValidationIssue(location, "memo entries are not allowed in v0.1"))
-        if entry.get("repo") == "aoa-memo":
-            issues.append(ValidationIssue(location, "aoa-memo repo entries are not allowed in v0.1"))
         if entry.get("kind") in ACTIVE_KINDS and entry.get("source_type") != "generated-catalog":
             issues.append(
                 ValidationIssue(
@@ -1012,8 +1149,6 @@ def validate_generated_outputs(
                 issues.append(ValidationIssue(location, f"duplicate router entry for {key[0]}:{key[1]}"))
             else:
                 seen_router_keys.add(key)
-        if entry.get("kind") == "memo":
-            issues.append(ValidationIssue(location, "memo router entries are not allowed in v0.1"))
         if "source_type" in entry or "attributes" in entry:
             issues.append(ValidationIssue(location, "router entries must stay as the thin projection surface"))
         validate_entry_repo_and_path(entry, location, issues)
@@ -1055,6 +1190,7 @@ def validate_generated_outputs(
         memo_root,
         issues,
     )
+    validate_recall_targets(hints_payload, memo_root, issues)
 
     try:
         recommended_entries = ensure_list(
@@ -1072,8 +1208,6 @@ def validate_generated_outputs(
         except RouterError as exc:
             issues.append(ValidationIssue(recommended_path.name, str(exc)))
             continue
-        if entry.get("kind") == "memo":
-            issues.append(ValidationIssue(location, "memo recommended path entries are not allowed in v0.1"))
         for edge_name in ("upstream", "downstream"):
             edges = entry.get(edge_name)
             if not isinstance(edges, list):
@@ -1086,12 +1220,10 @@ def validate_generated_outputs(
                     continue
                 if raw_hop.get("relation") not in {"requires", "required_by"}:
                     issues.append(ValidationIssue(hop_location, "relation must be 'requires' or 'required_by'"))
-                if raw_hop.get("kind") not in ACTIVE_KINDS:
+                if raw_hop.get("kind") not in RECOMMENDED_HOP_KINDS:
                     issues.append(ValidationIssue(hop_location, "hop kind must be technique, skill, or eval"))
                 if raw_hop.get("kind") == entry.get("kind"):
-                    issues.append(ValidationIssue(hop_location, "same-kind hops are not allowed in v0.1"))
-                if raw_hop.get("kind") == "memo":
-                    issues.append(ValidationIssue(hop_location, "memo hops are not allowed in v0.1"))
+                    issues.append(ValidationIssue(hop_location, "same-kind hops are not allowed in the bounded recommended path surface"))
 
     try:
         expected_recommended = build_recommended_paths_payload(recommended_safe_registry_entries)

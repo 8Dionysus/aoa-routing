@@ -63,19 +63,20 @@ Goal:
 
 ### Milestone 6: Memo dispatch readiness
 
-Add `memo` as a real routed kind only after `aoa-memo` exists as its own initialized source repo with local memory surfaces.
+Activate `memo` as a real routed kind now that `aoa-memo` exposes initialized source-owned memory surfaces.
 
-When that happens, `aoa-routing` should own:
+`aoa-routing` should own:
 
 - request typing for recall flows
 - dispatch to memo surfaces
-- bounded links from techniques, skills, and evals toward memory
+- bounded inspect/expand/recall hints toward memory
 
 It must not own:
 
 - memory truths
 - recall policy authority
 - shadow copies of memo objects
+- graph traversal programs
 
 ## Boundaries To Preserve
 
