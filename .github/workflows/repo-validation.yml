@@ -70,4 +70,4 @@ jobs:
             --agents-root ./aoa-agents
 
       - name: Run routing tests
-        run: pytest
+        run: pytest tests
