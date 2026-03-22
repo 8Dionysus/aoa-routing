@@ -61,7 +61,13 @@ jobs:
             --agents-root ./aoa-agents
 
       - name: Validate routing surfaces
-        run: python scripts/validate_router.py
+        run: |
+          python scripts/validate_router.py \
+            --techniques-root ./aoa-techniques \
+            --skills-root ./aoa-skills \
+            --evals-root ./aoa-evals \
+            --memo-root ./aoa-memo \
+            --agents-root ./aoa-agents
 
       - name: Run routing tests
         run: pytest
