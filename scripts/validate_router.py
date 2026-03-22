@@ -1024,8 +1024,18 @@ def validate_generated_outputs(
 
     if hints_payload != build_task_to_surface_hints_payload():
         issues.append(ValidationIssue(hints_path.name, "task_to_surface_hints.json does not match the expected static dispatch surface"))
-    if tier_hints_payload != build_task_to_tier_hints_payload(agents_root):
-        issues.append(ValidationIssue(tier_hints_path.name, "task_to_tier_hints.json does not match the expected static tier dispatch surface"))
+    try:
+        expected_tier_hints_payload = build_task_to_tier_hints_payload(agents_root)
+    except RouterError as exc:
+        issues.append(
+            ValidationIssue(
+                tier_hints_path.name,
+                f"could not rebuild task_to_tier_hints.json from aoa-agents: {exc}",
+            )
+        )
+    else:
+        if tier_hints_payload != expected_tier_hints_payload:
+            issues.append(ValidationIssue(tier_hints_path.name, "task_to_tier_hints.json does not match the expected static tier dispatch surface"))
     validate_task_tier_hints(tier_hints_payload, agents_root, issues)
     validate_inspect_targets(
         projection_safe_registry_entries,
