@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "walkthroughs": [
+    {
+      "name": "technique_pick_inspect_expand",
+      "fixture_variant": "base",
+      "pick": {
+        "target_kind": "technique"
+      },
+      "inspect": {
+        "kind": "technique",
+        "target_value": "AOA-T-0001"
+      },
+      "expand": {
+        "kind": "technique",
+        "target_value": "AOA-T-0001",
+        "section_value": "intent"
+      }
+    },
+    {
+      "name": "skill_inspect_pair_to_technique",
+      "fixture_variant": "base",
+      "inspect": {
+        "kind": "skill",
+        "target_value": "aoa-change-protocol"
+      },
+      "pair": {
+        "source_kind": "skill",
+        "source_id": "aoa-change-protocol",
+        "targets": [
+          {
+            "kind": "technique",
+            "id": "AOA-T-0001",
+            "relation": "requires"
+          }
+        ]
+      }
+    },
+    {
+      "name": "eval_inspect_pair_to_skill",
+      "fixture_variant": "base",
+      "inspect": {
+        "kind": "eval",
+        "target_value": "aoa-bounded-change-quality"
+      },
+      "pair": {
+        "source_kind": "eval",
+        "source_id": "aoa-bounded-change-quality",
+        "targets": [
+          {
+            "kind": "skill",
+            "id": "aoa-change-protocol",
+            "relation": "requires"
+          }
+        ]
+      }
+    },
+    {
+      "name": "memo_inspect_expand_recall_semantic",
+      "fixture_variant": "base",
+      "inspect": {
+        "kind": "memo",
+        "target_value": "AOA-M-0001"
+      },
+      "expand": {
+        "kind": "memo",
+        "target_value": "AOA-M-0001",
+        "section_value": "AOA-M-0001#mission"
+      },
+      "recall": {
+        "mode": "semantic"
+      }
+    },
+    {
+      "name": "kag_inspect_pair_companions",
+      "fixture_variant": "kag",
+      "inspect": {
+        "kind": "technique",
+        "target_value": "AOA-T-0019"
+      },
+      "pair": {
+        "source_kind": "technique",
+        "source_id": "AOA-T-0019",
+        "targets": [
+          {
+            "kind": "technique",
+            "id": "AOA-T-0018",
+            "relation": "complements"
+          },
+          {
+            "kind": "technique",
+            "id": "AOA-T-0020",
+            "relation": "used_together_for"
+          },
+          {
+            "kind": "technique",
+            "id": "AOA-T-0021",
+            "relation": "used_together_for"
+          }
+        ]
+      }
+    }
+  ]
+}
