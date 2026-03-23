@@ -19,21 +19,30 @@ Already merged:
   - `aoa-routing` points to repo-local capsule surfaces
 - section-aware expand routing:
   - `aoa-routing` points to repo-local section surfaces
+- bounded pairing routing:
+  - `aoa-routing` publishes route-owned pair hints for technique, skill, and eval flows
+- tiny-model entry routing:
+  - `aoa-routing` publishes a low-context query grammar and curated starter entrypoints
+- memo dispatch readiness:
+  - `aoa-routing` exposes mode-indexed router-ready recall contracts when upstream `aoa-memo` provides them
 - schema-backed public output validation:
   - registry
   - router projection
   - task-to-surface hints
   - recommended paths
+  - pairing hints
+  - KAG/source-lift relation hints
+  - tiny-model entrypoints
 
 The current runtime path is:
 
-`pick -> inspect -> expand -> object use`
+`pick -> inspect -> expand -> object use -> optional pair -> optional recall`
 
-## Next Waves
+## Current Milestones
 
 ### Milestone 4: Bounded adjacency and pairing surfaces
 
-Extend routing with richer, but still bounded, cross-object guidance:
+Merged as bounded routing surfaces:
 
 - skill-to-technique bridge hints
 - eval pairing hints
@@ -49,7 +58,7 @@ Non-goal:
 
 ### Milestone 5: Tiny-model entry surfaces
 
-Add model-tier-friendly entrypoints for very small models:
+Merged as model-tier-friendly entrypoints for very small models:
 
 - `generated/tiny_model_entrypoints.json`
 - stable query grammar for `pick`, `inspect`, `expand`, and `pair`
@@ -63,7 +72,7 @@ Goal:
 
 ### Milestone 6: Memo dispatch readiness
 
-Activate `memo` as a real routed kind now that `aoa-memo` exposes initialized source-owned memory surfaces.
+Merged as bounded memo recall dispatch readiness now that `aoa-memo` exposes initialized source-owned memory surfaces.
 
 `aoa-routing` should own:
 
@@ -87,6 +96,9 @@ These boundaries come directly from the seed and should remain hard constraints:
 - global transitions and cross-repo dispatch live in `aoa-routing`
 - `aoa-memo` should become a memory layer, not a second routing layer
 - `aoa-routing` should never duplicate full bundles as a convenience cache
+- same-kind pairing must stay family-scoped and one-hop bounded
+- tiny-model entrypoints must stay route-local and must not become a second tier registry
+- memo recall hints must advertise only router-ready upstream contracts
 
 ## Definition Of Success
 

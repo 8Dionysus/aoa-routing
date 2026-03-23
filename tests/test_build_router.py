@@ -211,6 +211,8 @@ def test_build_outputs_from_fixtures() -> None:
     tier_hints = outputs["task_to_tier_hints.json"]
     recommended = outputs["recommended_paths.min.json"]
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
+    pairing = outputs["pairing_hints.min.json"]
+    tiny_model = outputs["tiny_model_entrypoints.json"]
 
     assert [entry["kind"] for entry in registry["entries"]] == [
         "technique",
@@ -281,6 +283,12 @@ def test_build_outputs_from_fixtures() -> None:
             "future_evolution",
         ],
     }
+    assert technique_hint["actions"]["pair"] == {
+        "enabled": True,
+        "surface_repo": "aoa-routing",
+        "surface_file": "generated/pairing_hints.min.json",
+        "match_field": "id",
+    }
     memo_hint = next(hint for hint in hints["hints"] if hint["kind"] == "memo")
     assert memo_hint == {
         "kind": "memo",
@@ -307,7 +315,12 @@ def test_build_outputs_from_fixtures() -> None:
                 "enabled": True,
                 "contract_file": "examples/recall_contract.router.semantic.json",
                 "default_mode": "semantic",
-                "supported_modes": ["semantic"],
+                "supported_modes": ["semantic", "source_route", "lineage"],
+                "contracts_by_mode": {
+                    "semantic": "examples/recall_contract.router.semantic.json",
+                    "source_route": "examples/recall_contract.router.source_route.json",
+                    "lineage": "examples/recall_contract.router.lineage.json",
+                },
             },
         },
     }
@@ -341,6 +354,41 @@ def test_build_outputs_from_fixtures() -> None:
         "downstream": [],
     }
 
+    pairing_by_key = {(entry["kind"], entry["id"]): entry for entry in pairing["entries"]}
+    assert pairing_by_key[("technique", "AOA-T-0001")] == {
+        "kind": "technique",
+        "id": "AOA-T-0001",
+        "pairs": [
+            {"kind": "skill", "id": "aoa-change-protocol", "relation": "required_by"},
+            {"kind": "eval", "id": "aoa-bounded-change-quality", "relation": "required_by"},
+        ],
+    }
+    assert pairing_by_key[("skill", "aoa-context-scan")] == {
+        "kind": "skill",
+        "id": "aoa-context-scan",
+        "pairs": [
+            {"kind": "technique", "id": "AOA-T-0002", "relation": "requires"},
+            {"kind": "eval", "id": "aoa-context-scan-quality", "relation": "required_by"},
+        ],
+    }
+    assert tiny_model["queries"][0] == {
+        "verb": "pick",
+        "source_repo": "aoa-routing",
+        "target_surface": "generated/aoa_router.min.json",
+        "match_key": "kind",
+        "allowed_kinds": ["technique", "skill", "eval", "memo"],
+    }
+    assert tiny_model["starters"] == [
+        {
+            "name": "router-root",
+            "verb": "pick",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": ["technique", "skill", "eval", "memo"],
+        }
+    ]
+
 
 def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None:
     techniques_root = tmp_path / "aoa-techniques"
@@ -359,6 +407,8 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
     )
 
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
+    pairing = outputs["pairing_hints.min.json"]
+    tiny_model = outputs["tiny_model_entrypoints.json"]
     assert relation_hints["family_ids"] == KAG_SOURCE_LIFT_TECHNIQUE_IDS
     by_id = {entry["id"]: entry for entry in relation_hints["entries"]}
     assert by_id["AOA-T-0018"]["relations"] == [
@@ -371,6 +421,34 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
     ]
     assert by_id["AOA-T-0021"]["relations"] == [
         {"type": "requires", "target": "AOA-T-0019"}
+    ]
+    pairing_by_id = {entry["id"]: entry for entry in pairing["entries"] if entry["kind"] == "technique"}
+    assert pairing_by_id["AOA-T-0019"]["pairs"] == [
+        {"kind": "technique", "id": "AOA-T-0018", "relation": "complements"},
+        {"kind": "technique", "id": "AOA-T-0020", "relation": "used_together_for"},
+        {"kind": "technique", "id": "AOA-T-0021", "relation": "used_together_for"},
+    ]
+    assert tiny_model["starters"][-2:] == [
+        {
+            "name": "kag-source-lift-default",
+            "verb": "inspect",
+            "source_repo": "aoa-techniques",
+            "target_surface": "generated/technique_capsules.json",
+            "match_key": "id",
+            "allowed_kinds": ["technique"],
+            "target_kind": "technique",
+            "target_value": "AOA-T-0019",
+        },
+        {
+            "name": "kag-source-lift-companions",
+            "verb": "pair",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/pairing_hints.min.json",
+            "match_key": "id",
+            "allowed_kinds": ["technique"],
+            "target_kind": "technique",
+            "target_value": "AOA-T-0019",
+        },
     ]
 
 

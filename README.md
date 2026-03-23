@@ -12,7 +12,7 @@ The core rule for this repository is:
 
 The current runtime path is:
 
-`pick -> inspect -> expand -> object use`
+`pick -> inspect -> expand -> object use -> optional pair -> optional recall`
 
 ## Scope
 
@@ -52,16 +52,18 @@ The builder writes these tracked artifacts under `generated/`:
 
 - `cross_repo_registry.min.json` - normalized registry of all routeable objects
 - `aoa_router.min.json` - minimal entry routing projection
-- `task_to_surface_hints.json` - static dispatch hints by surface kind, including inspect and expand actions
+- `task_to_surface_hints.json` - dispatch hints by surface kind, including inspect, expand, pair, and bounded recall actions
 - `task_to_tier_hints.json` - task-family hints that derive tier IDs and artifact contracts from `aoa-agents/generated/model_tier_registry.json`
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
 - `kag_source_lift_relation_hints.min.json` - bounded one-hop direct relation hints for the KAG/source-lift family
+- `pairing_hints.min.json` - bounded pair suggestions derived from cross-kind dependencies and family-scoped direct relations
+- `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
 `AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,
 `AOA-T-0021` stays the direct relation hint companion, and `AOA-T-0022` stays the caution companion.
-The new relation-hint surface stays family-scoped to that seam and does not introduce graph traversal,
-rationale layers, or same-kind exploration.
+The relation-hint and pairing surfaces stay family-scoped to that seam and do not introduce graph traversal,
+rationale layers, or open-ended same-kind exploration.
 
 These public outputs are schema-backed and validator-checked.
 `aoa-routing` treats them as stable navigation contracts, not ad hoc helper files.
@@ -86,9 +88,18 @@ Expand actions point to repo-local section surfaces:
 `aoa-routing` does not copy section payloads into its own outputs.
 It only tells an agent which source-owned section surface to expand next.
 
+Pair actions point to a route-owned bounded surface:
+
+- `aoa-routing/generated/pairing_hints.min.json`
+
+`aoa-routing` keeps pairing to one-hop bounded hints.
+It does not widen pair flow into a graph or same-kind exploration layer.
+
 Recall stays bounded.
 `aoa-routing` points memo recall requests at source-owned `aoa-memo` contracts and surfaces,
-but it does not own recall policy authority, memory truth, or graph traversal.
+advertises only router-ready recall modes that upstream `aoa-memo` exposes through contract files,
+and keeps those contracts mode-indexed in the routing hint surface.
+It does not own recall policy authority, memory truth, or graph traversal.
 
 ## Repository layout
 
@@ -147,8 +158,6 @@ python scripts/build_router.py --techniques-root ../custom-techniques --generate
 
 These are intentionally out of scope for the first foundation release:
 
-- pairings
-- tiny-model entrypoints
 - same-kind relation graphs
 - broader KAG and graph views
 
@@ -160,4 +169,5 @@ These are intentionally out of scope for the first foundation release:
 - routing points them to the smallest next object
 - meaning stays in the source repositories
 
-The next cross-repo waves start with bounded pairing and adjacency surfaces, then tiny-model entry surfaces, while memo stays constrained to inspect, expand, and recall dispatch.
+Bounded pairing, tiny-model entrypoints, and memo recall dispatch now sit inside that thin-router contract,
+while source-owned meaning remains upstream.

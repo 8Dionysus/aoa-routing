@@ -1,0 +1,12 @@
+{
+  "id": "recall.lineage.router-ready",
+  "name": "Router-ready lineage recall",
+  "mode": "lineage",
+  "allowed_scopes": ["repo", "project", "ecosystem"],
+  "preferred_kinds": ["claim", "decision", "pattern"],
+  "temperature_order": ["warm", "cool", "frozen", "cold", "hot"],
+  "inspect_surface": "generated/memory_catalog.min.json",
+  "expand_surface": "generated/memory_sections.full.json",
+  "source_route_required": true,
+  "notes": "Use when routing needs compact lineage-aware memo expansion."
+}

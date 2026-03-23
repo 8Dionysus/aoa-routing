@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/schemas/tiny-model-entrypoints.schema.json",
+  "title": "aoa-routing tiny model entrypoints",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "queries",
+    "starters"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "queries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/query"
+      }
+    },
+    "starters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/starter"
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "kindName": {
+      "type": "string",
+      "enum": [
+        "technique",
+        "skill",
+        "eval",
+        "memo"
+      ]
+    },
+    "verbName": {
+      "type": "string",
+      "enum": [
+        "pick",
+        "inspect",
+        "expand",
+        "pair"
+      ]
+    },
+    "sourceRepo": {
+      "type": "string",
+      "enum": [
+        "aoa-routing",
+        "aoa-techniques",
+        "aoa-skills",
+        "aoa-evals",
+        "aoa-memo"
+      ]
+    },
+    "kindList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/kindName"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "query": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verb",
+        "source_repo",
+        "target_surface",
+        "match_key",
+        "allowed_kinds"
+      ],
+      "properties": {
+        "verb": {
+          "$ref": "#/$defs/verbName"
+        },
+        "source_repo": {
+          "$ref": "#/$defs/sourceRepo"
+        },
+        "target_surface": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "match_key": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "allowed_kinds": {
+          "$ref": "#/$defs/kindList"
+        },
+        "section_key_field": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "default_sections": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          },
+          "uniqueItems": true
+        }
+      }
+    },
+    "starter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb",
+        "source_repo",
+        "target_surface",
+        "match_key",
+        "allowed_kinds"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "verb": {
+          "$ref": "#/$defs/verbName"
+        },
+        "source_repo": {
+          "$ref": "#/$defs/sourceRepo"
+        },
+        "target_surface": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "match_key": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "allowed_kinds": {
+          "$ref": "#/$defs/kindList"
+        },
+        "target_kind": {
+          "$ref": "#/$defs/kindName"
+        },
+        "target_value": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    }
+  }
+}

@@ -18,22 +18,30 @@ from router_core import (
     ACTIVE_KINDS,
     ALL_KINDS,
     CANONICAL_REPO_BY_KIND,
+    DIRECT_RELATION_TYPES_SET,
+    KAG_SOURCE_LIFT_TECHNIQUE_SET,
     MODEL_TIER_SOURCE_REPO,
+    PAIRABLE_KINDS,
+    PAIRING_SURFACE_REPO,
     RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
     RESERVED_KINDS,
     RouterError,
     build_kag_source_lift_relation_hints_payload,
+    build_pairing_hints_payload,
     build_recommended_paths_payload,
     build_router_payload,
+    build_tiny_model_entrypoints_payload,
     build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
+    collect_memo_recall_mode_order,
     ensure_list,
     ensure_mapping,
     ensure_repo_relative_path,
     ensure_string_list,
     is_pending_technique_id,
     load_json_file,
+    load_memo_catalog_surfaces,
     load_model_tier_registry,
     load_technique_catalog_entries,
 )
@@ -51,6 +59,9 @@ OUTPUT_SCHEMA_NAMES = {
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
     "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
     "recommended_paths.min.json": "recommended-paths.schema.json",
+    "kag_source_lift_relation_hints.min.json": "kag-source-lift-relation-hints.schema.json",
+    "pairing_hints.min.json": "pairing-hints.schema.json",
+    "tiny_model_entrypoints.json": "tiny-model-entrypoints.schema.json",
 }
 
 SOURCE_OWNED_PAYLOAD_KEYS = (
@@ -807,9 +818,32 @@ def validate_expand_targets(
                     )
 
 
-def validate_recall_targets(
+def load_surface_entries_for_validation(
+    payload: dict[str, Any],
+    surface_file: str,
+) -> list[dict[str, Any]]:
+    array_key_by_filename = {
+        "aoa_router.min.json": "entries",
+        "pairing_hints.min.json": "entries",
+        "technique_capsules.json": "techniques",
+        "skill_capsules.json": "skills",
+        "eval_capsules.json": "evals",
+        "memory_catalog.min.json": "memo_surfaces",
+        "technique_sections.full.json": "techniques",
+        "skill_sections.full.json": "skills",
+        "eval_sections.full.json": "evals",
+        "memory_sections.full.json": "memo_surfaces",
+    }
+    key = array_key_by_filename.get(Path(surface_file).name)
+    if key is None:
+        raise RouterError(f"unsupported surface file '{surface_file}' for validation lookup")
+    return ensure_list(payload.get(key), f"{surface_file}.{key}")
+
+
+def validate_pair_targets(
+    registry_entries: list[dict[str, Any]],
     hints_payload: dict[str, Any],
-    memo_root: Path,
+    generated_dir: Path,
     issues: list[ValidationIssue],
 ) -> None:
     try:
@@ -817,6 +851,288 @@ def validate_recall_targets(
     except RouterError as exc:
         issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
         return
+
+    route_root = generated_dir.resolve().parent
+    registry_index = {
+        (entry["kind"], entry["id"]): entry
+        for entry in registry_entries
+        if isinstance(entry.get("kind"), str) and isinstance(entry.get("id"), str)
+    }
+    expected_matches_by_kind = {
+        kind: {
+            entry["id"]
+            for entry in registry_entries
+            if entry.get("kind") == kind and isinstance(entry.get("id"), str)
+        }
+        for kind in PAIRABLE_KINDS
+    }
+
+    loaded_payloads: dict[str, dict[str, Any]] = {}
+    pair_entries_by_kind: dict[str, set[str]] = {kind: set() for kind in PAIRABLE_KINDS}
+    validated_surface_files: set[str] = set()
+
+    for index, raw_hint in enumerate(hints):
+        try:
+            hint = ensure_mapping(raw_hint, f"task_to_surface_hints.json.hints[{index}]")
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+        kind = hint.get("kind")
+        if kind not in PAIRABLE_KINDS or hint.get("enabled") is not True:
+            continue
+        actions = hint.get("actions")
+        if not isinstance(actions, dict):
+            continue
+        pair = actions.get("pair")
+        if not isinstance(pair, dict) or pair.get("enabled") is not True:
+            continue
+
+        surface_repo = pair.get("surface_repo")
+        surface_file = pair.get("surface_file")
+        match_field = pair.get("match_field")
+        if surface_repo != PAIRING_SURFACE_REPO:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"pair action for kind '{kind}' must use surface_repo '{PAIRING_SURFACE_REPO}'",
+                )
+            )
+            continue
+        if not isinstance(surface_file, str) or not surface_file.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled pair action for kind '{kind}' must define surface_file",
+                )
+            )
+            continue
+        if not isinstance(match_field, str) or not match_field.strip():
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"enabled pair action for kind '{kind}' must define match_field",
+                )
+            )
+            continue
+
+        if surface_file not in loaded_payloads:
+            surface_path = route_root / surface_file
+            location = f"aoa-routing/{surface_file}"
+            try:
+                loaded_payloads[surface_file] = ensure_mapping(load_json_file(surface_path), location)
+            except RouterError as exc:
+                issues.append(ValidationIssue(location, str(exc)))
+                continue
+
+        payload = loaded_payloads[surface_file]
+        try:
+            pair_entries = load_surface_entries_for_validation(payload, surface_file)
+        except RouterError as exc:
+            issues.append(ValidationIssue(f"aoa-routing/{surface_file}", str(exc)))
+            continue
+
+        if surface_file in validated_surface_files:
+            continue
+        validated_surface_files.add(surface_file)
+
+        for pair_index, raw_entry in enumerate(pair_entries):
+            location = f"aoa-routing/{surface_file}.entries[{pair_index}]"
+            try:
+                entry = ensure_mapping(raw_entry, location)
+            except RouterError as exc:
+                issues.append(ValidationIssue(f"aoa-routing/{surface_file}", str(exc)))
+                continue
+            entry_kind = entry.get("kind")
+            entry_id = entry.get("id")
+            if entry_kind not in PAIRABLE_KINDS or not isinstance(entry_id, str):
+                continue
+            pair_entries_by_kind[entry_kind].add(entry_id)
+            pairs = entry.get("pairs")
+            if not isinstance(pairs, list):
+                issues.append(ValidationIssue(location, "pairs must be a list"))
+                continue
+            seen_targets: set[tuple[str, str, str]] = set()
+            for target_index, raw_pair in enumerate(pairs):
+                pair_location = f"{location}.pairs[{target_index}]"
+                if not isinstance(raw_pair, dict):
+                    issues.append(ValidationIssue(pair_location, "pair target must be an object"))
+                    continue
+                target_kind = raw_pair.get("kind")
+                target_id = raw_pair.get("id")
+                relation = raw_pair.get("relation")
+                if target_kind == "memo":
+                    issues.append(ValidationIssue(pair_location, "memo pair hops are not allowed"))
+                    continue
+                if target_kind not in PAIRABLE_KINDS:
+                    issues.append(
+                        ValidationIssue(
+                            pair_location,
+                            "pair target kind must be technique, skill, or eval",
+                        )
+                    )
+                    continue
+                if not isinstance(target_id, str):
+                    continue
+                if (target_kind, target_id) not in registry_index:
+                    issues.append(
+                        ValidationIssue(
+                            pair_location,
+                            f"pair target {target_kind}:{target_id} must exist in the registry",
+                        )
+                    )
+                if not isinstance(relation, str):
+                    continue
+                if target_kind == entry_kind:
+                    if entry_kind != "technique":
+                        issues.append(
+                            ValidationIssue(
+                                pair_location,
+                                "same-kind pairing is only allowed for techniques",
+                            )
+                        )
+                    elif entry_id not in KAG_SOURCE_LIFT_TECHNIQUE_SET or target_id not in KAG_SOURCE_LIFT_TECHNIQUE_SET:
+                        issues.append(
+                            ValidationIssue(
+                                pair_location,
+                                "same-kind pairing must stay within the KAG/source-lift family",
+                            )
+                        )
+                    elif relation not in DIRECT_RELATION_TYPES_SET:
+                        issues.append(
+                            ValidationIssue(
+                                pair_location,
+                                "same-kind pairing must use a supported direct relation type",
+                            )
+                        )
+                elif relation not in {"requires", "required_by"}:
+                    issues.append(
+                        ValidationIssue(
+                            pair_location,
+                            "cross-kind pairing must use relation 'requires' or 'required_by'",
+                        )
+                    )
+                target_key = (target_kind, target_id, relation)
+                if target_key in seen_targets:
+                    issues.append(ValidationIssue(pair_location, "duplicate pair target"))
+                seen_targets.add(target_key)
+
+    for kind, expected_matches in expected_matches_by_kind.items():
+        missing_matches = sorted(expected_matches - pair_entries_by_kind[kind])
+        for match_value in missing_matches:
+            issues.append(
+                ValidationIssue(
+                    "pairing_hints.min.json",
+                    f"pair surface is missing {kind} match '{match_value}'",
+                )
+            )
+
+
+def validate_tiny_model_entrypoints(
+    tiny_payload: dict[str, Any],
+    generated_dir: Path,
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    route_root = generated_dir.resolve().parent
+    roots = {
+        "aoa-routing": route_root,
+        "aoa-techniques": techniques_root.resolve(),
+        "aoa-skills": skills_root.resolve(),
+        "aoa-evals": evals_root.resolve(),
+        "aoa-memo": memo_root.resolve(),
+    }
+
+    try:
+        queries = ensure_list(tiny_payload.get("queries"), "tiny_model_entrypoints.json.queries")
+        starters = ensure_list(tiny_payload.get("starters"), "tiny_model_entrypoints.json.starters")
+    except RouterError as exc:
+        issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+        return
+
+    def load_target_payload(source_repo: str, surface_file: str) -> dict[str, Any] | None:
+        surface_root = roots.get(source_repo)
+        if surface_root is None:
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"unknown source_repo '{source_repo}' in tiny-model entrypoints",
+                )
+            )
+            return None
+        surface_path = surface_root / surface_file
+        location = f"{source_repo}/{surface_file}"
+        try:
+            return ensure_mapping(load_json_file(surface_path), location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            return None
+
+    for index, raw_query in enumerate(queries):
+        location = f"tiny_model_entrypoints.json.queries[{index}]"
+        try:
+            query = ensure_mapping(raw_query, location)
+            source_repo = query.get("source_repo")
+            surface_file = query.get("target_surface")
+            if not isinstance(source_repo, str) or not isinstance(surface_file, str):
+                continue
+            load_target_payload(source_repo, surface_file)
+        except RouterError as exc:
+            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+
+    for index, raw_starter in enumerate(starters):
+        location = f"tiny_model_entrypoints.json.starters[{index}]"
+        try:
+            starter = ensure_mapping(raw_starter, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+            continue
+        source_repo = starter.get("source_repo")
+        surface_file = starter.get("target_surface")
+        match_key = starter.get("match_key")
+        target_value = starter.get("target_value")
+        if not isinstance(source_repo, str) or not isinstance(surface_file, str):
+            continue
+        payload = load_target_payload(source_repo, surface_file)
+        if payload is None:
+            continue
+        if not isinstance(match_key, str) or not isinstance(target_value, str):
+            continue
+        try:
+            entries = load_surface_entries_for_validation(payload, surface_file)
+        except RouterError as exc:
+            issues.append(ValidationIssue(f"{source_repo}/{surface_file}", str(exc)))
+            continue
+        found = False
+        for raw_entry in entries:
+            if not isinstance(raw_entry, dict):
+                continue
+            if raw_entry.get(match_key) == target_value:
+                found = True
+                break
+        if not found:
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"starter '{starter.get('name', index)}' target '{target_value}' was not found in {source_repo}/{surface_file}",
+                )
+            )
+
+
+def validate_recall_targets(
+    hints_payload: dict[str, Any],
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    try:
+        hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+        memo_surfaces = load_memo_catalog_surfaces(memo_root)
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+        return
+    declared_modes = set(collect_memo_recall_mode_order(memo_surfaces))
     for index, raw_hint in enumerate(hints):
         try:
             hint = ensure_mapping(raw_hint, f"task_to_surface_hints.json.hints[{index}]")
@@ -836,14 +1152,7 @@ def validate_recall_targets(
         contract_file = recall.get("contract_file")
         default_mode = recall.get("default_mode")
         supported_modes = recall.get("supported_modes")
-        if not isinstance(contract_file, str) or not contract_file.strip():
-            issues.append(
-                ValidationIssue(
-                    "task_to_surface_hints.json",
-                    "enabled recall action for kind 'memo' must define contract_file",
-                )
-            )
-            continue
+        contracts_by_mode = recall.get("contracts_by_mode")
         if not isinstance(default_mode, str) or not default_mode.strip():
             issues.append(
                 ValidationIssue(
@@ -859,6 +1168,14 @@ def validate_recall_targets(
         except RouterError as exc:
             issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
             continue
+        if not isinstance(contracts_by_mode, dict) or not contracts_by_mode:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "enabled recall action for kind 'memo' must define contracts_by_mode",
+                )
+            )
+            continue
         if default_mode not in supported_mode_values:
             issues.append(
                 ValidationIssue(
@@ -866,48 +1183,75 @@ def validate_recall_targets(
                     "memo default_mode must be included in supported_modes",
                 )
             )
-        contract_path = memo_root.resolve() / contract_file
-        try:
-            contract = ensure_mapping(
-                load_json_file(contract_path),
-                f"aoa-memo/{contract_file}",
-            )
-        except RouterError as exc:
-            issues.append(ValidationIssue(f"aoa-memo/{contract_file}", str(exc)))
-            continue
-        contract_mode = contract.get("mode")
-        inspect_surface = contract.get("inspect_surface")
-        expand_surface = contract.get("expand_surface")
-        if contract_mode != default_mode:
+        if contract_file is not None:
+            if not isinstance(contract_file, str) or not contract_file.strip():
+                issues.append(
+                    ValidationIssue(
+                        "task_to_surface_hints.json",
+                        "memo contract_file must be a non-empty string when present",
+                    )
+                )
+            elif contracts_by_mode.get(default_mode) != contract_file:
+                issues.append(
+                    ValidationIssue(
+                        "task_to_surface_hints.json",
+                        "memo contract_file must match contracts_by_mode for default_mode",
+                    )
+                )
+        mapping_keys = sorted(contracts_by_mode.keys())
+        if mapping_keys != sorted(supported_mode_values):
             issues.append(
                 ValidationIssue(
-                    f"aoa-memo/{contract_file}",
-                    "recall contract mode must match memo default_mode",
+                    "task_to_surface_hints.json",
+                    "memo contracts_by_mode keys must match supported_modes",
                 )
             )
-        if contract_mode not in supported_mode_values:
+        unsupported_modes = sorted(set(supported_mode_values) - declared_modes)
+        if unsupported_modes:
             issues.append(
                 ValidationIssue(
-                    f"aoa-memo/{contract_file}",
-                    "recall contract mode must be included in supported_modes",
+                    "task_to_surface_hints.json",
+                    f"memo supported_modes must exist in aoa-memo/generated/memory_catalog.min.json: {', '.join(unsupported_modes)}",
                 )
             )
         inspect_surface_file = inspect.get("surface_file") if isinstance(inspect, dict) else None
         expand_surface_file = expand.get("surface_file") if isinstance(expand, dict) else None
-        if inspect_surface != inspect_surface_file:
-            issues.append(
-                ValidationIssue(
-                    f"aoa-memo/{contract_file}",
-                    "recall contract inspect_surface must match the memo inspect surface hint",
+        for mode, mode_contract_file in sorted(contracts_by_mode.items()):
+            if mode not in supported_mode_values:
+                continue
+            contract_path = memo_root.resolve() / mode_contract_file
+            try:
+                contract = ensure_mapping(
+                    load_json_file(contract_path),
+                    f"aoa-memo/{mode_contract_file}",
                 )
-            )
-        if expand_surface != expand_surface_file:
-            issues.append(
-                ValidationIssue(
-                    f"aoa-memo/{contract_file}",
-                    "recall contract expand_surface must match the memo expand surface hint",
+            except RouterError as exc:
+                issues.append(ValidationIssue(f"aoa-memo/{mode_contract_file}", str(exc)))
+                continue
+            contract_mode = contract.get("mode")
+            inspect_surface = contract.get("inspect_surface")
+            expand_surface = contract.get("expand_surface")
+            if contract_mode != mode:
+                issues.append(
+                    ValidationIssue(
+                        f"aoa-memo/{mode_contract_file}",
+                        "recall contract mode must match its advertised recall mode",
+                    )
                 )
-            )
+            if inspect_surface != inspect_surface_file:
+                issues.append(
+                    ValidationIssue(
+                        f"aoa-memo/{mode_contract_file}",
+                        "recall contract inspect_surface must match the memo inspect surface hint",
+                    )
+                )
+            if expand_surface != expand_surface_file:
+                issues.append(
+                    ValidationIssue(
+                        f"aoa-memo/{mode_contract_file}",
+                        "recall contract expand_surface must match the memo expand surface hint",
+                    )
+                )
 
 
 def payload_contains_key(payload: Any, target_key: str) -> bool:
@@ -1021,6 +1365,8 @@ def validate_generated_outputs(
     tier_hints_path = generated_dir / "task_to_tier_hints.json"
     recommended_path = generated_dir / "recommended_paths.min.json"
     relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
+    pairing_path = generated_dir / "pairing_hints.min.json"
+    tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
 
     registry_payload = load_output(registry_path, issues)
     router_payload = load_output(router_path, issues)
@@ -1028,6 +1374,8 @@ def validate_generated_outputs(
     tier_hints_payload = load_output(tier_hints_path, issues)
     recommended_payload = load_output(recommended_path, issues)
     relation_hints_payload = load_output(relation_hints_path, issues)
+    pairing_payload = load_output(pairing_path, issues)
+    tiny_model_payload = load_output(tiny_model_path, issues)
     if any(
         payload is None
         for payload in (
@@ -1037,6 +1385,8 @@ def validate_generated_outputs(
             tier_hints_payload,
             recommended_payload,
             relation_hints_payload,
+            pairing_payload,
+            tiny_model_payload,
         )
     ):
         return issues
@@ -1048,6 +1398,9 @@ def validate_generated_outputs(
             hints_path.name: hints_payload,
             tier_hints_path.name: tier_hints_payload,
             recommended_path.name: recommended_payload,
+            relation_hints_path.name: relation_hints_payload,
+            pairing_path.name: pairing_payload,
+            tiny_model_path.name: tiny_model_payload,
         },
         techniques_root,
         skills_root,
@@ -1063,6 +1416,9 @@ def validate_generated_outputs(
         (hints_path, hints_payload),
         (tier_hints_path, tier_hints_payload),
         (recommended_path, recommended_payload),
+        (relation_hints_path, relation_hints_payload),
+        (pairing_path, pairing_payload),
+        (tiny_model_path, tiny_model_payload),
     ):
         validate_against_schema(
             payload,
@@ -1157,7 +1513,7 @@ def validate_generated_outputs(
     if router_payload != build_router_payload(projection_safe_registry_entries):
         issues.append(ValidationIssue(router_path.name, "aoa_router.min.json does not match the registry projection"))
 
-    if hints_payload != build_task_to_surface_hints_payload():
+    if hints_payload != build_task_to_surface_hints_payload(memo_root):
         issues.append(ValidationIssue(hints_path.name, "task_to_surface_hints.json does not match the expected static dispatch surface"))
     try:
         expected_tier_hints_payload = build_task_to_tier_hints_payload(agents_root)
@@ -1188,6 +1544,12 @@ def validate_generated_outputs(
         skills_root,
         evals_root,
         memo_root,
+        issues,
+    )
+    validate_pair_targets(
+        projection_safe_registry_entries,
+        hints_payload,
+        generated_dir,
         issues,
     )
     validate_recall_targets(hints_payload, memo_root, issues)
@@ -1234,6 +1596,23 @@ def validate_generated_outputs(
             issues.append(ValidationIssue(recommended_path.name, "recommended_paths.min.json does not match registry-derived dependencies"))
 
     try:
+        expected_pairing = build_pairing_hints_payload(
+            recommended_safe_registry_entries,
+            technique_catalog_source,
+            technique_catalog_entries,
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue(pairing_path.name, str(exc)))
+    else:
+        if pairing_payload != expected_pairing:
+            issues.append(
+                ValidationIssue(
+                    pairing_path.name,
+                    "pairing_hints.min.json does not match the bounded pairing derivation",
+                )
+            )
+
+    try:
         expected_relation_hints = build_kag_source_lift_relation_hints_payload(
             normalized_registry_entries,
             technique_catalog_source,
@@ -1250,6 +1629,31 @@ def validate_generated_outputs(
                 )
             )
 
+    try:
+        expected_tiny_model_payload = build_tiny_model_entrypoints_payload(
+            projection_safe_registry_entries,
+            hints_payload,
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue(tiny_model_path.name, str(exc)))
+    else:
+        if tiny_model_payload != expected_tiny_model_payload:
+            issues.append(
+                ValidationIssue(
+                    tiny_model_path.name,
+                    "tiny_model_entrypoints.json does not match the expected tiny-model entry surface",
+                )
+            )
+    validate_tiny_model_entrypoints(
+        tiny_model_payload,
+        generated_dir,
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        issues,
+    )
+
     for filename, payload in (
         (registry_path.name, registry_payload),
         (router_path.name, router_payload),
@@ -1257,6 +1661,8 @@ def validate_generated_outputs(
         (tier_hints_path.name, tier_hints_payload),
         (recommended_path.name, recommended_payload),
         (relation_hints_path.name, relation_hints_payload),
+        (pairing_path.name, pairing_payload),
+        (tiny_model_path.name, tiny_model_payload),
     ):
         for key in SOURCE_OWNED_PAYLOAD_KEYS:
             if payload_contains_key(payload, key):
