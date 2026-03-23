@@ -1,0 +1,42 @@
+{
+  "sections_version": 1,
+  "source_of_truth": "aoa-memo-object-example-surfaces-v1",
+  "memory_objects": [
+    {
+      "id": "memo.state.fixture.contract-hardening-current-axis",
+      "kind": "state_capsule",
+      "title": "Fixture contract-hardening axis",
+      "source_path": "examples/state_capsule.example.json",
+      "sections": [
+        {
+          "section_id": "memo.state.fixture.contract-hardening-current-axis#identity-and-recall",
+          "heading": "Identity and Recall",
+          "ordinal": 1,
+          "summary": "Fixture identity section for working recall.",
+          "body": "Fixture contract-hardening axis for object-facing working recall."
+        },
+        {
+          "section_id": "memo.state.fixture.contract-hardening-current-axis#provenance-and-evidence",
+          "heading": "Provenance and Evidence",
+          "ordinal": 2,
+          "summary": "Fixture provenance section.",
+          "body": "Source refs stay bounded in the fixture object family."
+        },
+        {
+          "section_id": "memo.state.fixture.contract-hardening-current-axis#trust-and-lifecycle",
+          "heading": "Trust and Lifecycle",
+          "ordinal": 3,
+          "summary": "Fixture trust section.",
+          "body": "This fixture remains a captured operational object."
+        },
+        {
+          "section_id": "memo.state.fixture.contract-hardening-current-axis#bridges-and-access",
+          "heading": "Bridges and Access",
+          "ordinal": 4,
+          "summary": "Fixture access section.",
+          "body": "Object-facing recall expands through generated memory-object sections."
+        }
+      ]
+    }
+  ]
+}

@@ -20,6 +20,11 @@ from router_core import (
     CANONICAL_REPO_BY_KIND,
     DIRECT_RELATION_TYPES_SET,
     KAG_SOURCE_LIFT_TECHNIQUE_SET,
+    MEMO_INSPECT_SURFACE_FILE,
+    MEMO_OBJECT_RECALL_DEFAULT_MODE,
+    MEMO_OBJECT_EXPAND_SURFACE_FILE,
+    MEMO_OBJECT_INSPECT_SURFACE_FILE,
+    MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE,
     MODEL_TIER_SOURCE_REPO,
     PAIRABLE_KINDS,
     PAIRING_SURFACE_REPO,
@@ -830,10 +835,12 @@ def load_surface_entries_for_validation(
         "skill_capsules.json": "skills",
         "eval_capsules.json": "evals",
         "memory_catalog.min.json": "memo_surfaces",
+        "memory_object_catalog.min.json": "memory_objects",
         "technique_sections.full.json": "techniques",
         "skill_sections.full.json": "skills",
         "eval_sections.full.json": "evals",
         "memory_sections.full.json": "memo_surfaces",
+        "memory_object_sections.full.json": "memory_objects",
     }
     key = array_key_by_filename.get(Path(surface_file).name)
     if key is None:
@@ -1189,6 +1196,194 @@ def validate_tiny_model_entrypoints(
             )
 
 
+def validate_surface_lookup_target(
+    surface_file: Any,
+    location: str,
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> str | None:
+    try:
+        relative_surface_path = ensure_repo_relative_path(surface_file, location)
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+        return None
+    try:
+        payload = ensure_mapping(
+            load_json_file(memo_root.resolve() / relative_surface_path),
+            f"aoa-memo/{relative_surface_path}",
+        )
+        load_surface_entries_for_validation(payload, relative_surface_path)
+    except RouterError as exc:
+        issues.append(ValidationIssue(f"aoa-memo/{relative_surface_path}", str(exc)))
+        return None
+    return relative_surface_path
+
+
+def validate_contract_targets_for_surface(
+    *,
+    contracts_by_mode: dict[str, str],
+    supported_modes: list[str],
+    inspect_surface_file: str | None,
+    expand_surface_file: str | None,
+    memo_root: Path,
+    issues: list[ValidationIssue],
+    mode_message: str,
+    inspect_message: str,
+    expand_message: str,
+) -> None:
+    for mode, mode_contract_file in sorted(contracts_by_mode.items()):
+        if mode not in supported_modes:
+            continue
+        contract_path = memo_root.resolve() / mode_contract_file
+        contract_location = f"aoa-memo/{mode_contract_file}"
+        try:
+            contract = ensure_mapping(
+                load_json_file(contract_path),
+                contract_location,
+            )
+            contract_mode = contract.get("mode")
+            contract_inspect_surface = ensure_repo_relative_path(
+                contract.get("inspect_surface"),
+                f"{contract_location}.inspect_surface",
+            )
+            contract_expand_surface = ensure_repo_relative_path(
+                contract.get("expand_surface"),
+                f"{contract_location}.expand_surface",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue(contract_location, str(exc)))
+            continue
+        if contract_mode != mode:
+            issues.append(ValidationIssue(contract_location, mode_message))
+        if contract_inspect_surface != inspect_surface_file:
+            issues.append(ValidationIssue(contract_location, inspect_message))
+        if contract_expand_surface != expand_surface_file:
+            issues.append(ValidationIssue(contract_location, expand_message))
+
+
+def validate_parallel_recall_family(
+    family_name: str,
+    family_payload: dict[str, Any],
+    memo_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    location_prefix = f"task_to_surface_hints.json.memo.actions.recall.parallel_families.{family_name}"
+    default_mode = family_payload.get("default_mode")
+    supported_modes = family_payload.get("supported_modes")
+    contracts_by_mode = family_payload.get("contracts_by_mode")
+
+    if not isinstance(default_mode, str) or not default_mode.strip():
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' must define default_mode",
+            )
+        )
+        return
+    try:
+        supported_mode_values = ensure_string_list(
+            supported_modes,
+            f"{location_prefix}.supported_modes",
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+        return
+    if not isinstance(contracts_by_mode, dict) or not contracts_by_mode:
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' must define contracts_by_mode",
+            )
+        )
+        return
+    if default_mode not in supported_mode_values:
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' default_mode must be included in supported_modes",
+            )
+        )
+    mapping_keys = sorted(contracts_by_mode.keys())
+    if mapping_keys != sorted(supported_mode_values):
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' contracts_by_mode keys must match supported_modes",
+            )
+        )
+
+    inspect_surface_file = validate_surface_lookup_target(
+        family_payload.get("inspect_surface"),
+        f"{location_prefix}.inspect_surface",
+        memo_root,
+        issues,
+    )
+    expand_surface_file = validate_surface_lookup_target(
+        family_payload.get("expand_surface"),
+        f"{location_prefix}.expand_surface",
+        memo_root,
+        issues,
+    )
+    if inspect_surface_file != MEMO_OBJECT_INSPECT_SURFACE_FILE:
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' inspect_surface must stay {MEMO_OBJECT_INSPECT_SURFACE_FILE}",
+            )
+        )
+    if expand_surface_file != MEMO_OBJECT_EXPAND_SURFACE_FILE:
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' expand_surface must stay {MEMO_OBJECT_EXPAND_SURFACE_FILE}",
+            )
+        )
+
+    expected_modes = list(MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE.keys())
+    if sorted(supported_mode_values) != sorted(expected_modes):
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' supported_modes must be exactly: {', '.join(expected_modes)}",
+            )
+        )
+    if default_mode != MEMO_OBJECT_RECALL_DEFAULT_MODE:
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' default_mode must stay '{MEMO_OBJECT_RECALL_DEFAULT_MODE}'",
+            )
+        )
+    for mode, expected_contract_file in MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE.items():
+        actual_contract_file = contracts_by_mode.get(mode)
+        if actual_contract_file != expected_contract_file:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"parallel recall family '{family_name}' contract for mode '{mode}' must stay {expected_contract_file}",
+                )
+            )
+    if inspect_surface_file is None or expand_surface_file is None:
+        return
+    validate_contract_targets_for_surface(
+        contracts_by_mode=contracts_by_mode,
+        supported_modes=supported_mode_values,
+        inspect_surface_file=inspect_surface_file,
+        expand_surface_file=expand_surface_file,
+        memo_root=memo_root,
+        issues=issues,
+        mode_message=(
+            f"parallel recall family '{family_name}' contract mode must match its advertised recall mode"
+        ),
+        inspect_message=(
+            f"parallel recall family '{family_name}' contract inspect_surface must match the family inspect surface"
+        ),
+        expand_message=(
+            f"parallel recall family '{family_name}' contract expand_surface must match the family expand surface"
+        ),
+    )
+
+
 def validate_recall_targets(
     hints_payload: dict[str, Any],
     memo_root: Path,
@@ -1279,47 +1474,43 @@ def validate_recall_targets(
             issues.append(
                 ValidationIssue(
                     "task_to_surface_hints.json",
-                    f"memo supported_modes must exist in aoa-memo/generated/memory_catalog.min.json: {', '.join(unsupported_modes)}",
+                    f"memo supported_modes must exist in aoa-memo/{MEMO_INSPECT_SURFACE_FILE}: {', '.join(unsupported_modes)}",
                 )
             )
         inspect_surface_file = inspect.get("surface_file") if isinstance(inspect, dict) else None
         expand_surface_file = expand.get("surface_file") if isinstance(expand, dict) else None
-        for mode, mode_contract_file in sorted(contracts_by_mode.items()):
-            if mode not in supported_mode_values:
-                continue
-            contract_path = memo_root.resolve() / mode_contract_file
+        validate_contract_targets_for_surface(
+            contracts_by_mode=contracts_by_mode,
+            supported_modes=supported_mode_values,
+            inspect_surface_file=inspect_surface_file if isinstance(inspect_surface_file, str) else None,
+            expand_surface_file=expand_surface_file if isinstance(expand_surface_file, str) else None,
+            memo_root=memo_root,
+            issues=issues,
+            mode_message="recall contract mode must match its advertised recall mode",
+            inspect_message="recall contract inspect_surface must match the memo inspect surface hint",
+            expand_message="recall contract expand_surface must match the memo expand surface hint",
+        )
+        parallel_families = recall.get("parallel_families")
+        if parallel_families is None:
+            continue
+        if not isinstance(parallel_families, dict):
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "memo parallel_families must be an object when present",
+                )
+            )
+            continue
+        for family_name, raw_family in sorted(parallel_families.items()):
             try:
-                contract = ensure_mapping(
-                    load_json_file(contract_path),
-                    f"aoa-memo/{mode_contract_file}",
+                family_payload = ensure_mapping(
+                    raw_family,
+                    f"task_to_surface_hints.json.memo.actions.recall.parallel_families.{family_name}",
                 )
             except RouterError as exc:
-                issues.append(ValidationIssue(f"aoa-memo/{mode_contract_file}", str(exc)))
+                issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
                 continue
-            contract_mode = contract.get("mode")
-            inspect_surface = contract.get("inspect_surface")
-            expand_surface = contract.get("expand_surface")
-            if contract_mode != mode:
-                issues.append(
-                    ValidationIssue(
-                        f"aoa-memo/{mode_contract_file}",
-                        "recall contract mode must match its advertised recall mode",
-                    )
-                )
-            if inspect_surface != inspect_surface_file:
-                issues.append(
-                    ValidationIssue(
-                        f"aoa-memo/{mode_contract_file}",
-                        "recall contract inspect_surface must match the memo inspect surface hint",
-                    )
-                )
-            if expand_surface != expand_surface_file:
-                issues.append(
-                    ValidationIssue(
-                        f"aoa-memo/{mode_contract_file}",
-                        "recall contract expand_surface must match the memo expand surface hint",
-                    )
-                )
+            validate_parallel_recall_family(family_name, family_payload, memo_root, issues)
 
 
 def payload_contains_key(payload: Any, target_key: str) -> bool:

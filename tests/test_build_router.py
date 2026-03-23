@@ -321,6 +321,19 @@ def test_build_outputs_from_fixtures() -> None:
                     "source_route": "examples/recall_contract.router.source_route.json",
                     "lineage": "examples/recall_contract.router.lineage.json",
                 },
+                "parallel_families": {
+                    "memory_objects": {
+                        "inspect_surface": "generated/memory_object_catalog.min.json",
+                        "expand_surface": "generated/memory_object_sections.full.json",
+                        "default_mode": "working",
+                        "supported_modes": ["working", "semantic", "lineage"],
+                        "contracts_by_mode": {
+                            "working": "examples/recall_contract.object.working.json",
+                            "semantic": "examples/recall_contract.object.semantic.json",
+                            "lineage": "examples/recall_contract.object.lineage.json",
+                        },
+                    }
+                },
             },
         },
     }
@@ -557,6 +570,19 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
         "contracts_by_mode": {
             "semantic": "examples/recall_contract.router.semantic.json",
         },
+        "parallel_families": {
+            "memory_objects": {
+                "inspect_surface": "generated/memory_object_catalog.min.json",
+                "expand_surface": "generated/memory_object_sections.full.json",
+                "default_mode": "working",
+                "supported_modes": ["working", "semantic", "lineage"],
+                "contracts_by_mode": {
+                    "working": "examples/recall_contract.object.working.json",
+                    "semantic": "examples/recall_contract.object.semantic.json",
+                    "lineage": "examples/recall_contract.object.lineage.json",
+                },
+            }
+        },
     }
     recall_starters = [
         starter
@@ -576,6 +602,44 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
             "recall_mode": "semantic",
         }
     ]
+
+
+def test_build_outputs_omits_parallel_object_family_when_object_contract_is_missing(tmp_path: Path) -> None:
+    memo_root = tmp_path / "aoa-memo"
+    shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
+    (memo_root / "examples" / "recall_contract.object.lineage.json").unlink()
+
+    outputs = build_router.build_outputs(
+        FIXTURES_ROOT / "aoa-techniques",
+        FIXTURES_ROOT / "aoa-skills",
+        FIXTURES_ROOT / "aoa-evals",
+        memo_root,
+        FIXTURES_ROOT / "aoa-agents",
+    )
+
+    memo_hint = next(
+        hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
+    )
+    assert "parallel_families" not in memo_hint["actions"]["recall"]
+
+
+def test_build_outputs_omits_parallel_object_family_when_object_surface_is_missing(tmp_path: Path) -> None:
+    memo_root = tmp_path / "aoa-memo"
+    shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
+    (memo_root / "generated" / "memory_object_sections.full.json").unlink()
+
+    outputs = build_router.build_outputs(
+        FIXTURES_ROOT / "aoa-techniques",
+        FIXTURES_ROOT / "aoa-skills",
+        FIXTURES_ROOT / "aoa-evals",
+        memo_root,
+        FIXTURES_ROOT / "aoa-agents",
+    )
+
+    memo_hint = next(
+        hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
+    )
+    assert "parallel_families" not in memo_hint["actions"]["recall"]
 
 
 def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) -> None:
