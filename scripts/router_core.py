@@ -747,6 +747,7 @@ def build_tiny_model_entrypoints_payload(
     registry_index = {(entry["kind"], entry["id"]): entry for entry in registry_entries}
     available_kinds = {entry["kind"] for entry in registry_entries}
     hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    memo_recall_supported_modes: list[str] = []
     queries: list[dict[str, Any]] = [
         {
             "verb": "pick",
@@ -829,6 +830,23 @@ def build_tiny_model_entrypoints_payload(
                 }
             )
 
+        recall = ensure_mapping(actions["recall"], f"{location}.actions.recall")
+        if recall.get("enabled") is True:
+            queries.append(
+                {
+                    "verb": "recall",
+                    "source_repo": PAIRING_SURFACE_REPO,
+                    "target_surface": "generated/task_to_surface_hints.json",
+                    "match_key": "kind",
+                    "allowed_kinds": [kind],
+                }
+            )
+            if kind == "memo":
+                memo_recall_supported_modes = ensure_string_list(
+                    recall.get("supported_modes"),
+                    f"{location}.actions.recall.supported_modes",
+                )
+
     starters: list[dict[str, Any]] = [
         {
             "name": "router-root",
@@ -852,6 +870,20 @@ def build_tiny_model_entrypoints_payload(
                 "allowed_kinds": [kind],
                 "target_kind": kind,
                 "target_value": kind,
+            }
+        )
+    for mode in memo_recall_supported_modes:
+        starters.append(
+            {
+                "name": f"memo-recall-{mode.replace('_', '-')}",
+                "verb": "recall",
+                "source_repo": PAIRING_SURFACE_REPO,
+                "target_surface": "generated/task_to_surface_hints.json",
+                "match_key": "kind",
+                "allowed_kinds": ["memo"],
+                "target_kind": "memo",
+                "target_value": "memo",
+                "recall_mode": mode,
             }
         )
     if ("technique", KAG_DEFAULT_ENTRYPOINT_ID) in registry_index:

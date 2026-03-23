@@ -46,7 +46,8 @@
         "pick",
         "inspect",
         "expand",
-        "pair"
+        "pair",
+        "recall"
       ]
     },
     "sourceRepo": {
@@ -102,6 +103,9 @@
             "$ref": "#/$defs/nonEmptyString"
           },
           "uniqueItems": true
+        },
+        "recall_mode": {
+          "$ref": "#/$defs/nonEmptyString"
         }
       }
     },
@@ -139,6 +143,9 @@
           "$ref": "#/$defs/kindName"
         },
         "target_value": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "recall_mode": {
           "$ref": "#/$defs/nonEmptyString"
         }
       }

@@ -61,8 +61,8 @@ Non-goal:
 Merged as model-tier-friendly entrypoints for very small models:
 
 - `generated/tiny_model_entrypoints.json`
-- stable query grammar for `pick`, `inspect`, `expand`, and `pair`
-- curated start surfaces for low-context agents
+- stable query grammar for `pick`, `inspect`, `expand`, `pair`, and bounded `recall`
+- curated start surfaces for low-context agents, including kind roots and memo recall starters when upstream contracts are router-ready
 
 For the current KAG/source-lift family, keep `AOA-T-0019` as the default bundle-level metadata entrypoint and treat `AOA-T-0018`, `AOA-T-0020`, `AOA-T-0021`, and `AOA-T-0022` as the explicit special-case companions.
 
@@ -73,6 +73,8 @@ Goal:
 ### Milestone 6: Memo dispatch readiness
 
 Merged as bounded memo recall dispatch readiness now that `aoa-memo` exposes initialized source-owned memory surfaces.
+
+Wave 1 tiny-model recall activation now routes small models through published memo recall hints rather than hardcoding semantic-only behavior.
 
 `aoa-routing` should own:
 
