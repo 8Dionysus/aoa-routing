@@ -378,6 +378,13 @@ def test_build_outputs_from_fixtures() -> None:
         "match_key": "kind",
         "allowed_kinds": ["technique", "skill", "eval", "memo"],
     }
+    assert tiny_model["queries"][-1] == {
+        "verb": "recall",
+        "source_repo": "aoa-routing",
+        "target_surface": "generated/task_to_surface_hints.json",
+        "match_key": "kind",
+        "allowed_kinds": ["memo"],
+    }
     assert tiny_model["starters"] == [
         {
             "name": "router-root",
@@ -426,6 +433,39 @@ def test_build_outputs_from_fixtures() -> None:
             "allowed_kinds": ["memo"],
             "target_kind": "memo",
             "target_value": "memo",
+        },
+        {
+            "name": "memo-recall-semantic",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_mode": "semantic",
+        },
+        {
+            "name": "memo-recall-source-route",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_mode": "source_route",
+        },
+        {
+            "name": "memo-recall-lineage",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_mode": "lineage",
         },
     ]
 
@@ -490,6 +530,53 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
             "target_value": "AOA-T-0019",
         },
     ]
+
+
+def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(tmp_path: Path) -> None:
+    memo_root = tmp_path / "aoa-memo"
+    shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
+    (memo_root / "examples" / "recall_contract.router.source_route.json").unlink()
+    (memo_root / "examples" / "recall_contract.router.lineage.json").unlink()
+
+    outputs = build_router.build_outputs(
+        FIXTURES_ROOT / "aoa-techniques",
+        FIXTURES_ROOT / "aoa-skills",
+        FIXTURES_ROOT / "aoa-evals",
+        memo_root,
+        FIXTURES_ROOT / "aoa-agents",
+    )
+
+    memo_hint = next(
+        hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
+    )
+    assert memo_hint["actions"]["recall"] == {
+        "enabled": True,
+        "contract_file": "examples/recall_contract.router.semantic.json",
+        "default_mode": "semantic",
+        "supported_modes": ["semantic"],
+        "contracts_by_mode": {
+            "semantic": "examples/recall_contract.router.semantic.json",
+        },
+    }
+    recall_starters = [
+        starter
+        for starter in outputs["tiny_model_entrypoints.json"]["starters"]
+        if starter["verb"] == "recall"
+    ]
+    assert recall_starters == [
+        {
+            "name": "memo-recall-semantic",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_mode": "semantic",
+        }
+    ]
+
 
 def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) -> None:
     skills_root = tmp_path / "aoa-skills"

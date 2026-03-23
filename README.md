@@ -57,7 +57,7 @@ The builder writes these tracked artifacts under `generated/`:
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
 - `kag_source_lift_relation_hints.min.json` - bounded one-hop direct relation hints for the KAG/source-lift family
 - `pairing_hints.min.json` - bounded pair suggestions derived from cross-kind dependencies and family-scoped direct relations
-- `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind-root starters for low-context entry
+- `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind roots and memo recall entry hints when upstream contracts are router-ready
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
 `AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,

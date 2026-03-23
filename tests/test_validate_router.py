@@ -580,3 +580,20 @@ def test_validate_generated_outputs_rejects_tiny_model_starter_missing_target(tm
         "starter 'technique-root' target 'ghost-kind' was not found" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_tiny_model_recall_starter_unsupported_mode(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
+    payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
+    recall_starter = next(starter for starter in payload["starters"] if starter["verb"] == "recall")
+    recall_starter["recall_mode"] = "episodic"
+    write_json(tiny_model_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "uses unsupported recall mode 'episodic'" in issue.message
+        for issue in issues
+    )
