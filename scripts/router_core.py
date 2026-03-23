@@ -51,8 +51,19 @@ MODEL_TIER_REGISTRY_PATH = "generated/model_tier_registry.json"
 PAIRING_SURFACE_REPO = "aoa-routing"
 PAIRING_SURFACE_FILE = "generated/pairing_hints.min.json"
 TINY_MODEL_ENTRYPOINTS_FILE = "generated/tiny_model_entrypoints.json"
+MEMO_INSPECT_SURFACE_FILE = "generated/memory_catalog.min.json"
+MEMO_EXPAND_SURFACE_FILE = "generated/memory_sections.full.json"
+MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory_object_catalog.min.json"
+MEMO_OBJECT_EXPAND_SURFACE_FILE = "generated/memory_object_sections.full.json"
 DEFAULT_MEMO_RECALL_MODE = "semantic"
 ROUTER_READY_RECALL_CONTRACT_PREFIX = "recall_contract.router."
+MEMO_OBJECT_RECALL_FAMILY = "memory_objects"
+MEMO_OBJECT_RECALL_DEFAULT_MODE = "working"
+MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE = {
+    "working": "examples/recall_contract.object.working.json",
+    "semantic": "examples/recall_contract.object.semantic.json",
+    "lineage": "examples/recall_contract.object.lineage.json",
+}
 KAG_DEFAULT_ENTRYPOINT_ID = "AOA-T-0019"
 TASK_TO_TIER_HINT_SPECS = (
     {
@@ -313,7 +324,7 @@ def load_model_tier_registry(
 
 
 def load_memo_catalog_surfaces(memo_root: Path) -> list[dict[str, Any]]:
-    catalog_path = memo_root / "generated" / "memory_catalog.min.json"
+    catalog_path = memo_root / MEMO_INSPECT_SURFACE_FILE
     payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
     raw_surfaces = ensure_list(
         payload.get("memo_surfaces"),
@@ -340,6 +351,73 @@ def collect_memo_recall_mode_order(memo_surfaces: list[dict[str, Any]]) -> list[
     return ordered_modes
 
 
+def load_optional_parallel_memo_recall_families(memo_root: Path) -> dict[str, dict[str, Any]]:
+    families: dict[str, dict[str, Any]] = {}
+    object_family = load_optional_memo_object_recall_family(memo_root)
+    if object_family is not None:
+        families[MEMO_OBJECT_RECALL_FAMILY] = object_family
+    return families
+
+
+def load_optional_memo_object_recall_family(memo_root: Path) -> dict[str, Any] | None:
+    catalog_path = memo_root / MEMO_OBJECT_INSPECT_SURFACE_FILE
+    sections_path = memo_root / MEMO_OBJECT_EXPAND_SURFACE_FILE
+    try:
+        catalog_payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
+        ensure_list(
+            catalog_payload.get("memory_objects"),
+            f"{relative_posix(catalog_path)}.memory_objects",
+        )
+        sections_payload = ensure_mapping(
+            load_json_file(sections_path),
+            relative_posix(sections_path),
+        )
+        ensure_list(
+            sections_payload.get("memory_objects"),
+            f"{relative_posix(sections_path)}.memory_objects",
+        )
+    except RouterError:
+        return None
+
+    contracts_by_mode: dict[str, str] = {}
+    for mode, relative_contract_path in MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE.items():
+        contract_path = memo_root / relative_contract_path
+        location = relative_posix(contract_path, memo_root)
+        try:
+            contract = ensure_mapping(load_json_file(contract_path), location)
+            require_keys(
+                contract,
+                ("mode", "inspect_surface", "expand_surface"),
+                location,
+            )
+            contract_mode = ensure_string(contract["mode"], f"{location}.mode")
+            inspect_surface = ensure_repo_relative_path(
+                contract["inspect_surface"],
+                f"{location}.inspect_surface",
+            )
+            expand_surface = ensure_repo_relative_path(
+                contract["expand_surface"],
+                f"{location}.expand_surface",
+            )
+        except RouterError:
+            return None
+        if contract_mode != mode:
+            return None
+        if inspect_surface != MEMO_OBJECT_INSPECT_SURFACE_FILE:
+            return None
+        if expand_surface != MEMO_OBJECT_EXPAND_SURFACE_FILE:
+            return None
+        contracts_by_mode[mode] = location
+
+    return {
+        "inspect_surface": MEMO_OBJECT_INSPECT_SURFACE_FILE,
+        "expand_surface": MEMO_OBJECT_EXPAND_SURFACE_FILE,
+        "default_mode": MEMO_OBJECT_RECALL_DEFAULT_MODE,
+        "supported_modes": list(MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE.keys()),
+        "contracts_by_mode": contracts_by_mode,
+    }
+
+
 def load_router_ready_memo_recall_contracts(
     memo_root: Path,
     memo_surfaces: list[dict[str, Any]] | None = None,
@@ -364,7 +442,7 @@ def load_router_ready_memo_recall_contracts(
                 raise RouterError(f"{location} duplicates router-ready recall mode '{mode}'")
             if mode not in declared_mode_set:
                 raise RouterError(
-                    f"{location}.mode must be declared by aoa-memo/generated/memory_catalog.min.json"
+                    f"{location}.mode must be declared by aoa-memo/{MEMO_INSPECT_SURFACE_FILE}"
                 )
             contracts_by_mode[mode] = location
 
@@ -417,6 +495,7 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
         recall_default_mode: str | None = None,
         recall_supported_modes: list[str] | None = None,
         recall_contracts_by_mode: dict[str, str] | None = None,
+        recall_parallel_families: dict[str, dict[str, Any]] | None = None,
     ) -> dict[str, dict[str, Any]]:
         inspect: dict[str, Any] = {"enabled": inspect_enabled}
         if inspect_enabled:
@@ -441,6 +520,11 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
             recall["default_mode"] = recall_default_mode
             recall["supported_modes"] = list(recall_supported_modes or [])
             recall["contracts_by_mode"] = dict(recall_contracts_by_mode or {})
+            if recall_parallel_families:
+                recall["parallel_families"] = {
+                    family_name: dict(family_payload)
+                    for family_name, family_payload in sorted(recall_parallel_families.items())
+                }
         return {
             "pick": {"enabled": pick_enabled},
             "inspect": inspect,
@@ -453,6 +537,7 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
     recall_default_mode, recall_supported_modes, recall_contracts_by_mode = (
         load_router_ready_memo_recall_contracts(memo_root, memo_surfaces)
     )
+    recall_parallel_families = load_optional_parallel_memo_recall_families(memo_root)
     recall_contract_file = None
     if recall_default_mode is not None:
         recall_contract_file = recall_contracts_by_mode[recall_default_mode]
@@ -599,10 +684,10 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
                 "use_when": "need bounded recall or memory-layer doctrine surfaces without copying memo truth into routing",
                 "actions": action_flags(
                     inspect_enabled=True,
-                    surface_file="generated/memory_catalog.min.json",
+                    surface_file=MEMO_INSPECT_SURFACE_FILE,
                     match_field="id",
                     expand_enabled=True,
-                    expand_surface_file="generated/memory_sections.full.json",
+                    expand_surface_file=MEMO_EXPAND_SURFACE_FILE,
                     expand_match_field="id",
                     expand_section_key_field="section_id",
                     default_sections=[],
@@ -612,6 +697,7 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
                     recall_default_mode=recall_default_mode,
                     recall_supported_modes=recall_supported_modes,
                     recall_contracts_by_mode=recall_contracts_by_mode,
+                    recall_parallel_families=recall_parallel_families,
                 ),
             },
         ],

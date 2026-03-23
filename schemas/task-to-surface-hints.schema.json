@@ -154,6 +154,53 @@
         }
       ]
     },
+    "contractsByMode": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9_-]*$": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "parallelRecallFamily": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "inspect_surface",
+        "expand_surface",
+        "default_mode",
+        "supported_modes",
+        "contracts_by_mode"
+      ],
+      "properties": {
+        "inspect_surface": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "expand_surface": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "default_mode": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "supported_modes": {
+          "$ref": "#/$defs/stringList"
+        },
+        "contracts_by_mode": {
+          "$ref": "#/$defs/contractsByMode"
+        }
+      }
+    },
+    "parallelRecallFamilies": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "memory_objects": {
+          "$ref": "#/$defs/parallelRecallFamily"
+        }
+      }
+    },
     "recallAction": {
       "oneOf": [
         {
@@ -182,14 +229,10 @@
               "$ref": "#/$defs/stringList"
             },
             "contracts_by_mode": {
-              "type": "object",
-              "minProperties": 1,
-              "additionalProperties": false,
-              "patternProperties": {
-                "^[a-z][a-z0-9_-]*$": {
-                  "$ref": "#/$defs/nonEmptyString"
-                }
-              }
+              "$ref": "#/$defs/contractsByMode"
+            },
+            "parallel_families": {
+              "$ref": "#/$defs/parallelRecallFamilies"
             }
           }
         }

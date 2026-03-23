@@ -1,0 +1,27 @@
+{
+  "id": "recall.object.working",
+  "name": "Object-facing working recall",
+  "mode": "working",
+  "allowed_scopes": [
+    "thread",
+    "session",
+    "project"
+  ],
+  "preferred_kinds": [
+    "state_capsule",
+    "decision",
+    "episode",
+    "audit_event"
+  ],
+  "temperature_order": [
+    "hot",
+    "warm",
+    "cool",
+    "frozen",
+    "cold"
+  ],
+  "inspect_surface": "generated/memory_object_catalog.min.json",
+  "expand_surface": "generated/memory_object_sections.full.json",
+  "source_route_required": false,
+  "notes": "Fixture working recall contract for object-facing memo surfaces."
+}

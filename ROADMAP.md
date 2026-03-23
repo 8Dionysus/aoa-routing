@@ -24,7 +24,8 @@ Already merged:
 - tiny-model entry routing:
   - `aoa-routing` publishes a low-context query grammar and curated starter entrypoints
 - memo dispatch readiness:
-  - `aoa-routing` exposes mode-indexed router-ready recall contracts when upstream `aoa-memo` provides them
+  - `aoa-routing` exposes mode-indexed router-ready doctrine recall contracts when upstream `aoa-memo` provides them
+  - `aoa-routing` may expose a parallel object-facing memo recall family without replacing the doctrine-first root path
 - schema-backed public output validation:
   - registry
   - router projection
@@ -75,6 +76,7 @@ Goal:
 Merged as bounded memo recall dispatch readiness now that `aoa-memo` exposes initialized source-owned memory surfaces.
 
 Wave 1 tiny-model recall activation now routes small models through published memo recall hints rather than hardcoding semantic-only behavior.
+Wave 2 parallel memo adoption keeps the root inspect/expand path doctrine-first while allowing `task_to_surface_hints.json` to advertise an optional object-facing recall family when upstream object contracts are complete.
 
 `aoa-routing` should own:
 
@@ -101,6 +103,8 @@ These boundaries come directly from the seed and should remain hard constraints:
 - same-kind pairing must stay family-scoped and one-hop bounded
 - tiny-model entrypoints must stay route-local and must not become a second tier registry
 - memo recall hints must advertise only router-ready upstream contracts
+- object-facing memo recall must remain a parallel family, not a replacement root kind
+- tiny-model grammar expansion for recall-family selection should wait for a later bounded wave
 
 ## Definition Of Success
 

@@ -1,0 +1,27 @@
+{
+  "id": "recall.object.lineage",
+  "name": "Object-facing lineage recall",
+  "mode": "lineage",
+  "allowed_scopes": [
+    "repo",
+    "project",
+    "ecosystem"
+  ],
+  "preferred_kinds": [
+    "episode",
+    "claim",
+    "bridge",
+    "audit_event"
+  ],
+  "temperature_order": [
+    "warm",
+    "cool",
+    "frozen",
+    "cold",
+    "hot"
+  ],
+  "inspect_surface": "generated/memory_object_catalog.min.json",
+  "expand_surface": "generated/memory_object_sections.full.json",
+  "source_route_required": false,
+  "notes": "Fixture lineage recall contract for object-facing memo surfaces."
+}

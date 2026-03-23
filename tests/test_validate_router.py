@@ -389,6 +389,24 @@ def test_validate_generated_outputs_rejects_malformed_enabled_recall_action_via_
     )
 
 
+def test_validate_generated_outputs_rejects_malformed_parallel_recall_family_via_schema(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    del memo_hint["actions"]["recall"]["parallel_families"]["memory_objects"]["inspect_surface"]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        ("schema violation" in issue.message and "parallel_families" in issue.message)
+        or "inspect_surface" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_invalid_recommended_paths(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     recommended_path = generated_dir / "recommended_paths.min.json"
@@ -538,6 +556,35 @@ def test_validate_generated_outputs_rejects_missing_recall_contract_target(tmp_p
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         "recall contract expand_surface must match the memo expand surface hint" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_missing_parallel_object_recall_contract(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    (roots["aoa-memo"] / "examples" / "recall_contract.object.semantic.json").unlink()
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "aoa-memo/examples/recall_contract.object.semantic.json" == issue.location
+        and "is missing" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_parallel_object_contract_surface_mismatch(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    contract_path = roots["aoa-memo"] / "examples" / "recall_contract.object.semantic.json"
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+    payload["expand_surface"] = "generated/memory_sections.full.json"
+    write_json(contract_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "parallel recall family 'memory_objects' contract expand_surface must match the family expand surface"
+        in issue.message
         for issue in issues
     )
 

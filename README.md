@@ -30,7 +30,7 @@ The build reads only repo-local generated catalogs and registries:
 - `aoa-techniques` from `generated/technique_catalog.min.json`
 - `aoa-skills` from `generated/skill_catalog.min.json`
 - `aoa-evals` from `generated/eval_catalog.min.json`
-- `aoa-memo` from `generated/memory_catalog.min.json`
+- `aoa-memo` from `generated/memory_catalog.min.json` for root memo routing, with optional object-facing recall contracts and surfaces published through `task_to_surface_hints.json`
 - `aoa-agents` from `generated/model_tier_registry.json` for task-to-tier dispatch hints only
 
 `aoa-routing` no longer parses live `SKILL.md`, `techniques.yaml`, `EVAL.md`, or `eval.yaml`.
@@ -98,7 +98,9 @@ It does not widen pair flow into a graph or same-kind exploration layer.
 Recall stays bounded.
 `aoa-routing` points memo recall requests at source-owned `aoa-memo` contracts and surfaces,
 advertises only router-ready recall modes that upstream `aoa-memo` exposes through contract files,
-and keeps those contracts mode-indexed in the routing hint surface.
+keeps doctrine recall mode-indexed at the top level of the routing hint surface,
+and may publish an additional parallel object-facing recall family inside the memo recall hint when upstream object contracts and object surfaces are complete and coherent.
+The root memo inspect/expand path remains doctrine-first in this wave, and tiny-model starters remain bound to the legacy doctrine recall surface.
 It does not own recall policy authority, memory truth, or graph traversal.
 
 ## Repository layout

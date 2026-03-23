@@ -1,0 +1,27 @@
+{
+  "id": "recall.object.semantic",
+  "name": "Object-facing semantic recall",
+  "mode": "semantic",
+  "allowed_scopes": [
+    "repo",
+    "project",
+    "ecosystem"
+  ],
+  "preferred_kinds": [
+    "anchor",
+    "claim",
+    "decision",
+    "pattern"
+  ],
+  "temperature_order": [
+    "warm",
+    "cool",
+    "frozen",
+    "cold",
+    "hot"
+  ],
+  "inspect_surface": "generated/memory_object_catalog.min.json",
+  "expand_surface": "generated/memory_object_sections.full.json",
+  "source_route_required": false,
+  "notes": "Fixture semantic recall contract for object-facing memo surfaces."
+}
