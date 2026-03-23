@@ -644,3 +644,45 @@ def test_validate_generated_outputs_rejects_tiny_model_recall_starter_unsupporte
         "uses unsupported recall mode 'episodic'" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_tiny_model_recall_query_unknown_family(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
+    payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
+    recall_query = next(
+        query
+        for query in payload["queries"]
+        if query["verb"] == "recall" and query.get("recall_family") == "memory_objects"
+    )
+    recall_query["recall_family"] = "ghost-family"
+    write_json(tiny_model_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "must target a published recall family 'ghost-family'" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_tiny_model_recall_starter_unknown_family(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
+    payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
+    recall_starter = next(
+        starter
+        for starter in payload["starters"]
+        if starter["verb"] == "recall" and starter.get("recall_family") == "memory_objects"
+    )
+    recall_starter["recall_family"] = "ghost-family"
+    write_json(tiny_model_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "must target a published recall family 'ghost-family'" in issue.message
+        for issue in issues
+    )

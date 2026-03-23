@@ -1080,6 +1080,119 @@ def validate_tiny_model_entrypoints(
             issues.append(ValidationIssue(location, str(exc)))
             return None
 
+    def find_surface_entry(
+        entries: list[dict[str, Any]],
+        *,
+        match_key: str,
+        target_value: str,
+    ) -> dict[str, Any] | None:
+        for raw_entry in entries:
+            if not isinstance(raw_entry, dict):
+                continue
+            if raw_entry.get(match_key) == target_value:
+                return raw_entry
+        return None
+
+    def validate_recall_target(
+        *,
+        consumer_label: str,
+        location: str,
+        matched_entry: dict[str, Any],
+        recall_family: Any,
+        recall_mode: Any,
+        require_mode: bool,
+    ) -> None:
+        actions = matched_entry.get("actions") if isinstance(matched_entry, dict) else None
+        recall = actions.get("recall") if isinstance(actions, dict) else None
+        if not isinstance(recall, dict) or recall.get("enabled") is not True:
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} points to a target without enabled recall routing",
+                )
+            )
+            return
+
+        selected_recall = recall
+        selected_family: str | None = None
+        if recall_family is not None:
+            if not isinstance(recall_family, str) or not recall_family.strip():
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"{consumer_label} must define a non-empty recall_family when present",
+                    )
+                )
+                return
+            parallel_families = recall.get("parallel_families")
+            if not isinstance(parallel_families, dict):
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"{consumer_label} must target a published recall family '{recall_family}'",
+                    )
+                )
+                return
+            family_payload = parallel_families.get(recall_family)
+            if not isinstance(family_payload, dict):
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"{consumer_label} must target a published recall family '{recall_family}'",
+                    )
+                )
+                return
+            selected_recall = family_payload
+            selected_family = recall_family
+
+        if require_mode and (not isinstance(recall_mode, str) or not recall_mode.strip()):
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} must define recall_mode",
+                )
+            )
+            return
+        if recall_mode is None:
+            return
+        if not isinstance(recall_mode, str) or not recall_mode.strip():
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} must define a non-empty recall_mode when present",
+                )
+            )
+            return
+        try:
+            supported_modes = ensure_string_list(
+                selected_recall.get("supported_modes"),
+                f"{location}.recall_mode",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+            return
+        if recall_mode not in supported_modes:
+            family_message = ""
+            if selected_family is not None:
+                family_message = f" for recall family '{selected_family}'"
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} uses unsupported recall mode '{recall_mode}'{family_message}",
+                )
+            )
+        contracts_by_mode = selected_recall.get("contracts_by_mode")
+        if not isinstance(contracts_by_mode, dict) or recall_mode not in contracts_by_mode:
+            family_message = ""
+            if selected_family is not None:
+                family_message = f" in recall family '{selected_family}'"
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} must target a published recall contract for mode '{recall_mode}'{family_message}",
+                )
+            )
+
     for index, raw_query in enumerate(queries):
         location = f"tiny_model_entrypoints.json.queries[{index}]"
         try:
@@ -1088,7 +1201,73 @@ def validate_tiny_model_entrypoints(
             surface_file = query.get("target_surface")
             if not isinstance(source_repo, str) or not isinstance(surface_file, str):
                 continue
-            load_target_payload(source_repo, surface_file)
+            payload = load_target_payload(source_repo, surface_file)
+            if payload is None:
+                continue
+            verb = query.get("verb")
+            recall_mode = query.get("recall_mode")
+            recall_family = query.get("recall_family")
+            if verb != "recall":
+                if recall_mode is not None:
+                    issues.append(
+                        ValidationIssue(
+                            "tiny_model_entrypoints.json",
+                            f"non-recall query '{location}' must not define recall_mode",
+                        )
+                    )
+                if recall_family is not None:
+                    issues.append(
+                        ValidationIssue(
+                            "tiny_model_entrypoints.json",
+                            f"non-recall query '{location}' must not define recall_family",
+                        )
+                    )
+                continue
+            allowed_kinds = query.get("allowed_kinds")
+            if not isinstance(allowed_kinds, list) or len(allowed_kinds) != 1:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"recall query '{location}' must target exactly one allowed kind",
+                    )
+                )
+                continue
+            target_value = allowed_kinds[0]
+            match_key = query.get("match_key")
+            if not isinstance(match_key, str) or match_key != "kind":
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"recall query '{location}' must use match_key 'kind'",
+                    )
+                )
+                continue
+            if not isinstance(target_value, str) or not target_value.strip():
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"recall query '{location}' must target a non-empty kind value",
+                    )
+                )
+                continue
+            entries = load_surface_entries_for_validation(payload, surface_file)
+            matched_entry = find_surface_entry(entries, match_key=match_key, target_value=target_value)
+            if matched_entry is None:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"recall query '{location}' target '{target_value}' was not found in {source_repo}/{surface_file}",
+                    )
+                )
+                continue
+            validate_recall_target(
+                consumer_label=f"recall query '{location}'",
+                location=location,
+                matched_entry=matched_entry,
+                recall_family=recall_family,
+                recall_mode=recall_mode,
+                require_mode=False,
+            )
         except RouterError as exc:
             issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
 
@@ -1115,6 +1294,7 @@ def validate_tiny_model_entrypoints(
         verb = starter.get("verb")
         match_key = starter.get("match_key")
         target_value = starter.get("target_value")
+        recall_family = starter.get("recall_family")
         recall_mode = starter.get("recall_mode")
         if not isinstance(source_repo, str) or not isinstance(surface_file, str):
             continue
@@ -1128,16 +1308,8 @@ def validate_tiny_model_entrypoints(
         except RouterError as exc:
             issues.append(ValidationIssue(f"{source_repo}/{surface_file}", str(exc)))
             continue
-        found = False
-        matched_entry: dict[str, Any] | None = None
-        for raw_entry in entries:
-            if not isinstance(raw_entry, dict):
-                continue
-            if raw_entry.get(match_key) == target_value:
-                found = True
-                matched_entry = raw_entry
-                break
-        if not found:
+        matched_entry = find_surface_entry(entries, match_key=match_key, target_value=target_value)
+        if matched_entry is None:
             issues.append(
                 ValidationIssue(
                     "tiny_model_entrypoints.json",
@@ -1146,52 +1318,26 @@ def validate_tiny_model_entrypoints(
             )
             continue
         if verb == "recall":
-            if not isinstance(recall_mode, str) or not recall_mode.strip():
-                issues.append(
-                    ValidationIssue(
-                        "tiny_model_entrypoints.json",
-                        f"recall starter '{starter.get('name', index)}' must define recall_mode",
-                    )
-                )
-                continue
-            actions = matched_entry.get("actions") if isinstance(matched_entry, dict) else None
-            recall = actions.get("recall") if isinstance(actions, dict) else None
-            if not isinstance(recall, dict) or recall.get("enabled") is not True:
-                issues.append(
-                    ValidationIssue(
-                        "tiny_model_entrypoints.json",
-                        f"recall starter '{starter.get('name', index)}' points to a target without enabled recall routing",
-                    )
-                )
-                continue
-            try:
-                supported_modes = ensure_string_list(
-                    recall.get("supported_modes"),
-                    f"{location}.recall_mode",
-                )
-            except RouterError as exc:
-                issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
-                continue
-            if recall_mode not in supported_modes:
-                issues.append(
-                    ValidationIssue(
-                        "tiny_model_entrypoints.json",
-                        f"recall starter '{starter.get('name', index)}' uses unsupported recall mode '{recall_mode}'",
-                    )
-                )
-            contracts_by_mode = recall.get("contracts_by_mode")
-            if not isinstance(contracts_by_mode, dict) or recall_mode not in contracts_by_mode:
-                issues.append(
-                    ValidationIssue(
-                        "tiny_model_entrypoints.json",
-                        f"recall starter '{starter.get('name', index)}' must target a published recall contract for mode '{recall_mode}'",
-                    )
-                )
+            validate_recall_target(
+                consumer_label=f"recall starter '{starter.get('name', index)}'",
+                location=location,
+                matched_entry=matched_entry,
+                recall_family=recall_family,
+                recall_mode=recall_mode,
+                require_mode=True,
+            )
         elif recall_mode is not None:
             issues.append(
                 ValidationIssue(
                     "tiny_model_entrypoints.json",
                     f"non-recall starter '{starter.get('name', index)}' must not define recall_mode",
+                )
+            )
+        elif recall_family is not None:
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"non-recall starter '{starter.get('name', index)}' must not define recall_family",
                 )
             )
 

@@ -834,6 +834,7 @@ def build_tiny_model_entrypoints_payload(
     available_kinds = {entry["kind"] for entry in registry_entries}
     hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
     memo_recall_supported_modes: list[str] = []
+    memo_parallel_recall_modes: dict[str, list[str]] = {}
     queries: list[dict[str, Any]] = [
         {
             "verb": "pick",
@@ -932,6 +933,31 @@ def build_tiny_model_entrypoints_payload(
                     recall.get("supported_modes"),
                     f"{location}.actions.recall.supported_modes",
                 )
+                parallel_families = recall.get("parallel_families")
+                if parallel_families is not None:
+                    parallel_family_payloads = ensure_mapping(
+                        parallel_families,
+                        f"{location}.actions.recall.parallel_families",
+                    )
+                    for family_name, raw_family in sorted(parallel_family_payloads.items()):
+                        family_location = (
+                            f"{location}.actions.recall.parallel_families.{family_name}"
+                        )
+                        family_payload = ensure_mapping(raw_family, family_location)
+                        memo_parallel_recall_modes[family_name] = ensure_string_list(
+                            family_payload.get("supported_modes"),
+                            f"{family_location}.supported_modes",
+                        )
+                        queries.append(
+                            {
+                                "verb": "recall",
+                                "source_repo": PAIRING_SURFACE_REPO,
+                                "target_surface": "generated/task_to_surface_hints.json",
+                                "match_key": "kind",
+                                "allowed_kinds": [kind],
+                                "recall_family": family_name,
+                            }
+                        )
 
     starters: list[dict[str, Any]] = [
         {
@@ -972,6 +998,25 @@ def build_tiny_model_entrypoints_payload(
                 "recall_mode": mode,
             }
         )
+    for family_name, supported_modes in sorted(memo_parallel_recall_modes.items()):
+        starter_prefix = f"memo-{family_name.replace('_', '-')}-recall"
+        if family_name == MEMO_OBJECT_RECALL_FAMILY:
+            starter_prefix = "memo-object-recall"
+        for mode in supported_modes:
+            starters.append(
+                {
+                    "name": f"{starter_prefix}-{mode.replace('_', '-')}",
+                    "verb": "recall",
+                    "source_repo": PAIRING_SURFACE_REPO,
+                    "target_surface": "generated/task_to_surface_hints.json",
+                    "match_key": "kind",
+                    "allowed_kinds": ["memo"],
+                    "target_kind": "memo",
+                    "target_value": "memo",
+                    "recall_family": family_name,
+                    "recall_mode": mode,
+                }
+            )
     if ("technique", KAG_DEFAULT_ENTRYPOINT_ID) in registry_index:
         starters.append(
             {
