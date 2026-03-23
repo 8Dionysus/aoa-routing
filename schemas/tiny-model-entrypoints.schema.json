@@ -104,6 +104,9 @@
           },
           "uniqueItems": true
         },
+        "recall_family": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
         "recall_mode": {
           "$ref": "#/$defs/nonEmptyString"
         }
@@ -143,6 +146,9 @@
           "$ref": "#/$defs/kindName"
         },
         "target_value": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "recall_family": {
           "$ref": "#/$defs/nonEmptyString"
         },
         "recall_mode": {

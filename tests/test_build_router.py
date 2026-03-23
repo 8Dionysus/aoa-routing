@@ -391,13 +391,23 @@ def test_build_outputs_from_fixtures() -> None:
         "match_key": "kind",
         "allowed_kinds": ["technique", "skill", "eval", "memo"],
     }
-    assert tiny_model["queries"][-1] == {
-        "verb": "recall",
-        "source_repo": "aoa-routing",
-        "target_surface": "generated/task_to_surface_hints.json",
-        "match_key": "kind",
-        "allowed_kinds": ["memo"],
-    }
+    assert tiny_model["queries"][-2:] == [
+        {
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+        },
+        {
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "recall_family": "memory_objects",
+        },
+    ]
     assert tiny_model["starters"] == [
         {
             "name": "router-root",
@@ -478,6 +488,42 @@ def test_build_outputs_from_fixtures() -> None:
             "allowed_kinds": ["memo"],
             "target_kind": "memo",
             "target_value": "memo",
+            "recall_mode": "lineage",
+        },
+        {
+            "name": "memo-object-recall-working",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_family": "memory_objects",
+            "recall_mode": "working",
+        },
+        {
+            "name": "memo-object-recall-semantic",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_family": "memory_objects",
+            "recall_mode": "semantic",
+        },
+        {
+            "name": "memo-object-recall-lineage",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_family": "memory_objects",
             "recall_mode": "lineage",
         },
     ]
@@ -600,7 +646,43 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
             "target_kind": "memo",
             "target_value": "memo",
             "recall_mode": "semantic",
-        }
+        },
+        {
+            "name": "memo-object-recall-working",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_family": "memory_objects",
+            "recall_mode": "working",
+        },
+        {
+            "name": "memo-object-recall-semantic",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_family": "memory_objects",
+            "recall_mode": "semantic",
+        },
+        {
+            "name": "memo-object-recall-lineage",
+            "verb": "recall",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/task_to_surface_hints.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+            "recall_family": "memory_objects",
+            "recall_mode": "lineage",
+        },
     ]
 
 
@@ -621,6 +703,16 @@ def test_build_outputs_omits_parallel_object_family_when_object_contract_is_miss
         hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
     )
     assert "parallel_families" not in memo_hint["actions"]["recall"]
+    assert all(
+        starter.get("recall_family") != "memory_objects"
+        for starter in outputs["tiny_model_entrypoints.json"]["starters"]
+        if starter["verb"] == "recall"
+    )
+    assert all(
+        query.get("recall_family") != "memory_objects"
+        for query in outputs["tiny_model_entrypoints.json"]["queries"]
+        if query["verb"] == "recall"
+    )
 
 
 def test_build_outputs_omits_parallel_object_family_when_object_surface_is_missing(tmp_path: Path) -> None:
@@ -640,6 +732,16 @@ def test_build_outputs_omits_parallel_object_family_when_object_surface_is_missi
         hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
     )
     assert "parallel_families" not in memo_hint["actions"]["recall"]
+    assert all(
+        starter.get("recall_family") != "memory_objects"
+        for starter in outputs["tiny_model_entrypoints.json"]["starters"]
+        if starter["verb"] == "recall"
+    )
+    assert all(
+        query.get("recall_family") != "memory_objects"
+        for query in outputs["tiny_model_entrypoints.json"]["queries"]
+        if query["verb"] == "recall"
+    )
 
 
 def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) -> None:

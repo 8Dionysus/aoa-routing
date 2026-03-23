@@ -77,6 +77,7 @@ Merged as bounded memo recall dispatch readiness now that `aoa-memo` exposes ini
 
 Wave 1 tiny-model recall activation now routes small models through published memo recall hints rather than hardcoding semantic-only behavior.
 Wave 2 parallel memo adoption keeps the root inspect/expand path doctrine-first while allowing `task_to_surface_hints.json` to advertise an optional object-facing recall family when upstream object contracts are complete.
+Wave 3 tiny-model recall-family selection keeps doctrine recall as the default starter path while adding explicit `recall_family = memory_objects` queries and starters for the parallel object-facing family.
 
 `aoa-routing` should own:
 
@@ -104,7 +105,7 @@ These boundaries come directly from the seed and should remain hard constraints:
 - tiny-model entrypoints must stay route-local and must not become a second tier registry
 - memo recall hints must advertise only router-ready upstream contracts
 - object-facing memo recall must remain a parallel family, not a replacement root kind
-- tiny-model grammar expansion for recall-family selection should wait for a later bounded wave
+- tiny-model recall-family selection must stay additive and memo-scoped rather than becoming a second root registry
 
 ## Definition Of Success
 

@@ -100,7 +100,7 @@ Recall stays bounded.
 advertises only router-ready recall modes that upstream `aoa-memo` exposes through contract files,
 keeps doctrine recall mode-indexed at the top level of the routing hint surface,
 and may publish an additional parallel object-facing recall family inside the memo recall hint when upstream object contracts and object surfaces are complete and coherent.
-The root memo inspect/expand path remains doctrine-first in this wave, and tiny-model starters remain bound to the legacy doctrine recall surface.
+The root memo inspect/expand path remains doctrine-first, while tiny-model entrypoints now keep doctrine recall as the default path and may also publish explicit `recall_family = memory_objects` queries and starters for the parallel object-facing family.
 It does not own recall policy authority, memory truth, or graph traversal.
 
 ## Repository layout
