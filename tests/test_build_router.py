@@ -386,7 +386,47 @@ def test_build_outputs_from_fixtures() -> None:
             "target_surface": "generated/aoa_router.min.json",
             "match_key": "kind",
             "allowed_kinds": ["technique", "skill", "eval", "memo"],
-        }
+        },
+        {
+            "name": "technique-root",
+            "verb": "pick",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": ["technique"],
+            "target_kind": "technique",
+            "target_value": "technique",
+        },
+        {
+            "name": "skill-root",
+            "verb": "pick",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": ["skill"],
+            "target_kind": "skill",
+            "target_value": "skill",
+        },
+        {
+            "name": "eval-root",
+            "verb": "pick",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": ["eval"],
+            "target_kind": "eval",
+            "target_value": "eval",
+        },
+        {
+            "name": "memo-root",
+            "verb": "pick",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": ["memo"],
+            "target_kind": "memo",
+            "target_value": "memo",
+        },
     ]
 
 
@@ -450,7 +490,6 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
             "target_value": "AOA-T-0019",
         },
     ]
-
 
 def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) -> None:
     skills_root = tmp_path / "aoa-skills"

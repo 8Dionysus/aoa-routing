@@ -824,6 +824,7 @@ def load_surface_entries_for_validation(
 ) -> list[dict[str, Any]]:
     array_key_by_filename = {
         "aoa_router.min.json": "entries",
+        "task_to_surface_hints.json": "hints",
         "pairing_hints.min.json": "entries",
         "technique_capsules.json": "techniques",
         "skill_capsules.json": "skills",
@@ -1052,6 +1053,8 @@ def validate_tiny_model_entrypoints(
         issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
         return
 
+    starter_names: set[str] = set()
+
     def load_target_payload(source_repo: str, surface_file: str) -> dict[str, Any] | None:
         surface_root = roots.get(source_repo)
         if surface_root is None:
@@ -1089,6 +1092,17 @@ def validate_tiny_model_entrypoints(
         except RouterError as exc:
             issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
             continue
+        starter_name = starter.get("name")
+        if isinstance(starter_name, str):
+            if starter_name in starter_names:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"starter names must be unique; found duplicate '{starter_name}'",
+                    )
+                )
+            else:
+                starter_names.add(starter_name)
         source_repo = starter.get("source_repo")
         surface_file = starter.get("target_surface")
         match_key = starter.get("match_key")
@@ -1106,11 +1120,13 @@ def validate_tiny_model_entrypoints(
             issues.append(ValidationIssue(f"{source_repo}/{surface_file}", str(exc)))
             continue
         found = False
+        matched_entry: dict[str, Any] | None = None
         for raw_entry in entries:
             if not isinstance(raw_entry, dict):
                 continue
             if raw_entry.get(match_key) == target_value:
                 found = True
+                matched_entry = raw_entry
                 break
         if not found:
             issues.append(

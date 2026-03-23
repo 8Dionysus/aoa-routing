@@ -555,3 +555,28 @@ def test_validate_generated_outputs_rejects_tiny_model_entrypoint_missing_surfac
         and "is missing" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_duplicate_tiny_model_starter_name(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
+    payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
+    payload["starters"][1]["name"] = payload["starters"][0]["name"]
+    write_json(tiny_model_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any("starter names must be unique" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_tiny_model_starter_missing_target(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
+    payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
+    payload["starters"][1]["target_value"] = "ghost-kind"
+    write_json(tiny_model_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "starter 'technique-root' target 'ghost-kind' was not found" in issue.message
+        for issue in issues
+    )

@@ -745,6 +745,7 @@ def build_tiny_model_entrypoints_payload(
     hints_payload: dict[str, Any],
 ) -> dict[str, Any]:
     registry_index = {(entry["kind"], entry["id"]): entry for entry in registry_entries}
+    available_kinds = {entry["kind"] for entry in registry_entries}
     hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
     queries: list[dict[str, Any]] = [
         {
@@ -838,6 +839,21 @@ def build_tiny_model_entrypoints_payload(
             "allowed_kinds": list(ACTIVE_KINDS),
         }
     ]
+    for kind in ACTIVE_KINDS:
+        if kind not in available_kinds:
+            continue
+        starters.append(
+            {
+                "name": f"{kind}-root",
+                "verb": "pick",
+                "source_repo": PAIRING_SURFACE_REPO,
+                "target_surface": "generated/aoa_router.min.json",
+                "match_key": "kind",
+                "allowed_kinds": [kind],
+                "target_kind": kind,
+                "target_value": kind,
+            }
+        )
     if ("technique", KAG_DEFAULT_ENTRYPOINT_ID) in registry_index:
         starters.append(
             {

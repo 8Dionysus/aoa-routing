@@ -57,7 +57,7 @@ The builder writes these tracked artifacts under `generated/`:
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
 - `kag_source_lift_relation_hints.min.json` - bounded one-hop direct relation hints for the KAG/source-lift family
 - `pairing_hints.min.json` - bounded pair suggestions derived from cross-kind dependencies and family-scoped direct relations
-- `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing
+- `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind-root starters for low-context entry
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
 `AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,
@@ -107,6 +107,9 @@ It does not own recall policy authority, memory truth, or graph traversal.
 - `schemas/` - local schema contracts for the public output envelopes, entries, actions, and hops
 - `generated/` - committed derived routing surfaces
 - `tests/` - unit and integration coverage for build and validate flows
+
+Canonical bounded flows are also covered by walkthrough smokes in `tests/test_route_walkthroughs.py`,
+so `pick`, `inspect`, `expand`, `pair`, and memo `recall` stay anchored to live source-owned surfaces.
 
 ## Build and validate
 
