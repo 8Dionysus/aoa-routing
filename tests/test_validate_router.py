@@ -356,16 +356,17 @@ def test_validate_generated_outputs_rejects_malformed_expand_action_shape_via_sc
     )
 
 
-def test_validate_generated_outputs_rejects_enabled_pair_action_via_schema(tmp_path: Path) -> None:
+def test_validate_generated_outputs_rejects_malformed_enabled_pair_action_via_schema(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     hints_path = generated_dir / "task_to_surface_hints.json"
     payload = json.loads(hints_path.read_text(encoding="utf-8"))
-    payload["hints"][0]["actions"]["pair"]["enabled"] = True
+    del payload["hints"][0]["actions"]["pair"]["surface_repo"]
     write_json(hints_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "schema violation" in issue.message and ".actions.pair.enabled" in issue.message
+        ("schema violation" in issue.message and "actions.pair" in issue.message)
+        or "must define surface_file" in issue.message
         for issue in issues
     )
 
@@ -377,13 +378,13 @@ def test_validate_generated_outputs_rejects_malformed_enabled_recall_action_via_
     hints_path = generated_dir / "task_to_surface_hints.json"
     payload = json.loads(hints_path.read_text(encoding="utf-8"))
     memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
-    del memo_hint["actions"]["recall"]["contract_file"]
+    del memo_hint["actions"]["recall"]["contracts_by_mode"]
     write_json(hints_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         ("schema violation" in issue.message and "actions.recall" in issue.message)
-        or "must define contract_file" in issue.message
+        or "must define contracts_by_mode" in issue.message
         for issue in issues
     )
 
@@ -436,6 +437,22 @@ def test_validate_generated_outputs_rejects_invalid_kag_relation_hints(tmp_path:
     assert any(
         "kag_source_lift_relation_hints.min.json does not match the live direct relation surface"
         in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_invalid_pairing_hints(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    pairing_path = generated_dir / "pairing_hints.min.json"
+    payload = json.loads(pairing_path.read_text(encoding="utf-8"))
+    payload["entries"][0]["pairs"].append(
+        {"kind": payload["entries"][0]["kind"], "id": "AOA-T-0002", "relation": "requires"}
+    )
+    write_json(pairing_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "same-kind pairing must stay within the KAG/source-lift family" in issue.message
         for issue in issues
     )
 
@@ -521,5 +538,20 @@ def test_validate_generated_outputs_rejects_missing_recall_contract_target(tmp_p
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         "recall contract expand_surface must match the memo expand surface hint" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_tiny_model_entrypoint_missing_surface(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
+    payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
+    payload["queries"][0]["target_surface"] = "generated/missing-router-surface.json"
+    write_json(tiny_model_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "aoa-routing/generated/missing-router-surface.json"
+        and "is missing" in issue.message
         for issue in issues
     )

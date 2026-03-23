@@ -12,8 +12,10 @@ from router_core import (
     REPO_ROOT,
     RouterError,
     build_kag_source_lift_relation_hints_payload,
+    build_pairing_hints_payload,
     build_recommended_paths_payload,
     build_router_payload,
+    build_tiny_model_entrypoints_payload,
     build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
     ensure_bool,
@@ -359,13 +361,22 @@ def build_outputs(
         "entries": registry_entries,
     }
     router_payload = build_router_payload(registry_entries)
-    hints_payload = build_task_to_surface_hints_payload()
+    hints_payload = build_task_to_surface_hints_payload(memo_root)
     tier_hints_payload = build_task_to_tier_hints_payload(agents_root)
     recommended_payload = build_recommended_paths_payload(registry_entries)
     relation_hints_payload = build_kag_source_lift_relation_hints_payload(
         registry_entries,
         technique_catalog_source,
         technique_catalog_entries,
+    )
+    pairing_payload = build_pairing_hints_payload(
+        registry_entries,
+        technique_catalog_source,
+        technique_catalog_entries,
+    )
+    tiny_model_entrypoints_payload = build_tiny_model_entrypoints_payload(
+        registry_entries,
+        hints_payload,
     )
     return {
         "cross_repo_registry.min.json": registry_payload,
@@ -374,6 +385,8 @@ def build_outputs(
         "task_to_tier_hints.json": tier_hints_payload,
         "recommended_paths.min.json": recommended_payload,
         "kag_source_lift_relation_hints.min.json": relation_hints_payload,
+        "pairing_hints.min.json": pairing_payload,
+        "tiny_model_entrypoints.json": tiny_model_entrypoints_payload,
     }
 
 

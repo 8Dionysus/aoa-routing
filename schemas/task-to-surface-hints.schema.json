@@ -121,6 +121,39 @@
         }
       ]
     },
+    "pairAction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/disabledAction"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "surface_repo",
+            "surface_file",
+            "match_field"
+          ],
+          "properties": {
+            "enabled": {
+              "const": true
+            },
+            "surface_repo": {
+              "enum": [
+                "aoa-routing"
+              ]
+            },
+            "surface_file": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "match_field": {
+              "$ref": "#/$defs/nonEmptyString"
+            }
+          }
+        }
+      ]
+    },
     "recallAction": {
       "oneOf": [
         {
@@ -131,9 +164,9 @@
           "additionalProperties": false,
           "required": [
             "enabled",
-            "contract_file",
             "default_mode",
-            "supported_modes"
+            "supported_modes",
+            "contracts_by_mode"
           ],
           "properties": {
             "enabled": {
@@ -147,6 +180,16 @@
             },
             "supported_modes": {
               "$ref": "#/$defs/stringList"
+            },
+            "contracts_by_mode": {
+              "type": "object",
+              "minProperties": 1,
+              "additionalProperties": false,
+              "patternProperties": {
+                "^[a-z][a-z0-9_-]*$": {
+                  "$ref": "#/$defs/nonEmptyString"
+                }
+              }
             }
           }
         }
@@ -173,7 +216,7 @@
           "$ref": "#/$defs/expandAction"
         },
         "pair": {
-          "$ref": "#/$defs/disabledAction"
+          "$ref": "#/$defs/pairAction"
         },
         "recall": {
           "$ref": "#/$defs/recallAction"

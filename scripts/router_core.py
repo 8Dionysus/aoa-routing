@@ -15,6 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 ACTIVE_KINDS = ("technique", "skill", "eval", "memo")
 RESERVED_KINDS: tuple[str, ...] = ()
 ALL_KINDS = ACTIVE_KINDS + RESERVED_KINDS
+PAIRABLE_KINDS = ("technique", "skill", "eval")
 RECOMMENDED_HOP_KINDS = ("technique", "skill", "eval")
 CANONICAL_REPO_BY_KIND = {
     "technique": "aoa-techniques",
@@ -47,6 +48,12 @@ DIRECT_RELATION_TYPES = (
 DIRECT_RELATION_TYPES_SET = set(DIRECT_RELATION_TYPES)
 MODEL_TIER_SOURCE_REPO = "aoa-agents"
 MODEL_TIER_REGISTRY_PATH = "generated/model_tier_registry.json"
+PAIRING_SURFACE_REPO = "aoa-routing"
+PAIRING_SURFACE_FILE = "generated/pairing_hints.min.json"
+TINY_MODEL_ENTRYPOINTS_FILE = "generated/tiny_model_entrypoints.json"
+DEFAULT_MEMO_RECALL_MODE = "semantic"
+ROUTER_READY_RECALL_CONTRACT_PREFIX = "recall_contract.router."
+KAG_DEFAULT_ENTRYPOINT_ID = "AOA-T-0019"
 TASK_TO_TIER_HINT_SPECS = (
     {
         "task_family": "task-triage",
@@ -305,6 +312,70 @@ def load_model_tier_registry(
     return normalized_path, tier_index
 
 
+def load_memo_catalog_surfaces(memo_root: Path) -> list[dict[str, Any]]:
+    catalog_path = memo_root / "generated" / "memory_catalog.min.json"
+    payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
+    raw_surfaces = ensure_list(
+        payload.get("memo_surfaces"),
+        f"{relative_posix(catalog_path)}.memo_surfaces",
+    )
+    surfaces: list[dict[str, Any]] = []
+    for index, item in enumerate(raw_surfaces):
+        location = f"{relative_posix(catalog_path)}.memo_surfaces[{index}]"
+        surfaces.append(ensure_mapping(item, location))
+    return surfaces
+
+
+def collect_memo_recall_mode_order(memo_surfaces: list[dict[str, Any]]) -> list[str]:
+    ordered_modes: list[str] = []
+    seen_modes: set[str] = set()
+    for index, surface in enumerate(memo_surfaces):
+        location = f"generated/memory_catalog.min.json.memo_surfaces[{index}]"
+        modes = ensure_string_list(surface.get("recall_modes"), f"{location}.recall_modes")
+        for mode in modes:
+            if mode in seen_modes:
+                continue
+            ordered_modes.append(mode)
+            seen_modes.add(mode)
+    return ordered_modes
+
+
+def load_router_ready_memo_recall_contracts(
+    memo_root: Path,
+    memo_surfaces: list[dict[str, Any]] | None = None,
+) -> tuple[str | None, list[str], dict[str, str]]:
+    surfaces = memo_surfaces or load_memo_catalog_surfaces(memo_root)
+    declared_modes = collect_memo_recall_mode_order(surfaces)
+    declared_mode_set = set(declared_modes)
+    contracts_by_mode: dict[str, str] = {}
+
+    examples_dir = memo_root / "examples"
+    if examples_dir.exists():
+        for contract_path in sorted(examples_dir.glob(f"{ROUTER_READY_RECALL_CONTRACT_PREFIX}*.json")):
+            location = relative_posix(contract_path, memo_root)
+            contract = ensure_mapping(load_json_file(contract_path), location)
+            require_keys(
+                contract,
+                ("mode", "inspect_surface", "expand_surface"),
+                location,
+            )
+            mode = ensure_string(contract["mode"], f"{location}.mode")
+            if mode in contracts_by_mode:
+                raise RouterError(f"{location} duplicates router-ready recall mode '{mode}'")
+            if mode not in declared_mode_set:
+                raise RouterError(
+                    f"{location}.mode must be declared by aoa-memo/generated/memory_catalog.min.json"
+                )
+            contracts_by_mode[mode] = location
+
+    supported_modes = [mode for mode in declared_modes if mode in contracts_by_mode]
+    if not supported_modes:
+        return None, [], {}
+
+    default_mode = DEFAULT_MEMO_RECALL_MODE if DEFAULT_MEMO_RECALL_MODE in contracts_by_mode else supported_modes[0]
+    return default_mode, supported_modes, contracts_by_mode
+
+
 def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, Any]:
     projection = [
         {
@@ -324,7 +395,7 @@ def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, An
     }
 
 
-def build_task_to_surface_hints_payload() -> dict[str, Any]:
+def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
     def action_flags(
         *,
         inspect_enabled: bool,
@@ -337,10 +408,15 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
         default_sections: list[str] | None = None,
         supported_sections: list[str] | None = None,
         pick_enabled: bool = True,
+        pair_enabled: bool = False,
+        pair_surface_repo: str | None = None,
+        pair_surface_file: str | None = None,
+        pair_match_field: str | None = None,
         recall_enabled: bool = False,
         recall_contract_file: str | None = None,
         recall_default_mode: str | None = None,
         recall_supported_modes: list[str] | None = None,
+        recall_contracts_by_mode: dict[str, str] | None = None,
     ) -> dict[str, dict[str, Any]]:
         inspect: dict[str, Any] = {"enabled": inspect_enabled}
         if inspect_enabled:
@@ -353,18 +429,33 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
             expand["section_key_field"] = expand_section_key_field
             expand["default_sections"] = list(default_sections or [])
             expand["supported_sections"] = list(supported_sections or [])
+        pair: dict[str, Any] = {"enabled": pair_enabled}
+        if pair_enabled:
+            pair["surface_repo"] = pair_surface_repo
+            pair["surface_file"] = pair_surface_file
+            pair["match_field"] = pair_match_field
         recall: dict[str, Any] = {"enabled": recall_enabled}
         if recall_enabled:
-            recall["contract_file"] = recall_contract_file
+            if recall_contract_file is not None:
+                recall["contract_file"] = recall_contract_file
             recall["default_mode"] = recall_default_mode
             recall["supported_modes"] = list(recall_supported_modes or [])
+            recall["contracts_by_mode"] = dict(recall_contracts_by_mode or {})
         return {
             "pick": {"enabled": pick_enabled},
             "inspect": inspect,
             "expand": expand,
-            "pair": {"enabled": False},
+            "pair": pair,
             "recall": recall,
         }
+
+    memo_surfaces = load_memo_catalog_surfaces(memo_root)
+    recall_default_mode, recall_supported_modes, recall_contracts_by_mode = (
+        load_router_ready_memo_recall_contracts(memo_root, memo_surfaces)
+    )
+    recall_contract_file = None
+    if recall_default_mode is not None:
+        recall_contract_file = recall_contracts_by_mode[recall_default_mode]
 
     return {
         "version": 1,
@@ -408,6 +499,10 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                         "promotion_history",
                         "future_evolution",
                     ],
+                    pair_enabled=True,
+                    pair_surface_repo=PAIRING_SURFACE_REPO,
+                    pair_surface_file=PAIRING_SURFACE_FILE,
+                    pair_match_field="id",
                 ),
             },
             {
@@ -444,6 +539,10 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                         "technique_traceability",
                         "adaptation_points",
                     ],
+                    pair_enabled=True,
+                    pair_surface_repo=PAIRING_SURFACE_REPO,
+                    pair_surface_file=PAIRING_SURFACE_FILE,
+                    pair_match_field="id",
                 ),
             },
             {
@@ -487,6 +586,10 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                         "skill_traceability",
                         "adaptation_points",
                     ],
+                    pair_enabled=True,
+                    pair_surface_repo=PAIRING_SURFACE_REPO,
+                    pair_surface_file=PAIRING_SURFACE_FILE,
+                    pair_match_field="id",
                 ),
             },
             {
@@ -504,13 +607,267 @@ def build_task_to_surface_hints_payload() -> dict[str, Any]:
                     expand_section_key_field="section_id",
                     default_sections=[],
                     supported_sections=[],
-                    recall_enabled=True,
-                    recall_contract_file="examples/recall_contract.router.semantic.json",
-                    recall_default_mode="semantic",
-                    recall_supported_modes=["semantic"],
+                    recall_enabled=bool(recall_supported_modes),
+                    recall_contract_file=recall_contract_file,
+                    recall_default_mode=recall_default_mode,
+                    recall_supported_modes=recall_supported_modes,
+                    recall_contracts_by_mode=recall_contracts_by_mode,
                 ),
             },
         ],
+    }
+
+
+def build_pairing_hints_payload(
+    registry_entries: list[dict[str, Any]],
+    source_catalog: str,
+    technique_catalog_entries: list[dict[str, Any]],
+) -> dict[str, Any]:
+    index = {(entry["kind"], entry["id"]): entry for entry in registry_entries}
+    pairings: dict[tuple[str, str], list[dict[str, str]]] = {
+        (entry["kind"], entry["id"]): []
+        for entry in registry_entries
+        if entry["kind"] in PAIRABLE_KINDS
+    }
+    seen_pairs: dict[tuple[str, str], set[tuple[str, str, str]]] = {
+        key: set() for key in pairings
+    }
+
+    def add_pair(source_key: tuple[str, str], target_kind: str, target_id: str, relation: str) -> None:
+        if source_key[0] not in PAIRABLE_KINDS:
+            return
+        if target_kind == "memo":
+            raise RouterError("memo entries must not appear in bounded pairing hints")
+        if target_kind not in PAIRABLE_KINDS:
+            raise RouterError(f"{target_kind} is not supported in the bounded pairing surface")
+        if target_kind == "technique" and is_pending_technique_id(target_id):
+            return
+        if target_kind == source_key[0]:
+            if source_key[0] != "technique":
+                raise RouterError(
+                    f"same-kind pairing is not allowed for {source_key[0]}:{source_key[1]} -> {target_id}"
+                )
+            if source_key[1] not in KAG_SOURCE_LIFT_TECHNIQUE_SET or target_id not in KAG_SOURCE_LIFT_TECHNIQUE_SET:
+                raise RouterError(
+                    f"same-kind pairing must stay within the KAG/source-lift family: {source_key[1]} -> {target_id}"
+                )
+            if relation not in DIRECT_RELATION_TYPES_SET:
+                raise RouterError(
+                    f"same-kind pairing for {source_key[1]} -> {target_id} must use a supported direct relation"
+                )
+        elif relation not in {RELATION_REQUIRES, RELATION_REQUIRED_BY}:
+            raise RouterError(
+                f"cross-kind pairing for {source_key[0]}:{source_key[1]} -> {target_kind}:{target_id} must use requires/required_by"
+            )
+        if (target_kind, target_id) not in index:
+            raise RouterError(
+                f"unresolved pairing target: {source_key[0]}:{source_key[1]} -> {target_kind}:{target_id}"
+            )
+        pair_key = (target_kind, target_id, relation)
+        if pair_key in seen_pairs[source_key]:
+            return
+        seen_pairs[source_key].add(pair_key)
+        pairings[source_key].append(
+            {"kind": target_kind, "id": target_id, "relation": relation}
+        )
+
+    for entry in registry_entries:
+        source_key = (entry["kind"], entry["id"])
+        if entry["kind"] == "skill":
+            for dependency_id in entry["attributes"]["technique_dependencies"]:
+                add_pair(source_key, "technique", dependency_id, RELATION_REQUIRES)
+                if ("technique", dependency_id) in pairings:
+                    add_pair(("technique", dependency_id), "skill", entry["id"], RELATION_REQUIRED_BY)
+        elif entry["kind"] == "eval":
+            for dependency_id in entry["attributes"]["technique_dependencies"]:
+                add_pair(source_key, "technique", dependency_id, RELATION_REQUIRES)
+                if ("technique", dependency_id) in pairings:
+                    add_pair(("technique", dependency_id), "eval", entry["id"], RELATION_REQUIRED_BY)
+            for dependency_name in entry["attributes"]["skill_dependencies"]:
+                add_pair(source_key, "skill", dependency_name, RELATION_REQUIRES)
+                if ("skill", dependency_name) in pairings:
+                    add_pair(("skill", dependency_name), "eval", entry["id"], RELATION_REQUIRED_BY)
+
+    techniques_by_id: dict[str, dict[str, Any]] = {}
+    for index_value, item in enumerate(technique_catalog_entries):
+        location = f"generated/technique_catalog.min.json.techniques[{index_value}]"
+        technique = ensure_mapping(item, location)
+        require_keys(technique, ("id",), location)
+        technique_id = ensure_string(technique["id"], f"{location}.id")
+        techniques_by_id[technique_id] = technique
+
+    for technique_id in KAG_SOURCE_LIFT_TECHNIQUE_IDS:
+        technique = techniques_by_id.get(technique_id)
+        if technique is None or ("technique", technique_id) not in pairings:
+            continue
+        raw_relations = technique.get("relations", [])
+        if raw_relations is None:
+            raw_relations = []
+        relations = ensure_list(
+            raw_relations,
+            f"generated/technique_catalog.min.json.techniques[{technique_id}].relations",
+        )
+        for relation_index, raw_relation in enumerate(relations):
+            relation_location = (
+                f"generated/technique_catalog.min.json.techniques[{technique_id}].relations[{relation_index}]"
+            )
+            relation = ensure_mapping(raw_relation, relation_location)
+            require_keys(relation, ("type", "target"), relation_location)
+            relation_type = ensure_string(relation["type"], f"{relation_location}.type")
+            target_id = ensure_string(relation["target"], f"{relation_location}.target")
+            add_pair(("technique", technique_id), "technique", target_id, relation_type)
+
+    payload_entries = []
+    for entry in sort_registry_entries(list(registry_entries)):
+        if entry["kind"] not in PAIRABLE_KINDS:
+            continue
+        key = (entry["kind"], entry["id"])
+        payload_entries.append(
+            {
+                "kind": entry["kind"],
+                "id": entry["id"],
+                "pairs": sort_hops(pairings[key]),
+            }
+        )
+    return {
+        "version": 1,
+        "source_inputs": {
+            "registry_surface": "generated/cross_repo_registry.min.json",
+            "kag_relation_source_repo": "aoa-techniques",
+            "kag_relation_source_catalog": source_catalog,
+        },
+        "entries": payload_entries,
+    }
+
+
+def build_tiny_model_entrypoints_payload(
+    registry_entries: list[dict[str, Any]],
+    hints_payload: dict[str, Any],
+) -> dict[str, Any]:
+    registry_index = {(entry["kind"], entry["id"]): entry for entry in registry_entries}
+    hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    queries: list[dict[str, Any]] = [
+        {
+            "verb": "pick",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": list(ACTIVE_KINDS),
+        }
+    ]
+
+    for index, raw_hint in enumerate(hints):
+        location = f"task_to_surface_hints.json.hints[{index}]"
+        hint = ensure_mapping(raw_hint, location)
+        kind = ensure_string(hint["kind"], f"{location}.kind")
+        source_repo = ensure_string(hint["source_repo"], f"{location}.source_repo")
+        actions = ensure_mapping(hint["actions"], f"{location}.actions")
+
+        inspect = ensure_mapping(actions["inspect"], f"{location}.actions.inspect")
+        if inspect.get("enabled") is True:
+            queries.append(
+                {
+                    "verb": "inspect",
+                    "source_repo": source_repo,
+                    "target_surface": ensure_string(
+                        inspect.get("surface_file"),
+                        f"{location}.actions.inspect.surface_file",
+                    ),
+                    "match_key": ensure_string(
+                        inspect.get("match_field"),
+                        f"{location}.actions.inspect.match_field",
+                    ),
+                    "allowed_kinds": [kind],
+                }
+            )
+
+        expand = ensure_mapping(actions["expand"], f"{location}.actions.expand")
+        if expand.get("enabled") is True:
+            queries.append(
+                {
+                    "verb": "expand",
+                    "source_repo": source_repo,
+                    "target_surface": ensure_string(
+                        expand.get("surface_file"),
+                        f"{location}.actions.expand.surface_file",
+                    ),
+                    "match_key": ensure_string(
+                        expand.get("match_field"),
+                        f"{location}.actions.expand.match_field",
+                    ),
+                    "allowed_kinds": [kind],
+                    "section_key_field": ensure_string(
+                        expand.get("section_key_field"),
+                        f"{location}.actions.expand.section_key_field",
+                    ),
+                    "default_sections": ensure_string_list(
+                        expand.get("default_sections"),
+                        f"{location}.actions.expand.default_sections",
+                    ),
+                }
+            )
+
+        pair = ensure_mapping(actions["pair"], f"{location}.actions.pair")
+        if pair.get("enabled") is True:
+            queries.append(
+                {
+                    "verb": "pair",
+                    "source_repo": ensure_string(
+                        pair.get("surface_repo"),
+                        f"{location}.actions.pair.surface_repo",
+                    ),
+                    "target_surface": ensure_string(
+                        pair.get("surface_file"),
+                        f"{location}.actions.pair.surface_file",
+                    ),
+                    "match_key": ensure_string(
+                        pair.get("match_field"),
+                        f"{location}.actions.pair.match_field",
+                    ),
+                    "allowed_kinds": [kind],
+                }
+            )
+
+    starters: list[dict[str, Any]] = [
+        {
+            "name": "router-root",
+            "verb": "pick",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": list(ACTIVE_KINDS),
+        }
+    ]
+    if ("technique", KAG_DEFAULT_ENTRYPOINT_ID) in registry_index:
+        starters.append(
+            {
+                "name": "kag-source-lift-default",
+                "verb": "inspect",
+                "source_repo": "aoa-techniques",
+                "target_surface": "generated/technique_capsules.json",
+                "match_key": "id",
+                "allowed_kinds": ["technique"],
+                "target_kind": "technique",
+                "target_value": KAG_DEFAULT_ENTRYPOINT_ID,
+            }
+        )
+        starters.append(
+            {
+                "name": "kag-source-lift-companions",
+                "verb": "pair",
+                "source_repo": PAIRING_SURFACE_REPO,
+                "target_surface": PAIRING_SURFACE_FILE,
+                "match_key": "id",
+                "allowed_kinds": ["technique"],
+                "target_kind": "technique",
+                "target_value": KAG_DEFAULT_ENTRYPOINT_ID,
+            }
+        )
+
+    return {
+        "version": 1,
+        "queries": queries,
+        "starters": starters,
     }
 
 
