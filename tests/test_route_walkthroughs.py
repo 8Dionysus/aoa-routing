@@ -378,6 +378,7 @@ def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> Non
 
     assert entry_by_id["router"]["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
     assert entry_by_id["aoa-techniques"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
+    assert entry_by_id["Tree-of-Sophia"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
     assert root_by_id["tos-root"]["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
 
 
@@ -409,7 +410,38 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
     assert route_entry["lineage_or_context_hop"] == "examples/concept_node.example.json"
     assert route_entry["fallback"] == "docs/KNOWLEDGE_MODEL.md"
 
+    second_action = tos_root["next_actions"][1]
+    assert second_action == {
+        "verb": "inspect",
+        "target_repo": "aoa-routing",
+        "target_surface": "generated/federation_entrypoints.min.json",
+        "match_key": "id",
+        "target_value": "Tree-of-Sophia",
+    }
+    tos_kag_view = next(
+        entry
+        for entry in federation["entrypoints"]
+        if entry["kind"] == "kag_view" and entry["id"] == "Tree-of-Sophia"
+    )
+    assert tos_kag_view["next_actions"] == [
+        {
+            "verb": "inspect",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "docs/TINY_ENTRY_ROUTE.md",
+            "match_key": "path",
+            "target_value": "docs/TINY_ENTRY_ROUTE.md",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "match_key": "route_id",
+            "target_value": "tos-tiny-entry.zarathustra-prologue",
+        },
+    ]
+    assert (roots["Tree-of-Sophia"] / "docs" / "TINY_ENTRY_ROUTE.md").exists()
+
     assert tos_root["next_hops"] == [
-        {"kind": "kag_view", "id": "aoa-techniques"},
+        {"kind": "kag_view", "id": "Tree-of-Sophia"},
         {"kind": "playbook", "id": "AOA-P-0009"},
     ]

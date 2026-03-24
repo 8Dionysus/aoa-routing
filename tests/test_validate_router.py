@@ -831,3 +831,35 @@ def test_validate_generated_outputs_rejects_tos_tiny_entry_route_id_drift(
         or "target 'tos-tiny-entry.zarathustra-prologue' was not found" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_tos_kag_view_entry_surface_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    spine_path = roots["aoa-kag"] / "generated" / "federation_spine.min.json"
+    payload = json.loads(spine_path.read_text(encoding="utf-8"))
+    payload["repos"][1]["current_entry_surface_refs"] = ["Tree-of-Sophia/README.md"]
+    write_json(spine_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "current_entry_surface_refs must stay" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_tos_kag_view_route_id_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    spine_path = roots["aoa-kag"] / "generated" / "federation_spine.min.json"
+    payload = json.loads(spine_path.read_text(encoding="utf-8"))
+    payload["repos"][1]["example_object_ids"] = ["tos-tiny-entry.drifted"]
+    write_json(spine_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "example_object_ids must stay ['tos-tiny-entry.zarathustra-prologue']" in issue.message
+        for issue in issues
+    )

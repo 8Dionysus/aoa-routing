@@ -73,7 +73,7 @@ The builder writes these tracked artifacts under `generated/`:
 - `kag_source_lift_relation_hints.min.json` - bounded one-hop direct relation hints for the KAG/source-lift family
 - `pairing_hints.min.json` - bounded pair suggestions derived from cross-kind dependencies and family-scoped direct relations
 - `federation_entrypoints.min.json` - bounded federation entry ABI with derived root cards, live entry cards, and explicit source authority refs
-- `federation_entrypoints.min.json` also keeps the current `tos-root -> source-owned tiny-entry route` handoff without activating a new federation kind
+- `federation_entrypoints.min.json` also keeps the current `tos-root -> source-owned tiny-entry route -> Tree-of-Sophia kag_view` handoff without activating a new federation kind
 - `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind roots, memo recall entry hints, and a separate federation-entry seam
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
@@ -88,7 +88,7 @@ These public outputs are schema-backed and validator-checked.
 For the federation-entry seam, `aoa-routing` publishes orientation cards only.
 Authority stays in the owning repos.
 The doctrinal explanation for that boundary lives in `docs/FEDERATION_ENTRY_ABI.md`.
-For ToS specifically, `tos-root` now hands off first to a source-owned tiny-entry route surface inside `Tree-of-Sophia` before any downstream KAG or playbook hop.
+For ToS specifically, `tos-root` now hands off first to a source-owned tiny-entry route surface inside `Tree-of-Sophia`, then to a ToS-specific KAG view, before the bounded playbook hop.
 
 Inspect actions point to repo-local capsule surfaces:
 
@@ -205,3 +205,4 @@ These are intentionally out of scope for the first foundation release:
 Bounded pairing, tiny-model entrypoints, memo recall dispatch, and the federation entry ABI now sit inside that thin-router posture,
 while source-owned meaning remains upstream.
 The current ToS tiny-entry sync stays inside that same posture: it improves handoff into `Tree-of-Sophia` without widening the live router taxonomy.
+The default `kag-view-root` starter still stays anchored to `aoa-techniques`, while `tos-root` now chooses the ToS-specific `kag_view`.
