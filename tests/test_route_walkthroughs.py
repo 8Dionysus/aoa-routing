@@ -10,6 +10,17 @@ import build_router
 
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
+FIXTURE_REPO_NAMES = (
+    "aoa-techniques",
+    "aoa-skills",
+    "aoa-evals",
+    "aoa-memo",
+    "aoa-agents",
+    "Agents-of-Abyss",
+    "aoa-playbooks",
+    "aoa-kag",
+    "Tree-of-Sophia",
+)
 WALKTHROUGHS = json.loads((FIXTURES_ROOT / "route_walkthroughs.json").read_text(encoding="utf-8"))[
     "walkthroughs"
 ]
@@ -192,11 +203,25 @@ def build_kag_source_lift_capsules() -> list[dict[str, object]]:
 
 def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
     roots: dict[str, Path] = {}
-    for repo_name in ("aoa-techniques", "aoa-skills", "aoa-evals", "aoa-memo", "aoa-agents"):
+    for repo_name in FIXTURE_REPO_NAMES:
         target = tmp_path / repo_name
         shutil.copytree(FIXTURES_ROOT / repo_name, target)
         roots[repo_name] = target
     return roots
+
+
+def build_fixture_outputs(roots: dict[str, Path]) -> dict[str, dict[str, object]]:
+    return build_router.build_outputs(
+        roots["aoa-techniques"],
+        roots["aoa-skills"],
+        roots["aoa-evals"],
+        roots["aoa-memo"],
+        roots["aoa-agents"],
+        roots["Agents-of-Abyss"],
+        roots["aoa-playbooks"],
+        roots["aoa-kag"],
+        roots["Tree-of-Sophia"],
+    )
 
 
 def augment_kag_source_lift_surfaces(techniques_root: Path) -> None:
@@ -215,13 +240,7 @@ def build_walkthrough_context(tmp_path: Path, fixture_variant: str) -> tuple[dic
     roots = copy_fixture_roots(tmp_path)
     if fixture_variant == "kag":
         augment_kag_source_lift_surfaces(roots["aoa-techniques"])
-    outputs = build_router.build_outputs(
-        roots["aoa-techniques"],
-        roots["aoa-skills"],
-        roots["aoa-evals"],
-        roots["aoa-memo"],
-        roots["aoa-agents"],
-    )
+    outputs = build_fixture_outputs(roots)
     return outputs, roots
 
 
@@ -337,3 +356,23 @@ def test_route_walkthrough_smokes_resolve_canonical_flows(
         assert contract["mode"] == mode
         assert contract["inspect_surface"] == memo_hint["actions"]["inspect"]["surface_file"]
         assert contract["expand_surface"] == memo_hint["actions"]["expand"]["surface_file"]
+
+
+def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> None:
+    outputs, _ = build_walkthrough_context(tmp_path, "base")
+    federation = outputs["federation_entrypoints.min.json"]
+    root_by_id = {entry["id"]: entry for entry in federation["root_entries"]}
+    entry_by_id = {entry["id"]: entry for entry in federation["entrypoints"]}
+    starters = {
+        starter["name"]: starter
+        for starter in outputs["tiny_model_entrypoints.json"]["federation_starters"]
+    }
+
+    assert starters["aoa-root"]["target_value"] in root_by_id
+    assert starters["tos-root"]["target_value"] in root_by_id
+    assert starters["tier-root"]["target_value"] in entry_by_id
+    assert starters["kag-view-root"]["target_value"] in entry_by_id
+
+    assert entry_by_id["router"]["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
+    assert entry_by_id["aoa-techniques"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
+    assert root_by_id["tos-root"]["authority_surface"] == "Tree-of-Sophia:CHARTER.md"

@@ -1,6 +1,6 @@
 # aoa-routing
 
-Thin navigation, typing, and dispatch layer for the public AoA stack.
+Thin navigation, typing, dispatch, and federation-entry orientation layer for the public AoA stack.
 
 `aoa-routing` does not author new meaning.
 It derives lightweight routing surfaces from sibling AoA repositories so models can
@@ -10,9 +10,13 @@ The core rule for this repository is:
 
 **Source repos own meaning. Routing repo owns navigation.**
 
-The current runtime path is:
+The current thin-router runtime path is:
 
 `pick -> inspect -> expand -> object use -> optional pair -> optional recall`
+
+The new federation-entry path is separate and additive:
+
+`federation root -> entry card -> source authority -> bounded next hop`
 
 ## Scope
 
@@ -22,6 +26,7 @@ The current runtime path is:
 - `aoa-skills` as the execution canon
 - `aoa-evals` as the proof canon
 - `aoa-memo` as a bounded memo and recall routing surface
+- `Agents-of-Abyss`, `Tree-of-Sophia`, `aoa-agents`, `aoa-playbooks`, and `aoa-kag` as source inputs for a separate federation entry ABI
 
 ## Current ingestion model
 
@@ -32,6 +37,15 @@ The build reads only repo-local generated catalogs and registries:
 - `aoa-evals` from `generated/eval_catalog.min.json`
 - `aoa-memo` from `generated/memory_catalog.min.json` for root memo routing, with optional object-facing recall contracts and surfaces published through `task_to_surface_hints.json`
 - `aoa-agents` from `generated/model_tier_registry.json` for task-to-tier dispatch hints only
+
+For the federation entry ABI, the build also reads:
+
+- `Agents-of-Abyss` root docs for `aoa-root`
+- `Tree-of-Sophia` root docs for `tos-root`
+- `aoa-agents/generated/agent_registry.min.json`
+- `aoa-agents/generated/runtime_seam_bindings.json`
+- `aoa-playbooks/generated/playbook_registry.min.json`
+- `aoa-kag/generated/federation_spine.min.json`
 
 `aoa-routing` no longer parses live `SKILL.md`, `techniques.yaml`, `EVAL.md`, or `eval.yaml`.
 That contract keeps source meaning inside the source repositories while letting routing stay
@@ -57,7 +71,8 @@ The builder writes these tracked artifacts under `generated/`:
 - `recommended_paths.min.json` - bounded cross-kind upstream/downstream hops
 - `kag_source_lift_relation_hints.min.json` - bounded one-hop direct relation hints for the KAG/source-lift family
 - `pairing_hints.min.json` - bounded pair suggestions derived from cross-kind dependencies and family-scoped direct relations
-- `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind roots and memo recall entry hints when upstream contracts are router-ready
+- `federation_entrypoints.min.json` - bounded federation entry ABI with derived root cards, live entry cards, and explicit source authority refs
+- `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind roots, memo recall entry hints, and a separate federation-entry seam
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
 `AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,
@@ -67,6 +82,10 @@ rationale layers, or open-ended same-kind exploration.
 
 These public outputs are schema-backed and validator-checked.
 `aoa-routing` treats them as stable navigation contracts, not ad hoc helper files.
+
+For the federation-entry seam, `aoa-routing` publishes orientation cards only.
+Authority stays in the owning repos.
+The doctrinal explanation for that boundary lives in `docs/FEDERATION_ENTRY_ABI.md`.
 
 Inspect actions point to repo-local capsule surfaces:
 
@@ -152,6 +171,10 @@ The builder defaults to sibling repository roots:
 - `../aoa-evals`
 - `../aoa-memo`
 - `../aoa-agents`
+- `../Agents-of-Abyss`
+- `../aoa-playbooks`
+- `../aoa-kag`
+- `../Tree-of-Sophia`
 
 Override them when needed:
 
@@ -165,6 +188,7 @@ These are intentionally out of scope for the first foundation release:
 
 - same-kind relation graphs
 - broader KAG and graph views
+- making `aoa-routing` the authority surface for federation root, playbook, tier, or ToS entry paths
 
 ## Intended role
 
@@ -174,5 +198,5 @@ These are intentionally out of scope for the first foundation release:
 - routing points them to the smallest next object
 - meaning stays in the source repositories
 
-Bounded pairing, tiny-model entrypoints, and memo recall dispatch now sit inside that thin-router contract,
+Bounded pairing, tiny-model entrypoints, memo recall dispatch, and the federation entry ABI now sit inside that thin-router posture,
 while source-owned meaning remains upstream.

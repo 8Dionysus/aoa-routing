@@ -7,11 +7,13 @@
   "required": [
     "version",
     "queries",
-    "starters"
+    "starters",
+    "federation_queries",
+    "federation_starters"
   ],
   "properties": {
     "version": {
-      "const": 1
+      "const": 2
     },
     "queries": {
       "type": "array",
@@ -23,6 +25,18 @@
       "type": "array",
       "items": {
         "$ref": "#/$defs/starter"
+      }
+    },
+    "federation_queries": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/federationQuery"
+      }
+    },
+    "federation_starters": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/federationStarter"
       }
     }
   },
@@ -155,6 +169,229 @@
           "$ref": "#/$defs/nonEmptyString"
         }
       }
+    },
+    "federationVerb": {
+      "type": "string",
+      "enum": [
+        "pick",
+        "inspect"
+      ]
+    },
+    "federationSourceRepo": {
+      "const": "aoa-routing"
+    },
+    "federationSurface": {
+      "const": "generated/federation_entrypoints.min.json"
+    },
+    "activeEntryKind": {
+      "type": "string",
+      "enum": [
+        "agent",
+        "tier",
+        "playbook",
+        "kag_view"
+      ]
+    },
+    "rootId": {
+      "type": "string",
+      "enum": [
+        "aoa-root",
+        "tos-root"
+      ]
+    },
+    "activeEntryKindList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/activeEntryKind"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "rootIdList": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/rootId"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "federationKindQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb",
+        "source_repo",
+        "target_surface",
+        "match_key",
+        "allowed_entry_kinds"
+      ],
+      "properties": {
+        "name": {
+          "const": "federation-kind-pick"
+        },
+        "verb": {
+          "const": "pick"
+        },
+        "source_repo": {
+          "$ref": "#/$defs/federationSourceRepo"
+        },
+        "target_surface": {
+          "$ref": "#/$defs/federationSurface"
+        },
+        "match_key": {
+          "const": "kind"
+        },
+        "allowed_entry_kinds": {
+          "$ref": "#/$defs/activeEntryKindList"
+        }
+      }
+    },
+    "federationEntryInspectQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb",
+        "source_repo",
+        "target_surface",
+        "match_key",
+        "allowed_entry_kinds"
+      ],
+      "properties": {
+        "name": {
+          "const": "federation-entry-inspect"
+        },
+        "verb": {
+          "const": "inspect"
+        },
+        "source_repo": {
+          "$ref": "#/$defs/federationSourceRepo"
+        },
+        "target_surface": {
+          "$ref": "#/$defs/federationSurface"
+        },
+        "match_key": {
+          "const": "id"
+        },
+        "allowed_entry_kinds": {
+          "$ref": "#/$defs/activeEntryKindList"
+        }
+      }
+    },
+    "federationRootInspectQuery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb",
+        "source_repo",
+        "target_surface",
+        "match_key",
+        "allowed_root_ids"
+      ],
+      "properties": {
+        "name": {
+          "const": "federation-root-inspect"
+        },
+        "verb": {
+          "const": "inspect"
+        },
+        "source_repo": {
+          "$ref": "#/$defs/federationSourceRepo"
+        },
+        "target_surface": {
+          "$ref": "#/$defs/federationSurface"
+        },
+        "match_key": {
+          "const": "id"
+        },
+        "allowed_root_ids": {
+          "$ref": "#/$defs/rootIdList"
+        }
+      }
+    },
+    "federationQuery": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/federationKindQuery"
+        },
+        {
+          "$ref": "#/$defs/federationEntryInspectQuery"
+        },
+        {
+          "$ref": "#/$defs/federationRootInspectQuery"
+        }
+      ]
+    },
+    "federationSurfaceStarter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb",
+        "source_repo",
+        "target_surface"
+      ],
+      "properties": {
+        "name": {
+          "const": "federation-root"
+        },
+        "verb": {
+          "const": "pick"
+        },
+        "source_repo": {
+          "$ref": "#/$defs/federationSourceRepo"
+        },
+        "target_surface": {
+          "$ref": "#/$defs/federationSurface"
+        }
+      }
+    },
+    "federationTargetStarter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "verb",
+        "source_repo",
+        "target_surface",
+        "match_key",
+        "target_value"
+      ],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "verb": {
+          "const": "inspect"
+        },
+        "source_repo": {
+          "$ref": "#/$defs/federationSourceRepo"
+        },
+        "target_surface": {
+          "$ref": "#/$defs/federationSurface"
+        },
+        "match_key": {
+          "const": "id"
+        },
+        "target_value": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "entry_kind": {
+          "$ref": "#/$defs/activeEntryKind"
+        }
+      }
+    },
+    "federationStarter": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/federationSurfaceStarter"
+        },
+        {
+          "$ref": "#/$defs/federationTargetStarter"
+        }
+      ]
     }
   }
 }

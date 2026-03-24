@@ -16,9 +16,17 @@ from referencing import Registry, Resource
 from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
+    AGENT_REGISTRY_PATH,
+    AGENTS_REPO,
     ALL_KINDS,
+    AOA_ROOT_REPO,
     CANONICAL_REPO_BY_KIND,
     DIRECT_RELATION_TYPES_SET,
+    FEDERATION_ACTIVE_ENTRY_KINDS,
+    FEDERATION_DECLARED_ENTRY_KINDS,
+    FEDERATION_ENTRYPOINTS_FILE,
+    FEDERATION_ROOT_IDS,
+    KAG_REPO,
     KAG_SOURCE_LIFT_TECHNIQUE_SET,
     MEMO_INSPECT_SURFACE_FILE,
     MEMO_OBJECT_RECALL_DEFAULT_MODE,
@@ -26,12 +34,16 @@ from router_core import (
     MEMO_OBJECT_INSPECT_SURFACE_FILE,
     MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE,
     MODEL_TIER_SOURCE_REPO,
+    MODEL_TIER_REGISTRY_PATH,
     PAIRABLE_KINDS,
     PAIRING_SURFACE_REPO,
+    PLAYBOOKS_REPO,
     RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
     RESERVED_KINDS,
     RouterError,
+    TOS_REPO,
+    build_federation_entrypoints_payload,
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
     build_recommended_paths_payload,
@@ -40,14 +52,20 @@ from router_core import (
     build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
     collect_memo_recall_mode_order,
+    ensure_cross_repo_surface_ref,
     ensure_list,
     ensure_mapping,
     ensure_repo_relative_path,
+    ensure_repo_qualified_ref,
+    ensure_string,
     ensure_string_list,
     is_pending_technique_id,
     load_json_file,
+    load_agent_registry_entries,
     load_memo_catalog_surfaces,
+    load_model_tier_entries,
     load_model_tier_registry,
+    load_playbook_registry_entries,
     load_technique_catalog_entries,
 )
 
@@ -63,6 +81,7 @@ OUTPUT_SCHEMA_NAMES = {
     "aoa_router.min.json": "aoa-router.schema.json",
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
     "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
+    Path(FEDERATION_ENTRYPOINTS_FILE).name: "federation-entrypoints.schema.json",
     "recommended_paths.min.json": "recommended-paths.schema.json",
     "kag_source_lift_relation_hints.min.json": "kag-source-lift-relation-hints.schema.json",
     "pairing_hints.min.json": "pairing-hints.schema.json",
@@ -124,6 +143,30 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT.parent / "aoa-agents",
         help="Path to the aoa-agents repository root for model-tier contracts.",
+    )
+    parser.add_argument(
+        "--aoa-root",
+        type=Path,
+        default=REPO_ROOT.parent / "Agents-of-Abyss",
+        help="Path to the Agents-of-Abyss repository root for federation root entry validation.",
+    )
+    parser.add_argument(
+        "--playbooks-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-playbooks",
+        help="Path to the aoa-playbooks repository root for federation playbook entries.",
+    )
+    parser.add_argument(
+        "--kag-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-kag",
+        help="Path to the aoa-kag repository root for federation KAG entry views.",
+    )
+    parser.add_argument(
+        "--tos-root",
+        type=Path,
+        default=REPO_ROOT.parent / "Tree-of-Sophia",
+        help="Path to the Tree-of-Sophia repository root for federation root entry validation.",
     )
     parser.add_argument(
         "--generated-dir",
@@ -212,6 +255,10 @@ def validate_rebuild_parity(
     evals_root: Path,
     memo_root: Path,
     agents_root: Path,
+    aoa_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    tos_root: Path,
     issues: list[ValidationIssue],
 ) -> None:
     try:
@@ -221,6 +268,10 @@ def validate_rebuild_parity(
             evals_root.resolve(),
             memo_root.resolve(),
             agents_root.resolve(),
+            aoa_root.resolve(),
+            playbooks_root.resolve(),
+            kag_root.resolve(),
+            tos_root.resolve(),
         )
     except RouterError as exc:
         issues.append(
@@ -827,11 +878,24 @@ def load_surface_entries_for_validation(
     payload: dict[str, Any],
     surface_file: str,
 ) -> list[dict[str, Any]]:
+    if Path(surface_file).name == Path(FEDERATION_ENTRYPOINTS_FILE).name:
+        root_entries = ensure_list(
+            payload.get("root_entries"),
+            f"{surface_file}.root_entries",
+        )
+        entrypoints = ensure_list(
+            payload.get("entrypoints"),
+            f"{surface_file}.entrypoints",
+        )
+        return root_entries + entrypoints
     array_key_by_filename = {
         "aoa_router.min.json": "entries",
         "task_to_surface_hints.json": "hints",
         "pairing_hints.min.json": "entries",
+        "repo_doc_surface_manifest.min.json": "docs",
         "technique_capsules.json": "techniques",
+        "technique_catalog.json": "techniques",
+        "technique_catalog.min.json": "techniques",
         "skill_capsules.json": "skills",
         "eval_capsules.json": "evals",
         "memory_catalog.min.json": "memo_surfaces",
@@ -846,6 +910,327 @@ def load_surface_entries_for_validation(
     if key is None:
         raise RouterError(f"unsupported surface file '{surface_file}' for validation lookup")
     return ensure_list(payload.get(key), f"{surface_file}.{key}")
+
+
+def validate_federation_entrypoints(
+    federation_payload: dict[str, Any],
+    generated_dir: Path,
+    techniques_root: Path,
+    agents_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    aoa_root: Path,
+    tos_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    route_root = generated_dir.resolve().parent
+    roots = {
+        "aoa-routing": route_root,
+        "aoa-techniques": techniques_root.resolve(),
+        AGENTS_REPO: agents_root.resolve(),
+        PLAYBOOKS_REPO: playbooks_root.resolve(),
+        KAG_REPO: kag_root.resolve(),
+        AOA_ROOT_REPO: aoa_root.resolve(),
+        TOS_REPO: tos_root.resolve(),
+    }
+
+    try:
+        source_inputs = ensure_list(
+            federation_payload.get("source_inputs"),
+            "federation_entrypoints.min.json.source_inputs",
+        )
+        root_entries = ensure_list(
+            federation_payload.get("root_entries"),
+            "federation_entrypoints.min.json.root_entries",
+        )
+        active_entry_kinds = ensure_string_list(
+            federation_payload.get("active_entry_kinds"),
+            "federation_entrypoints.min.json.active_entry_kinds",
+        )
+        declared_entry_kinds = ensure_string_list(
+            federation_payload.get("declared_entry_kinds"),
+            "federation_entrypoints.min.json.declared_entry_kinds",
+        )
+        entrypoints = ensure_list(
+            federation_payload.get("entrypoints"),
+            "federation_entrypoints.min.json.entrypoints",
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+        return
+
+    if active_entry_kinds != list(FEDERATION_ACTIVE_ENTRY_KINDS):
+        issues.append(
+            ValidationIssue(
+                "federation_entrypoints.min.json",
+                "active_entry_kinds must match the published v1 active federation entry kinds",
+            )
+        )
+    if declared_entry_kinds != list(FEDERATION_DECLARED_ENTRY_KINDS):
+        issues.append(
+            ValidationIssue(
+                "federation_entrypoints.min.json",
+                "declared_entry_kinds must match the published v1 declared federation entry kinds",
+            )
+        )
+
+    payload_cache: dict[tuple[str, str], dict[str, Any]] = {}
+
+    def validate_source_path(repo_name: str, relative_path: str, location: str) -> None:
+        repo_root = roots.get(repo_name)
+        if repo_root is None:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} references unknown repo '{repo_name}'",
+                )
+            )
+            return
+        target_path = repo_root / relative_path
+        if not target_path.exists():
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} target '{repo_name}/{relative_path}' is missing",
+                )
+            )
+
+    def load_target_payload(repo_name: str, relative_path: str) -> dict[str, Any] | None:
+        cache_key = (repo_name, relative_path)
+        if cache_key in payload_cache:
+            return payload_cache[cache_key]
+        repo_root = roots.get(repo_name)
+        if repo_root is None:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"unknown repo '{repo_name}' while loading {relative_path}",
+                )
+            )
+            return None
+        target_path = repo_root / relative_path
+        location = f"{repo_name}/{relative_path}"
+        try:
+            payload = ensure_mapping(load_json_file(target_path), location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            return None
+        payload_cache[cache_key] = payload
+        return payload
+
+    def validate_repo_ref(raw_ref: Any, location: str, *, allow_route_generated: bool) -> None:
+        try:
+            repo_name, relative_path = ensure_repo_qualified_ref(raw_ref, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            return
+        if not allow_route_generated and repo_name == "aoa-routing" and relative_path.startswith("generated/"):
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} must not point authority at aoa-routing/generated/*",
+                )
+            )
+        validate_source_path(repo_name, relative_path, location)
+
+    def validate_action(raw_action: Any, location: str) -> None:
+        try:
+            action = ensure_mapping(raw_action, location)
+            target_repo = action.get("target_repo")
+            if not isinstance(target_repo, str) or target_repo not in roots:
+                raise RouterError(f"{location}.target_repo must reference a known repo")
+            target_surface = ensure_repo_relative_path(
+                action.get("target_surface"),
+                f"{location}.target_surface",
+            )
+            match_key = action.get("match_key")
+            target_value = action.get("target_value")
+            if not isinstance(match_key, str) or not match_key.strip():
+                raise RouterError(f"{location}.match_key must be a non-empty string")
+            if not isinstance(target_value, str) or not target_value.strip():
+                raise RouterError(f"{location}.target_value must be a non-empty string")
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            return
+
+        payload = load_target_payload(target_repo, target_surface)
+        if payload is None:
+            return
+        try:
+            entries = load_surface_entries_for_validation(payload, target_surface)
+        except RouterError as exc:
+            issues.append(ValidationIssue(f"{target_repo}/{target_surface}", str(exc)))
+            return
+        if not any(isinstance(entry, dict) and entry.get(match_key) == target_value for entry in entries):
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} target '{target_value}' was not found in {target_repo}/{target_surface}",
+                )
+            )
+
+    for index, raw_source_input in enumerate(source_inputs):
+        location = f"federation_entrypoints.min.json.source_inputs[{index}]"
+        try:
+            source_input = ensure_mapping(raw_source_input, location)
+            repo_name = ensure_string(source_input.get("repo"), f"{location}.repo")
+            relative_path = ensure_repo_relative_path(source_input.get("ref"), f"{location}.ref")
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            continue
+        validate_source_path(repo_name, relative_path, location)
+
+    root_ids: set[str] = set()
+    entry_ids_by_kind: dict[str, set[str]] = {kind: set() for kind in FEDERATION_ACTIVE_ENTRY_KINDS}
+    all_entry_ids: set[str] = set()
+
+    for index, raw_root_entry in enumerate(root_entries):
+        location = f"federation_entrypoints.min.json.root_entries[{index}]"
+        try:
+            root_entry = ensure_mapping(raw_root_entry, location)
+            root_id = ensure_string(root_entry.get("id"), f"{location}.id")
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            continue
+        root_ids.add(root_id)
+        all_entry_ids.add(root_id)
+        validate_repo_ref(root_entry.get("capsule_surface"), f"{location}.capsule_surface", allow_route_generated=True)
+        validate_repo_ref(root_entry.get("authority_surface"), f"{location}.authority_surface", allow_route_generated=False)
+        next_actions = root_entry.get("next_actions")
+        if isinstance(next_actions, list):
+            for action_index, action in enumerate(next_actions):
+                validate_action(action, f"{location}.next_actions[{action_index}]")
+        fallback = root_entry.get("fallback")
+        validate_action(fallback, f"{location}.fallback")
+        next_hops = root_entry.get("next_hops")
+        if isinstance(next_hops, list):
+            for hop_index, raw_hop in enumerate(next_hops):
+                hop_location = f"{location}.next_hops[{hop_index}]"
+                if not isinstance(raw_hop, dict):
+                    issues.append(ValidationIssue("federation_entrypoints.min.json", f"{hop_location} must be an object"))
+                    continue
+                hop_kind = raw_hop.get("kind")
+                hop_id = raw_hop.get("id")
+                if hop_kind not in FEDERATION_ACTIVE_ENTRY_KINDS or not isinstance(hop_id, str):
+                    issues.append(
+                        ValidationIssue(
+                            "federation_entrypoints.min.json",
+                            f"{hop_location} must reference an active federation entry kind and id",
+                        )
+                    )
+
+    if root_ids != set(FEDERATION_ROOT_IDS):
+        issues.append(
+            ValidationIssue(
+                "federation_entrypoints.min.json",
+                "root_entries must publish exactly aoa-root and tos-root in v1",
+            )
+        )
+
+    for index, raw_entry in enumerate(entrypoints):
+        location = f"federation_entrypoints.min.json.entrypoints[{index}]"
+        try:
+            entry = ensure_mapping(raw_entry, location)
+            entry_kind = entry.get("kind")
+            entry_id = ensure_string(entry.get("id"), f"{location}.id")
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            continue
+        if entry_kind not in FEDERATION_ACTIVE_ENTRY_KINDS:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location}.kind must be one of the active federation entry kinds",
+                )
+            )
+            continue
+        if entry_kind in declared_entry_kinds:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location}.kind must not use a declared-but-inactive entry kind",
+                )
+            )
+        entry_ids_by_kind.setdefault(entry_kind, set()).add(entry_id)
+        if entry_id in all_entry_ids:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location}.id duplicates another federation root or entry id",
+                )
+            )
+        all_entry_ids.add(entry_id)
+        validate_repo_ref(entry.get("capsule_surface"), f"{location}.capsule_surface", allow_route_generated=True)
+        validate_repo_ref(entry.get("authority_surface"), f"{location}.authority_surface", allow_route_generated=False)
+        next_actions = entry.get("next_actions")
+        if isinstance(next_actions, list):
+            for action_index, action in enumerate(next_actions):
+                validate_action(action, f"{location}.next_actions[{action_index}]")
+        validate_action(entry.get("fallback"), f"{location}.fallback")
+        risk = entry.get("risk")
+        if not isinstance(risk, str) or not risk.strip():
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location}.risk must be a non-empty string",
+                )
+            )
+        next_hops = entry.get("next_hops")
+        if isinstance(next_hops, list):
+            for hop_index, raw_hop in enumerate(next_hops):
+                hop_location = f"{location}.next_hops[{hop_index}]"
+                if not isinstance(raw_hop, dict):
+                    issues.append(ValidationIssue("federation_entrypoints.min.json", f"{hop_location} must be an object"))
+                    continue
+                hop_kind = raw_hop.get("kind")
+                hop_id = raw_hop.get("id")
+                if hop_kind not in FEDERATION_ACTIVE_ENTRY_KINDS or not isinstance(hop_id, str):
+                    issues.append(
+                        ValidationIssue(
+                            "federation_entrypoints.min.json",
+                            f"{hop_location} must reference an active federation entry kind and id",
+                        )
+                    )
+
+    for index, raw_root_entry in enumerate(root_entries):
+        location = f"federation_entrypoints.min.json.root_entries[{index}]"
+        if not isinstance(raw_root_entry, dict):
+            continue
+        next_hops = raw_root_entry.get("next_hops")
+        if not isinstance(next_hops, list):
+            continue
+        for hop_index, raw_hop in enumerate(next_hops):
+            if not isinstance(raw_hop, dict):
+                continue
+            hop_kind = raw_hop.get("kind")
+            hop_id = raw_hop.get("id")
+            if isinstance(hop_kind, str) and isinstance(hop_id, str) and hop_id not in entry_ids_by_kind.get(hop_kind, set()):
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location}.next_hops[{hop_index}] must point to a live federation entry",
+                    )
+                )
+
+    for index, raw_entry in enumerate(entrypoints):
+        location = f"federation_entrypoints.min.json.entrypoints[{index}]"
+        if not isinstance(raw_entry, dict):
+            continue
+        next_hops = raw_entry.get("next_hops")
+        if not isinstance(next_hops, list):
+            continue
+        for hop_index, raw_hop in enumerate(next_hops):
+            if not isinstance(raw_hop, dict):
+                continue
+            hop_kind = raw_hop.get("kind")
+            hop_id = raw_hop.get("id")
+            if isinstance(hop_kind, str) and isinstance(hop_id, str) and hop_id not in entry_ids_by_kind.get(hop_kind, set()):
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location}.next_hops[{hop_index}] must point to a live federation entry",
+                    )
+                )
 
 
 def validate_pair_targets(
@@ -1042,6 +1427,11 @@ def validate_tiny_model_entrypoints(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    agents_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    aoa_root: Path,
+    tos_root: Path,
     issues: list[ValidationIssue],
 ) -> None:
     route_root = generated_dir.resolve().parent
@@ -1051,11 +1441,24 @@ def validate_tiny_model_entrypoints(
         "aoa-skills": skills_root.resolve(),
         "aoa-evals": evals_root.resolve(),
         "aoa-memo": memo_root.resolve(),
+        AGENTS_REPO: agents_root.resolve(),
+        PLAYBOOKS_REPO: playbooks_root.resolve(),
+        KAG_REPO: kag_root.resolve(),
+        AOA_ROOT_REPO: aoa_root.resolve(),
+        TOS_REPO: tos_root.resolve(),
     }
 
     try:
         queries = ensure_list(tiny_payload.get("queries"), "tiny_model_entrypoints.json.queries")
         starters = ensure_list(tiny_payload.get("starters"), "tiny_model_entrypoints.json.starters")
+        federation_queries = ensure_list(
+            tiny_payload.get("federation_queries"),
+            "tiny_model_entrypoints.json.federation_queries",
+        )
+        federation_starters = ensure_list(
+            tiny_payload.get("federation_starters"),
+            "tiny_model_entrypoints.json.federation_starters",
+        )
     except RouterError as exc:
         issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
         return
@@ -1340,6 +1743,216 @@ def validate_tiny_model_entrypoints(
                     f"non-recall starter '{starter.get('name', index)}' must not define recall_family",
                 )
             )
+
+    def validate_federation_target(
+        *,
+        consumer_label: str,
+        location: str,
+        source_repo: str,
+        surface_file: str,
+        match_key: Any,
+        target_value: Any,
+        entry_kind: Any = None,
+    ) -> None:
+        payload = load_target_payload(source_repo, surface_file)
+        if payload is None:
+            return
+        try:
+            entries = load_surface_entries_for_validation(payload, surface_file)
+        except RouterError as exc:
+            issues.append(ValidationIssue(f"{source_repo}/{surface_file}", str(exc)))
+            return
+        if not isinstance(match_key, str) or not match_key.strip():
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} must define a non-empty match_key",
+                )
+            )
+            return
+        if not isinstance(target_value, str) or not target_value.strip():
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} must define a non-empty target_value",
+                )
+            )
+            return
+        matched_entry = find_surface_entry(entries, match_key=match_key, target_value=target_value)
+        if matched_entry is None:
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} target '{target_value}' was not found in {source_repo}/{surface_file}",
+                )
+            )
+            return
+        if entry_kind is not None and matched_entry.get("kind") != entry_kind:
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"{consumer_label} must resolve to federation entry kind '{entry_kind}'",
+                )
+            )
+
+    for index, raw_query in enumerate(federation_queries):
+        location = f"tiny_model_entrypoints.json.federation_queries[{index}]"
+        try:
+            query = ensure_mapping(raw_query, location)
+            name = ensure_string(query.get("name"), f"{location}.name")
+            source_repo = ensure_string(query.get("source_repo"), f"{location}.source_repo")
+            surface_file = ensure_repo_relative_path(
+                query.get("target_surface"),
+                f"{location}.target_surface",
+            )
+            if source_repo != "aoa-routing" or surface_file != FEDERATION_ENTRYPOINTS_FILE:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"federation query '{name}' must target aoa-routing/{FEDERATION_ENTRYPOINTS_FILE}",
+                    )
+                )
+            match_key = query.get("match_key")
+        except RouterError as exc:
+            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+            continue
+
+        if name == "federation-kind-pick":
+            try:
+                allowed_entry_kinds = ensure_string_list(
+                    query.get("allowed_entry_kinds"),
+                    f"{location}.allowed_entry_kinds",
+                )
+            except RouterError as exc:
+                issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+                continue
+            if allowed_entry_kinds != list(FEDERATION_ACTIVE_ENTRY_KINDS):
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        "federation-kind-pick must advertise the active federation entry kinds only",
+                    )
+                )
+            if match_key != "kind":
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        "federation-kind-pick must use match_key 'kind'",
+                    )
+                )
+        elif name == "federation-entry-inspect":
+            try:
+                allowed_entry_kinds = ensure_string_list(
+                    query.get("allowed_entry_kinds"),
+                    f"{location}.allowed_entry_kinds",
+                )
+            except RouterError as exc:
+                issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+                continue
+            if allowed_entry_kinds != list(FEDERATION_ACTIVE_ENTRY_KINDS):
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        "federation-entry-inspect must advertise the active federation entry kinds only",
+                    )
+                )
+            if match_key != "id":
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        "federation-entry-inspect must use match_key 'id'",
+                    )
+                )
+        elif name == "federation-root-inspect":
+            try:
+                allowed_root_ids = ensure_string_list(
+                    query.get("allowed_root_ids"),
+                    f"{location}.allowed_root_ids",
+                )
+            except RouterError as exc:
+                issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+                continue
+            if allowed_root_ids != list(FEDERATION_ROOT_IDS):
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        "federation-root-inspect must advertise exactly aoa-root and tos-root",
+                    )
+                )
+            if match_key != "id":
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        "federation-root-inspect must use match_key 'id'",
+                    )
+                )
+        else:
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"unsupported federation query '{name}'",
+                )
+            )
+
+    for index, raw_starter in enumerate(federation_starters):
+        location = f"tiny_model_entrypoints.json.federation_starters[{index}]"
+        try:
+            starter = ensure_mapping(raw_starter, location)
+            starter_name = ensure_string(starter.get("name"), f"{location}.name")
+            if starter_name in starter_names:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"starter names must be unique; found duplicate '{starter_name}'",
+                    )
+                )
+            else:
+                starter_names.add(starter_name)
+            source_repo = ensure_string(starter.get("source_repo"), f"{location}.source_repo")
+            surface_file = ensure_repo_relative_path(
+                starter.get("target_surface"),
+                f"{location}.target_surface",
+            )
+            if source_repo != "aoa-routing" or surface_file != FEDERATION_ENTRYPOINTS_FILE:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"federation starter '{starter_name}' must target aoa-routing/{FEDERATION_ENTRYPOINTS_FILE}",
+                    )
+                )
+            entry_kind = starter.get("entry_kind")
+            if entry_kind in FEDERATION_DECLARED_ENTRY_KINDS:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        f"federation starter '{starter_name}' must not target a declared-but-inactive entry kind",
+                    )
+                )
+            match_key = starter.get("match_key")
+            target_value = starter.get("target_value")
+        except RouterError as exc:
+            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+            continue
+
+        if starter_name == "federation-root":
+            if match_key is not None or target_value is not None:
+                issues.append(
+                    ValidationIssue(
+                        "tiny_model_entrypoints.json",
+                        "federation-root must stay as the unfiltered federation surface opener",
+                    )
+                )
+            continue
+
+        validate_federation_target(
+            consumer_label=f"federation starter '{starter_name}'",
+            location=location,
+            source_repo=source_repo,
+            surface_file=surface_file,
+            match_key=match_key,
+            target_value=target_value,
+            entry_kind=entry_kind,
+        )
 
 
 def validate_surface_lookup_target(
@@ -1760,6 +2373,10 @@ def validate_generated_outputs(
     evals_root: Path,
     memo_root: Path,
     agents_root: Path,
+    aoa_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    tos_root: Path,
 ) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     generated_dir = generated_dir.resolve()
@@ -1768,6 +2385,7 @@ def validate_generated_outputs(
     router_path = generated_dir / "aoa_router.min.json"
     hints_path = generated_dir / "task_to_surface_hints.json"
     tier_hints_path = generated_dir / "task_to_tier_hints.json"
+    federation_entrypoints_path = generated_dir / Path(FEDERATION_ENTRYPOINTS_FILE).name
     recommended_path = generated_dir / "recommended_paths.min.json"
     relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
     pairing_path = generated_dir / "pairing_hints.min.json"
@@ -1777,6 +2395,7 @@ def validate_generated_outputs(
     router_payload = load_output(router_path, issues)
     hints_payload = load_output(hints_path, issues)
     tier_hints_payload = load_output(tier_hints_path, issues)
+    federation_entrypoints_payload = load_output(federation_entrypoints_path, issues)
     recommended_payload = load_output(recommended_path, issues)
     relation_hints_payload = load_output(relation_hints_path, issues)
     pairing_payload = load_output(pairing_path, issues)
@@ -1788,6 +2407,7 @@ def validate_generated_outputs(
             router_payload,
             hints_payload,
             tier_hints_payload,
+            federation_entrypoints_payload,
             recommended_payload,
             relation_hints_payload,
             pairing_payload,
@@ -1802,6 +2422,7 @@ def validate_generated_outputs(
             router_path.name: router_payload,
             hints_path.name: hints_payload,
             tier_hints_path.name: tier_hints_payload,
+            federation_entrypoints_path.name: federation_entrypoints_payload,
             recommended_path.name: recommended_payload,
             relation_hints_path.name: relation_hints_payload,
             pairing_path.name: pairing_payload,
@@ -1812,6 +2433,10 @@ def validate_generated_outputs(
         evals_root,
         memo_root,
         agents_root,
+        aoa_root,
+        playbooks_root,
+        kag_root,
+        tos_root,
         issues,
     )
 
@@ -1820,6 +2445,7 @@ def validate_generated_outputs(
         (router_path, router_payload),
         (hints_path, hints_payload),
         (tier_hints_path, tier_hints_payload),
+        (federation_entrypoints_path, federation_entrypoints_payload),
         (recommended_path, recommended_payload),
         (relation_hints_path, relation_hints_payload),
         (pairing_path, pairing_payload),
@@ -1933,6 +2559,45 @@ def validate_generated_outputs(
         if tier_hints_payload != expected_tier_hints_payload:
             issues.append(ValidationIssue(tier_hints_path.name, "task_to_tier_hints.json does not match the expected static tier dispatch surface"))
     validate_task_tier_hints(tier_hints_payload, agents_root, issues)
+    expected_federation_entrypoints_payload: dict[str, Any] | None = None
+    try:
+        expected_federation_entrypoints_payload = build_federation_entrypoints_payload(
+            aoa_root,
+            techniques_root,
+            agents_root,
+            playbooks_root,
+            kag_root,
+            tos_root,
+        )
+    except RouterError as exc:
+        issues.append(
+            ValidationIssue(
+                federation_entrypoints_path.name,
+                f"could not rebuild {federation_entrypoints_path.name} from sibling source surfaces: {exc}",
+            )
+        )
+    else:
+        if federation_entrypoints_payload != expected_federation_entrypoints_payload:
+            issues.append(
+                ValidationIssue(
+                    federation_entrypoints_path.name,
+                    "federation_entrypoints.min.json does not match the expected federation entry ABI surface",
+                )
+            )
+    canonical_federation_entrypoints_payload = (
+        expected_federation_entrypoints_payload or federation_entrypoints_payload
+    )
+    validate_federation_entrypoints(
+        federation_entrypoints_payload,
+        generated_dir,
+        techniques_root,
+        agents_root,
+        playbooks_root,
+        kag_root,
+        aoa_root,
+        tos_root,
+        issues,
+    )
     validate_inspect_targets(
         projection_safe_registry_entries,
         hints_payload,
@@ -2038,6 +2703,7 @@ def validate_generated_outputs(
         expected_tiny_model_payload = build_tiny_model_entrypoints_payload(
             projection_safe_registry_entries,
             hints_payload,
+            canonical_federation_entrypoints_payload,
         )
     except RouterError as exc:
         issues.append(ValidationIssue(tiny_model_path.name, str(exc)))
@@ -2056,6 +2722,11 @@ def validate_generated_outputs(
         skills_root,
         evals_root,
         memo_root,
+        agents_root,
+        playbooks_root,
+        kag_root,
+        aoa_root,
+        tos_root,
         issues,
     )
 
@@ -2064,6 +2735,7 @@ def validate_generated_outputs(
         (router_path.name, router_payload),
         (hints_path.name, hints_payload),
         (tier_hints_path.name, tier_hints_payload),
+        (federation_entrypoints_path.name, federation_entrypoints_payload),
         (recommended_path.name, recommended_payload),
         (relation_hints_path.name, relation_hints_payload),
         (pairing_path.name, pairing_payload),
@@ -2090,6 +2762,10 @@ def main() -> int:
         args.evals_root,
         args.memo_root,
         args.agents_root,
+        args.aoa_root,
+        args.playbooks_root,
+        args.kag_root,
+        args.tos_root,
     )
     if issues:
         for issue in issues:

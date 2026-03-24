@@ -9,8 +9,10 @@ from typing import Any
 
 from router_core import (
     CANONICAL_REPO_BY_KIND,
+    FEDERATION_ENTRYPOINTS_FILE,
     REPO_ROOT,
     RouterError,
+    build_federation_entrypoints_payload,
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
     build_recommended_paths_payload,
@@ -71,6 +73,30 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT.parent / "aoa-agents",
         help="Path to the aoa-agents repository root for model-tier contracts.",
+    )
+    parser.add_argument(
+        "--aoa-root",
+        type=Path,
+        default=REPO_ROOT.parent / "Agents-of-Abyss",
+        help="Path to the Agents-of-Abyss repository root for federation root entry surfaces.",
+    )
+    parser.add_argument(
+        "--playbooks-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-playbooks",
+        help="Path to the aoa-playbooks repository root for federation playbook entries.",
+    )
+    parser.add_argument(
+        "--kag-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-kag",
+        help="Path to the aoa-kag repository root for federation KAG entry views.",
+    )
+    parser.add_argument(
+        "--tos-root",
+        type=Path,
+        default=REPO_ROOT.parent / "Tree-of-Sophia",
+        help="Path to the Tree-of-Sophia repository root for federation root entry surfaces.",
     )
     parser.add_argument(
         "--generated-dir",
@@ -338,6 +364,10 @@ def build_outputs(
     evals_root: Path,
     memo_root: Path,
     agents_root: Path,
+    aoa_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    tos_root: Path,
 ) -> dict[str, dict[str, Any]]:
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
         techniques_root
@@ -363,6 +393,14 @@ def build_outputs(
     router_payload = build_router_payload(registry_entries)
     hints_payload = build_task_to_surface_hints_payload(memo_root)
     tier_hints_payload = build_task_to_tier_hints_payload(agents_root)
+    federation_entrypoints_payload = build_federation_entrypoints_payload(
+        aoa_root,
+        techniques_root,
+        agents_root,
+        playbooks_root,
+        kag_root,
+        tos_root,
+    )
     recommended_payload = build_recommended_paths_payload(registry_entries)
     relation_hints_payload = build_kag_source_lift_relation_hints_payload(
         registry_entries,
@@ -377,12 +415,14 @@ def build_outputs(
     tiny_model_entrypoints_payload = build_tiny_model_entrypoints_payload(
         registry_entries,
         hints_payload,
+        federation_entrypoints_payload,
     )
     return {
         "cross_repo_registry.min.json": registry_payload,
         "aoa_router.min.json": router_payload,
         "task_to_surface_hints.json": hints_payload,
         "task_to_tier_hints.json": tier_hints_payload,
+        Path(FEDERATION_ENTRYPOINTS_FILE).name: federation_entrypoints_payload,
         "recommended_paths.min.json": recommended_payload,
         "kag_source_lift_relation_hints.min.json": relation_hints_payload,
         "pairing_hints.min.json": pairing_payload,
@@ -398,6 +438,10 @@ def main() -> int:
         args.evals_root.resolve(),
         args.memo_root.resolve(),
         args.agents_root.resolve(),
+        args.aoa_root.resolve(),
+        args.playbooks_root.resolve(),
+        args.kag_root.resolve(),
+        args.tos_root.resolve(),
     )
     generated_dir = args.generated_dir.resolve()
     generated_dir.mkdir(parents=True, exist_ok=True)
