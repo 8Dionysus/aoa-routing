@@ -171,6 +171,14 @@ For the current ToS root card, the first handoff is now:
 That handoff is source-owned and bounded.
 It does not activate `tos_node` as a live federation entry kind.
 
+The current KAG-view layer now publishes two live derived entries:
+
+- `aoa-techniques` as the default KAG starter for the federation seam
+- `Tree-of-Sophia` as the ToS-specific derived KAG view reached from `tos-root`
+
+This does not widen the active kind list.
+It only lets `tos-root` hand off to a ToS-shaped derived readiness card after the source-owned tiny-entry route.
+
 ## Non-Goals
 
 This landing does not:
@@ -181,3 +189,4 @@ This landing does not:
 - replace ToS authority with route-owned cards
 - replace KAG doctrine with router-owned summaries
 - fold federation entry routing into the thin router registry
+- change `kag-view-root` away from the current `aoa-techniques` default

@@ -16,6 +16,7 @@ from referencing import Registry, Resource
 from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
+    AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS,
     AGENT_REGISTRY_PATH,
     AGENTS_REPO,
     ALL_KINDS,
@@ -24,6 +25,9 @@ from router_core import (
     DIRECT_RELATION_TYPES_SET,
     FEDERATION_ACTIVE_ENTRY_KINDS,
     FEDERATION_DECLARED_ENTRY_KINDS,
+    FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+    FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID,
+    FEDERATION_DEFAULT_TIER_ENTRY_ID,
     FEDERATION_ENTRYPOINTS_FILE,
     FEDERATION_ROOT_IDS,
     KAG_REPO,
@@ -43,6 +47,9 @@ from router_core import (
     RESERVED_KINDS,
     RouterError,
     TOS_REPO,
+    TOS_KAG_VIEW_ENTRY_ID,
+    TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID,
+    TOS_TINY_ENTRY_DOCTRINE_PATH,
     TOS_TINY_ENTRY_ROUTE_ID,
     TOS_TINY_ENTRY_ROUTE_PATH,
     build_federation_entrypoints_payload,
@@ -113,6 +120,11 @@ SOURCE_OWNED_PAYLOAD_KEYS = (
     "blind_spot_short",
     "what_this_does_not_prove",
 )
+
+EXPECTED_KAG_VIEW_IDS = {
+    FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+    TOS_KAG_VIEW_ENTRY_ID,
+}
 
 
 def parse_args() -> argparse.Namespace:
@@ -1058,6 +1070,24 @@ def validate_federation_entrypoints(
             issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
             return
 
+        if Path(target_surface).suffix.lower() == ".md":
+            if match_key != "path":
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location} must use match_key 'path' for markdown inspect targets",
+                    )
+                )
+            if target_value != target_surface:
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location}.target_value must stay '{target_surface}' for markdown inspect targets",
+                    )
+                )
+            validate_source_path(target_repo, target_surface, location)
+            return
+
         payload = load_target_payload(target_repo, target_surface)
         if payload is None:
             return
@@ -1168,7 +1198,7 @@ def validate_federation_entrypoints(
                     "target_repo": PAIRING_SURFACE_REPO,
                     "target_surface": FEDERATION_ENTRYPOINTS_FILE,
                     "match_key": "id",
-                    "target_value": "aoa-techniques",
+                    "target_value": TOS_KAG_VIEW_ENTRY_ID,
                 },
                 {
                     "verb": "inspect",
@@ -1205,6 +1235,16 @@ def validate_federation_entrypoints(
                                 f"tos-root next_actions[{action_index}].{key} must stay '{expected_value}'",
                             )
                         )
+        if tos_root_entry.get("next_hops") != [
+            {"kind": "kag_view", "id": TOS_KAG_VIEW_ENTRY_ID},
+            {"kind": "playbook", "id": TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID},
+        ]:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "tos-root next_hops must stay bounded to the ToS-specific KAG view and AOA-P-0009 in the current routing wave",
+                )
+            )
 
     for index, raw_entry in enumerate(entrypoints):
         location = f"federation_entrypoints.min.json.entrypoints[{index}]"
@@ -1310,6 +1350,100 @@ def validate_federation_entrypoints(
                         f"{location}.next_hops[{hop_index}] must point to a live federation entry",
                     )
                 )
+
+    if entry_ids_by_kind.get("kag_view", set()) != EXPECTED_KAG_VIEW_IDS:
+        issues.append(
+            ValidationIssue(
+                "federation_entrypoints.min.json",
+                "kag_view entries must publish exactly aoa-techniques and Tree-of-Sophia in the current routing wave",
+            )
+        )
+
+    entry_by_kind_and_id = {
+        (entry.get("kind"), entry.get("id")): entry
+        for entry in entrypoints
+        if isinstance(entry, dict)
+    }
+
+    aoa_techniques_kag_view = entry_by_kind_and_id.get(
+        ("kag_view", FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID)
+    )
+    if isinstance(aoa_techniques_kag_view, dict):
+        if aoa_techniques_kag_view.get("next_actions") != [
+            {
+                "verb": "inspect",
+                "target_repo": "aoa-techniques",
+                "target_surface": "generated/repo_doc_surface_manifest.min.json",
+                "match_key": "doc_id",
+                "target_value": "readme",
+            },
+            {
+                "verb": "inspect",
+                "target_repo": "aoa-techniques",
+                "target_surface": "generated/technique_catalog.min.json",
+                "match_key": "id",
+                "target_value": AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS[0],
+            },
+        ]:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "aoa-techniques kag_view must keep the current repo-doc and technique-catalog handoff actions",
+                )
+            )
+        if aoa_techniques_kag_view.get("next_hops") != [
+            {"kind": "tier", "id": FEDERATION_DEFAULT_TIER_ENTRY_ID},
+            {"kind": "playbook", "id": FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID},
+        ]:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "aoa-techniques kag_view must keep router and AOA-P-0008 as its bounded next hops",
+                )
+            )
+
+    tos_kag_view = entry_by_kind_and_id.get(("kag_view", TOS_KAG_VIEW_ENTRY_ID))
+    if isinstance(tos_kag_view, dict):
+        if tos_kag_view.get("next_actions") != [
+            {
+                "verb": "inspect",
+                "target_repo": TOS_REPO,
+                "target_surface": TOS_TINY_ENTRY_DOCTRINE_PATH,
+                "match_key": "path",
+                "target_value": TOS_TINY_ENTRY_DOCTRINE_PATH,
+            },
+            {
+                "verb": "inspect",
+                "target_repo": TOS_REPO,
+                "target_surface": TOS_TINY_ENTRY_ROUTE_PATH,
+                "match_key": "route_id",
+                "target_value": TOS_TINY_ENTRY_ROUTE_ID,
+            },
+        ]:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "Tree-of-Sophia kag_view must point first to TINY_ENTRY_ROUTE doctrine and then to the current tiny-entry route example",
+                )
+            )
+        if tos_kag_view.get("next_hops") != [
+            {"kind": "tier", "id": FEDERATION_DEFAULT_TIER_ENTRY_ID},
+            {"kind": "playbook", "id": TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID},
+        ]:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "Tree-of-Sophia kag_view must keep router and AOA-P-0009 as its bounded next hops",
+                )
+            )
+        risk = tos_kag_view.get("risk")
+        if not isinstance(risk, str) or "Tree-of-Sophia remains authoritative" not in risk:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "Tree-of-Sophia kag_view risk text must explicitly preserve ToS authority in Tree-of-Sophia",
+                )
+            )
 
 
 def validate_pair_targets(

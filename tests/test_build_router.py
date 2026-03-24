@@ -705,7 +705,7 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
             "target_repo": "aoa-routing",
             "target_surface": "generated/federation_entrypoints.min.json",
             "match_key": "id",
-            "target_value": "aoa-techniques",
+            "target_value": "Tree-of-Sophia",
         },
         {
             "verb": "inspect",
@@ -723,7 +723,7 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
         "target_value": "aoa-root",
     }
     assert tos_root["next_hops"] == [
-        {"kind": "kag_view", "id": "aoa-techniques"},
+        {"kind": "kag_view", "id": "Tree-of-Sophia"},
         {"kind": "playbook", "id": "AOA-P-0009"},
     ]
     assert "source-owned tiny-entry route" in tos_root["risk"]
@@ -763,6 +763,43 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
         {"kind": "tier", "id": "router"},
         {"kind": "playbook", "id": "AOA-P-0008"},
     ]
+
+    tos_kag_view = entry_by_key[("kag_view", "Tree-of-Sophia")]
+    assert tos_kag_view["capsule_surface"] == "aoa-kag:generated/federation_spine.min.json"
+    assert tos_kag_view["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
+    assert tos_kag_view["next_actions"] == [
+        {
+            "verb": "inspect",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "docs/TINY_ENTRY_ROUTE.md",
+            "match_key": "path",
+            "target_value": "docs/TINY_ENTRY_ROUTE.md",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "match_key": "route_id",
+            "target_value": "tos-tiny-entry.zarathustra-prologue",
+        },
+    ]
+    assert tos_kag_view["next_hops"] == [
+        {"kind": "tier", "id": "router"},
+        {"kind": "playbook", "id": "AOA-P-0009"},
+    ]
+    assert "Tree-of-Sophia remains authoritative" in tos_kag_view["risk"]
+
+
+def test_build_outputs_reject_tos_kag_view_spine_drift(tmp_path: Path) -> None:
+    kag_root = tmp_path / "aoa-kag"
+    shutil.copytree(FIXTURES_ROOT / "aoa-kag", kag_root)
+    spine_path = kag_root / "generated" / "federation_spine.min.json"
+    payload = json.loads(spine_path.read_text(encoding="utf-8"))
+    payload["repos"][1]["current_entry_surface_refs"] = ["Tree-of-Sophia/README.md"]
+    write_json(spine_path, payload)
+
+    with pytest.raises(build_router.RouterError, match="current_entry_surface_refs must stay"):
+        build_fixture_outputs(kag_root=kag_root)
 
 
 def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None:

@@ -93,6 +93,19 @@ FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID = "AOA-P-0008"
 FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID = "aoa-techniques"
 TOS_TINY_ENTRY_ROUTE_PATH = "examples/tos_tiny_entry_route.example.json"
 TOS_TINY_ENTRY_ROUTE_ID = "tos-tiny-entry.zarathustra-prologue"
+TOS_TINY_ENTRY_DOCTRINE_PATH = "docs/TINY_ENTRY_ROUTE.md"
+AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF = (
+    "aoa-techniques/generated/repo_doc_surface_manifest.min.json"
+)
+AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF = "aoa-techniques/generated/technique_catalog.min.json"
+AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS = ("AOA-T-0001", "AOA-T-0002", "AOA-T-0003")
+TOS_KAG_VIEW_ENTRY_ID = TOS_REPO
+TOS_KAG_VIEW_ENTRY_SURFACE_REFS = (
+    "Tree-of-Sophia/README.md",
+    "Tree-of-Sophia/docs/TINY_ENTRY_ROUTE.md",
+)
+TOS_KAG_VIEW_OBJECT_SURFACE_REF = "Tree-of-Sophia/examples/tos_tiny_entry_route.example.json"
+TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID = "AOA-P-0009"
 FALLBACK_ROUTER_KIND = "technique"
 TIER_PHASE_ORDER = (
     "route",
@@ -779,6 +792,10 @@ def build_federation_entrypoints_payload(
     ensure_markdown_file(tos_root / "CHARTER.md", f"{TOS_REPO}/CHARTER.md")
     tos_tiny_entry_route_path, tos_tiny_entry_route = load_tos_tiny_entry_route(tos_root)
     ensure_markdown_file(
+        tos_root / TOS_TINY_ENTRY_DOCTRINE_PATH,
+        f"{TOS_REPO}/{TOS_TINY_ENTRY_DOCTRINE_PATH}",
+    )
+    ensure_markdown_file(
         kag_root / "docs" / "FEDERATION_SPINE.md",
         f"{KAG_REPO}/docs/FEDERATION_SPINE.md",
     )
@@ -878,6 +895,20 @@ def build_federation_entrypoints_payload(
     if FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID not in kag_index:
         raise RouterError(
             f"federation entry ABI requires KAG view '{FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID}'"
+        )
+    if TOS_KAG_VIEW_ENTRY_ID not in kag_index:
+        raise RouterError(
+            f"federation entry ABI requires KAG view '{TOS_KAG_VIEW_ENTRY_ID}'"
+        )
+    unsupported_kag_view_ids = set(kag_index) - {
+        FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+        TOS_KAG_VIEW_ENTRY_ID,
+    }
+    if unsupported_kag_view_ids:
+        unsupported = ", ".join(sorted(unsupported_kag_view_ids))
+        raise RouterError(
+            "current federation entry ABI only supports explicit KAG views for "
+            f"{FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID} and {TOS_KAG_VIEW_ENTRY_ID}; got {unsupported}"
         )
 
     federation_entrypoints: list[dict[str, Any]] = []
@@ -1047,6 +1078,10 @@ def build_federation_entrypoints_payload(
 
     for kag_view_id in sorted(kag_index):
         kag_entry = kag_index[kag_view_id]
+        pilot_posture = ensure_string(
+            kag_entry.get("pilot_posture"),
+            f"{kag_view_id}.pilot_posture",
+        )
         entry_surface_refs = ensure_string_list(
             kag_entry["current_entry_surface_refs"],
             f"{kag_view_id}.current_entry_surface_refs",
@@ -1061,49 +1096,109 @@ def build_federation_entrypoints_payload(
         )
         if not example_object_ids:
             raise RouterError(f"{kag_view_id}.example_object_ids must not be empty")
-        entry_target_repo, entry_target_surface = ensure_cross_repo_surface_ref(
-            entry_surface_refs[0],
-            f"{kag_view_id}.current_entry_surface_refs[0]",
-        )
-        object_target_repo, object_target_surface = ensure_cross_repo_surface_ref(
-            object_surface_ref,
-            f"{kag_view_id}.current_object_surface_ref",
-        )
-        if entry_target_repo != CANONICAL_REPO_BY_KIND["technique"]:
-            raise RouterError(
-                f"{kag_view_id}.current_entry_surface_refs[0] must target aoa-techniques in v1"
+        if kag_view_id == FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID:
+            if pilot_posture != "existing_generated_surfaces":
+                raise RouterError(
+                    f"{kag_view_id}.pilot_posture must stay 'existing_generated_surfaces' in the current routing wave"
+                )
+            if entry_surface_refs != [AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF]:
+                raise RouterError(
+                    f"{kag_view_id}.current_entry_surface_refs must stay '{AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF}' in the current routing wave"
+                )
+            if object_surface_ref != AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF:
+                raise RouterError(
+                    f"{kag_view_id}.current_object_surface_ref must stay '{AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF}' in the current routing wave"
+                )
+            if example_object_ids != list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS):
+                raise RouterError(
+                    f"{kag_view_id}.example_object_ids must stay {list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS)!r} in the current routing wave"
+                )
+            entry_target_repo, entry_target_surface = ensure_cross_repo_surface_ref(
+                entry_surface_refs[0],
+                f"{kag_view_id}.current_entry_surface_refs[0]",
             )
-        if object_target_repo != CANONICAL_REPO_BY_KIND["technique"]:
-            raise RouterError(
-                f"{kag_view_id}.current_object_surface_ref must target aoa-techniques in v1"
+            object_target_repo, object_target_surface = ensure_cross_repo_surface_ref(
+                object_surface_ref,
+                f"{kag_view_id}.current_object_surface_ref",
             )
-        entry_doc_id = load_repo_doc_manifest_default_doc_id(techniques_root, entry_target_surface)
+            entry_doc_id = load_repo_doc_manifest_default_doc_id(
+                techniques_root,
+                entry_target_surface,
+            )
+            title = f"{title_case_slug(kag_view_id)} Readiness View"
+            next_actions = [
+                build_entry_action(
+                    verb="inspect",
+                    target_repo=entry_target_repo,
+                    target_surface=entry_target_surface,
+                    match_key="doc_id",
+                    target_value=entry_doc_id,
+                ),
+                build_entry_action(
+                    verb="inspect",
+                    target_repo=object_target_repo,
+                    target_surface=object_target_surface,
+                    match_key="id",
+                    target_value=example_object_ids[0],
+                ),
+            ]
+            risk = "KAG view cards summarize derived readiness and current source-facing surfaces; confirm aoa-kag doctrine and the owning repo before treating the view as canon."
+            next_hops = [
+                build_entry_hop("tier", FEDERATION_DEFAULT_TIER_ENTRY_ID),
+                build_entry_hop("playbook", FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID),
+            ]
+        elif kag_view_id == TOS_KAG_VIEW_ENTRY_ID:
+            if pilot_posture != "source_owned_tiny_entry_route":
+                raise RouterError(
+                    f"{kag_view_id}.pilot_posture must stay 'source_owned_tiny_entry_route' in the current routing wave"
+                )
+            if entry_surface_refs != list(TOS_KAG_VIEW_ENTRY_SURFACE_REFS):
+                raise RouterError(
+                    f"{kag_view_id}.current_entry_surface_refs must stay {list(TOS_KAG_VIEW_ENTRY_SURFACE_REFS)!r} in the current routing wave"
+                )
+            if object_surface_ref != TOS_KAG_VIEW_OBJECT_SURFACE_REF:
+                raise RouterError(
+                    f"{kag_view_id}.current_object_surface_ref must stay '{TOS_KAG_VIEW_OBJECT_SURFACE_REF}' in the current routing wave"
+                )
+            if example_object_ids != [TOS_TINY_ENTRY_ROUTE_ID]:
+                raise RouterError(
+                    f"{kag_view_id}.example_object_ids must stay ['{TOS_TINY_ENTRY_ROUTE_ID}'] in the current routing wave"
+                )
+            title = "Tree-of-Sophia Readiness View"
+            next_actions = [
+                build_entry_action(
+                    verb="inspect",
+                    target_repo=TOS_REPO,
+                    target_surface=TOS_TINY_ENTRY_DOCTRINE_PATH,
+                    match_key="path",
+                    target_value=TOS_TINY_ENTRY_DOCTRINE_PATH,
+                ),
+                build_entry_action(
+                    verb="inspect",
+                    target_repo=TOS_REPO,
+                    target_surface=tos_tiny_entry_route_path,
+                    match_key="route_id",
+                    target_value=TOS_TINY_ENTRY_ROUTE_ID,
+                ),
+            ]
+            risk = "KAG view cards summarize derived readiness and current source-facing surfaces; Tree-of-Sophia remains authoritative for ToS meaning while this derived view only orients entry through the current tiny-entry seam."
+            next_hops = [
+                build_entry_hop("tier", FEDERATION_DEFAULT_TIER_ENTRY_ID),
+                build_entry_hop("playbook", TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID),
+            ]
+        else:
+            raise RouterError(f"unsupported KAG view '{kag_view_id}'")
         federation_entrypoints.append(
             {
                 "kind": "kag_view",
                 "id": kag_view_id,
                 "owner_repo": KAG_REPO,
-                "title": f"{title_case_slug(kag_view_id)} Readiness View",
+                "title": title,
                 "capsule_surface": make_repo_qualified_ref(KAG_REPO, FEDERATION_SPINE_PATH),
                 "authority_surface": make_repo_qualified_ref(
                     KAG_REPO, "docs/FEDERATION_SPINE.md"
                 ),
-                "next_actions": [
-                    build_entry_action(
-                        verb="inspect",
-                        target_repo=entry_target_repo,
-                        target_surface=entry_target_surface,
-                        match_key="doc_id",
-                        target_value=entry_doc_id,
-                    ),
-                    build_entry_action(
-                        verb="inspect",
-                        target_repo=object_target_repo,
-                        target_surface=object_target_surface,
-                        match_key="id",
-                        target_value=example_object_ids[0],
-                    ),
-                ],
+                "next_actions": next_actions,
                 "fallback": build_entry_action(
                     verb="inspect",
                     target_repo=PAIRING_SURFACE_REPO,
@@ -1111,11 +1206,8 @@ def build_federation_entrypoints_payload(
                     match_key="id",
                     target_value=FEDERATION_DEFAULT_TIER_ENTRY_ID,
                 ),
-                "risk": "KAG view cards summarize derived readiness and current source-facing surfaces; confirm aoa-kag doctrine and the owning repo before treating the view as canon.",
-                "next_hops": [
-                    build_entry_hop("tier", FEDERATION_DEFAULT_TIER_ENTRY_ID),
-                    build_entry_hop("playbook", FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID),
-                ],
+                "risk": risk,
+                "next_hops": next_hops,
             }
         )
 
@@ -1237,7 +1329,7 @@ def build_federation_entrypoints_payload(
                         target_repo=PAIRING_SURFACE_REPO,
                         target_surface=FEDERATION_ENTRYPOINTS_FILE,
                         match_key="id",
-                        target_value=FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+                        target_value=TOS_KAG_VIEW_ENTRY_ID,
                     ),
                     build_entry_action(
                         verb="inspect",
@@ -1256,8 +1348,8 @@ def build_federation_entrypoints_payload(
                 ),
                 "risk": "ToS root orientation must keep Tree-of-Sophia authority in the charter while handing off to one source-owned tiny-entry route; downstream routing, KAG, and playbook hops remain secondary orientation rather than ToS authority replacement.",
                 "next_hops": [
-                    build_entry_hop("kag_view", FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID),
-                    build_entry_hop("playbook", "AOA-P-0009"),
+                    build_entry_hop("kag_view", TOS_KAG_VIEW_ENTRY_ID),
+                    build_entry_hop("playbook", TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID),
                 ],
             },
         ],
