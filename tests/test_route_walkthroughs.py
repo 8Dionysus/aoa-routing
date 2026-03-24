@@ -245,6 +245,9 @@ def build_walkthrough_context(tmp_path: Path, fixture_variant: str) -> tuple[dic
 
 
 def load_surface_entries(payload: dict[str, object], surface_file: str) -> list[dict[str, object]]:
+    if Path(surface_file).name == "tos_tiny_entry_route.example.json":
+        assert isinstance(payload, dict)
+        return [payload]
     key_by_filename = {
         "aoa_router.min.json": "entries",
         "pairing_hints.min.json": "entries",
@@ -376,3 +379,37 @@ def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> Non
     assert entry_by_id["router"]["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
     assert entry_by_id["aoa-techniques"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
     assert root_by_id["tos-root"]["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
+
+
+def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path) -> None:
+    outputs, roots = build_walkthrough_context(tmp_path, "base")
+    federation = outputs["federation_entrypoints.min.json"]
+    root_by_id = {entry["id"]: entry for entry in federation["root_entries"]}
+
+    tos_root = root_by_id["tos-root"]
+    first_action = tos_root["next_actions"][0]
+    assert first_action == {
+        "verb": "inspect",
+        "target_repo": "Tree-of-Sophia",
+        "target_surface": "examples/tos_tiny_entry_route.example.json",
+        "match_key": "route_id",
+        "target_value": "tos-tiny-entry.zarathustra-prologue",
+    }
+
+    route_payload = load_json(roots["Tree-of-Sophia"] / first_action["target_surface"])
+    route_entry = find_entry(
+        load_surface_entries(route_payload, first_action["target_surface"]),
+        first_action["match_key"],
+        first_action["target_value"],
+    )
+    assert route_entry is not None
+    assert route_entry["root_surface"] == "README.md"
+    assert route_entry["capsule_surface"] == "docs/ZARATHUSTRA_TRILINGUAL_ENTRY.md"
+    assert route_entry["authority_surface"] == "examples/source_node.example.json"
+    assert route_entry["lineage_or_context_hop"] == "examples/concept_node.example.json"
+    assert route_entry["fallback"] == "docs/KNOWLEDGE_MODEL.md"
+
+    assert tos_root["next_hops"] == [
+        {"kind": "kag_view", "id": "aoa-techniques"},
+        {"kind": "playbook", "id": "AOA-P-0009"},
+    ]

@@ -798,3 +798,36 @@ def test_validate_generated_outputs_rejects_unbounded_federation_root_fanout(
         "schema violation" in issue.message and "next_actions" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_tos_tiny_entry_route_boundary_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    route_path = roots["Tree-of-Sophia"] / "examples" / "tos_tiny_entry_route.example.json"
+    payload = json.loads(route_path.read_text(encoding="utf-8"))
+    payload["fallback"] = "aoa-routing/generated/aoa_router.min.json"
+    write_json(route_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "must stay inside Tree-of-Sophia and must not point at downstream repos" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_tos_tiny_entry_route_id_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    route_path = roots["Tree-of-Sophia"] / "examples" / "tos_tiny_entry_route.example.json"
+    payload = json.loads(route_path.read_text(encoding="utf-8"))
+    payload["route_id"] = "tos-tiny-entry.drifted"
+    write_json(route_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "route_id must stay 'tos-tiny-entry.zarathustra-prologue'" in issue.message
+        or "target 'tos-tiny-entry.zarathustra-prologue' was not found" in issue.message
+        for issue in issues
+    )

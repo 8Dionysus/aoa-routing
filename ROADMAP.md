@@ -104,6 +104,7 @@ This wave adds:
 - active entry cards for `agent`, `tier`, `playbook`, and `kag_view`
 - `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
 - schema-backed validation that orientation never points authority at route-owned generated surfaces
+- a narrow `tos-root -> source-owned ToS tiny-entry route` handoff without activating `tos_node`
 
 The federation entry ABI should own:
 
@@ -116,6 +117,7 @@ It must not own:
 - source authority for AoA, ToS, agents, playbooks, or KAG doctrine
 - declared-but-inactive entry kinds
 - a widened replacement for the current thin router taxonomy
+- a separate starter or active kind for the current ToS tiny-entry route
 
 ## Boundaries To Preserve
 
@@ -132,6 +134,7 @@ These boundaries come directly from the seed and should remain hard constraints:
 - object-facing memo recall must remain a parallel family, not a replacement root kind
 - tiny-model recall-family selection must stay additive and memo-scoped rather than becoming a second root registry
 - federation entry cards must point authority at owning repos rather than `aoa-routing/generated/*`
+- the `tos-root` handoff may point to one source-owned ToS tiny-entry route, but that route must stay inside `Tree-of-Sophia`
 - declared federation kinds must stay documented but inactive until their contracts are narrower and more stable
 - the federation entry ABI must stay additive beside the thin router core instead of replacing it
 

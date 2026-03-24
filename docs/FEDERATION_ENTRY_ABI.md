@@ -124,6 +124,7 @@ These are hard constraints for the landing:
 - orientation must never point authority at `aoa-routing/generated/*`
 - `aoa-routing` may summarize a source surface, but it may not replace it
 - root entry cards must keep AoA and ToS authority in their owning repos
+- `tos-root` may hand off to one current source-owned ToS tiny-entry route without activating `tos_node`
 - KAG views remain derived readiness views, not canon authorship
 - the thin router taxonomy for `technique`, `skill`, `eval`, and `memo` must not be widened by this ABI layer
 
@@ -147,17 +148,28 @@ v1 federation starters are:
 - `playbook-root`
 - `kag-view-root`
 
+This wave does not add a separate tiny-entry federation starter.
+Small-model ToS entry still begins at `tos-root`.
+
 ## Current v1 Inputs
 
 This first landing stays `aoa-routing`-only by edited files, but it reads sibling source surfaces:
 
 - `Agents-of-Abyss/README.md`
 - `Tree-of-Sophia/README.md`
+- `Tree-of-Sophia/examples/tos_tiny_entry_route.example.json`
 - `aoa-agents/generated/agent_registry.min.json`
 - `aoa-agents/generated/model_tier_registry.json`
 - `aoa-agents/generated/runtime_seam_bindings.json`
 - `aoa-playbooks/generated/playbook_registry.min.json`
 - `aoa-kag/generated/federation_spine.min.json`
+
+For the current ToS root card, the first handoff is now:
+
+`tos-root -> Tree-of-Sophia/examples/tos_tiny_entry_route.example.json -> ToS-authored route surfaces`
+
+That handoff is source-owned and bounded.
+It does not activate `tos_node` as a live federation entry kind.
 
 ## Non-Goals
 
@@ -165,6 +177,7 @@ This landing does not:
 
 - turn `aoa-routing` into a second charter layer
 - promote declared kinds to active routing
+- add a new federation starter for the current ToS tiny-entry route
 - replace ToS authority with route-owned cards
 - replace KAG doctrine with router-owned summaries
 - fold federation entry routing into the thin router registry

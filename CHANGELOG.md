@@ -15,3 +15,9 @@ Tracking starts with the community-docs baseline for this repository.
 - `generated/federation_entrypoints.min.json` and its schema-backed validation path
 - additive `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
 - build, validation, and CI support for `Agents-of-Abyss`, `Tree-of-Sophia`, `aoa-playbooks`, and `aoa-kag` as federation entry inputs
+- narrow support for `Tree-of-Sophia/examples/tos_tiny_entry_route.example.json` as a source-owned ToS tiny-entry handoff surface
+
+### Changed
+
+- `tos-root` in `generated/federation_entrypoints.min.json` now hands off first to the source-owned ToS tiny-entry route while keeping `README.md` and `CHARTER.md` as root card surfaces
+- `docs/FEDERATION_ENTRY_ABI.md`, `README.md`, and `ROADMAP.md` now describe the ToS tiny-entry sync as additive and non-authoritative
