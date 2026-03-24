@@ -91,6 +91,8 @@ FEDERATION_DEFAULT_AGENT_ENTRY_ID = "AOA-A-0001"
 FEDERATION_DEFAULT_TIER_ENTRY_ID = "router"
 FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID = "AOA-P-0008"
 FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID = "aoa-techniques"
+TOS_TINY_ENTRY_ROUTE_PATH = "examples/tos_tiny_entry_route.example.json"
+TOS_TINY_ENTRY_ROUTE_ID = "tos-tiny-entry.zarathustra-prologue"
 FALLBACK_ROUTER_KIND = "technique"
 TIER_PHASE_ORDER = (
     "route",
@@ -328,6 +330,73 @@ def ensure_markdown_file(path: Path, location: str) -> None:
         raise RouterError(f"{location} is missing") from exc
     if not text.strip():
         raise RouterError(f"{location} must not be empty")
+
+
+def ensure_tos_route_surface_path(
+    raw_path: Any,
+    location: str,
+    *,
+    tos_root: Path,
+    allow_null: bool = False,
+) -> str | None:
+    if raw_path is None:
+        if allow_null:
+            return None
+        raise RouterError(f"{location} must be a repo-relative Tree-of-Sophia path")
+    relative_path = ensure_repo_relative_path(raw_path, location)
+    if ":" in relative_path:
+        raise RouterError(f"{location} must stay Tree-of-Sophia-relative and must not use repo-qualified refs")
+    if relative_path.startswith(("aoa-routing/", "aoa-kag/")):
+        raise RouterError(f"{location} must stay inside Tree-of-Sophia and must not point at downstream repos")
+    if not (tos_root / relative_path).exists():
+        raise RouterError(f"{location} target 'Tree-of-Sophia/{relative_path}' is missing")
+    return relative_path
+
+
+def load_tos_tiny_entry_route(tos_root: Path) -> tuple[str, dict[str, Any]]:
+    route_path = tos_root / TOS_TINY_ENTRY_ROUTE_PATH
+    location = f"{TOS_REPO}/{TOS_TINY_ENTRY_ROUTE_PATH}"
+    payload = ensure_mapping(load_json_file(route_path), location)
+
+    route_id = ensure_string(payload.get("route_id"), f"{location}.route_id")
+    if route_id != TOS_TINY_ENTRY_ROUTE_ID:
+        raise RouterError(
+            f"{location}.route_id must stay '{TOS_TINY_ENTRY_ROUTE_ID}' in the current routing wave"
+        )
+
+    root_surface = ensure_tos_route_surface_path(
+        payload.get("root_surface"),
+        f"{location}.root_surface",
+        tos_root=tos_root,
+    )
+    if root_surface != "README.md":
+        raise RouterError(f"{location}.root_surface must stay 'README.md' in the current routing wave")
+
+    ensure_string(payload.get("node_kind"), f"{location}.node_kind")
+    ensure_string(payload.get("node_id"), f"{location}.node_id")
+    ensure_tos_route_surface_path(
+        payload.get("capsule_surface"),
+        f"{location}.capsule_surface",
+        tos_root=tos_root,
+    )
+    ensure_tos_route_surface_path(
+        payload.get("authority_surface"),
+        f"{location}.authority_surface",
+        tos_root=tos_root,
+    )
+    ensure_tos_route_surface_path(
+        payload.get("lineage_or_context_hop"),
+        f"{location}.lineage_or_context_hop",
+        tos_root=tos_root,
+        allow_null=True,
+    )
+    ensure_tos_route_surface_path(
+        payload.get("fallback"),
+        f"{location}.fallback",
+        tos_root=tos_root,
+    )
+    ensure_string(payload.get("non_identity_boundary"), f"{location}.non_identity_boundary")
+    return TOS_TINY_ENTRY_ROUTE_PATH, payload
 
 
 def is_pending_technique_id(identifier: str) -> bool:
@@ -708,6 +777,7 @@ def build_federation_entrypoints_payload(
     ensure_markdown_file(aoa_root / "CHARTER.md", f"{AOA_ROOT_REPO}/CHARTER.md")
     ensure_markdown_file(tos_root / "README.md", f"{TOS_REPO}/README.md")
     ensure_markdown_file(tos_root / "CHARTER.md", f"{TOS_REPO}/CHARTER.md")
+    tos_tiny_entry_route_path, tos_tiny_entry_route = load_tos_tiny_entry_route(tos_root)
     ensure_markdown_file(
         kag_root / "docs" / "FEDERATION_SPINE.md",
         f"{KAG_REPO}/docs/FEDERATION_SPINE.md",
@@ -1065,6 +1135,12 @@ def build_federation_entrypoints_payload(
                 "ref": "README.md",
             },
             {
+                "name": "tos_tiny_entry_route",
+                "repo": TOS_REPO,
+                "role": "tiny_entry_handoff",
+                "ref": tos_tiny_entry_route_path,
+            },
+            {
                 "name": "agent_registry",
                 "repo": AGENTS_REPO,
                 "role": "agent_entries",
@@ -1148,6 +1224,16 @@ def build_federation_entrypoints_payload(
                 "next_actions": [
                     build_entry_action(
                         verb="inspect",
+                        target_repo=TOS_REPO,
+                        target_surface=tos_tiny_entry_route_path,
+                        match_key="route_id",
+                        target_value=ensure_string(
+                            tos_tiny_entry_route["route_id"],
+                            f"{TOS_REPO}/{tos_tiny_entry_route_path}.route_id",
+                        ),
+                    ),
+                    build_entry_action(
+                        verb="inspect",
                         target_repo=PAIRING_SURFACE_REPO,
                         target_surface=FEDERATION_ENTRYPOINTS_FILE,
                         match_key="id",
@@ -1168,7 +1254,7 @@ def build_federation_entrypoints_payload(
                     match_key="id",
                     target_value="aoa-root",
                 ),
-                "risk": "ToS root orientation must not replace ToS source authority; follow the ToS charter and source-facing docs before trusting downstream operational bridges.",
+                "risk": "ToS root orientation must keep Tree-of-Sophia authority in the charter while handing off to one source-owned tiny-entry route; downstream routing, KAG, and playbook hops remain secondary orientation rather than ToS authority replacement.",
                 "next_hops": [
                     build_entry_hop("kag_view", FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID),
                     build_entry_hop("playbook", "AOA-P-0009"),

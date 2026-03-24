@@ -418,6 +418,20 @@ def test_build_outputs_from_fixtures() -> None:
     assert federation["version"] == 1
     assert federation["active_entry_kinds"] == ["agent", "tier", "playbook", "kag_view"]
     assert federation["declared_entry_kinds"] == ["seed", "tos_node", "runtime_surface"]
+    assert federation["source_inputs"][1:3] == [
+        {
+            "name": "tos_root_readme",
+            "repo": "Tree-of-Sophia",
+            "role": "root_entry",
+            "ref": "README.md",
+        },
+        {
+            "name": "tos_tiny_entry_route",
+            "repo": "Tree-of-Sophia",
+            "role": "tiny_entry_handoff",
+            "ref": "examples/tos_tiny_entry_route.example.json",
+        },
+    ]
     assert tiny_model["queries"][0] == {
         "verb": "pick",
         "source_repo": "aoa-routing",
@@ -678,6 +692,29 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     tos_root = root_by_id["tos-root"]
     assert tos_root["capsule_surface"] == "Tree-of-Sophia:README.md"
     assert tos_root["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
+    assert tos_root["next_actions"] == [
+        {
+            "verb": "inspect",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "match_key": "route_id",
+            "target_value": "tos-tiny-entry.zarathustra-prologue",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "aoa-techniques",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "AOA-P-0009",
+        },
+    ]
     assert tos_root["fallback"] == {
         "verb": "inspect",
         "target_repo": "aoa-routing",
@@ -689,6 +726,7 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
         {"kind": "kag_view", "id": "aoa-techniques"},
         {"kind": "playbook", "id": "AOA-P-0009"},
     ]
+    assert "source-owned tiny-entry route" in tos_root["risk"]
 
     router_tier = entry_by_key[("tier", "router")]
     assert router_tier["capsule_surface"] == "aoa-agents:generated/model_tier_registry.json"

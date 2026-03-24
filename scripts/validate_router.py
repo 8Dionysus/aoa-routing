@@ -43,6 +43,8 @@ from router_core import (
     RESERVED_KINDS,
     RouterError,
     TOS_REPO,
+    TOS_TINY_ENTRY_ROUTE_ID,
+    TOS_TINY_ENTRY_ROUTE_PATH,
     build_federation_entrypoints_payload,
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
@@ -67,6 +69,7 @@ from router_core import (
     load_model_tier_registry,
     load_playbook_registry_entries,
     load_technique_catalog_entries,
+    load_tos_tiny_entry_route,
 )
 
 
@@ -888,6 +891,8 @@ def load_surface_entries_for_validation(
             f"{surface_file}.entrypoints",
         )
         return root_entries + entrypoints
+    if Path(surface_file).name == Path(TOS_TINY_ENTRY_ROUTE_PATH).name:
+        return [ensure_mapping(payload, surface_file)]
     array_key_by_filename = {
         "aoa_router.min.json": "entries",
         "task_to_surface_hints.json": "hints",
@@ -1080,6 +1085,11 @@ def validate_federation_entrypoints(
             continue
         validate_source_path(repo_name, relative_path, location)
 
+    try:
+        load_tos_tiny_entry_route(tos_root)
+    except RouterError as exc:
+        issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+
     root_ids: set[str] = set()
     entry_ids_by_kind: dict[str, set[str]] = {kind: set() for kind in FEDERATION_ACTIVE_ENTRY_KINDS}
     all_entry_ids: set[str] = set()
@@ -1126,6 +1136,75 @@ def validate_federation_entrypoints(
                 "root_entries must publish exactly aoa-root and tos-root in v1",
             )
         )
+
+    tos_root_entry = next(
+        (
+            raw_root_entry
+            for raw_root_entry in root_entries
+            if isinstance(raw_root_entry, dict) and raw_root_entry.get("id") == "tos-root"
+        ),
+        None,
+    )
+    if isinstance(tos_root_entry, dict):
+        next_actions = tos_root_entry.get("next_actions")
+        if not isinstance(next_actions, list) or not next_actions:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "tos-root must publish the current ToS tiny-entry handoff as its first next_action",
+                )
+            )
+        else:
+            expected_actions = [
+                {
+                    "verb": "inspect",
+                    "target_repo": TOS_REPO,
+                    "target_surface": TOS_TINY_ENTRY_ROUTE_PATH,
+                    "match_key": "route_id",
+                    "target_value": TOS_TINY_ENTRY_ROUTE_ID,
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": PAIRING_SURFACE_REPO,
+                    "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+                    "match_key": "id",
+                    "target_value": "aoa-techniques",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": PAIRING_SURFACE_REPO,
+                    "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+                    "match_key": "id",
+                    "target_value": "AOA-P-0009",
+                },
+            ]
+            if len(next_actions) != len(expected_actions):
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        "tos-root must publish exactly three bounded next_actions in the current routing wave",
+                    )
+                )
+            for action_index, expected_action in enumerate(expected_actions):
+                if action_index >= len(next_actions):
+                    break
+                action = next_actions[action_index]
+                if not isinstance(action, dict):
+                    issues.append(
+                        ValidationIssue(
+                            "federation_entrypoints.min.json",
+                            f"tos-root next_actions[{action_index}] must be an action object",
+                        )
+                    )
+                    continue
+                for key, expected_value in expected_action.items():
+                    if action.get(key) != expected_value:
+                        issues.append(
+                            ValidationIssue(
+                                "federation_entrypoints.min.json",
+                                f"tos-root next_actions[{action_index}].{key} must stay '{expected_value}'",
+                            )
+                        )
 
     for index, raw_entry in enumerate(entrypoints):
         location = f"federation_entrypoints.min.json.entrypoints[{index}]"
