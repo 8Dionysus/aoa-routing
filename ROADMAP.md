@@ -34,6 +34,7 @@ Already merged:
   - pairing hints
   - KAG/source-lift relation hints
   - tiny-model entrypoints
+  - federation entry ABI
 
 The current runtime path is:
 
@@ -92,6 +93,30 @@ It must not own:
 - shadow copies of memo objects
 - graph traversal programs
 
+### Milestone 7: Federation entry ABI
+
+Merged as a separate orientation layer rather than a widening of the thin router core.
+
+This wave adds:
+
+- `generated/federation_entrypoints.min.json`
+- explicit `aoa-root` and `tos-root` root cards
+- active entry cards for `agent`, `tier`, `playbook`, and `kag_view`
+- `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
+- schema-backed validation that orientation never points authority at route-owned generated surfaces
+
+The federation entry ABI should own:
+
+- bounded entry orientation
+- small-model-ready federation starters
+- explicit capsule-to-authority handoff cards
+
+It must not own:
+
+- source authority for AoA, ToS, agents, playbooks, or KAG doctrine
+- declared-but-inactive entry kinds
+- a widened replacement for the current thin router taxonomy
+
 ## Boundaries To Preserve
 
 These boundaries come directly from the seed and should remain hard constraints:
@@ -106,12 +131,19 @@ These boundaries come directly from the seed and should remain hard constraints:
 - memo recall hints must advertise only router-ready upstream contracts
 - object-facing memo recall must remain a parallel family, not a replacement root kind
 - tiny-model recall-family selection must stay additive and memo-scoped rather than becoming a second root registry
+- federation entry cards must point authority at owning repos rather than `aoa-routing/generated/*`
+- declared federation kinds must stay documented but inactive until their contracts are narrower and more stable
+- the federation entry ABI must stay additive beside the thin router core instead of replacing it
 
 ## Definition Of Success
 
-The roadmap is successful when a small model can follow this path reliably:
+The roadmap is successful when a small model can follow one of these paths reliably:
 
 `routing -> capsule -> section expand -> object use -> optional pair -> optional recall`
+
+or
+
+`federation root -> entry card -> source authority -> bounded next hop`
 
 Without:
 

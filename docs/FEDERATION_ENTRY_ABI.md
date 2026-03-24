@@ -1,0 +1,170 @@
+# Federation Entry ABI
+
+`aoa-routing` can now publish a separate federation entry orientation layer without widening the thin router core.
+
+The governing rule stays unchanged:
+
+**Source repos own meaning. Routing owns navigation.**
+
+For federation entry routing, that rule becomes:
+
+**`aoa-routing` may publish entry cards, but it must not become the authority surface those cards describe.**
+
+## Purpose
+
+This surface exists to give very small models and low-context agents a bounded way to enter the wider AoA / ToS federation.
+
+It is an orientation plane, not an authority plane.
+
+The orientation plane should answer:
+
+- what kind of surface this is
+- which repo owns it
+- which compact capsule to inspect first
+- which source-owned authority surface to trust next
+- which bounded next hop is reasonable after that
+
+The authority plane should stay upstream:
+
+- `Agents-of-Abyss` owns AoA root authority
+- `Tree-of-Sophia` owns ToS root authority
+- `aoa-agents` owns agent and tier authority
+- `aoa-playbooks` owns playbook authority
+- `aoa-kag` owns KAG doctrine for the derived readiness view
+
+## Model Criterion
+
+The ABI is designed around a `2B-first, GPT-5.4-complete` criterion.
+
+That means:
+
+- a small model should be able to enter the federation through a stable starter without loading whole repositories raw
+- a stronger model should still see an explicit, reviewable route rather than a hidden router heuristic
+
+## Published v1 Surface
+
+`aoa-routing` now publishes:
+
+- `generated/federation_entrypoints.min.json`
+
+That surface is schema-backed and additive.
+It sits beside the thin router outputs instead of replacing them.
+
+The thin router core remains the same:
+
+- `aoa_router.min.json`
+- `cross_repo_registry.min.json`
+- `task_to_surface_hints.json`
+- `task_to_tier_hints.json`
+- `recommended_paths.min.json`
+- `pairing_hints.min.json`
+
+## Root Entries
+
+v1 publishes exactly two federation root entries:
+
+- `aoa-root`
+- `tos-root`
+
+These are derived entry cards.
+They are not new root authorities.
+
+Each root card must include:
+
+- `capsule_surface`
+- `authority_surface`
+- `next_actions`
+- `fallback`
+- `risk`
+- `next_hops`
+
+## Active And Declared Kinds
+
+v1 active entry kinds:
+
+- `agent`
+- `tier`
+- `playbook`
+- `kag_view`
+
+v1 declared but inactive kinds:
+
+- `seed`
+- `tos_node`
+- `runtime_surface`
+
+Declared kinds are documented as the next wave only.
+They must not appear as active entry cards or tiny-model federation starters in this landing.
+
+## Entry Card Contract
+
+Each `federation_entrypoint` card carries:
+
+- `kind`
+- `id`
+- `owner_repo`
+- `title`
+- `capsule_surface`
+- `authority_surface`
+- `next_actions`
+- `fallback`
+- `risk`
+- `next_hops`
+
+Conventions:
+
+- `capsule_surface` and `authority_surface` use repo-qualified refs: `repo:path`
+- `next_actions` use bounded action objects with `verb`, `target_repo`, `target_surface`, `match_key`, and optional `target_value`
+- `next_hops` stay bounded and typed
+
+## Anti-Confusion Rules
+
+These are hard constraints for the landing:
+
+- orientation must never point authority at `aoa-routing/generated/*`
+- `aoa-routing` may summarize a source surface, but it may not replace it
+- root entry cards must keep AoA and ToS authority in their owning repos
+- KAG views remain derived readiness views, not canon authorship
+- the thin router taxonomy for `technique`, `skill`, `eval`, and `memo` must not be widened by this ABI layer
+
+## Tiny-Model Seam
+
+`generated/tiny_model_entrypoints.json` now has a separate federation seam:
+
+- `federation_queries`
+- `federation_starters`
+
+This seam is additive.
+Existing consumers of `queries` and `starters` for the thin router path should keep working unchanged.
+
+v1 federation starters are:
+
+- `federation-root`
+- `aoa-root`
+- `tos-root`
+- `agent-root`
+- `tier-root`
+- `playbook-root`
+- `kag-view-root`
+
+## Current v1 Inputs
+
+This first landing stays `aoa-routing`-only by edited files, but it reads sibling source surfaces:
+
+- `Agents-of-Abyss/README.md`
+- `Tree-of-Sophia/README.md`
+- `aoa-agents/generated/agent_registry.min.json`
+- `aoa-agents/generated/model_tier_registry.json`
+- `aoa-agents/generated/runtime_seam_bindings.json`
+- `aoa-playbooks/generated/playbook_registry.min.json`
+- `aoa-kag/generated/federation_spine.min.json`
+
+## Non-Goals
+
+This landing does not:
+
+- turn `aoa-routing` into a second charter layer
+- promote declared kinds to active routing
+- replace ToS authority with route-owned cards
+- replace KAG doctrine with router-owned summaries
+- fold federation entry routing into the thin router registry

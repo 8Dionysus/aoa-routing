@@ -17,13 +17,25 @@ RESERVED_KINDS: tuple[str, ...] = ()
 ALL_KINDS = ACTIVE_KINDS + RESERVED_KINDS
 PAIRABLE_KINDS = ("technique", "skill", "eval")
 RECOMMENDED_HOP_KINDS = ("technique", "skill", "eval")
+AGENTS_REPO = "aoa-agents"
+PLAYBOOKS_REPO = "aoa-playbooks"
+KAG_REPO = "aoa-kag"
+AOA_ROOT_REPO = "Agents-of-Abyss"
+TOS_REPO = "Tree-of-Sophia"
 CANONICAL_REPO_BY_KIND = {
     "technique": "aoa-techniques",
     "skill": "aoa-skills",
     "eval": "aoa-evals",
     "memo": "aoa-memo",
 }
-KNOWN_REPOS = ("aoa-routing",) + tuple(CANONICAL_REPO_BY_KIND.values())
+KNOWN_REPOS = (
+    "aoa-routing",
+    AOA_ROOT_REPO,
+    TOS_REPO,
+    AGENTS_REPO,
+    PLAYBOOKS_REPO,
+    KAG_REPO,
+) + tuple(CANONICAL_REPO_BY_KIND.values())
 KIND_ORDER = {kind: index for index, kind in enumerate(ALL_KINDS)}
 RELATION_REQUIRES = "requires"
 RELATION_REQUIRED_BY = "required_by"
@@ -46,11 +58,18 @@ DIRECT_RELATION_TYPES = (
     "shares_contract_with",
 )
 DIRECT_RELATION_TYPES_SET = set(DIRECT_RELATION_TYPES)
-MODEL_TIER_SOURCE_REPO = "aoa-agents"
+MODEL_TIER_SOURCE_REPO = AGENTS_REPO
 MODEL_TIER_REGISTRY_PATH = "generated/model_tier_registry.json"
+AGENT_REGISTRY_PATH = "generated/agent_registry.min.json"
+RUNTIME_SEAM_BINDINGS_PATH = "generated/runtime_seam_bindings.json"
+PLAYBOOK_REGISTRY_PATH = "generated/playbook_registry.min.json"
+PLAYBOOK_PORTFOLIO_PATH = "docs/PLAYBOOK_PORTFOLIO.md"
+FEDERATION_SPINE_PATH = "generated/federation_spine.min.json"
+AOA_ECOSYSTEM_REGISTRY_PATH = "generated/ecosystem_registry.min.json"
 PAIRING_SURFACE_REPO = "aoa-routing"
 PAIRING_SURFACE_FILE = "generated/pairing_hints.min.json"
 TINY_MODEL_ENTRYPOINTS_FILE = "generated/tiny_model_entrypoints.json"
+FEDERATION_ENTRYPOINTS_FILE = "generated/federation_entrypoints.min.json"
 MEMO_INSPECT_SURFACE_FILE = "generated/memory_catalog.min.json"
 MEMO_EXPAND_SURFACE_FILE = "generated/memory_sections.full.json"
 MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory_object_catalog.min.json"
@@ -65,6 +84,23 @@ MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE = {
     "lineage": "examples/recall_contract.object.lineage.json",
 }
 KAG_DEFAULT_ENTRYPOINT_ID = "AOA-T-0019"
+FEDERATION_ROOT_IDS = ("aoa-root", "tos-root")
+FEDERATION_ACTIVE_ENTRY_KINDS = ("agent", "tier", "playbook", "kag_view")
+FEDERATION_DECLARED_ENTRY_KINDS = ("seed", "tos_node", "runtime_surface")
+FEDERATION_DEFAULT_AGENT_ENTRY_ID = "AOA-A-0001"
+FEDERATION_DEFAULT_TIER_ENTRY_ID = "router"
+FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID = "AOA-P-0008"
+FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID = "aoa-techniques"
+FALLBACK_ROUTER_KIND = "technique"
+TIER_PHASE_ORDER = (
+    "route",
+    "plan",
+    "do",
+    "verify",
+    "transition",
+    "deep",
+    "distill",
+)
 TASK_TO_TIER_HINT_SPECS = (
     {
         "task_family": "task-triage",
@@ -269,6 +305,31 @@ def ensure_repo_relative_path(raw_path: str, location: str) -> str:
     return normalized
 
 
+def ensure_repo_qualified_ref(value: Any, location: str) -> tuple[str, str]:
+    raw_value = ensure_string(value, location)
+    repo, separator, ref = raw_value.partition(":")
+    if separator != ":":
+        raise RouterError(f"{location} must use '<repo>:<path>' form")
+    normalized_repo = normalize_repo_name(repo)
+    normalized_ref = ensure_repo_relative_path(ref, f"{location}.path")
+    return normalized_repo, normalized_ref
+
+
+def make_repo_qualified_ref(repo: str, relative_path: str) -> str:
+    normalized_repo = normalize_repo_name(repo)
+    normalized_path = ensure_repo_relative_path(relative_path, f"{normalized_repo}.path")
+    return f"{normalized_repo}:{normalized_path}"
+
+
+def ensure_markdown_file(path: Path, location: str) -> None:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except FileNotFoundError as exc:
+        raise RouterError(f"{location} is missing") from exc
+    if not text.strip():
+        raise RouterError(f"{location} must not be empty")
+
+
 def is_pending_technique_id(identifier: str) -> bool:
     return identifier.startswith(PENDING_TECHNIQUE_PREFIX)
 
@@ -321,6 +382,167 @@ def load_model_tier_registry(
             )
         }
     return normalized_path, tier_index
+
+
+def load_agent_registry_entries(agents_root: Path) -> tuple[str, list[dict[str, Any]]]:
+    registry_path = agents_root / AGENT_REGISTRY_PATH
+    location = relative_posix(registry_path, agents_root)
+    payload = ensure_mapping(load_json_file(registry_path), location)
+    agents = ensure_list(payload.get("agents"), f"{location}.agents")
+
+    entries: list[dict[str, Any]] = []
+    for index, item in enumerate(agents):
+        agent_location = f"{location}.agents[{index}]"
+        agent = ensure_mapping(item, agent_location)
+        require_keys(agent, ("id", "name", "summary"), agent_location)
+        entries.append(agent)
+    return AGENT_REGISTRY_PATH, entries
+
+
+def load_model_tier_entries(
+    agents_root: Path,
+    registry_relative_path: str = MODEL_TIER_REGISTRY_PATH,
+) -> tuple[str, list[dict[str, Any]]]:
+    normalized_path = ensure_repo_relative_path(registry_relative_path, "tier_registry_path")
+    registry_path = agents_root / normalized_path
+    location = relative_posix(registry_path, agents_root)
+    payload = ensure_mapping(load_json_file(registry_path), location)
+    model_tiers = ensure_list(payload.get("model_tiers"), f"{location}.model_tiers")
+
+    entries: list[dict[str, Any]] = []
+    for index, item in enumerate(model_tiers):
+        tier_location = f"{location}.model_tiers[{index}]"
+        tier = ensure_mapping(item, tier_location)
+        require_keys(tier, ("id", "summary", "artifact_requirement"), tier_location)
+        entries.append(tier)
+    return normalized_path, entries
+
+
+def load_runtime_seam_bindings(agents_root: Path) -> tuple[str, list[dict[str, Any]]]:
+    bindings_path = agents_root / RUNTIME_SEAM_BINDINGS_PATH
+    location = relative_posix(bindings_path, agents_root)
+    payload = ensure_mapping(load_json_file(bindings_path), location)
+    bindings = ensure_list(payload.get("bindings"), f"{location}.bindings")
+
+    entries: list[dict[str, Any]] = []
+    for index, item in enumerate(bindings):
+        binding_location = f"{location}.bindings[{index}]"
+        binding = ensure_mapping(item, binding_location)
+        require_keys(binding, ("phase", "tier_id", "role_names", "artifact_type"), binding_location)
+        entries.append(binding)
+    return RUNTIME_SEAM_BINDINGS_PATH, entries
+
+
+def load_playbook_registry_entries(playbooks_root: Path) -> tuple[str, list[dict[str, Any]]]:
+    registry_path = playbooks_root / PLAYBOOK_REGISTRY_PATH
+    location = relative_posix(registry_path, playbooks_root)
+    payload = ensure_mapping(load_json_file(registry_path), location)
+    playbooks = ensure_list(payload.get("playbooks"), f"{location}.playbooks")
+
+    entries: list[dict[str, Any]] = []
+    for index, item in enumerate(playbooks):
+        playbook_location = f"{location}.playbooks[{index}]"
+        playbook = ensure_mapping(item, playbook_location)
+        require_keys(
+            playbook,
+            ("id", "name", "summary", "participating_agents", "expected_artifacts"),
+            playbook_location,
+        )
+        entries.append(playbook)
+    return PLAYBOOK_REGISTRY_PATH, entries
+
+
+def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, Any]]]:
+    spine_path = kag_root / FEDERATION_SPINE_PATH
+    location = relative_posix(spine_path, kag_root)
+    payload = ensure_mapping(load_json_file(spine_path), location)
+    entries = ensure_list(payload.get("repos"), f"{location}.repos")
+
+    repos: list[dict[str, Any]] = []
+    for index, item in enumerate(entries):
+        repo_location = f"{location}.repos[{index}]"
+        repo_entry = ensure_mapping(item, repo_location)
+        require_keys(
+            repo_entry,
+            (
+                "repo",
+                "current_entry_surface_refs",
+                "current_object_surface_ref",
+                "example_object_ids",
+            ),
+            repo_location,
+        )
+        repos.append(repo_entry)
+    return FEDERATION_SPINE_PATH, repos
+
+
+def load_ecosystem_registry_entries(aoa_root: Path) -> tuple[str, list[dict[str, Any]]]:
+    registry_path = aoa_root / AOA_ECOSYSTEM_REGISTRY_PATH
+    location = relative_posix(registry_path, aoa_root)
+    payload = ensure_mapping(load_json_file(registry_path), location)
+    repos = ensure_list(payload.get("repos"), f"{location}.repos")
+    for index, item in enumerate(repos):
+        repo_location = f"{location}.repos[{index}]"
+        repo_entry = ensure_mapping(item, repo_location)
+        require_keys(repo_entry, ("name", "role"), repo_location)
+    return AOA_ECOSYSTEM_REGISTRY_PATH, repos
+
+
+def ensure_cross_repo_surface_ref(value: Any, location: str) -> tuple[str, str]:
+    raw_value = ensure_string(value, location)
+    repo_name, separator, remainder = raw_value.partition("/")
+    if separator != "/":
+        raise RouterError(f"{location} must use '<repo>/<path>' form")
+    normalized_repo = normalize_repo_name(repo_name)
+    normalized_path = ensure_repo_relative_path(remainder, f"{location}.path")
+    return normalized_repo, normalized_path
+
+
+def build_entry_action(
+    *,
+    verb: str,
+    target_repo: str,
+    target_surface: str,
+    match_key: str,
+    target_value: str,
+) -> dict[str, str]:
+    return {
+        "verb": ensure_string(verb, "verb"),
+        "target_repo": normalize_repo_name(target_repo),
+        "target_surface": ensure_repo_relative_path(target_surface, "target_surface"),
+        "match_key": ensure_string(match_key, "match_key"),
+        "target_value": ensure_string(target_value, "target_value"),
+    }
+
+
+def build_entry_hop(kind: str, identifier: str) -> dict[str, str]:
+    if kind not in FEDERATION_ACTIVE_ENTRY_KINDS:
+        raise RouterError(f"unsupported federation entry kind '{kind}'")
+    return {
+        "kind": kind,
+        "id": ensure_string(identifier, f"{kind}.id"),
+    }
+
+
+def title_case_slug(value: str) -> str:
+    return " ".join(part.capitalize() for part in value.replace("_", "-").split("-") if part)
+
+
+def load_repo_doc_manifest_default_doc_id(repo_root: Path, manifest_relative_path: str) -> str:
+    manifest_path = repo_root / manifest_relative_path
+    location = relative_posix(manifest_path, repo_root)
+    payload = ensure_mapping(load_json_file(manifest_path), location)
+    docs = ensure_list(payload.get("docs"), f"{location}.docs")
+    for index, item in enumerate(docs):
+        doc_location = f"{location}.docs[{index}]"
+        doc = ensure_mapping(item, doc_location)
+        doc_id = ensure_string(doc.get("doc_id"), f"{doc_location}.doc_id")
+        if doc_id == "readme":
+            return doc_id
+    if not docs:
+        raise RouterError(f"{location}.docs must not be empty")
+    first_doc = ensure_mapping(docs[0], f"{location}.docs[0]")
+    return ensure_string(first_doc.get("doc_id"), f"{location}.docs[0].doc_id")
 
 
 def load_memo_catalog_surfaces(memo_root: Path) -> list[dict[str, Any]]:
@@ -470,6 +692,498 @@ def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, An
     return {
         "router_version": 1,
         "entries": projection,
+    }
+
+
+def build_federation_entrypoints_payload(
+    aoa_root: Path,
+    techniques_root: Path,
+    agents_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    tos_root: Path,
+) -> dict[str, Any]:
+    load_ecosystem_registry_entries(aoa_root)
+    ensure_markdown_file(aoa_root / "README.md", f"{AOA_ROOT_REPO}/README.md")
+    ensure_markdown_file(aoa_root / "CHARTER.md", f"{AOA_ROOT_REPO}/CHARTER.md")
+    ensure_markdown_file(tos_root / "README.md", f"{TOS_REPO}/README.md")
+    ensure_markdown_file(tos_root / "CHARTER.md", f"{TOS_REPO}/CHARTER.md")
+    ensure_markdown_file(
+        kag_root / "docs" / "FEDERATION_SPINE.md",
+        f"{KAG_REPO}/docs/FEDERATION_SPINE.md",
+    )
+
+    agent_registry_path, agent_entries = load_agent_registry_entries(agents_root)
+    model_tier_registry_path, tier_entries = load_model_tier_entries(agents_root)
+    runtime_bindings_path, runtime_bindings = load_runtime_seam_bindings(agents_root)
+    playbook_registry_path, playbook_entries = load_playbook_registry_entries(playbooks_root)
+    federation_spine_path, kag_entries = load_federation_spine_entries(kag_root)
+
+    def bounded_unique(values: Iterable[str], limit: int = 3) -> list[str]:
+        result: list[str] = []
+        seen: set[str] = set()
+        for value in values:
+            if value in seen:
+                continue
+            result.append(value)
+            seen.add(value)
+            if len(result) >= limit:
+                break
+        return result
+
+    agent_id_by_name: dict[str, str] = {}
+    agent_index: dict[str, dict[str, Any]] = {}
+    for index, raw_agent in enumerate(agent_entries):
+        location = f"{agent_registry_path}.agents[{index}]"
+        agent_id = ensure_string(raw_agent["id"], f"{location}.id")
+        agent_name = ensure_string(raw_agent["name"], f"{location}.name")
+        agent_id_by_name[agent_name] = agent_id
+        agent_index[agent_id] = raw_agent
+
+    tier_index: dict[str, dict[str, Any]] = {}
+    artifact_to_tier: dict[str, str] = {}
+    for index, raw_tier in enumerate(tier_entries):
+        location = f"{model_tier_registry_path}.model_tiers[{index}]"
+        tier_id = ensure_string(raw_tier["id"], f"{location}.id")
+        artifact_requirement = ensure_string(
+            raw_tier["artifact_requirement"],
+            f"{location}.artifact_requirement",
+        )
+        tier_index[tier_id] = raw_tier
+        artifact_to_tier[artifact_requirement] = tier_id
+
+    ordered_bindings = sorted(
+        runtime_bindings,
+        key=lambda binding: (
+            TIER_PHASE_ORDER.index(
+                ensure_string(
+                    binding["phase"],
+                    f"{runtime_bindings_path}.bindings.phase",
+                )
+            )
+            if ensure_string(binding["phase"], f"{runtime_bindings_path}.bindings.phase")
+            in TIER_PHASE_ORDER
+            else len(TIER_PHASE_ORDER),
+            ensure_string(binding["tier_id"], f"{runtime_bindings_path}.bindings.tier_id"),
+        ),
+    )
+    tier_ids_by_agent_name: dict[str, list[str]] = {}
+    agent_ids_by_tier: dict[str, list[str]] = {}
+    for index, raw_binding in enumerate(ordered_bindings):
+        location = f"{runtime_bindings_path}.bindings[{index}]"
+        tier_id = ensure_string(raw_binding["tier_id"], f"{location}.tier_id")
+        role_names = ensure_string_list(raw_binding["role_names"], f"{location}.role_names")
+        for role_name in role_names:
+            tier_ids_by_agent_name.setdefault(role_name, []).append(tier_id)
+            agent_id = agent_id_by_name.get(role_name)
+            if agent_id is not None:
+                agent_ids_by_tier.setdefault(tier_id, []).append(agent_id)
+
+    for agent_id in (FEDERATION_DEFAULT_AGENT_ENTRY_ID,):
+        if agent_id not in agent_index:
+            raise RouterError(f"federation entry ABI requires agent '{agent_id}'")
+    for tier_id in (FEDERATION_DEFAULT_TIER_ENTRY_ID,):
+        if tier_id not in tier_index:
+            raise RouterError(f"federation entry ABI requires tier '{tier_id}'")
+
+    playbook_index: dict[str, dict[str, Any]] = {}
+    for index, raw_playbook in enumerate(playbook_entries):
+        location = f"{playbook_registry_path}.playbooks[{index}]"
+        playbook_id = ensure_string(raw_playbook["id"], f"{location}.id")
+        playbook_index[playbook_id] = raw_playbook
+    if FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID not in playbook_index:
+        raise RouterError(
+            f"federation entry ABI requires playbook '{FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID}'"
+        )
+    if "AOA-P-0009" not in playbook_index:
+        raise RouterError("federation entry ABI requires playbook 'AOA-P-0009'")
+
+    kag_index: dict[str, dict[str, Any]] = {}
+    for index, raw_kag_entry in enumerate(kag_entries):
+        location = f"{federation_spine_path}.repos[{index}]"
+        repo_name = normalize_repo_name(
+            ensure_string(raw_kag_entry["repo"], f"{location}.repo")
+        )
+        kag_index[repo_name] = raw_kag_entry
+    if FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID not in kag_index:
+        raise RouterError(
+            f"federation entry ABI requires KAG view '{FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID}'"
+        )
+
+    federation_entrypoints: list[dict[str, Any]] = []
+
+    for agent_id in sorted(agent_index):
+        agent = agent_index[agent_id]
+        agent_name = ensure_string(agent["name"], f"{agent_id}.name")
+        authority_path = f"profiles/{agent_name}.profile.json"
+        ensure_mapping(
+            load_json_file(agents_root / authority_path),
+            f"{AGENTS_REPO}/{authority_path}",
+        )
+        related_tiers = bounded_unique(tier_ids_by_agent_name.get(agent_name, []))
+        if not related_tiers:
+            related_tiers = [FEDERATION_DEFAULT_TIER_ENTRY_ID]
+        federation_entrypoints.append(
+            {
+                "kind": "agent",
+                "id": agent_id,
+                "owner_repo": AGENTS_REPO,
+                "title": f"{title_case_slug(agent_name)} Agent",
+                "capsule_surface": make_repo_qualified_ref(AGENTS_REPO, AGENT_REGISTRY_PATH),
+                "authority_surface": make_repo_qualified_ref(AGENTS_REPO, authority_path),
+                "next_actions": [
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=PAIRING_SURFACE_REPO,
+                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                        match_key="id",
+                        target_value=tier_id,
+                    )
+                    for tier_id in related_tiers
+                ],
+                "fallback": build_entry_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_key="id",
+                    target_value=related_tiers[0],
+                ),
+                "risk": "Agent entry cards summarize role posture; confirm the source profile before treating a handoff hint as binding.",
+                "next_hops": [build_entry_hop("tier", tier_id) for tier_id in related_tiers],
+            }
+        )
+
+    for tier_id in sorted(tier_index):
+        authority_path = f"model_tiers/{tier_id}.tier.json"
+        ensure_mapping(
+            load_json_file(agents_root / authority_path),
+            f"{AGENTS_REPO}/{authority_path}",
+        )
+        related_agents = bounded_unique(agent_ids_by_tier.get(tier_id, []))
+        if not related_agents:
+            related_agents = [FEDERATION_DEFAULT_AGENT_ENTRY_ID]
+        federation_entrypoints.append(
+            {
+                "kind": "tier",
+                "id": tier_id,
+                "owner_repo": AGENTS_REPO,
+                "title": f"{title_case_slug(tier_id)} Tier",
+                "capsule_surface": make_repo_qualified_ref(
+                    AGENTS_REPO, MODEL_TIER_REGISTRY_PATH
+                ),
+                "authority_surface": make_repo_qualified_ref(AGENTS_REPO, authority_path),
+                "next_actions": [
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=PAIRING_SURFACE_REPO,
+                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                        match_key="id",
+                        target_value=agent_id,
+                    )
+                    for agent_id in related_agents
+                ],
+                "fallback": build_entry_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_key="id",
+                    target_value=related_agents[0],
+                ),
+                "risk": "Tier entry cards orient effort class and handoff posture; the tier contract remains authoritative in aoa-agents.",
+                "next_hops": [build_entry_hop("agent", agent_id) for agent_id in related_agents],
+            }
+        )
+
+    for playbook_id in sorted(playbook_index):
+        playbook = playbook_index[playbook_id]
+        playbook_name = ensure_string(playbook["name"], f"{playbook_id}.name")
+        candidate_authority_path = f"playbooks/{playbook_name}/PLAYBOOK.md"
+        authority_path = candidate_authority_path
+        if not (playbooks_root / authority_path).exists():
+            authority_path = PLAYBOOK_PORTFOLIO_PATH
+        ensure_markdown_file(playbooks_root / authority_path, f"{PLAYBOOKS_REPO}/{authority_path}")
+
+        expected_artifacts = ensure_string_list(
+            playbook["expected_artifacts"],
+            f"{playbook_id}.expected_artifacts",
+        )
+        participating_agents = ensure_string_list(
+            playbook["participating_agents"],
+            f"{playbook_id}.participating_agents",
+        )
+        next_hops: list[dict[str, str]] = []
+        next_actions: list[dict[str, str]] = []
+
+        tier_hops = bounded_unique(
+            artifact_to_tier[artifact]
+            for artifact in expected_artifacts
+            if artifact in artifact_to_tier
+        )
+        if tier_hops:
+            next_hops = [build_entry_hop("tier", tier_id) for tier_id in tier_hops]
+            next_actions = [
+                build_entry_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_key="id",
+                    target_value=tier_id,
+                )
+                for tier_id in tier_hops
+            ]
+        else:
+            agent_hops = bounded_unique(
+                agent_id_by_name[agent_name]
+                for agent_name in participating_agents
+                if agent_name in agent_id_by_name
+            )
+            if not agent_hops:
+                agent_hops = [FEDERATION_DEFAULT_AGENT_ENTRY_ID]
+            next_hops = [build_entry_hop("agent", agent_id) for agent_id in agent_hops]
+            next_actions = [
+                build_entry_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_key="id",
+                    target_value=agent_id,
+                )
+                for agent_id in agent_hops
+            ]
+
+        fallback_target = next_actions[0]["target_value"]
+        federation_entrypoints.append(
+            {
+                "kind": "playbook",
+                "id": playbook_id,
+                "owner_repo": PLAYBOOKS_REPO,
+                "title": title_case_slug(playbook_name),
+                "capsule_surface": make_repo_qualified_ref(
+                    PLAYBOOKS_REPO, PLAYBOOK_REGISTRY_PATH
+                ),
+                "authority_surface": make_repo_qualified_ref(PLAYBOOKS_REPO, authority_path),
+                "next_actions": next_actions,
+                "fallback": build_entry_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_key="id",
+                    target_value=fallback_target,
+                ),
+                "risk": "Playbook entry cards compress scenario posture; read the source playbook bundle or portfolio doc before using the route as execution authority.",
+                "next_hops": next_hops,
+            }
+        )
+
+    for kag_view_id in sorted(kag_index):
+        kag_entry = kag_index[kag_view_id]
+        entry_surface_refs = ensure_string_list(
+            kag_entry["current_entry_surface_refs"],
+            f"{kag_view_id}.current_entry_surface_refs",
+        )
+        object_surface_ref = ensure_string(
+            kag_entry["current_object_surface_ref"],
+            f"{kag_view_id}.current_object_surface_ref",
+        )
+        example_object_ids = ensure_string_list(
+            kag_entry["example_object_ids"],
+            f"{kag_view_id}.example_object_ids",
+        )
+        if not example_object_ids:
+            raise RouterError(f"{kag_view_id}.example_object_ids must not be empty")
+        entry_target_repo, entry_target_surface = ensure_cross_repo_surface_ref(
+            entry_surface_refs[0],
+            f"{kag_view_id}.current_entry_surface_refs[0]",
+        )
+        object_target_repo, object_target_surface = ensure_cross_repo_surface_ref(
+            object_surface_ref,
+            f"{kag_view_id}.current_object_surface_ref",
+        )
+        if entry_target_repo != CANONICAL_REPO_BY_KIND["technique"]:
+            raise RouterError(
+                f"{kag_view_id}.current_entry_surface_refs[0] must target aoa-techniques in v1"
+            )
+        if object_target_repo != CANONICAL_REPO_BY_KIND["technique"]:
+            raise RouterError(
+                f"{kag_view_id}.current_object_surface_ref must target aoa-techniques in v1"
+            )
+        entry_doc_id = load_repo_doc_manifest_default_doc_id(techniques_root, entry_target_surface)
+        federation_entrypoints.append(
+            {
+                "kind": "kag_view",
+                "id": kag_view_id,
+                "owner_repo": KAG_REPO,
+                "title": f"{title_case_slug(kag_view_id)} Readiness View",
+                "capsule_surface": make_repo_qualified_ref(KAG_REPO, FEDERATION_SPINE_PATH),
+                "authority_surface": make_repo_qualified_ref(
+                    KAG_REPO, "docs/FEDERATION_SPINE.md"
+                ),
+                "next_actions": [
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=entry_target_repo,
+                        target_surface=entry_target_surface,
+                        match_key="doc_id",
+                        target_value=entry_doc_id,
+                    ),
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=object_target_repo,
+                        target_surface=object_target_surface,
+                        match_key="id",
+                        target_value=example_object_ids[0],
+                    ),
+                ],
+                "fallback": build_entry_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_key="id",
+                    target_value=FEDERATION_DEFAULT_TIER_ENTRY_ID,
+                ),
+                "risk": "KAG view cards summarize derived readiness and current source-facing surfaces; confirm aoa-kag doctrine and the owning repo before treating the view as canon.",
+                "next_hops": [
+                    build_entry_hop("tier", FEDERATION_DEFAULT_TIER_ENTRY_ID),
+                    build_entry_hop("playbook", FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID),
+                ],
+            }
+        )
+
+    return {
+        "version": 1,
+        "source_inputs": [
+            {
+                "name": "aoa_root_readme",
+                "repo": AOA_ROOT_REPO,
+                "role": "root_entry",
+                "ref": "README.md",
+            },
+            {
+                "name": "tos_root_readme",
+                "repo": TOS_REPO,
+                "role": "root_entry",
+                "ref": "README.md",
+            },
+            {
+                "name": "agent_registry",
+                "repo": AGENTS_REPO,
+                "role": "agent_entries",
+                "ref": agent_registry_path,
+            },
+            {
+                "name": "model_tier_registry",
+                "repo": AGENTS_REPO,
+                "role": "tier_entries",
+                "ref": model_tier_registry_path,
+            },
+            {
+                "name": "runtime_seam_bindings",
+                "repo": AGENTS_REPO,
+                "role": "tier_role_bindings",
+                "ref": runtime_bindings_path,
+            },
+            {
+                "name": "playbook_registry",
+                "repo": PLAYBOOKS_REPO,
+                "role": "playbook_entries",
+                "ref": playbook_registry_path,
+            },
+            {
+                "name": "federation_spine",
+                "repo": KAG_REPO,
+                "role": "kag_views",
+                "ref": federation_spine_path,
+            },
+        ],
+        "root_entries": [
+            {
+                "id": "aoa-root",
+                "owner_repo": AOA_ROOT_REPO,
+                "title": "AoA Federation Root",
+                "capsule_surface": make_repo_qualified_ref(AOA_ROOT_REPO, "README.md"),
+                "authority_surface": make_repo_qualified_ref(AOA_ROOT_REPO, "CHARTER.md"),
+                "next_actions": [
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=PAIRING_SURFACE_REPO,
+                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                        match_key="id",
+                        target_value=FEDERATION_DEFAULT_TIER_ENTRY_ID,
+                    ),
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=PAIRING_SURFACE_REPO,
+                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                        match_key="id",
+                        target_value=FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID,
+                    ),
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=PAIRING_SURFACE_REPO,
+                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                        match_key="id",
+                        target_value=FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+                    ),
+                ],
+                "fallback": build_entry_action(
+                    verb="pick",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface="generated/aoa_router.min.json",
+                    match_key="kind",
+                    target_value=FALLBACK_ROUTER_KIND,
+                ),
+                "risk": "AoA root orientation can be mistaken for source authority; use the source charter and owning repo surfaces before treating a route card as canon.",
+                "next_hops": [
+                    build_entry_hop("tier", FEDERATION_DEFAULT_TIER_ENTRY_ID),
+                    build_entry_hop("playbook", FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID),
+                    build_entry_hop("kag_view", FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID),
+                ],
+            },
+            {
+                "id": "tos-root",
+                "owner_repo": TOS_REPO,
+                "title": "ToS Federation Root",
+                "capsule_surface": make_repo_qualified_ref(TOS_REPO, "README.md"),
+                "authority_surface": make_repo_qualified_ref(TOS_REPO, "CHARTER.md"),
+                "next_actions": [
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=PAIRING_SURFACE_REPO,
+                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                        match_key="id",
+                        target_value=FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+                    ),
+                    build_entry_action(
+                        verb="inspect",
+                        target_repo=PAIRING_SURFACE_REPO,
+                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                        match_key="id",
+                        target_value="AOA-P-0009",
+                    ),
+                ],
+                "fallback": build_entry_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_key="id",
+                    target_value="aoa-root",
+                ),
+                "risk": "ToS root orientation must not replace ToS source authority; follow the ToS charter and source-facing docs before trusting downstream operational bridges.",
+                "next_hops": [
+                    build_entry_hop("kag_view", FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID),
+                    build_entry_hop("playbook", "AOA-P-0009"),
+                ],
+            },
+        ],
+        "active_entry_kinds": list(FEDERATION_ACTIVE_ENTRY_KINDS),
+        "declared_entry_kinds": list(FEDERATION_DECLARED_ENTRY_KINDS),
+        "entrypoints": sorted(
+            federation_entrypoints,
+            key=lambda entry: (
+                FEDERATION_ACTIVE_ENTRY_KINDS.index(entry["kind"]),
+                entry["id"],
+            ),
+        ),
     }
 
 
@@ -829,10 +1543,23 @@ def build_pairing_hints_payload(
 def build_tiny_model_entrypoints_payload(
     registry_entries: list[dict[str, Any]],
     hints_payload: dict[str, Any],
+    federation_payload: dict[str, Any],
 ) -> dict[str, Any]:
     registry_index = {(entry["kind"], entry["id"]): entry for entry in registry_entries}
     available_kinds = {entry["kind"] for entry in registry_entries}
     hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    federation_root_entries = ensure_list(
+        federation_payload.get("root_entries"),
+        "federation_entrypoints.min.json.root_entries",
+    )
+    federation_entries = ensure_list(
+        federation_payload.get("entrypoints"),
+        "federation_entrypoints.min.json.entrypoints",
+    )
+    active_entry_kinds = ensure_string_list(
+        federation_payload.get("active_entry_kinds"),
+        "federation_entrypoints.min.json.active_entry_kinds",
+    )
     memo_recall_supported_modes: list[str] = []
     memo_parallel_recall_modes: dict[str, list[str]] = {}
     queries: list[dict[str, Any]] = [
@@ -1043,10 +1770,129 @@ def build_tiny_model_entrypoints_payload(
             }
         )
 
+    root_ids = [
+        ensure_string(entry.get("id"), f"federation_entrypoints.min.json.root_entries[{index}].id")
+        for index, entry in enumerate(federation_root_entries)
+        if isinstance(entry, dict)
+    ]
+    federation_entry_ids_by_kind: dict[str, list[str]] = {}
+    for index, raw_entry in enumerate(federation_entries):
+        location = f"federation_entrypoints.min.json.entrypoints[{index}]"
+        entry = ensure_mapping(raw_entry, location)
+        entry_kind = ensure_string(entry.get("kind"), f"{location}.kind")
+        entry_id = ensure_string(entry.get("id"), f"{location}.id")
+        federation_entry_ids_by_kind.setdefault(entry_kind, []).append(entry_id)
+
+    if FEDERATION_DEFAULT_AGENT_ENTRY_ID not in federation_entry_ids_by_kind.get("agent", []):
+        raise RouterError(
+            f"tiny-model federation seam requires agent '{FEDERATION_DEFAULT_AGENT_ENTRY_ID}'"
+        )
+    if FEDERATION_DEFAULT_TIER_ENTRY_ID not in federation_entry_ids_by_kind.get("tier", []):
+        raise RouterError(
+            f"tiny-model federation seam requires tier '{FEDERATION_DEFAULT_TIER_ENTRY_ID}'"
+        )
+    if FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID not in federation_entry_ids_by_kind.get("playbook", []):
+        raise RouterError(
+            f"tiny-model federation seam requires playbook '{FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID}'"
+        )
+    if FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID not in federation_entry_ids_by_kind.get("kag_view", []):
+        raise RouterError(
+            f"tiny-model federation seam requires KAG view '{FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID}'"
+        )
+
+    federation_queries: list[dict[str, Any]] = [
+        {
+            "name": "federation-kind-pick",
+            "verb": "pick",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "kind",
+            "allowed_entry_kinds": active_entry_kinds,
+        },
+        {
+            "name": "federation-entry-inspect",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "allowed_entry_kinds": active_entry_kinds,
+        },
+        {
+            "name": "federation-root-inspect",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "allowed_root_ids": root_ids,
+        },
+    ]
+    federation_starters: list[dict[str, Any]] = [
+        {
+            "name": "federation-root",
+            "verb": "pick",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+        },
+        {
+            "name": "aoa-root",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "target_value": "aoa-root",
+        },
+        {
+            "name": "tos-root",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "target_value": "tos-root",
+        },
+        {
+            "name": "agent-root",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "target_value": FEDERATION_DEFAULT_AGENT_ENTRY_ID,
+            "entry_kind": "agent",
+        },
+        {
+            "name": "tier-root",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "target_value": FEDERATION_DEFAULT_TIER_ENTRY_ID,
+            "entry_kind": "tier",
+        },
+        {
+            "name": "playbook-root",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "target_value": FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID,
+            "entry_kind": "playbook",
+        },
+        {
+            "name": "kag-view-root",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "target_value": FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+            "entry_kind": "kag_view",
+        },
+    ]
+
     return {
-        "version": 1,
+        "version": 2,
         "queries": queries,
         "starters": starters,
+        "federation_queries": federation_queries,
+        "federation_starters": federation_starters,
     }
 
 

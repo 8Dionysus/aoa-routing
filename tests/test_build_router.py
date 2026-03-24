@@ -10,6 +10,17 @@ import build_router
 
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
+FIXTURE_REPO_NAMES = (
+    "aoa-techniques",
+    "aoa-skills",
+    "aoa-evals",
+    "aoa-memo",
+    "aoa-agents",
+    "Agents-of-Abyss",
+    "aoa-playbooks",
+    "aoa-kag",
+    "Tree-of-Sophia",
+)
 KAG_SOURCE_LIFT_TECHNIQUE_IDS = [
     "AOA-T-0018",
     "AOA-T-0019",
@@ -22,6 +33,31 @@ KAG_SOURCE_LIFT_TECHNIQUE_IDS = [
 def write_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
+
+
+def build_fixture_outputs(
+    *,
+    techniques_root: Path = FIXTURES_ROOT / "aoa-techniques",
+    skills_root: Path = FIXTURES_ROOT / "aoa-skills",
+    evals_root: Path = FIXTURES_ROOT / "aoa-evals",
+    memo_root: Path = FIXTURES_ROOT / "aoa-memo",
+    agents_root: Path = FIXTURES_ROOT / "aoa-agents",
+    aoa_root: Path = FIXTURES_ROOT / "Agents-of-Abyss",
+    playbooks_root: Path = FIXTURES_ROOT / "aoa-playbooks",
+    kag_root: Path = FIXTURES_ROOT / "aoa-kag",
+    tos_root: Path = FIXTURES_ROOT / "Tree-of-Sophia",
+) -> dict[str, dict[str, object]]:
+    return build_router.build_outputs(
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        agents_root,
+        aoa_root,
+        playbooks_root,
+        kag_root,
+        tos_root,
+    )
 
 
 def build_kag_source_lift_technique_entries() -> list[dict[str, object]]:
@@ -197,18 +233,13 @@ def test_collect_eval_entries_rejects_parent_directory_eval_path(tmp_path: Path)
 
 
 def test_build_outputs_from_fixtures() -> None:
-    outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        FIXTURES_ROOT / "aoa-memo",
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs = build_fixture_outputs()
 
     registry = outputs["cross_repo_registry.min.json"]
     router = outputs["aoa_router.min.json"]
     hints = outputs["task_to_surface_hints.json"]
     tier_hints = outputs["task_to_tier_hints.json"]
+    federation = outputs["federation_entrypoints.min.json"]
     recommended = outputs["recommended_paths.min.json"]
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
     pairing = outputs["pairing_hints.min.json"]
@@ -384,6 +415,9 @@ def test_build_outputs_from_fixtures() -> None:
             {"kind": "eval", "id": "aoa-context-scan-quality", "relation": "required_by"},
         ],
     }
+    assert federation["version"] == 1
+    assert federation["active_entry_kinds"] == ["agent", "tier", "playbook", "kag_view"]
+    assert federation["declared_entry_kinds"] == ["seed", "tos_node", "runtime_surface"]
     assert tiny_model["queries"][0] == {
         "verb": "pick",
         "source_repo": "aoa-routing",
@@ -391,6 +425,7 @@ def test_build_outputs_from_fixtures() -> None:
         "match_key": "kind",
         "allowed_kinds": ["technique", "skill", "eval", "memo"],
     }
+    assert tiny_model["version"] == 2
     assert tiny_model["queries"][-2:] == [
         {
             "verb": "recall",
@@ -527,6 +562,169 @@ def test_build_outputs_from_fixtures() -> None:
             "recall_mode": "lineage",
         },
     ]
+    assert tiny_model["federation_queries"] == [
+        {
+            "name": "federation-kind-pick",
+            "verb": "pick",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "kind",
+            "allowed_entry_kinds": ["agent", "tier", "playbook", "kag_view"],
+        },
+        {
+            "name": "federation-entry-inspect",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "allowed_entry_kinds": ["agent", "tier", "playbook", "kag_view"],
+        },
+        {
+            "name": "federation-root-inspect",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "allowed_root_ids": ["aoa-root", "tos-root"],
+        },
+    ]
+    assert tiny_model["federation_starters"] == [
+        {
+            "name": "federation-root",
+            "verb": "pick",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+        },
+        {
+            "name": "aoa-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "aoa-root",
+        },
+        {
+            "name": "tos-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "tos-root",
+        },
+        {
+            "name": "agent-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "AOA-A-0001",
+            "entry_kind": "agent",
+        },
+        {
+            "name": "tier-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "router",
+            "entry_kind": "tier",
+        },
+        {
+            "name": "playbook-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "AOA-P-0008",
+            "entry_kind": "playbook",
+        },
+        {
+            "name": "kag-view-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "aoa-techniques",
+            "entry_kind": "kag_view",
+        },
+    ]
+
+
+def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
+    outputs = build_fixture_outputs()
+    federation = outputs["federation_entrypoints.min.json"]
+
+    root_by_id = {entry["id"]: entry for entry in federation["root_entries"]}
+    entry_by_key = {
+        (entry["kind"], entry["id"]): entry for entry in federation["entrypoints"]
+    }
+
+    aoa_root = root_by_id["aoa-root"]
+    assert aoa_root["capsule_surface"] == "Agents-of-Abyss:README.md"
+    assert aoa_root["authority_surface"] == "Agents-of-Abyss:CHARTER.md"
+    assert aoa_root["fallback"] == {
+        "verb": "pick",
+        "target_repo": "aoa-routing",
+        "target_surface": "generated/aoa_router.min.json",
+        "match_key": "kind",
+        "target_value": "technique",
+    }
+    assert aoa_root["next_hops"] == [
+        {"kind": "tier", "id": "router"},
+        {"kind": "playbook", "id": "AOA-P-0008"},
+        {"kind": "kag_view", "id": "aoa-techniques"},
+    ]
+
+    tos_root = root_by_id["tos-root"]
+    assert tos_root["capsule_surface"] == "Tree-of-Sophia:README.md"
+    assert tos_root["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
+    assert tos_root["fallback"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-routing",
+        "target_surface": "generated/federation_entrypoints.min.json",
+        "match_key": "id",
+        "target_value": "aoa-root",
+    }
+    assert tos_root["next_hops"] == [
+        {"kind": "kag_view", "id": "aoa-techniques"},
+        {"kind": "playbook", "id": "AOA-P-0009"},
+    ]
+
+    router_tier = entry_by_key[("tier", "router")]
+    assert router_tier["capsule_surface"] == "aoa-agents:generated/model_tier_registry.json"
+    assert router_tier["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
+    assert router_tier["fallback"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-routing",
+        "target_surface": "generated/federation_entrypoints.min.json",
+        "match_key": "id",
+        "target_value": "AOA-A-0001",
+    }
+    assert router_tier["next_hops"] == [{"kind": "agent", "id": "AOA-A-0001"}]
+
+    kag_view = entry_by_key[("kag_view", "aoa-techniques")]
+    assert kag_view["capsule_surface"] == "aoa-kag:generated/federation_spine.min.json"
+    assert kag_view["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
+    assert kag_view["next_actions"] == [
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-techniques",
+            "target_surface": "generated/repo_doc_surface_manifest.min.json",
+            "match_key": "doc_id",
+            "target_value": "readme",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-techniques",
+            "target_surface": "generated/technique_catalog.min.json",
+            "match_key": "id",
+            "target_value": "AOA-T-0001",
+        },
+    ]
+    assert kag_view["next_hops"] == [
+        {"kind": "tier", "id": "router"},
+        {"kind": "playbook", "id": "AOA-P-0008"},
+    ]
 
 
 def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None:
@@ -537,13 +735,7 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
     payload["techniques"].extend(build_kag_source_lift_technique_entries())
     write_json(catalog_path, payload)
 
-    outputs = build_router.build_outputs(
-        techniques_root,
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        FIXTURES_ROOT / "aoa-memo",
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs = build_fixture_outputs(techniques_root=techniques_root)
 
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
     pairing = outputs["pairing_hints.min.json"]
@@ -597,13 +789,7 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
     (memo_root / "examples" / "recall_contract.router.source_route.json").unlink()
     (memo_root / "examples" / "recall_contract.router.lineage.json").unlink()
 
-    outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        memo_root,
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs = build_fixture_outputs(memo_root=memo_root)
 
     memo_hint = next(
         hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
@@ -691,13 +877,7 @@ def test_build_outputs_omits_parallel_object_family_when_object_contract_is_miss
     shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
     (memo_root / "examples" / "recall_contract.object.lineage.json").unlink()
 
-    outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        memo_root,
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs = build_fixture_outputs(memo_root=memo_root)
 
     memo_hint = next(
         hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
@@ -720,13 +900,7 @@ def test_build_outputs_omits_parallel_object_family_when_object_surface_is_missi
     shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
     (memo_root / "generated" / "memory_object_sections.full.json").unlink()
 
-    outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        memo_root,
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs = build_fixture_outputs(memo_root=memo_root)
 
     memo_hint = next(
         hint for hint in outputs["task_to_surface_hints.json"]["hints"] if hint["kind"] == "memo"
@@ -752,13 +926,7 @@ def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) 
     shutil.rmtree(skills_root / "skills")
     shutil.rmtree(evals_root / "bundles")
 
-    outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        skills_root,
-        evals_root,
-        FIXTURES_ROOT / "aoa-memo",
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs = build_fixture_outputs(skills_root=skills_root, evals_root=evals_root)
 
     assert len(outputs["cross_repo_registry.min.json"]["entries"]) == 8
 
@@ -774,13 +942,7 @@ def test_build_allows_pending_technique_dependencies_without_creating_paths(tmp_
             break
     write_json(catalog_path, payload)
 
-    outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        skills_root,
-        FIXTURES_ROOT / "aoa-evals",
-        FIXTURES_ROOT / "aoa-memo",
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs = build_fixture_outputs(skills_root=skills_root)
 
     registry_entries = outputs["cross_repo_registry.min.json"]["entries"]
     skill_entry = next(entry for entry in registry_entries if entry["id"] == "aoa-context-scan")
@@ -795,13 +957,7 @@ def test_build_allows_pending_technique_dependencies_without_creating_paths(tmp_
 
 def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
     generated_dir = tmp_path / "generated"
-    outputs_a = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        FIXTURES_ROOT / "aoa-memo",
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs_a = build_fixture_outputs()
     for filename, payload in outputs_a.items():
         write_json(generated_dir / filename, payload)
     snapshot_a = {
@@ -809,13 +965,7 @@ def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
         for path in sorted(generated_dir.iterdir())
     }
 
-    outputs_b = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        FIXTURES_ROOT / "aoa-memo",
-        FIXTURES_ROOT / "aoa-agents",
-    )
+    outputs_b = build_fixture_outputs()
     for filename, payload in outputs_b.items():
         write_json(generated_dir / filename, payload)
     snapshot_b = {
@@ -834,12 +984,6 @@ def test_build_task_to_tier_hints_reads_agents_registry_artifacts(tmp_path: Path
     payload["model_tiers"][0]["artifact_requirement"] = "triage_packet"
     write_json(registry_path, payload)
 
-    outputs = build_router.build_outputs(
-        FIXTURES_ROOT / "aoa-techniques",
-        FIXTURES_ROOT / "aoa-skills",
-        FIXTURES_ROOT / "aoa-evals",
-        FIXTURES_ROOT / "aoa-memo",
-        agents_root,
-    )
+    outputs = build_fixture_outputs(agents_root=agents_root)
 
     assert outputs["task_to_tier_hints.json"]["hints"][0]["output_artifact"] == "triage_packet"
