@@ -13,6 +13,8 @@ from typing import Any, Iterable
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
+import validate_nested_agents
+
 from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
@@ -2968,22 +2970,29 @@ def validate_generated_outputs(
 
 def main() -> int:
     args = parse_args()
-    issues = validate_generated_outputs(
-        args.generated_dir,
-        args.techniques_root,
-        args.skills_root,
-        args.evals_root,
-        args.memo_root,
-        args.agents_root,
-        args.aoa_root,
-        args.playbooks_root,
-        args.kag_root,
-        args.tos_root,
+    issues = [
+        ValidationIssue(location, message)
+        for location, message in validate_nested_agents.run_validation(REPO_ROOT)
+    ]
+    issues.extend(
+        validate_generated_outputs(
+            args.generated_dir,
+            args.techniques_root,
+            args.skills_root,
+            args.evals_root,
+            args.memo_root,
+            args.agents_root,
+            args.aoa_root,
+            args.playbooks_root,
+            args.kag_root,
+            args.tos_root,
+        )
     )
     if issues:
         for issue in issues:
             print(f"[error] {issue.location}: {issue.message}")
         return 1
+    print("[ok] validated nested AGENTS docs")
     print("[ok] validated generated routing outputs")
     return 0
 

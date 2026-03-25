@@ -540,21 +540,77 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
     payload = ensure_mapping(load_json_file(spine_path), location)
     entries = ensure_list(payload.get("repos"), f"{location}.repos")
 
+    # Accept the current compact aoa-kag spine shape while keeping the
+    # router-facing KAG view cards stable for this routing wave.
+    def normalize_repo_entry(
+        repo_entry: dict[str, Any], repo_location: str
+    ) -> dict[str, Any]:
+        if all(
+            key in repo_entry
+            for key in (
+                "current_entry_surface_refs",
+                "current_object_surface_ref",
+                "example_object_ids",
+            )
+        ):
+            require_keys(
+                repo_entry,
+                (
+                    "repo",
+                    "current_entry_surface_refs",
+                    "current_object_surface_ref",
+                    "example_object_ids",
+                ),
+                repo_location,
+            )
+            return repo_entry
+
+        require_keys(
+            repo_entry,
+            ("repo", "pilot_posture", "entry_surface_ref", "export_ref", "object_id"),
+            repo_location,
+        )
+        repo_name = normalize_repo_name(
+            ensure_string(repo_entry["repo"], f"{repo_location}.repo")
+        )
+        pilot_posture = ensure_string(
+            repo_entry["pilot_posture"], f"{repo_location}.pilot_posture"
+        )
+        ensure_string(repo_entry["entry_surface_ref"], f"{repo_location}.entry_surface_ref")
+        ensure_string(repo_entry["export_ref"], f"{repo_location}.export_ref")
+        ensure_string(repo_entry["object_id"], f"{repo_location}.object_id")
+        if pilot_posture != "source_owned_export_tiny":
+            raise RouterError(
+                f"{repo_location}.pilot_posture must stay 'source_owned_export_tiny' in the compact federation spine format"
+            )
+
+        if repo_name == FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID:
+            return {
+                **repo_entry,
+                "pilot_posture": "existing_generated_surfaces",
+                "current_entry_surface_refs": [
+                    AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF
+                ],
+                "current_object_surface_ref": AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF,
+                "example_object_ids": list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS),
+            }
+        if repo_name == TOS_KAG_VIEW_ENTRY_ID:
+            return {
+                **repo_entry,
+                "pilot_posture": "source_owned_tiny_entry_route",
+                "current_entry_surface_refs": list(TOS_KAG_VIEW_ENTRY_SURFACE_REFS),
+                "current_object_surface_ref": TOS_KAG_VIEW_OBJECT_SURFACE_REF,
+                "example_object_ids": [TOS_TINY_ENTRY_ROUTE_ID],
+            }
+        raise RouterError(
+            f"{repo_location}.repo '{repo_name}' is not supported in the compact federation spine format"
+        )
+
     repos: list[dict[str, Any]] = []
     for index, item in enumerate(entries):
         repo_location = f"{location}.repos[{index}]"
         repo_entry = ensure_mapping(item, repo_location)
-        require_keys(
-            repo_entry,
-            (
-                "repo",
-                "current_entry_surface_refs",
-                "current_object_surface_ref",
-                "example_object_ids",
-            ),
-            repo_location,
-        )
-        repos.append(repo_entry)
+        repos.append(normalize_repo_entry(repo_entry, repo_location))
     return FEDERATION_SPINE_PATH, repos
 
 

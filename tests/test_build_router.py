@@ -802,6 +802,77 @@ def test_build_outputs_reject_tos_kag_view_spine_drift(tmp_path: Path) -> None:
         build_fixture_outputs(kag_root=kag_root)
 
 
+def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
+    kag_root = tmp_path / "aoa-kag"
+    shutil.copytree(FIXTURES_ROOT / "aoa-kag", kag_root)
+    spine_path = kag_root / "generated" / "federation_spine.min.json"
+    payload = json.loads(spine_path.read_text(encoding="utf-8"))
+    payload["repos"] = [
+        {
+            "repo": "aoa-techniques",
+            "pilot_posture": "source_owned_export_tiny",
+            "export_ref": "aoa-techniques/generated/kag_export.min.json",
+            "kind": "technique",
+            "object_id": "AOA-T-0043",
+            "entry_surface_ref": "aoa-techniques/generated/technique_capsules.json",
+            "summary_50": payload["repos"][0]["provenance_note"],
+            "provenance_note": payload["repos"][0]["provenance_note"],
+            "non_identity_boundary": payload["repos"][0]["non_identity_boundary"],
+        },
+        {
+            "repo": "Tree-of-Sophia",
+            "pilot_posture": "source_owned_export_tiny",
+            "export_ref": "Tree-of-Sophia/generated/kag_export.min.json",
+            "kind": "source_node",
+            "object_id": "tos.source.thus-spoke-zarathustra.prologue",
+            "entry_surface_ref": "Tree-of-Sophia/examples/source_node.example.json",
+            "summary_50": payload["repos"][1]["provenance_note"],
+            "provenance_note": payload["repos"][1]["provenance_note"],
+            "non_identity_boundary": payload["repos"][1]["non_identity_boundary"],
+        },
+    ]
+    write_json(spine_path, payload)
+
+    outputs = build_fixture_outputs(kag_root=kag_root)
+
+    entry_by_key = {
+        (entry["kind"], entry["id"]): entry
+        for entry in outputs["federation_entrypoints.min.json"]["entrypoints"]
+    }
+    assert entry_by_key[("kag_view", "aoa-techniques")]["next_actions"] == [
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-techniques",
+            "target_surface": "generated/repo_doc_surface_manifest.min.json",
+            "match_key": "doc_id",
+            "target_value": "readme",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-techniques",
+            "target_surface": "generated/technique_catalog.min.json",
+            "match_key": "id",
+            "target_value": "AOA-T-0001",
+        },
+    ]
+    assert entry_by_key[("kag_view", "Tree-of-Sophia")]["next_actions"] == [
+        {
+            "verb": "inspect",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "docs/TINY_ENTRY_ROUTE.md",
+            "match_key": "path",
+            "target_value": "docs/TINY_ENTRY_ROUTE.md",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "match_key": "route_id",
+            "target_value": "tos-tiny-entry.zarathustra-prologue",
+        },
+    ]
+
+
 def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None:
     techniques_root = tmp_path / "aoa-techniques"
     shutil.copytree(FIXTURES_ROOT / "aoa-techniques", techniques_root)
