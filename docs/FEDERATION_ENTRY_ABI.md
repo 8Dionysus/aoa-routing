@@ -169,6 +169,10 @@ For the current ToS root card, the first handoff is now:
 `tos-root -> Tree-of-Sophia/examples/tos_tiny_entry_route.example.json -> ToS-authored route surfaces`
 
 That handoff is source-owned and bounded.
+The current ToS input should treat `bounded_hop` as the primary hop field and
+may keep `lineage_or_context_hop` as a temporary compatibility alias while
+downstream consumers transition. If both fields are present, they must resolve
+to the same in-repo surface.
 It does not activate `tos_node` as a live federation entry kind.
 
 The current KAG-view layer now publishes two live derived entries:
