@@ -53,6 +53,8 @@ Before making changes, read in this order:
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
 
+If you are editing inside `generated/`, `schemas/`, `scripts/`, or `tests/`, also follow the nested `AGENTS.md` in that directory.
+
 ## Primary objects
 
 The most important objects in this repository are:
@@ -169,6 +171,7 @@ Summarize:
 Run the documented build and validation commands from `README.md`.
 
 If routing logic changes, rebuild generated outputs and run tests before finishing.
+`python scripts/validate_router.py` also checks the nested local guidance surfaces in `generated/`, `schemas/`, `scripts/`, and `tests/`.
 
 Do not claim validation you did not run.
 

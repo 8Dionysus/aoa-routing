@@ -125,6 +125,8 @@ and may publish an additional parallel object-facing recall family inside the me
 The root memo inspect/expand path remains doctrine-first, while tiny-model entrypoints now keep doctrine recall as the default path and may also publish explicit `recall_family = memory_objects` queries and starters for the parallel object-facing family.
 It does not own recall policy authority, memory truth, or graph traversal.
 
+If you are editing inside `generated/`, `schemas/`, `scripts/`, or `tests/`, also follow the nested `AGENTS.md` in that directory.
+
 ## Repository layout
 
 - `scripts/` - builder, validator, and shared helpers
@@ -160,6 +162,8 @@ The validator enforces both:
 - schema contracts for all public generated outputs
 - integrity checks across registry, router, hints, recommended paths, and source-owned inspect/expand targets
 - rebuild parity between committed routing artifacts and the current sibling source catalogs
+
+It also requires the local guidance surfaces at `generated/AGENTS.md`, `schemas/AGENTS.md`, `scripts/AGENTS.md`, and `tests/AGENTS.md` to remain present and aligned with the thin-router boundary.
 
 Run tests:
 
