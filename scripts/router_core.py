@@ -93,6 +93,8 @@ FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID = "AOA-P-0008"
 FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID = "aoa-techniques"
 TOS_TINY_ENTRY_ROUTE_PATH = "examples/tos_tiny_entry_route.example.json"
 TOS_TINY_ENTRY_ROUTE_ID = "tos-tiny-entry.zarathustra-prologue"
+TOS_TINY_ENTRY_PRIMARY_HOP_FIELD = "bounded_hop"
+TOS_TINY_ENTRY_LEGACY_HOP_FIELD = "lineage_or_context_hop"
 TOS_TINY_ENTRY_DOCTRINE_PATH = "docs/TINY_ENTRY_ROUTE.md"
 AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF = (
     "aoa-techniques/generated/repo_doc_surface_manifest.min.json"
@@ -366,6 +368,38 @@ def ensure_tos_route_surface_path(
     return relative_path
 
 
+def load_tos_tiny_entry_hop_surface(
+    payload: dict[str, Any],
+    location: str,
+    *,
+    tos_root: Path,
+) -> str:
+    bounded_hop = ensure_tos_route_surface_path(
+        payload.get(TOS_TINY_ENTRY_PRIMARY_HOP_FIELD),
+        f"{location}.{TOS_TINY_ENTRY_PRIMARY_HOP_FIELD}",
+        tos_root=tos_root,
+        allow_null=True,
+    )
+    legacy_hop = ensure_tos_route_surface_path(
+        payload.get(TOS_TINY_ENTRY_LEGACY_HOP_FIELD),
+        f"{location}.{TOS_TINY_ENTRY_LEGACY_HOP_FIELD}",
+        tos_root=tos_root,
+        allow_null=True,
+    )
+    if bounded_hop is None and legacy_hop is None:
+        raise RouterError(
+            f"{location} must define '{TOS_TINY_ENTRY_PRIMARY_HOP_FIELD}' or "
+            f"'{TOS_TINY_ENTRY_LEGACY_HOP_FIELD}'"
+        )
+    if bounded_hop is not None and legacy_hop is not None and bounded_hop != legacy_hop:
+        raise RouterError(
+            f"{location}.{TOS_TINY_ENTRY_PRIMARY_HOP_FIELD} and "
+            f"{location}.{TOS_TINY_ENTRY_LEGACY_HOP_FIELD} must resolve to the same "
+            "Tree-of-Sophia surface during transition"
+        )
+    return bounded_hop or legacy_hop  # type: ignore[return-value]
+
+
 def load_tos_tiny_entry_route(tos_root: Path) -> tuple[str, dict[str, Any]]:
     route_path = tos_root / TOS_TINY_ENTRY_ROUTE_PATH
     location = f"{TOS_REPO}/{TOS_TINY_ENTRY_ROUTE_PATH}"
@@ -397,12 +431,7 @@ def load_tos_tiny_entry_route(tos_root: Path) -> tuple[str, dict[str, Any]]:
         f"{location}.authority_surface",
         tos_root=tos_root,
     )
-    ensure_tos_route_surface_path(
-        payload.get("lineage_or_context_hop"),
-        f"{location}.lineage_or_context_hop",
-        tos_root=tos_root,
-        allow_null=True,
-    )
+    load_tos_tiny_entry_hop_surface(payload, location, tos_root=tos_root)
     ensure_tos_route_surface_path(
         payload.get("fallback"),
         f"{location}.fallback",
