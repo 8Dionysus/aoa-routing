@@ -7,7 +7,7 @@ import argparse
 import json
 from dataclasses import dataclass
 from functools import lru_cache
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 from jsonschema import Draft202012Validator
@@ -931,6 +931,13 @@ def load_surface_entries_for_validation(
     return ensure_list(payload.get(key), f"{surface_file}.{key}")
 
 
+def resolve_routing_surface_path(relative_surface_path: str, generated_dir: Path) -> Path:
+    surface_path = PurePosixPath(relative_surface_path)
+    if surface_path.parts and surface_path.parts[0] == "generated":
+        return generated_dir.resolve().joinpath(*surface_path.parts[1:])
+    return REPO_ROOT.joinpath(*surface_path.parts)
+
+
 def validate_federation_entrypoints(
     federation_payload: dict[str, Any],
     generated_dir: Path,
@@ -942,9 +949,8 @@ def validate_federation_entrypoints(
     tos_root: Path,
     issues: list[ValidationIssue],
 ) -> None:
-    route_root = generated_dir.resolve().parent
     roots = {
-        "aoa-routing": route_root,
+        "aoa-routing": generated_dir.resolve(),
         "aoa-techniques": techniques_root.resolve(),
         AGENTS_REPO: agents_root.resolve(),
         PLAYBOOKS_REPO: playbooks_root.resolve(),
@@ -1005,7 +1011,10 @@ def validate_federation_entrypoints(
                 )
             )
             return
-        target_path = repo_root / relative_path
+        if repo_name == "aoa-routing":
+            target_path = resolve_routing_surface_path(relative_path, generated_dir)
+        else:
+            target_path = repo_root / relative_path
         if not target_path.exists():
             issues.append(
                 ValidationIssue(
@@ -1027,7 +1036,10 @@ def validate_federation_entrypoints(
                 )
             )
             return None
-        target_path = repo_root / relative_path
+        if repo_name == "aoa-routing":
+            target_path = resolve_routing_surface_path(relative_path, generated_dir)
+        else:
+            target_path = repo_root / relative_path
         location = f"{repo_name}/{relative_path}"
         try:
             payload = ensure_mapping(load_json_file(target_path), location)
@@ -1460,7 +1472,6 @@ def validate_pair_targets(
         issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
         return
 
-    route_root = generated_dir.resolve().parent
     registry_index = {
         (entry["kind"], entry["id"]): entry
         for entry in registry_entries
@@ -1523,32 +1534,41 @@ def validate_pair_targets(
             )
             continue
 
-        if surface_file not in loaded_payloads:
-            surface_path = route_root / surface_file
-            location = f"aoa-routing/{surface_file}"
+        try:
+            relative_surface_file = ensure_repo_relative_path(
+                surface_file,
+                f"task_to_surface_hints.json.hints[{index}].actions.pair.surface_file",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+
+        if relative_surface_file not in loaded_payloads:
+            surface_path = resolve_routing_surface_path(relative_surface_file, generated_dir)
+            location = f"aoa-routing/{relative_surface_file}"
             try:
-                loaded_payloads[surface_file] = ensure_mapping(load_json_file(surface_path), location)
+                loaded_payloads[relative_surface_file] = ensure_mapping(load_json_file(surface_path), location)
             except RouterError as exc:
                 issues.append(ValidationIssue(location, str(exc)))
                 continue
 
-        payload = loaded_payloads[surface_file]
+        payload = loaded_payloads[relative_surface_file]
         try:
-            pair_entries = load_surface_entries_for_validation(payload, surface_file)
+            pair_entries = load_surface_entries_for_validation(payload, relative_surface_file)
         except RouterError as exc:
-            issues.append(ValidationIssue(f"aoa-routing/{surface_file}", str(exc)))
+            issues.append(ValidationIssue(f"aoa-routing/{relative_surface_file}", str(exc)))
             continue
 
-        if surface_file in validated_surface_files:
+        if relative_surface_file in validated_surface_files:
             continue
-        validated_surface_files.add(surface_file)
+        validated_surface_files.add(relative_surface_file)
 
         for pair_index, raw_entry in enumerate(pair_entries):
-            location = f"aoa-routing/{surface_file}.entries[{pair_index}]"
+            location = f"aoa-routing/{relative_surface_file}.entries[{pair_index}]"
             try:
                 entry = ensure_mapping(raw_entry, location)
             except RouterError as exc:
-                issues.append(ValidationIssue(f"aoa-routing/{surface_file}", str(exc)))
+                issues.append(ValidationIssue(f"aoa-routing/{relative_surface_file}", str(exc)))
                 continue
             entry_kind = entry.get("kind")
             entry_id = entry.get("id")
@@ -1649,9 +1669,8 @@ def validate_tiny_model_entrypoints(
     tos_root: Path,
     issues: list[ValidationIssue],
 ) -> None:
-    route_root = generated_dir.resolve().parent
     roots = {
-        "aoa-routing": route_root,
+        "aoa-routing": generated_dir.resolve(),
         "aoa-techniques": techniques_root.resolve(),
         "aoa-skills": skills_root.resolve(),
         "aoa-evals": evals_root.resolve(),
@@ -1690,8 +1709,19 @@ def validate_tiny_model_entrypoints(
                 )
             )
             return None
-        surface_path = surface_root / surface_file
-        location = f"{source_repo}/{surface_file}"
+        try:
+            relative_surface_file = ensure_repo_relative_path(
+                surface_file,
+                f"tiny_model_entrypoints.json.{source_repo}.target_surface",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+            return None
+        if source_repo == "aoa-routing":
+            surface_path = resolve_routing_surface_path(relative_surface_file, generated_dir)
+        else:
+            surface_path = surface_root / relative_surface_file
+        location = f"{source_repo}/{relative_surface_file}"
         try:
             return ensure_mapping(load_json_file(surface_path), location)
         except RouterError as exc:
@@ -2195,21 +2225,37 @@ def validate_surface_lookup_target(
 
 def validate_contract_targets_for_surface(
     *,
-    contracts_by_mode: dict[str, str],
+    contracts_by_mode: dict[str, Any],
     supported_modes: list[str],
     inspect_surface_file: str | None,
     expand_surface_file: str | None,
     memo_root: Path,
     issues: list[ValidationIssue],
+    contracts_location_prefix: str,
     mode_message: str,
     inspect_message: str,
     expand_message: str,
 ) -> None:
-    for mode, mode_contract_file in sorted(contracts_by_mode.items()):
+    for mode, mode_contract_file in sorted(
+        (
+            (mode, contract_file)
+            for mode, contract_file in contracts_by_mode.items()
+            if isinstance(mode, str) and mode.strip()
+        ),
+        key=lambda item: item[0],
+    ):
         if mode not in supported_modes:
             continue
-        contract_path = memo_root.resolve() / mode_contract_file
-        contract_location = f"aoa-memo/{mode_contract_file}"
+        try:
+            relative_contract_path = ensure_repo_relative_path(
+                mode_contract_file,
+                f"{contracts_location_prefix}.{mode}",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+        contract_path = memo_root.resolve() / relative_contract_path
+        contract_location = f"aoa-memo/{relative_contract_path}"
         try:
             contract = ensure_mapping(
                 load_json_file(contract_path),
@@ -2277,7 +2323,14 @@ def validate_parallel_recall_family(
                 f"parallel recall family '{family_name}' default_mode must be included in supported_modes",
             )
         )
-    mapping_keys = sorted(contracts_by_mode.keys())
+    if any(not isinstance(mode, str) or not mode.strip() for mode in contracts_by_mode):
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"parallel recall family '{family_name}' contracts_by_mode keys must be non-empty strings",
+            )
+        )
+    mapping_keys = sorted(mode for mode in contracts_by_mode if isinstance(mode, str) and mode.strip())
     if mapping_keys != sorted(supported_mode_values):
         issues.append(
             ValidationIssue(
@@ -2346,6 +2399,7 @@ def validate_parallel_recall_family(
         expand_surface_file=expand_surface_file,
         memo_root=memo_root,
         issues=issues,
+        contracts_location_prefix=f"{location_prefix}.contracts_by_mode",
         mode_message=(
             f"parallel recall family '{family_name}' contract mode must match its advertised recall mode"
         ),
@@ -2420,6 +2474,13 @@ def validate_recall_targets(
                     "memo default_mode must be included in supported_modes",
                 )
             )
+        if any(not isinstance(mode, str) or not mode.strip() for mode in contracts_by_mode):
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "memo contracts_by_mode keys must be non-empty strings",
+                )
+            )
         if contract_file is not None:
             if not isinstance(contract_file, str) or not contract_file.strip():
                 issues.append(
@@ -2435,7 +2496,7 @@ def validate_recall_targets(
                         "memo contract_file must match contracts_by_mode for default_mode",
                     )
                 )
-        mapping_keys = sorted(contracts_by_mode.keys())
+        mapping_keys = sorted(mode for mode in contracts_by_mode if isinstance(mode, str) and mode.strip())
         if mapping_keys != sorted(supported_mode_values):
             issues.append(
                 ValidationIssue(
@@ -2460,6 +2521,7 @@ def validate_recall_targets(
             expand_surface_file=expand_surface_file if isinstance(expand_surface_file, str) else None,
             memo_root=memo_root,
             issues=issues,
+            contracts_location_prefix="task_to_surface_hints.json.memo.actions.recall.contracts_by_mode",
             mode_message="recall contract mode must match its advertised recall mode",
             inspect_message="recall contract inspect_surface must match the memo inspect surface hint",
             expand_message="recall contract expand_surface must match the memo expand surface hint",
