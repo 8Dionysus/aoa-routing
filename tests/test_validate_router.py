@@ -50,9 +50,13 @@ def build_outputs_from_roots(roots: dict[str, Path]) -> dict[str, dict[str, obje
     )
 
 
-def build_fixture_generated(tmp_path: Path) -> tuple[Path, dict[str, Path]]:
+def build_fixture_generated(
+    tmp_path: Path,
+    *,
+    generated_dir_name: str = "generated",
+) -> tuple[Path, dict[str, Path]]:
     roots = copy_fixture_roots(tmp_path)
-    generated_dir = tmp_path / "generated"
+    generated_dir = tmp_path / generated_dir_name
     outputs = build_outputs_from_roots(roots)
     for filename, payload in outputs.items():
         write_json(generated_dir / filename, payload)
@@ -76,6 +80,12 @@ def validate_fixture_generated(generated_dir: Path, roots: dict[str, Path]) -> l
 
 def test_validate_generated_outputs_accepts_fixture_build(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert issues == []
+
+
+def test_validate_generated_outputs_accepts_custom_generated_dir(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path, generated_dir_name="custom-output")
     issues = validate_fixture_generated(generated_dir, roots)
     assert issues == []
 
@@ -583,6 +593,24 @@ def test_validate_generated_outputs_rejects_missing_recall_contract_target(tmp_p
     )
 
 
+def test_validate_generated_outputs_rejects_non_string_recall_contract_path_without_crashing(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    memo_hint["actions"]["recall"]["contracts_by_mode"]["semantic"] = ["bad-contract-path"]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "task_to_surface_hints.json.memo.actions.recall.contracts_by_mode.semantic must be a non-empty string"
+        in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_missing_parallel_object_recall_contract(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     (roots["aoa-memo"] / "examples" / "recall_contract.object.semantic.json").unlink()
@@ -607,6 +635,26 @@ def test_validate_generated_outputs_rejects_parallel_object_contract_surface_mis
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         "parallel recall family 'memory_objects' contract expand_surface must match the family expand surface"
+        in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_parallel_object_contract_absolute_path(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    memo_hint["actions"]["recall"]["parallel_families"]["memory_objects"]["contracts_by_mode"][
+        "semantic"
+    ] = "/tmp/escape.json"
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "task_to_surface_hints.json.memo.actions.recall.parallel_families.memory_objects.contracts_by_mode.semantic must be repo-relative, not absolute"
         in issue.message
         for issue in issues
     )

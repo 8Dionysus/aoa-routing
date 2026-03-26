@@ -266,10 +266,19 @@ def load_surface_entries(payload: dict[str, object], surface_file: str) -> list[
     return [entry for entry in entries if isinstance(entry, dict)]
 
 
-def find_entry(entries: list[dict[str, object]], match_key: str, target_value: str) -> dict[str, object] | None:
+def find_entry(
+    entries: list[dict[str, object]],
+    match_key: str,
+    target_value: str,
+    *,
+    required_fields: dict[str, object] | None = None,
+) -> dict[str, object] | None:
     for entry in entries:
-        if entry.get(match_key) == target_value:
-            return entry
+        if entry.get(match_key) != target_value:
+            continue
+        if required_fields and any(entry.get(field) != expected for field, expected in required_fields.items()):
+            continue
+        return entry
     return None
 
 
@@ -331,7 +340,12 @@ def test_route_walkthrough_smokes_resolve_canonical_flows(
     pair = walkthrough.get("pair")
     if isinstance(pair, dict):
         pairing_entries = load_surface_entries(outputs["pairing_hints.min.json"], "pairing_hints.min.json")
-        pair_entry = find_entry(pairing_entries, "id", pair["source_id"])
+        pair_entry = find_entry(
+            pairing_entries,
+            "id",
+            pair["source_id"],
+            required_fields={"kind": pair["source_kind"]},
+        )
         assert pair_entry is not None
         pairs = pair_entry["pairs"]
         assert isinstance(pairs, list)
@@ -359,6 +373,16 @@ def test_route_walkthrough_smokes_resolve_canonical_flows(
         assert contract["mode"] == mode
         assert contract["inspect_surface"] == memo_hint["actions"]["inspect"]["surface_file"]
         assert contract["expand_surface"] == memo_hint["actions"]["expand"]["surface_file"]
+
+
+def test_find_entry_applies_required_fields() -> None:
+    entries = [
+        {"kind": "skill", "id": "shared-id"},
+        {"kind": "eval", "id": "shared-id"},
+    ]
+
+    assert find_entry(entries, "id", "shared-id", required_fields={"kind": "eval"}) == entries[1]
+    assert find_entry(entries, "id", "shared-id", required_fields={"kind": "technique"}) is None
 
 
 def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> None:
