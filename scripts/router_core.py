@@ -70,6 +70,7 @@ PAIRING_SURFACE_REPO = "aoa-routing"
 PAIRING_SURFACE_FILE = "generated/pairing_hints.min.json"
 TINY_MODEL_ENTRYPOINTS_FILE = "generated/tiny_model_entrypoints.json"
 FEDERATION_ENTRYPOINTS_FILE = "generated/federation_entrypoints.min.json"
+RETURN_NAVIGATION_HINTS_FILE = "generated/return_navigation_hints.min.json"
 MEMO_INSPECT_SURFACE_FILE = "generated/memory_catalog.min.json"
 MEMO_EXPAND_SURFACE_FILE = "generated/memory_sections.full.json"
 MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory_object_catalog.min.json"
@@ -78,6 +79,7 @@ DEFAULT_MEMO_RECALL_MODE = "semantic"
 ROUTER_READY_RECALL_CONTRACT_PREFIX = "recall_contract.router."
 MEMO_OBJECT_RECALL_FAMILY = "memory_objects"
 MEMO_OBJECT_RECALL_DEFAULT_MODE = "working"
+MEMO_OBJECT_RETURN_READY_CONTRACT = "examples/recall_contract.object.working.return.json"
 MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE = {
     "working": "examples/recall_contract.object.working.json",
     "semantic": "examples/recall_contract.object.semantic.json",
@@ -109,6 +111,22 @@ TOS_KAG_VIEW_ENTRY_SURFACE_REFS = (
 TOS_KAG_VIEW_OBJECT_SURFACE_REF = "Tree-of-Sophia/examples/tos_tiny_entry_route.example.json"
 TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID = "AOA-P-0009"
 FALLBACK_ROUTER_KIND = "technique"
+RETURN_REASONS_BY_THIN_KIND = {
+    "technique": ("artifact_contract_lost", "source_boundary_lost", "reroute_required"),
+    "skill": ("artifact_contract_lost", "verification_lost", "source_boundary_lost"),
+    "eval": ("verification_lost", "artifact_contract_lost", "source_boundary_lost"),
+    "memo": ("checkpoint_continuity_needed", "artifact_contract_lost", "source_boundary_lost"),
+}
+RETURN_REASONS_BY_ROOT_ID = {
+    "aoa-root": ("authority_unclear", "source_boundary_lost", "reroute_required"),
+    "tos-root": ("authority_unclear", "source_boundary_lost", "reroute_required"),
+}
+RETURN_REASONS_BY_FEDERATION_KIND = {
+    "agent": ("authority_unclear", "artifact_contract_lost", "reroute_required"),
+    "tier": ("authority_unclear", "artifact_contract_lost", "reroute_required"),
+    "playbook": ("authority_unclear", "artifact_contract_lost", "reroute_required"),
+    "kag_view": ("authority_unclear", "source_boundary_lost", "reroute_required"),
+}
 TIER_PHASE_ORDER = (
     "route",
     "plan",
@@ -680,6 +698,29 @@ def build_entry_action(
         "match_key": ensure_string(match_key, "match_key"),
         "target_value": ensure_string(target_value, "target_value"),
     }
+
+
+def build_return_navigation_action(
+    *,
+    verb: str,
+    target_repo: str,
+    target_surface: str,
+    match_field: str | None = None,
+    target_value: str | None = None,
+    section_key_field: str | None = None,
+) -> dict[str, str]:
+    action = {
+        "verb": ensure_string(verb, "verb"),
+        "target_repo": normalize_repo_name(target_repo),
+        "target_surface": ensure_repo_relative_path(target_surface, "target_surface"),
+    }
+    if match_field is not None:
+        action["match_field"] = ensure_string(match_field, "match_field")
+    if target_value is not None:
+        action["target_value"] = ensure_string(target_value, "target_value")
+    if section_key_field is not None:
+        action["section_key_field"] = ensure_string(section_key_field, "section_key_field")
+    return action
 
 
 def build_entry_hop(kind: str, identifier: str) -> dict[str, str]:
@@ -1447,6 +1488,349 @@ def build_federation_entrypoints_payload(
                 entry["id"],
             ),
         ),
+    }
+
+
+def build_return_navigation_hints_payload(
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+    aoa_root: Path,
+    agents_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    tos_root: Path,
+    hints_payload: dict[str, Any],
+    federation_payload: dict[str, Any],
+) -> dict[str, Any]:
+    def ensure_enabled_action(action: Any, location: str) -> dict[str, Any]:
+        payload = ensure_mapping(action, location)
+        if payload.get("enabled") is not True:
+            raise RouterError(f"{location}.enabled must stay true for return navigation inputs")
+        return payload
+
+    def ensure_source_surface_exists(repo_root: Path, relative_path: str, location: str) -> None:
+        target_path = repo_root / relative_path
+        if not target_path.exists():
+            raise RouterError(
+                f"{location} target '{relative_posix(target_path, repo_root)}' is missing"
+            )
+
+    hint_source_roots = {
+        "technique": techniques_root,
+        "skill": skills_root,
+        "eval": evals_root,
+        "memo": memo_root,
+    }
+    federation_owner_roots = {
+        AOA_ROOT_REPO: aoa_root,
+        TOS_REPO: tos_root,
+        AGENTS_REPO: agents_root,
+        PLAYBOOKS_REPO: playbooks_root,
+        KAG_REPO: kag_root,
+    }
+
+    hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    hint_by_kind: dict[str, dict[str, Any]] = {}
+    for index, raw_hint in enumerate(hints):
+        location = f"task_to_surface_hints.json.hints[{index}]"
+        hint = ensure_mapping(raw_hint, location)
+        kind = ensure_string(hint.get("kind"), f"{location}.kind")
+        hint_by_kind[kind] = hint
+
+    thin_router_returns: list[dict[str, Any]] = []
+    for kind in ACTIVE_KINDS:
+        location = f"{Path(RETURN_NAVIGATION_HINTS_FILE).name}.thin_router_returns[{kind}]"
+        hint = hint_by_kind.get(kind)
+        if hint is None:
+            raise RouterError(f"{location} requires a published task_to_surface hint for '{kind}'")
+        source_repo = ensure_string(hint.get("source_repo"), f"{location}.source_repo")
+        if source_repo != CANONICAL_REPO_BY_KIND[kind]:
+            raise RouterError(
+                f"{location}.source_repo must stay '{CANONICAL_REPO_BY_KIND[kind]}'"
+            )
+        actions = ensure_mapping(hint.get("actions"), f"{location}.actions")
+
+        if kind == "memo":
+            ensure_enabled_action(actions.get("recall"), f"{location}.actions.recall")
+            inspect_surface = MEMO_OBJECT_INSPECT_SURFACE_FILE
+            return_contract_path = ensure_repo_relative_path(
+                MEMO_OBJECT_RETURN_READY_CONTRACT,
+                f"{location}.primary_action.target_surface",
+            )
+            return_contract_location = f"aoa-memo/{return_contract_path}"
+            return_contract = ensure_mapping(
+                load_json_file(memo_root / return_contract_path),
+                return_contract_location,
+            )
+            require_keys(
+                return_contract,
+                (
+                    "mode",
+                    "inspect_surface",
+                    "expand_surface",
+                    "checkpoint_continuity_supported",
+                    "return_ready",
+                ),
+                return_contract_location,
+            )
+            if (
+                ensure_string(return_contract.get("mode"), f"{return_contract_location}.mode")
+                != MEMO_OBJECT_RECALL_DEFAULT_MODE
+            ):
+                raise RouterError(
+                    f"{return_contract_location}.mode must stay '{MEMO_OBJECT_RECALL_DEFAULT_MODE}'"
+                )
+            if (
+                ensure_repo_relative_path(
+                    return_contract.get("inspect_surface"),
+                    f"{return_contract_location}.inspect_surface",
+                )
+                != MEMO_OBJECT_INSPECT_SURFACE_FILE
+            ):
+                raise RouterError(
+                    f"{return_contract_location}.inspect_surface must stay '{MEMO_OBJECT_INSPECT_SURFACE_FILE}'"
+                )
+            if (
+                ensure_repo_relative_path(
+                    return_contract.get("expand_surface"),
+                    f"{return_contract_location}.expand_surface",
+                )
+                != MEMO_OBJECT_EXPAND_SURFACE_FILE
+            ):
+                raise RouterError(
+                    f"{return_contract_location}.expand_surface must stay '{MEMO_OBJECT_EXPAND_SURFACE_FILE}'"
+                )
+            if return_contract.get("checkpoint_continuity_supported") is not True:
+                raise RouterError(
+                    f"{return_contract_location}.checkpoint_continuity_supported must stay true"
+                )
+            if return_contract.get("return_ready") is not True:
+                raise RouterError(f"{return_contract_location}.return_ready must stay true")
+            ensure_source_surface_exists(memo_root, return_contract_path, f"{location}.primary_action")
+            ensure_source_surface_exists(memo_root, inspect_surface, f"{location}.secondary_action")
+            thin_router_returns.append(
+                {
+                    "context_kind": "memo",
+                    "source_repo": source_repo,
+                    "supported_return_reasons": list(RETURN_REASONS_BY_THIN_KIND["memo"]),
+                    "primary_action": build_return_navigation_action(
+                        verb="recall",
+                        target_repo=source_repo,
+                        target_surface=return_contract_path,
+                    ),
+                    "secondary_action": build_return_navigation_action(
+                        verb="inspect",
+                        target_repo=source_repo,
+                        target_surface=inspect_surface,
+                        match_field="id",
+                    ),
+                    "ownership_note": (
+                        "Checkpoint continuity and recall meaning stay in aoa-memo; routing "
+                        "only points back to the public return-ready contract and object surface."
+                    ),
+                }
+            )
+            continue
+
+        inspect = ensure_enabled_action(actions.get("inspect"), f"{location}.actions.inspect")
+        expand = ensure_enabled_action(actions.get("expand"), f"{location}.actions.expand")
+        inspect_surface = ensure_repo_relative_path(
+            inspect.get("surface_file"),
+            f"{location}.actions.inspect.surface_file",
+        )
+        inspect_match = ensure_string(
+            inspect.get("match_field"),
+            f"{location}.actions.inspect.match_field",
+        )
+        expand_surface = ensure_repo_relative_path(
+            expand.get("surface_file"),
+            f"{location}.actions.expand.surface_file",
+        )
+        expand_match = ensure_string(
+            expand.get("match_field"),
+            f"{location}.actions.expand.match_field",
+        )
+        expand_section_key = ensure_string(
+            expand.get("section_key_field"),
+            f"{location}.actions.expand.section_key_field",
+        )
+        source_root = hint_source_roots[kind]
+        ensure_source_surface_exists(source_root, inspect_surface, f"{location}.primary_action")
+        ensure_source_surface_exists(source_root, expand_surface, f"{location}.secondary_action")
+        thin_router_returns.append(
+            {
+                "context_kind": kind,
+                "source_repo": source_repo,
+                "supported_return_reasons": list(RETURN_REASONS_BY_THIN_KIND[kind]),
+                "primary_action": build_return_navigation_action(
+                    verb="inspect",
+                    target_repo=source_repo,
+                    target_surface=inspect_surface,
+                    match_field=inspect_match,
+                ),
+                "secondary_action": build_return_navigation_action(
+                    verb="expand",
+                    target_repo=source_repo,
+                    target_surface=expand_surface,
+                    match_field=expand_match,
+                    section_key_field=expand_section_key,
+                ),
+                "ownership_note": {
+                    "technique": (
+                        "Technique meaning stays in aoa-techniques; routing only points back "
+                        "to the smallest reviewable surface."
+                    ),
+                    "skill": (
+                        "Workflow meaning stays in aoa-skills; routing only compresses the "
+                        "re-entry hop."
+                    ),
+                    "eval": (
+                        "Proof meaning stays in aoa-evals; routing only returns the reader "
+                        "to the bounded proof surface."
+                    ),
+                }[kind],
+            }
+        )
+
+    root_entries = ensure_list(
+        federation_payload.get("root_entries"),
+        "federation_entrypoints.min.json.root_entries",
+    )
+    root_by_id: dict[str, dict[str, Any]] = {}
+    for index, raw_root_entry in enumerate(root_entries):
+        location = f"federation_entrypoints.min.json.root_entries[{index}]"
+        root_entry = ensure_mapping(raw_root_entry, location)
+        root_id = ensure_string(root_entry.get("id"), f"{location}.id")
+        root_by_id[root_id] = root_entry
+
+    federation_root_returns: list[dict[str, Any]] = []
+    for root_id in FEDERATION_ROOT_IDS:
+        location = f"{Path(RETURN_NAVIGATION_HINTS_FILE).name}.federation_root_returns[{root_id}]"
+        root_entry = root_by_id.get(root_id)
+        if root_entry is None:
+            raise RouterError(f"{location} requires federation root entry '{root_id}'")
+        owner_repo = ensure_string(root_entry.get("owner_repo"), f"{location}.owner_repo")
+        authority_repo, authority_surface = ensure_repo_qualified_ref(
+            root_entry.get("authority_surface"),
+            f"{location}.primary_action",
+        )
+        if authority_repo != owner_repo:
+            raise RouterError(f"{location}.primary_action must stay inside owner repo '{owner_repo}'")
+        owner_root = federation_owner_roots[owner_repo]
+        ensure_source_surface_exists(owner_root, authority_surface, f"{location}.primary_action")
+        federation_root_returns.append(
+            {
+                "root_id": root_id,
+                "owner_repo": owner_repo,
+                "supported_return_reasons": list(RETURN_REASONS_BY_ROOT_ID[root_id]),
+                "primary_action": build_return_navigation_action(
+                    verb="inspect",
+                    target_repo=authority_repo,
+                    target_surface=authority_surface,
+                ),
+                "fallback_action": build_return_navigation_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_field="id",
+                    target_value=root_id,
+                ),
+                "ownership_note": {
+                    "aoa-root": (
+                        "AoA root authority stays in Agents-of-Abyss. Routing may only point "
+                        "back to that source-owned root."
+                    ),
+                    "tos-root": (
+                        "ToS authority stays in Tree-of-Sophia. Routing may only restore the "
+                        "handoff to that source-owned root."
+                    ),
+                }[root_id],
+            }
+        )
+
+    federation_entries = ensure_list(
+        federation_payload.get("entrypoints"),
+        "federation_entrypoints.min.json.entrypoints",
+    )
+    entries_by_kind: dict[str, list[dict[str, Any]]] = {
+        kind: [] for kind in FEDERATION_ACTIVE_ENTRY_KINDS
+    }
+    for index, raw_entry in enumerate(federation_entries):
+        location = f"federation_entrypoints.min.json.entrypoints[{index}]"
+        entry = ensure_mapping(raw_entry, location)
+        entry_kind = ensure_string(entry.get("kind"), f"{location}.kind")
+        if entry_kind in entries_by_kind:
+            entries_by_kind[entry_kind].append(entry)
+
+    federation_kind_returns: list[dict[str, Any]] = []
+    for entry_kind in FEDERATION_ACTIVE_ENTRY_KINDS:
+        location = f"{Path(RETURN_NAVIGATION_HINTS_FILE).name}.federation_kind_returns[{entry_kind}]"
+        kind_entries = entries_by_kind.get(entry_kind) or []
+        if not kind_entries:
+            raise RouterError(f"{location} requires at least one federation entry of kind '{entry_kind}'")
+        owner_repos = {
+            ensure_string(entry.get("owner_repo"), f"{location}.owner_repo")
+            for entry in kind_entries
+        }
+        if len(owner_repos) != 1:
+            raise RouterError(f"{location} must resolve to a single owner repo")
+        owner_repo = next(iter(owner_repos))
+        capsule_refs = {
+            ensure_repo_qualified_ref(entry.get("capsule_surface"), f"{location}.capsule_surface")
+            for entry in kind_entries
+        }
+        if len(capsule_refs) != 1:
+            raise RouterError(f"{location} must resolve to a single source-owned capsule surface")
+        primary_repo, primary_surface = next(iter(capsule_refs))
+        if primary_repo != owner_repo:
+            raise RouterError(f"{location}.primary_action must stay inside owner repo '{owner_repo}'")
+        owner_root = federation_owner_roots[owner_repo]
+        ensure_source_surface_exists(owner_root, primary_surface, f"{location}.primary_action")
+        federation_kind_returns.append(
+            {
+                "entry_kind": entry_kind,
+                "owner_repo": owner_repo,
+                "supported_return_reasons": list(RETURN_REASONS_BY_FEDERATION_KIND[entry_kind]),
+                "primary_action": build_return_navigation_action(
+                    verb="inspect",
+                    target_repo=primary_repo,
+                    target_surface=primary_surface,
+                ),
+                "fallback_action": build_return_navigation_action(
+                    verb="inspect",
+                    target_repo=PAIRING_SURFACE_REPO,
+                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                    match_field="kind",
+                    target_value=entry_kind,
+                ),
+                "ownership_note": {
+                    "agent": (
+                        "Agent authority stays in aoa-agents; routing only restores the "
+                        "source-owned registry surface."
+                    ),
+                    "tier": (
+                        "Tier authority stays in aoa-agents; routing only restores the "
+                        "source-owned registry surface."
+                    ),
+                    "playbook": (
+                        "Playbook authority stays in aoa-playbooks; routing only restores the "
+                        "source-owned registry surface."
+                    ),
+                    "kag_view": (
+                        "KAG readiness authority stays in aoa-kag; routing only restores the "
+                        "bounded derived entry surface."
+                    ),
+                }[entry_kind],
+            }
+        )
+
+    return {
+        "version": 1,
+        "thin_router_returns": thin_router_returns,
+        "federation_root_returns": federation_root_returns,
+        "federation_kind_returns": federation_kind_returns,
     }
 
 

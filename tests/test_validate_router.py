@@ -911,3 +911,107 @@ def test_validate_generated_outputs_rejects_tos_kag_view_route_id_drift(
         "example_object_ids must stay ['tos-tiny-entry.zarathustra-prologue']" in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_rejects_wrong_memo_return_primary_target(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    return_path = generated_dir / "return_navigation_hints.min.json"
+    payload = json.loads(return_path.read_text(encoding="utf-8"))
+    memo_return = next(
+        record for record in payload["thin_router_returns"] if record["context_kind"] == "memo"
+    )
+    memo_return["primary_action"]["target_surface"] = "examples/recall_contract.object.working.json"
+    write_json(return_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "memo return primary_action must point to aoa-memo/examples/recall_contract.object.working.return.json"
+        in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_thin_router_return_with_router_owned_fallback(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    return_path = generated_dir / "return_navigation_hints.min.json"
+    payload = json.loads(return_path.read_text(encoding="utf-8"))
+    technique_return = next(
+        record for record in payload["thin_router_returns"] if record["context_kind"] == "technique"
+    )
+    technique_return["secondary_action"] = {
+        "verb": "inspect",
+        "target_repo": "aoa-routing",
+        "target_surface": "generated/federation_entrypoints.min.json",
+        "match_field": "kind",
+        "target_value": "technique",
+    }
+    write_json(return_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "must not point primary authority or thin-router re-entry at aoa-routing" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_federation_root_primary_target_away_from_owner(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    return_path = generated_dir / "return_navigation_hints.min.json"
+    payload = json.loads(return_path.read_text(encoding="utf-8"))
+    aoa_root_return = next(
+        record for record in payload["federation_root_returns"] if record["root_id"] == "aoa-root"
+    )
+    aoa_root_return["primary_action"]["target_repo"] = "Tree-of-Sophia"
+    aoa_root_return["primary_action"]["target_surface"] = "CHARTER.md"
+    write_json(return_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "primary_action.target_repo must equal owner_repo 'Agents-of-Abyss'" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_router_owned_primary_return_target(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    return_path = generated_dir / "return_navigation_hints.min.json"
+    payload = json.loads(return_path.read_text(encoding="utf-8"))
+    playbook_return = next(
+        record for record in payload["federation_kind_returns"] if record["entry_kind"] == "playbook"
+    )
+    playbook_return["primary_action"]["target_repo"] = "aoa-routing"
+    playbook_return["primary_action"]["target_surface"] = "generated/federation_entrypoints.min.json"
+    playbook_return["primary_action"]["match_field"] = "kind"
+    playbook_return["primary_action"]["target_value"] = "playbook"
+    write_json(return_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "must not point primary authority or thin-router re-entry at aoa-routing" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_stale_return_navigation_surface(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    return_path = generated_dir / "return_navigation_hints.min.json"
+    payload = json.loads(return_path.read_text(encoding="utf-8"))
+    payload["federation_kind_returns"][0]["ownership_note"] = "stale routing snapshot"
+    write_json(return_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "return_navigation_hints.min.json"
+        and "canonical rebuild from current sibling catalogs" in issue.message
+        for issue in issues
+    )

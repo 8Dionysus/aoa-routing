@@ -240,6 +240,7 @@ def test_build_outputs_from_fixtures() -> None:
     hints = outputs["task_to_surface_hints.json"]
     tier_hints = outputs["task_to_tier_hints.json"]
     federation = outputs["federation_entrypoints.min.json"]
+    return_navigation = outputs["return_navigation_hints.min.json"]
     recommended = outputs["recommended_paths.min.json"]
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
     pairing = outputs["pairing_hints.min.json"]
@@ -418,6 +419,56 @@ def test_build_outputs_from_fixtures() -> None:
     assert federation["version"] == 1
     assert federation["active_entry_kinds"] == ["agent", "tier", "playbook", "kag_view"]
     assert federation["declared_entry_kinds"] == ["seed", "tos_node", "runtime_surface"]
+    assert return_navigation["version"] == 1
+    memo_return = next(
+        record for record in return_navigation["thin_router_returns"] if record["context_kind"] == "memo"
+    )
+    assert memo_return == {
+        "context_kind": "memo",
+        "source_repo": "aoa-memo",
+        "supported_return_reasons": [
+            "checkpoint_continuity_needed",
+            "artifact_contract_lost",
+            "source_boundary_lost",
+        ],
+        "primary_action": {
+            "verb": "recall",
+            "target_repo": "aoa-memo",
+            "target_surface": "examples/recall_contract.object.working.return.json",
+        },
+        "secondary_action": {
+            "verb": "inspect",
+            "target_repo": "aoa-memo",
+            "target_surface": "generated/memory_object_catalog.min.json",
+            "match_field": "id",
+        },
+        "ownership_note": "Checkpoint continuity and recall meaning stay in aoa-memo; routing only points back to the public return-ready contract and object surface.",
+    }
+    aoa_root_return = next(
+        record for record in return_navigation["federation_root_returns"] if record["root_id"] == "aoa-root"
+    )
+    assert aoa_root_return["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "Agents-of-Abyss",
+        "target_surface": "CHARTER.md",
+    }
+    playbook_return = next(
+        record
+        for record in return_navigation["federation_kind_returns"]
+        if record["entry_kind"] == "playbook"
+    )
+    assert playbook_return["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-playbooks",
+        "target_surface": "generated/playbook_registry.min.json",
+    }
+    assert playbook_return["fallback_action"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-routing",
+        "target_surface": "generated/federation_entrypoints.min.json",
+        "match_field": "kind",
+        "target_value": "playbook",
+    }
     assert federation["source_inputs"][1:3] == [
         {
             "name": "tos_root_readme",

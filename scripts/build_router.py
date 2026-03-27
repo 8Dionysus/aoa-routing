@@ -11,11 +11,13 @@ from router_core import (
     CANONICAL_REPO_BY_KIND,
     FEDERATION_ENTRYPOINTS_FILE,
     REPO_ROOT,
+    RETURN_NAVIGATION_HINTS_FILE,
     RouterError,
     build_federation_entrypoints_payload,
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
     build_recommended_paths_payload,
+    build_return_navigation_hints_payload,
     build_router_payload,
     build_tiny_model_entrypoints_payload,
     build_task_to_tier_hints_payload,
@@ -401,6 +403,19 @@ def build_outputs(
         kag_root,
         tos_root,
     )
+    return_navigation_payload = build_return_navigation_hints_payload(
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        aoa_root,
+        agents_root,
+        playbooks_root,
+        kag_root,
+        tos_root,
+        hints_payload,
+        federation_entrypoints_payload,
+    )
     recommended_payload = build_recommended_paths_payload(registry_entries)
     relation_hints_payload = build_kag_source_lift_relation_hints_payload(
         registry_entries,
@@ -423,6 +438,7 @@ def build_outputs(
         "task_to_surface_hints.json": hints_payload,
         "task_to_tier_hints.json": tier_hints_payload,
         Path(FEDERATION_ENTRYPOINTS_FILE).name: federation_entrypoints_payload,
+        Path(RETURN_NAVIGATION_HINTS_FILE).name: return_navigation_payload,
         "recommended_paths.min.json": recommended_payload,
         "kag_source_lift_relation_hints.min.json": relation_hints_payload,
         "pairing_hints.min.json": pairing_payload,

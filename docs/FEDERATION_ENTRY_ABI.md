@@ -124,6 +124,7 @@ These are hard constraints for the landing:
 - orientation must never point authority at `aoa-routing/generated/*`
 - `aoa-routing` may summarize a source surface, but it may not replace it
 - root entry cards must keep AoA and ToS authority in their owning repos
+- return-oriented re-entry may use router-owned entry cards only as orientation; the first authority surface must still live in the owning repo
 - `tos-root` may hand off to one current source-owned ToS tiny-entry route without activating `tos_node`
 - KAG views remain derived readiness views, not canon authorship
 - the thin router taxonomy for `technique`, `skill`, `eval`, and `memo` must not be widened by this ABI layer
@@ -150,6 +151,8 @@ v1 federation starters are:
 
 This wave does not add a separate tiny-entry federation starter.
 Small-model ToS entry still begins at `tos-root`.
+
+A dedicated `return_navigation_hints` surface may coexist with federation entry cards so that small-model recovery stays explicit without widening the authority boundary.
 
 ## Current v1 Inputs
 
