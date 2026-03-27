@@ -74,6 +74,7 @@ The builder writes these tracked artifacts under `generated/`:
 - `pairing_hints.min.json` - bounded pair suggestions derived from cross-kind dependencies and family-scoped direct relations
 - `federation_entrypoints.min.json` - bounded federation entry ABI with derived root cards, live entry cards, and explicit source authority refs
 - `federation_entrypoints.min.json` also keeps the current `tos-root -> source-owned tiny-entry route -> Tree-of-Sophia kag_view` handoff without activating a new federation kind
+- `return_navigation_hints.min.json` - bounded re-entry hints that point runtime and agent layers back to source-owned inspect, expand, or recall surfaces after a governed return decision
 - `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind roots, memo recall entry hints, and a separate federation-entry seam
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
@@ -88,6 +89,8 @@ These public outputs are schema-backed and validator-checked.
 For the federation-entry seam, `aoa-routing` publishes orientation cards only.
 Authority stays in the owning repos.
 The doctrinal explanation for that boundary lives in `docs/FEDERATION_ENTRY_ABI.md`.
+The recurrence-specific routing boundary lives in `docs/RECURRENCE_NAVIGATION_BOUNDARY.md`.
+Return guidance stays orientation-only as well: the router may point back to source-owned authority or support surfaces, but it does not classify return semantics or checkpoint meaning.
 For ToS specifically, `tos-root` now hands off first to a source-owned tiny-entry route surface inside `Tree-of-Sophia`, then to a ToS-specific KAG view, before the bounded playbook hop.
 
 Inspect actions point to repo-local capsule surfaces:

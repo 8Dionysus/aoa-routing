@@ -1,0 +1,41 @@
+{
+  "id": "recall.object.working.return",
+  "name": "Object-facing working recall for return",
+  "mode": "working",
+  "allowed_scopes": [
+    "thread",
+    "session",
+    "project"
+  ],
+  "preferred_kinds": [
+    "state_capsule",
+    "decision",
+    "episode",
+    "audit_event",
+    "anchor"
+  ],
+  "temperature_order": [
+    "hot",
+    "warm",
+    "cool",
+    "frozen",
+    "cold"
+  ],
+  "inspect_surface": "generated/memory_object_catalog.min.json",
+  "expand_surface": "generated/memory_object_sections.full.json",
+  "source_route_required": false,
+  "checkpoint_continuity_supported": true,
+  "return_ready": true,
+  "preferred_anchor_kinds": [
+    "state_capsule",
+    "decision",
+    "anchor"
+  ],
+  "support_artifact_refs": [
+    "schemas/inquiry_checkpoint.schema.json",
+    "schemas/checkpoint-to-memory-contract.schema.json",
+    "docs/RUNTIME_WRITEBACK_SEAM.md",
+    "docs/RECURRENCE_MEMORY_SUPPORT_SURFACES.md"
+  ],
+  "notes": "Fixture return-ready working recall contract for object-facing memo surfaces."
+}

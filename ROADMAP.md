@@ -120,6 +120,27 @@ It must not own:
 - a widened replacement for the current thin router taxonomy
 - a separate starter or active kind for the current ToS tiny-entry route
 
+### Milestone 8: Recurrence re-entry guidance
+
+Land as one additive routing surface:
+
+- `generated/return_navigation_hints.min.json`
+
+This wave should publish a bounded re-entry map that points drifted routes back to source-owned inspect, expand, or memo recall surfaces.
+
+It should own:
+
+- bounded re-entry orientation
+- source-owned primary targets for return
+- explicit router-owned fallback only for federation root and federation kind orientation
+
+It must not own:
+
+- return semantics
+- checkpoint meaning
+- retry policy
+- router-owned fallback for thin-router returns
+
 ## Boundaries To Preserve
 
 These boundaries come directly from the seed and should remain hard constraints:

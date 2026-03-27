@@ -36,6 +36,7 @@ from router_core import (
     KAG_SOURCE_LIFT_TECHNIQUE_SET,
     MEMO_INSPECT_SURFACE_FILE,
     MEMO_OBJECT_RECALL_DEFAULT_MODE,
+    MEMO_OBJECT_RETURN_READY_CONTRACT,
     MEMO_OBJECT_EXPAND_SURFACE_FILE,
     MEMO_OBJECT_INSPECT_SURFACE_FILE,
     MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE,
@@ -47,6 +48,7 @@ from router_core import (
     RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
     RESERVED_KINDS,
+    RETURN_NAVIGATION_HINTS_FILE,
     RouterError,
     TOS_REPO,
     TOS_KAG_VIEW_ENTRY_ID,
@@ -58,6 +60,7 @@ from router_core import (
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
     build_recommended_paths_payload,
+    build_return_navigation_hints_payload,
     build_router_payload,
     build_tiny_model_entrypoints_payload,
     build_task_to_tier_hints_payload,
@@ -94,6 +97,7 @@ OUTPUT_SCHEMA_NAMES = {
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
     "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
     Path(FEDERATION_ENTRYPOINTS_FILE).name: "federation-entrypoints.schema.json",
+    Path(RETURN_NAVIGATION_HINTS_FILE).name: "return-navigation-hints.schema.json",
     "recommended_paths.min.json": "recommended-paths.schema.json",
     "kag_source_lift_relation_hints.min.json": "kag-source-lift-relation-hints.schema.json",
     "pairing_hints.min.json": "pairing-hints.schema.json",
@@ -1460,6 +1464,406 @@ def validate_federation_entrypoints(
             )
 
 
+def validate_return_navigation_hints(
+    return_payload: dict[str, Any],
+    generated_dir: Path,
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    memo_root: Path,
+    agents_root: Path,
+    aoa_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    tos_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    location_prefix = Path(RETURN_NAVIGATION_HINTS_FILE).name
+    roots = {
+        "aoa-routing": generated_dir.resolve(),
+        "aoa-techniques": techniques_root.resolve(),
+        "aoa-skills": skills_root.resolve(),
+        "aoa-evals": evals_root.resolve(),
+        "aoa-memo": memo_root.resolve(),
+        AGENTS_REPO: agents_root.resolve(),
+        AOA_ROOT_REPO: aoa_root.resolve(),
+        PLAYBOOKS_REPO: playbooks_root.resolve(),
+        KAG_REPO: kag_root.resolve(),
+        TOS_REPO: tos_root.resolve(),
+    }
+    expected_root_owner = {
+        "aoa-root": AOA_ROOT_REPO,
+        "tos-root": TOS_REPO,
+    }
+    expected_kind_owner = {
+        "agent": AGENTS_REPO,
+        "tier": AGENTS_REPO,
+        "playbook": PLAYBOOKS_REPO,
+        "kag_view": KAG_REPO,
+    }
+    payload_cache: dict[tuple[str, str], dict[str, Any]] = {}
+
+    def resolve_repo_target(repo_name: str, relative_path: str) -> Path:
+        if repo_name == "aoa-routing":
+            return resolve_routing_surface_path(relative_path, generated_dir)
+        return roots[repo_name] / relative_path
+
+    def load_target_payload(repo_name: str, relative_path: str) -> dict[str, Any] | None:
+        cache_key = (repo_name, relative_path)
+        if cache_key in payload_cache:
+            return payload_cache[cache_key]
+        target_path = resolve_repo_target(repo_name, relative_path)
+        location = f"{repo_name}/{relative_path}"
+        try:
+            payload = ensure_mapping(load_json_file(target_path), location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            return None
+        payload_cache[cache_key] = payload
+        return payload
+
+    def validate_action(
+        raw_action: Any,
+        location: str,
+        *,
+        router_owned_allowed: bool,
+    ) -> dict[str, str] | None:
+        try:
+            action = ensure_mapping(raw_action, location)
+            normalized = {
+                "verb": ensure_string(action.get("verb"), f"{location}.verb"),
+                "target_repo": ensure_string(action.get("target_repo"), f"{location}.target_repo"),
+                "target_surface": ensure_repo_relative_path(
+                    action.get("target_surface"),
+                    f"{location}.target_surface",
+                ),
+            }
+            match_field = action.get("match_field")
+            target_value = action.get("target_value")
+            section_key_field = action.get("section_key_field")
+            if match_field is not None:
+                normalized["match_field"] = ensure_string(match_field, f"{location}.match_field")
+            if target_value is not None:
+                normalized["target_value"] = ensure_string(target_value, f"{location}.target_value")
+            if section_key_field is not None:
+                normalized["section_key_field"] = ensure_string(
+                    section_key_field,
+                    f"{location}.section_key_field",
+                )
+        except RouterError as exc:
+            issues.append(ValidationIssue(location_prefix, str(exc)))
+            return None
+
+        target_repo = normalized["target_repo"]
+        target_surface = normalized["target_surface"]
+        if target_repo not in roots:
+            issues.append(
+                ValidationIssue(location_prefix, f"{location}.target_repo must reference a known repo")
+            )
+            return None
+        if target_repo == "aoa-routing" and not router_owned_allowed:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location} must not point primary authority or thin-router re-entry at aoa-routing",
+                )
+            )
+        target_path = resolve_repo_target(target_repo, target_surface)
+        if not target_path.exists():
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location} target '{target_repo}/{target_surface}' is missing",
+                )
+            )
+            return normalized
+
+        is_markdown = Path(target_surface).suffix.lower() == ".md"
+        if is_markdown:
+            if any(key in normalized for key in ("match_field", "target_value", "section_key_field")):
+                issues.append(
+                    ValidationIssue(
+                        location_prefix,
+                        f"{location} markdown targets must not define match or section fields",
+                    )
+                )
+            return normalized
+
+        if "target_value" in normalized and "match_field" not in normalized:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.target_value requires match_field",
+                )
+            )
+            return normalized
+        if "section_key_field" in normalized and "match_field" not in normalized:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.section_key_field requires match_field",
+                )
+            )
+            return normalized
+        if "match_field" not in normalized and "section_key_field" not in normalized:
+            return normalized
+
+        payload = load_target_payload(target_repo, target_surface)
+        if payload is None:
+            return normalized
+        try:
+            entries = load_surface_entries_for_validation(payload, target_surface)
+        except RouterError as exc:
+            issues.append(ValidationIssue(f"{target_repo}/{target_surface}", str(exc)))
+            return normalized
+
+        match_field = normalized.get("match_field")
+        target_value = normalized.get("target_value")
+        section_key_field = normalized.get("section_key_field")
+        matched_any = False
+        found_target = False
+        for index, raw_entry in enumerate(entries):
+            entry_location = f"{target_repo}/{target_surface}[{index}]"
+            try:
+                entry = ensure_mapping(raw_entry, entry_location)
+            except RouterError as exc:
+                issues.append(ValidationIssue(f"{target_repo}/{target_surface}", str(exc)))
+                continue
+            if match_field is None:
+                continue
+            raw_match = entry.get(match_field)
+            if not isinstance(raw_match, str) or not raw_match.strip():
+                continue
+            matched_any = True
+            if target_value is not None and raw_match == target_value:
+                found_target = True
+            if section_key_field is None:
+                continue
+            try:
+                sections = ensure_list(entry.get("sections"), f"{entry_location}.sections")
+            except RouterError as exc:
+                issues.append(ValidationIssue(f"{target_repo}/{target_surface}", str(exc)))
+                continue
+            for section_index, raw_section in enumerate(sections):
+                section_location = f"{entry_location}.sections[{section_index}]"
+                try:
+                    section = ensure_mapping(raw_section, section_location)
+                    ensure_string(section.get(section_key_field), f"{section_location}.{section_key_field}")
+                except RouterError as exc:
+                    issues.append(ValidationIssue(f"{target_repo}/{target_surface}", str(exc)))
+        if match_field is not None and not matched_any:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location} target '{target_repo}/{target_surface}' does not expose match_field '{match_field}'",
+                )
+            )
+        if target_value is not None and not found_target:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location} target '{target_value}' was not found in {target_repo}/{target_surface}",
+                )
+            )
+        return normalized
+
+    try:
+        thin_router_returns = ensure_list(
+            return_payload.get("thin_router_returns"),
+            f"{location_prefix}.thin_router_returns",
+        )
+        federation_root_returns = ensure_list(
+            return_payload.get("federation_root_returns"),
+            f"{location_prefix}.federation_root_returns",
+        )
+        federation_kind_returns = ensure_list(
+            return_payload.get("federation_kind_returns"),
+            f"{location_prefix}.federation_kind_returns",
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue(location_prefix, str(exc)))
+        return
+
+    seen_thin_kinds: set[str] = set()
+    for index, raw_record in enumerate(thin_router_returns):
+        location = f"{location_prefix}.thin_router_returns[{index}]"
+        try:
+            record = ensure_mapping(raw_record, location)
+            context_kind = ensure_string(record.get("context_kind"), f"{location}.context_kind")
+            source_repo = ensure_string(record.get("source_repo"), f"{location}.source_repo")
+        except RouterError as exc:
+            issues.append(ValidationIssue(location_prefix, str(exc)))
+            continue
+        seen_thin_kinds.add(context_kind)
+        expected_repo = CANONICAL_REPO_BY_KIND.get(context_kind)
+        if expected_repo is not None and source_repo != expected_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.source_repo must stay '{expected_repo}' for kind '{context_kind}'",
+                )
+            )
+        primary_action = validate_action(
+            record.get("primary_action"),
+            f"{location}.primary_action",
+            router_owned_allowed=False,
+        )
+        secondary_action = None
+        if record.get("secondary_action") is not None:
+            secondary_action = validate_action(
+                record.get("secondary_action"),
+                f"{location}.secondary_action",
+                router_owned_allowed=False,
+            )
+        if primary_action is not None and primary_action["target_repo"] != source_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.primary_action.target_repo must equal source_repo '{source_repo}'",
+                )
+            )
+        if secondary_action is not None and secondary_action["target_repo"] != source_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.secondary_action.target_repo must equal source_repo '{source_repo}'",
+                )
+            )
+        if context_kind == "memo":
+            if primary_action is not None and (
+                primary_action["target_repo"] != "aoa-memo"
+                or primary_action["target_surface"] != MEMO_OBJECT_RETURN_READY_CONTRACT
+            ):
+                issues.append(
+                    ValidationIssue(
+                        location_prefix,
+                        "memo return primary_action must point to aoa-memo/examples/recall_contract.object.working.return.json",
+                    )
+                )
+            if secondary_action is not None and (
+                secondary_action["target_repo"] != "aoa-memo"
+                or secondary_action["target_surface"] != MEMO_OBJECT_INSPECT_SURFACE_FILE
+            ):
+                issues.append(
+                    ValidationIssue(
+                        location_prefix,
+                        "memo return secondary_action must point to aoa-memo/generated/memory_object_catalog.min.json",
+                    )
+                )
+    missing_thin_kinds = sorted(set(ACTIVE_KINDS) - seen_thin_kinds)
+    for missing_kind in missing_thin_kinds:
+        issues.append(
+            ValidationIssue(
+                location_prefix,
+                f"{location_prefix}.thin_router_returns must include context_kind '{missing_kind}'",
+            )
+        )
+
+    seen_root_ids: set[str] = set()
+    for index, raw_record in enumerate(federation_root_returns):
+        location = f"{location_prefix}.federation_root_returns[{index}]"
+        try:
+            record = ensure_mapping(raw_record, location)
+            root_id = ensure_string(record.get("root_id"), f"{location}.root_id")
+            owner_repo = ensure_string(record.get("owner_repo"), f"{location}.owner_repo")
+        except RouterError as exc:
+            issues.append(ValidationIssue(location_prefix, str(exc)))
+            continue
+        seen_root_ids.add(root_id)
+        expected_owner = expected_root_owner.get(root_id)
+        if expected_owner is not None and owner_repo != expected_owner:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.owner_repo must stay '{expected_owner}' for root '{root_id}'",
+                )
+            )
+        primary_action = validate_action(
+            record.get("primary_action"),
+            f"{location}.primary_action",
+            router_owned_allowed=False,
+        )
+        fallback_action = validate_action(
+            record.get("fallback_action"),
+            f"{location}.fallback_action",
+            router_owned_allowed=True,
+        )
+        if primary_action is not None and primary_action["target_repo"] != owner_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.primary_action.target_repo must equal owner_repo '{owner_repo}'",
+                )
+            )
+        if fallback_action is not None and fallback_action["target_repo"] != "aoa-routing":
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.fallback_action.target_repo must stay 'aoa-routing'",
+                )
+            )
+    missing_root_ids = sorted(set(FEDERATION_ROOT_IDS) - seen_root_ids)
+    for missing_root in missing_root_ids:
+        issues.append(
+            ValidationIssue(
+                location_prefix,
+                f"{location_prefix}.federation_root_returns must include root_id '{missing_root}'",
+            )
+        )
+
+    seen_entry_kinds: set[str] = set()
+    for index, raw_record in enumerate(federation_kind_returns):
+        location = f"{location_prefix}.federation_kind_returns[{index}]"
+        try:
+            record = ensure_mapping(raw_record, location)
+            entry_kind = ensure_string(record.get("entry_kind"), f"{location}.entry_kind")
+            owner_repo = ensure_string(record.get("owner_repo"), f"{location}.owner_repo")
+        except RouterError as exc:
+            issues.append(ValidationIssue(location_prefix, str(exc)))
+            continue
+        seen_entry_kinds.add(entry_kind)
+        expected_owner = expected_kind_owner.get(entry_kind)
+        if expected_owner is not None and owner_repo != expected_owner:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.owner_repo must stay '{expected_owner}' for kind '{entry_kind}'",
+                )
+            )
+        primary_action = validate_action(
+            record.get("primary_action"),
+            f"{location}.primary_action",
+            router_owned_allowed=False,
+        )
+        fallback_action = validate_action(
+            record.get("fallback_action"),
+            f"{location}.fallback_action",
+            router_owned_allowed=True,
+        )
+        if primary_action is not None and primary_action["target_repo"] != owner_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.primary_action.target_repo must equal owner_repo '{owner_repo}'",
+                )
+            )
+        if fallback_action is not None and fallback_action["target_repo"] != "aoa-routing":
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.fallback_action.target_repo must stay 'aoa-routing'",
+                )
+            )
+    missing_entry_kinds = sorted(set(FEDERATION_ACTIVE_ENTRY_KINDS) - seen_entry_kinds)
+    for missing_kind in missing_entry_kinds:
+        issues.append(
+            ValidationIssue(
+                location_prefix,
+                f"{location_prefix}.federation_kind_returns must include entry_kind '{missing_kind}'",
+            )
+        )
+
+
 def validate_pair_targets(
     registry_entries: list[dict[str, Any]],
     hints_payload: dict[str, Any],
@@ -2663,6 +3067,7 @@ def validate_generated_outputs(
     hints_path = generated_dir / "task_to_surface_hints.json"
     tier_hints_path = generated_dir / "task_to_tier_hints.json"
     federation_entrypoints_path = generated_dir / Path(FEDERATION_ENTRYPOINTS_FILE).name
+    return_navigation_path = generated_dir / Path(RETURN_NAVIGATION_HINTS_FILE).name
     recommended_path = generated_dir / "recommended_paths.min.json"
     relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
     pairing_path = generated_dir / "pairing_hints.min.json"
@@ -2673,6 +3078,7 @@ def validate_generated_outputs(
     hints_payload = load_output(hints_path, issues)
     tier_hints_payload = load_output(tier_hints_path, issues)
     federation_entrypoints_payload = load_output(federation_entrypoints_path, issues)
+    return_navigation_payload = load_output(return_navigation_path, issues)
     recommended_payload = load_output(recommended_path, issues)
     relation_hints_payload = load_output(relation_hints_path, issues)
     pairing_payload = load_output(pairing_path, issues)
@@ -2685,6 +3091,7 @@ def validate_generated_outputs(
             hints_payload,
             tier_hints_payload,
             federation_entrypoints_payload,
+            return_navigation_payload,
             recommended_payload,
             relation_hints_payload,
             pairing_payload,
@@ -2700,6 +3107,7 @@ def validate_generated_outputs(
             hints_path.name: hints_payload,
             tier_hints_path.name: tier_hints_payload,
             federation_entrypoints_path.name: federation_entrypoints_payload,
+            return_navigation_path.name: return_navigation_payload,
             recommended_path.name: recommended_payload,
             relation_hints_path.name: relation_hints_payload,
             pairing_path.name: pairing_payload,
@@ -2723,6 +3131,7 @@ def validate_generated_outputs(
         (hints_path, hints_payload),
         (tier_hints_path, tier_hints_payload),
         (federation_entrypoints_path, federation_entrypoints_payload),
+        (return_navigation_path, return_navigation_payload),
         (recommended_path, recommended_payload),
         (relation_hints_path, relation_hints_payload),
         (pairing_path, pairing_payload),
@@ -2872,6 +3281,50 @@ def validate_generated_outputs(
         playbooks_root,
         kag_root,
         aoa_root,
+        tos_root,
+        issues,
+    )
+    expected_return_navigation_payload: dict[str, Any] | None = None
+    try:
+        expected_return_navigation_payload = build_return_navigation_hints_payload(
+            techniques_root,
+            skills_root,
+            evals_root,
+            memo_root,
+            aoa_root,
+            agents_root,
+            playbooks_root,
+            kag_root,
+            tos_root,
+            hints_payload,
+            canonical_federation_entrypoints_payload,
+        )
+    except RouterError as exc:
+        issues.append(
+            ValidationIssue(
+                return_navigation_path.name,
+                f"could not rebuild {return_navigation_path.name} from sibling source surfaces: {exc}",
+            )
+        )
+    else:
+        if return_navigation_payload != expected_return_navigation_payload:
+            issues.append(
+                ValidationIssue(
+                    return_navigation_path.name,
+                    f"{return_navigation_path.name} does not match the expected recurrence re-entry surface",
+                )
+            )
+    validate_return_navigation_hints(
+        return_navigation_payload,
+        generated_dir,
+        techniques_root,
+        skills_root,
+        evals_root,
+        memo_root,
+        agents_root,
+        aoa_root,
+        playbooks_root,
+        kag_root,
         tos_root,
         issues,
     )
