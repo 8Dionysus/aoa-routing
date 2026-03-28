@@ -8,16 +8,11 @@ import json
 from pathlib import Path
 from typing import Any
 
+from _wave9_router_lib import build_decision_packet, load_json, load_jsonl, preselect
+
 
 PROFILE = "aoa-routing-wave-9-two-stage-skill-router"
-
-
-def load_json(path: Path) -> Any:
-    return json.loads(path.read_text(encoding="utf-8"))
-
-
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
-    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+LOCAL_PRECISION_CASES_PATH = Path("config") / "two_stage_router_precision_cases.jsonl"
 
 
 def resolve_generated_dir(path: Path) -> Path:
@@ -29,8 +24,135 @@ def resolve_generated_dir(path: Path) -> Path:
     return path
 
 
+def resolve_routing_root(path: Path) -> tuple[Path, bool]:
+    resolved = path.resolve()
+    for candidate in (resolved, *resolved.parents):
+        if (candidate / "config" / "two_stage_router_policy.json").exists():
+            return candidate, False
+    return Path(__file__).resolve().parents[1], True
+
+
+def load_optional_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    return load_jsonl(path)
+
+
+def add_behavior_issue(
+    issues: list[tuple[str, str]],
+    *,
+    source_label: str,
+    case_id: str,
+    field: str,
+    message: str,
+) -> None:
+    issues.append((f"{source_label}:{case_id}:{field}", message))
+
+
+def validate_behavior_case(
+    *,
+    case: dict[str, Any],
+    preselected: dict[str, Any],
+    packet: dict[str, Any],
+    issues: list[tuple[str, str]],
+    source_label: str,
+) -> None:
+    case_id = case.get("case_id", "unknown-case")
+    shortlist_names = [entry.get("name") for entry in preselected.get("shortlist", []) if entry.get("name")]
+    top1 = shortlist_names[0] if shortlist_names else None
+    top_band = None
+    if preselected.get("top_bands"):
+        top_band = preselected["top_bands"][0].get("id")
+    decision_mode = packet.get("suggested_decision", {}).get("decision_mode")
+
+    for name in case.get("expected_shortlist_includes", []):
+        if name not in shortlist_names:
+            add_behavior_issue(
+                issues,
+                source_label=source_label,
+                case_id=case_id,
+                field="expected_shortlist_includes",
+                message=f"expected shortlist to include {name!r}, got {shortlist_names!r}",
+            )
+    for name in case.get("expected_shortlist_excludes", []):
+        if name in shortlist_names:
+            add_behavior_issue(
+                issues,
+                source_label=source_label,
+                case_id=case_id,
+                field="expected_shortlist_excludes",
+                message=f"expected shortlist to exclude {name!r}, got {shortlist_names!r}",
+            )
+
+    expected_top1 = case.get("expected_top1")
+    if expected_top1 is not None and top1 != expected_top1:
+        add_behavior_issue(
+            issues,
+            source_label=source_label,
+            case_id=case_id,
+            field="expected_top1",
+            message=f"expected top1 {expected_top1!r}, got {top1!r}",
+        )
+
+    expected_top1_not = case.get("expected_top1_not")
+    if expected_top1_not is not None and top1 == expected_top1_not:
+        add_behavior_issue(
+            issues,
+            source_label=source_label,
+            case_id=case_id,
+            field="expected_top1_not",
+            message=f"expected top1 to differ from {expected_top1_not!r}",
+        )
+
+    expected_band = case.get("expected_band")
+    if expected_band is not None and top_band != expected_band:
+        add_behavior_issue(
+            issues,
+            source_label=source_label,
+            case_id=case_id,
+            field="expected_band",
+            message=f"expected top band {expected_band!r}, got {top_band!r}",
+        )
+
+    expected_confidence = case.get("expected_confidence")
+    if expected_confidence is not None and preselected.get("confidence") != expected_confidence:
+        add_behavior_issue(
+            issues,
+            source_label=source_label,
+            case_id=case_id,
+            field="expected_confidence",
+            message=f"expected confidence {expected_confidence!r}, got {preselected.get('confidence')!r}",
+        )
+
+    if "expect_fallback_candidates" in case:
+        expected_fallback_visibility = bool(case["expect_fallback_candidates"])
+        actual_fallback_visibility = bool(preselected.get("fallback_candidates"))
+        if actual_fallback_visibility != expected_fallback_visibility:
+            add_behavior_issue(
+                issues,
+                source_label=source_label,
+                case_id=case_id,
+                field="expect_fallback_candidates",
+                message=(
+                    f"expected fallback visibility {expected_fallback_visibility!r}, "
+                    f"got {actual_fallback_visibility!r}"
+                ),
+            )
+
+    expected_stage_2 = case.get("stage_2_expectation")
+    if expected_stage_2 is not None and decision_mode != expected_stage_2:
+        add_behavior_issue(
+            issues,
+            source_label=source_label,
+            case_id=case_id,
+            field="stage_2_expectation",
+            message=f"expected stage-2 decision {expected_stage_2!r}, got {decision_mode!r}",
+        )
+
+
 def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, str]]:
     generated_dir = resolve_generated_dir(routing_root)
+    routing_root, used_fallback_root = resolve_routing_root(routing_root)
     issues: list[tuple[str, str]] = []
     entrypoints = load_json(generated_dir / "two_stage_skill_entrypoints.json")
     prompt_blocks = load_json(generated_dir / "two_stage_router_prompt_blocks.json")
@@ -38,7 +160,13 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
     examples = load_json(generated_dir / "two_stage_router_examples.json")
     manifest = load_json(generated_dir / "two_stage_router_manifest.json")
     eval_cases = load_jsonl(generated_dir / "two_stage_router_eval_cases.jsonl")
+    local_precision_cases = []
+    if not used_fallback_root:
+        local_precision_cases = load_optional_jsonl(routing_root / LOCAL_PRECISION_CASES_PATH)
     tiny_capsules = load_json(skills_root / "generated" / "tiny_router_capsules.min.json")
+    policy = load_json(routing_root / "config" / "two_stage_router_policy.json")
+    signals = load_json(skills_root / "generated" / "tiny_router_skill_signals.json")
+    bands = load_json(skills_root / "generated" / "tiny_router_candidate_bands.json")
 
     for label, doc in {
         "two_stage_skill_entrypoints.json": entrypoints,
@@ -62,6 +190,8 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         issues.append(("two_stage_skill_entrypoints.json", "stage_2 decision_modes mismatch"))
     if entrypoints.get("routing_refs", {}).get("tiny_model_entrypoints") != "generated/tiny_model_entrypoints.json":
         issues.append(("two_stage_skill_entrypoints.json", "routing_refs tiny_model_entrypoints mismatch"))
+    if policy.get("defaults", {}).get("fallback_visibility_mode") != "out_of_band_only":
+        issues.append(("config/two_stage_router_policy.json", "fallback_visibility_mode must stay 'out_of_band_only'"))
 
     if len(tool_schemas.get("tools", [])) != 3:
         issues.append(("two_stage_router_tool_schemas.json", "expected exactly 3 tool schemas"))
@@ -95,6 +225,42 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         issues.append(("two_stage_router_manifest.json", "eval_case_count mismatch"))
     if manifest.get("integration_mode") != "adjacent-seam":
         issues.append(("two_stage_router_manifest.json", "integration_mode mismatch"))
+
+    for case in eval_cases:
+        preselected = preselect(
+            task=case["prompt"],
+            signals_doc=signals,
+            bands_doc=bands,
+            policy=policy,
+            top_k=top_k_default,
+            repo_family=case.get("repo_family_hint"),
+        )
+        packet = build_decision_packet(case["prompt"], preselected, skills_root)
+        validate_behavior_case(
+            case=case,
+            preselected=preselected,
+            packet=packet,
+            issues=issues,
+            source_label="two_stage_router_eval_cases.jsonl",
+        )
+
+    for case in local_precision_cases:
+        preselected = preselect(
+            task=case["prompt"],
+            signals_doc=signals,
+            bands_doc=bands,
+            policy=policy,
+            top_k=top_k_default,
+            repo_family=case.get("repo_family_hint"),
+        )
+        packet = build_decision_packet(case["prompt"], preselected, skills_root)
+        validate_behavior_case(
+            case=case,
+            preselected=preselected,
+            packet=packet,
+            issues=issues,
+            source_label=LOCAL_PRECISION_CASES_PATH.as_posix(),
+        )
 
     return issues
 

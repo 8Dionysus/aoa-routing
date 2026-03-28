@@ -37,12 +37,21 @@ def main() -> int:
         return 0
 
     if args.command == "decision-packet":
-        print_json(build_decision_packet(args.task, args.shortlist, skills_root))
+        preselect_payload = {
+            "task": args.task,
+            "repo_family": args.repo_family,
+            "top_bands": [],
+            "shortlist": [{"name": name} for name in args.shortlist],
+            "confidence": "strong" if args.shortlist else "empty",
+            "lead_score": None,
+            "lead_gap": None,
+            "fallback_candidates": [],
+        }
+        print_json(build_decision_packet(args.task, preselect_payload, skills_root))
         return 0
 
     preselected = preselect(args.task, signals, bands, policy, top_k=args.top_k, repo_family=args.repo_family)
-    shortlist_names = [entry["name"] for entry in preselected["shortlist"]]
-    packet = build_decision_packet(args.task, shortlist_names, skills_root)
+    packet = build_decision_packet(args.task, preselected, skills_root)
     print_json({"preselect": preselected, "decision_packet": packet})
     return 0
 

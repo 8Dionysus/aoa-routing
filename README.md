@@ -87,6 +87,9 @@ The builder writes these tracked artifacts under `generated/`:
 - `two_stage_router_manifest.json` - inventory and integration metadata for the two-stage seam
 - `two_stage_router_eval_cases.jsonl` - router-side shortlist and decision eval cases
 
+The current two-stage posture is precision-first:
+weak or empty shortlists stay `no-skill`, while fallback candidates remain visible out of band rather than replacing the live shortlist.
+
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
 `AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,
 `AOA-T-0021` stays the direct relation hint companion, and `AOA-T-0022` stays the caution companion.
@@ -242,3 +245,4 @@ while source-owned meaning remains upstream.
 The current ToS tiny-entry sync stays inside that same posture: it improves handoff into `Tree-of-Sophia` without widening the live router taxonomy.
 The default `kag-view-root` starter still stays anchored to `aoa-techniques`, while `tos-root` now chooses the ToS-specific `kag_view`.
 The optional two-stage skill-selection seam follows the same rule: stage-1 shortlist policy lives here, but skill meaning and activation authority stay in `aoa-skills`.
+When the signal is weak, the router should prefer `no-skill` and the flat routing path over a forced skill activation.
