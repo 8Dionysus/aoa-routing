@@ -114,18 +114,21 @@ def build_outputs(
         "tiny_preselector_system": (
             "You are a tiny skill preselector. Read only compressed skill cards, "
             "candidate bands, and their cues. Never activate a skill. Return at most "
-            "three candidate names plus manual markers for explicit-only skills."
+            "three positive-signal candidate names, confidence metadata, and any "
+            "out-of-band fallback visibility. Never treat fallback candidates as the live shortlist."
         ),
         "main_model_decision_system": (
             "You are the stage-2 skill decider. Read only the shortlist packet and "
             "the full capsules for shortlisted skills. Choose at most one skill or no "
-            "skill. Explicit-only skills must stay manual."
+            "skill. Weak or empty shortlists must stay no-skill. Explicit-only skills must stay manual."
         ),
         "handoff_contract": [
             "stage 1 narrows the candidate set",
             "stage 1 never activates a skill",
             "stage 2 may activate one candidate, require a manual handle, or choose no skill",
             "explicit-only skills stay manual even when they win stage 1",
+            "fallback candidates stay out-of-band and do not replace the shortlist",
+            "weak or empty shortlists must end in no-skill",
         ],
     }
 
@@ -135,7 +138,7 @@ def build_outputs(
         "tools": [
             {
                 "name": "preselect_skills",
-                "description": "Return a top-3 skill shortlist from compressed tiny-router cards.",
+                "description": "Return a top-3 positive-signal skill shortlist plus confidence metadata from compressed tiny-router cards.",
                 "input_schema": {
                     "type": "object",
                     "properties": {
@@ -167,7 +170,7 @@ def build_outputs(
             },
             {
                 "name": "route_skill_task",
-                "description": "Run stage-1 preselection and return the stage-2 decision packet.",
+                "description": "Run stage-1 preselection and return a precision-first stage-2 decision packet.",
                 "input_schema": {
                     "type": "object",
                     "properties": {
@@ -193,8 +196,7 @@ def build_outputs(
             top_k=policy["defaults"]["top_k"],
             repo_family=case.get("repo_family_hint"),
         )
-        shortlist_names = [entry["name"] for entry in preselected["shortlist"]]
-        packet = build_decision_packet(case["prompt"], shortlist_names, skills_root)
+        packet = build_decision_packet(case["prompt"], preselected, skills_root)
         if len(examples) < 8:
             examples.append(
                 {
@@ -205,23 +207,18 @@ def build_outputs(
                 }
             )
 
-        expected_mode = "no-skill"
-        if case.get("expected_shortlist_includes"):
-            expected_mode = (
-                "manual-invocation-required"
-                if case.get("expected_manual_invocation")
-                else "activate-candidate"
-            )
+        top_band = preselected["top_bands"][0]["id"] if preselected.get("top_bands") else None
         routing_eval_cases.append(
             {
                 "case_id": case["case_id"],
                 "prompt": case["prompt"],
+                "repo_family_hint": case.get("repo_family_hint"),
                 "expected_shortlist_includes": case.get("expected_shortlist_includes", []),
                 "expected_shortlist_excludes": case.get("expected_shortlist_excludes", []),
                 "expected_top1": case.get("expected_top1"),
                 "expected_top1_not": case.get("expected_top1_not"),
-                "expected_band": case.get("expected_band"),
-                "stage_2_expectation": expected_mode,
+                "expected_band": top_band,
+                "stage_2_expectation": packet["suggested_decision"]["decision_mode"],
             }
         )
 

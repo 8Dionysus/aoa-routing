@@ -26,6 +26,8 @@ It may:
 - score candidate bands
 - score skill cues
 - return a shortlist of up to `top_k`
+- emit a precision-first confidence reading for the current shortlist
+- keep fallback candidates visible out of band when the live shortlist is empty or weak
 - mark explicit-only skills as manual
 
 It must not:
@@ -51,6 +53,15 @@ It may return only:
 - `no-skill`
 
 Explicit-only skills may rank highly in stage 1, but stage 2 must still require an explicit handle.
+Weak or empty shortlists must stay `no-skill`.
+
+## Precision-First Posture
+
+The current router posture is precision-first.
+
+- stage 1 may publish fallback candidates for visibility, but they do not become the live shortlist
+- stage 2 should prefer `no-skill` over a weak activation
+- the flat routing path remains the default escape hatch when the shortlist signal is weak
 
 ## Boundary
 

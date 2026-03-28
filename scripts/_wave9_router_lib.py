@@ -45,9 +45,18 @@ STOPWORDS = {
     "you",
     "your",
     "already",
+    "anything",
+    "changed",
+    "checked",
+    "clear",
+    "identify",
+    "make",
+    "map",
     "only",
     "than",
+    "what",
 }
+NEGATION_PREFIXES = ("no", "not", "without")
 
 
 def load_json(path: Path) -> Any:
@@ -70,17 +79,36 @@ def tokenize(text: str) -> list[str]:
     return [token for token in normalize(text).split() if len(token) > 2 and token not in STOPWORDS]
 
 
+def is_negated_phrase(task_normalized: str, normalized_phrase: str) -> bool:
+    if not normalized_phrase:
+        return False
+    escaped_phrase = re.escape(normalized_phrase)
+    patterns = [
+        rf"\b(?:{'|'.join(NEGATION_PREFIXES)})(?: [a-z0-9]+){{0,6}} {escaped_phrase}\b",
+        rf"\b(?:does not|do not)(?: [a-z0-9]+){{0,6}} {escaped_phrase}\b",
+    ]
+    return any(re.search(pattern, task_normalized) for pattern in patterns)
+
+
 def phrase_hits(task_normalized: str, phrases: list[str]) -> list[str]:
     hits: list[str] = []
     for phrase in phrases:
         normalized_phrase = normalize(phrase)
-        if normalized_phrase and normalized_phrase in task_normalized:
+        if (
+            normalized_phrase
+            and normalized_phrase in task_normalized
+            and not is_negated_phrase(task_normalized, normalized_phrase)
+        ):
             hits.append(phrase)
     return hits
 
 
-def token_hits(task_tokens: set[str], tokens: list[str]) -> list[str]:
-    hits = [token for token in tokens if token in task_tokens]
+def token_hits(task_normalized: str, task_tokens: set[str], tokens: list[str]) -> list[str]:
+    hits = [
+        token
+        for token in tokens
+        if token in task_tokens and not is_negated_phrase(task_normalized, normalize(token))
+    ]
     return sorted(set(hits))
 
 
@@ -103,11 +131,11 @@ def score_band(
     reasons: list[str] = []
     score = 0
     matched_phrases = phrase_hits(task_normalized, band.get("cues", []))
-    matched_tokens = token_hits(task_tokens, tokenize(" ".join(band.get("cues", []))))
+    matched_tokens = token_hits(task_normalized, task_tokens, tokenize(" ".join(band.get("cues", []))))
     if matched_phrases:
         score += len(matched_phrases) * scoring["phrase_score_weight"]
         reasons.extend(f"cue:{phrase}" for phrase in matched_phrases[:3])
-    if matched_tokens:
+    if len(matched_tokens) >= 2:
         score += len(matched_tokens) * scoring["token_score_weight"]
         reasons.extend(f"token:{token}" for token in matched_tokens[:3])
     if normalize(band.get("summary", "")) in task_normalized:
@@ -127,37 +155,115 @@ def score_skill(
     scoring = policy["scoring"]
     score = 0
     reasons: list[str] = []
+    normalized_skill_name = normalize(signal["name"])
+    explicit_skill_mention = (
+        bool(normalized_skill_name)
+        and normalized_skill_name in task_normalized
+        and not is_negated_phrase(task_normalized, normalized_skill_name)
+    )
 
     if signal["band"] in top_band_ids:
         score += scoring["band_score_weight"]
         reasons.append(f"band:{signal['band']}")
+    if explicit_skill_mention:
+        score += scoring["phrase_score_weight"] * 2
+        reasons.append("explicit-skill-mention")
 
     positive_phrases = phrase_hits(task_normalized, signal.get("positive_cues", []))
     negative_phrases = phrase_hits(task_normalized, signal.get("negative_cues", []))
-    positive_tokens = token_hits(task_tokens, signal.get("cue_tokens", []))
-    negative_tokens = token_hits(task_tokens, signal.get("negative_tokens", []))
+    positive_tokens = token_hits(task_normalized, task_tokens, signal.get("cue_tokens", []))
+    negative_tokens = token_hits(task_normalized, task_tokens, signal.get("negative_tokens", []))
+    positive_prompt_tokens = token_hits(
+        task_normalized,
+        task_tokens,
+        tokenize(signal.get("primary_positive_prompt", "")),
+    )
+    negative_prompt_tokens = token_hits(
+        task_normalized,
+        task_tokens,
+        tokenize(signal.get("primary_negative_prompt", "")),
+    )
+    defer_prompt_tokens = token_hits(
+        task_normalized,
+        task_tokens,
+        tokenize(signal.get("primary_defer_prompt", "")),
+    )
 
     if positive_phrases:
         score += len(positive_phrases) * scoring["phrase_score_weight"]
         reasons.extend(f"positive:{phrase}" for phrase in positive_phrases[:3])
-    if positive_tokens:
+    if len(positive_tokens) >= 2:
         score += len(positive_tokens) * scoring["token_score_weight"]
         reasons.extend(f"token:{token}" for token in positive_tokens[:3])
+    if len(positive_prompt_tokens) >= 2:
+        score += len(positive_prompt_tokens) * scoring["token_score_weight"]
+        reasons.extend(f"positive-prompt:{token}" for token in positive_prompt_tokens[:3])
     if negative_phrases:
         score -= len(negative_phrases) * scoring["negative_phrase_penalty"]
         reasons.extend(f"negative:{phrase}" for phrase in negative_phrases[:2])
     if negative_tokens:
         score -= len(negative_tokens) * scoring["negative_token_penalty"]
         reasons.extend(f"negative-token:{token}" for token in negative_tokens[:2])
+    if len(negative_prompt_tokens) >= 2:
+        score -= len(negative_prompt_tokens) * scoring["negative_token_penalty"]
+        reasons.extend(f"negative-prompt:{token}" for token in negative_prompt_tokens[:2])
+    if len(defer_prompt_tokens) >= 2:
+        score -= len(defer_prompt_tokens) * scoring["negative_token_penalty"]
+        reasons.extend(f"defer-prompt:{token}" for token in defer_prompt_tokens[:2])
 
-    if resolved_repo_family and signal.get("project_overlay"):
-        family_entry = (policy.get("repo_families") or {}).get(resolved_repo_family, {})
-        prefixes = family_entry.get("project_skill_prefixes", [])
-        if any(signal["name"].startswith(prefix) for prefix in prefixes):
-            score += scoring["overlay_repo_family_bonus"]
-            reasons.append(f"overlay-family:{resolved_repo_family}")
+    if signal.get("project_overlay"):
+        if resolved_repo_family:
+            family_entry = (policy.get("repo_families") or {}).get(resolved_repo_family, {})
+            prefixes = family_entry.get("project_skill_prefixes", [])
+            if any(signal["name"].startswith(prefix) for prefix in prefixes):
+                score += scoring["overlay_repo_family_bonus"]
+                reasons.append(f"overlay-family:{resolved_repo_family}")
+        elif not explicit_skill_mention:
+            score -= scoring["overlay_repo_family_bonus"]
+            reasons.append("overlay-family-missing")
 
     return score, reasons
+
+
+def build_fallback_candidates(
+    fallback_names: list[str],
+    signal_by_name: dict[str, dict[str, Any]],
+    shortlisted_names: set[str],
+) -> list[dict[str, Any]]:
+    fallback_candidates: list[dict[str, Any]] = []
+    for fallback_name in fallback_names:
+        if fallback_name in shortlisted_names:
+            continue
+        signal = signal_by_name.get(fallback_name)
+        if signal is None:
+            continue
+        fallback_candidates.append(
+            {
+                "name": signal["name"],
+                "band": signal["band"],
+                "manual_invocation_required": signal["manual_invocation_required"],
+                "project_overlay": signal["project_overlay"],
+                "score": 0,
+                "reasons": ["fallback"],
+            }
+        )
+    return fallback_candidates
+
+
+def summarize_shortlist(shortlist: list[dict[str, Any]], policy: dict[str, Any]) -> tuple[str, int | None, int | None]:
+    if not shortlist:
+        return "empty", None, None
+
+    lead_score = int(shortlist[0]["score"])
+    runner_up_score = int(shortlist[1]["score"]) if len(shortlist) > 1 else 0
+    lead_gap = lead_score - runner_up_score
+
+    if (
+        lead_score < int(policy["defaults"]["min_activate_score"])
+        or lead_gap < int(policy["defaults"]["min_activate_gap"])
+    ):
+        return "weak", lead_score, lead_gap
+    return "strong", lead_score, lead_gap
 
 
 def preselect(
@@ -186,10 +292,8 @@ def preselect(
             }
         )
     scored_bands.sort(key=lambda entry: (-entry["score"], entry["id"]))
-    top_bands = scored_bands[: policy["defaults"]["max_band_candidates"]]
-    top_band_ids = {entry["id"] for entry in top_bands if entry["score"] > 0} or {
-        entry["id"] for entry in top_bands
-    }
+    top_bands = [entry for entry in scored_bands if entry["score"] > 0][: policy["defaults"]["max_band_candidates"]]
+    top_band_ids = {entry["id"] for entry in top_bands}
 
     scored_skills: list[dict[str, Any]] = []
     signal_by_name = {entry["name"]: entry for entry in signals_doc.get("skills", [])}
@@ -215,35 +319,54 @@ def preselect(
 
     scored_skills.sort(key=lambda entry: (-entry["score"], entry["name"]))
     shortlist = [entry for entry in scored_skills if entry["score"] > 0][:top_k]
-    if not shortlist:
-        for fallback_name in policy["defaults"].get("fallback_skills", []):
-            signal = signal_by_name.get(fallback_name)
-            if signal is None:
-                continue
-            shortlist.append(
-                {
-                    "name": signal["name"],
-                    "band": signal["band"],
-                    "manual_invocation_required": signal["manual_invocation_required"],
-                    "project_overlay": signal["project_overlay"],
-                    "score": 0,
-                    "reasons": ["fallback"],
-                }
-            )
-            if len(shortlist) >= top_k:
-                break
+    confidence, lead_score, lead_gap = summarize_shortlist(shortlist, policy)
+    fallback_candidates = build_fallback_candidates(
+        policy["defaults"].get("fallback_skills", []),
+        signal_by_name,
+        {entry["name"] for entry in shortlist},
+    )
 
     return {
         "task": task,
         "repo_family": resolved_repo_family,
         "top_bands": top_bands,
         "shortlist": shortlist,
+        "confidence": confidence,
+        "lead_score": lead_score,
+        "lead_gap": lead_gap,
+        "fallback_candidates": fallback_candidates,
+    }
+
+
+def coerce_preselect_result(task: str, preselect_result: dict[str, Any] | list[str]) -> dict[str, Any]:
+    if isinstance(preselect_result, dict):
+        return {
+            "task": preselect_result.get("task", task),
+            "repo_family": preselect_result.get("repo_family"),
+            "top_bands": preselect_result.get("top_bands", []),
+            "shortlist": preselect_result.get("shortlist", []),
+            "confidence": preselect_result.get("confidence", "strong"),
+            "lead_score": preselect_result.get("lead_score"),
+            "lead_gap": preselect_result.get("lead_gap"),
+            "fallback_candidates": preselect_result.get("fallback_candidates", []),
+        }
+
+    shortlist = [{"name": name} for name in preselect_result]
+    return {
+        "task": task,
+        "repo_family": None,
+        "top_bands": [],
+        "shortlist": shortlist,
+        "confidence": "strong" if shortlist else "empty",
+        "lead_score": None,
+        "lead_gap": None,
+        "fallback_candidates": [],
     }
 
 
 def build_decision_packet(
     task: str,
-    shortlist_names: list[str],
+    preselect_result: dict[str, Any] | list[str],
     skills_root: Path,
 ) -> dict[str, Any]:
     generated_dir = skills_root / "generated"
@@ -256,19 +379,26 @@ def build_decision_packet(
     capsule_by_name = {entry["name"]: entry for entry in capsules.get("skills", [])}
     adapter_by_name = {entry["name"]: entry for entry in local_adapter.get("skills", [])}
     retention_by_name = {entry["name"]: entry for entry in context_retention.get("skills", [])}
+    preselect_payload = coerce_preselect_result(task, preselect_result)
+    shortlist_by_name = {
+        entry.get("name"): entry for entry in preselect_payload.get("shortlist", []) if entry.get("name")
+    }
 
     candidates: list[dict[str, Any]] = []
-    for name in shortlist_names:
+    for name in shortlist_by_name:
         signal = signal_by_name.get(name)
         capsule = capsule_by_name.get(name)
         adapter = adapter_by_name.get(name)
         retention = retention_by_name.get(name)
         if signal is None or capsule is None or adapter is None or retention is None:
             continue
+        shortlist_entry = shortlist_by_name[name]
         candidates.append(
             {
                 "name": name,
                 "band": signal["band"],
+                "score": shortlist_entry.get("score"),
+                "preselect_reasons": shortlist_entry.get("reasons", []),
                 "summary": capsule["summary"],
                 "trigger_boundary_short": capsule["trigger_boundary_short"],
                 "verification_short": capsule["verification_short"],
@@ -281,12 +411,25 @@ def build_decision_packet(
             }
         )
 
-    if not candidates:
+    confidence = preselect_payload.get("confidence", "empty")
+    lead_score = preselect_payload.get("lead_score")
+    lead_gap = preselect_payload.get("lead_gap")
+    fallback_candidates = preselect_payload.get("fallback_candidates", [])
+
+    if confidence == "empty" or not candidates:
         suggested_decision = {
             "decision_mode": "no-skill",
             "skill": None,
             "next_step": "continue without a skill or use flat routing",
         }
+        decision_reason = "no positive-signal shortlist under the precision-first routing policy"
+    elif confidence == "weak":
+        suggested_decision = {
+            "decision_mode": "no-skill",
+            "skill": None,
+            "next_step": "continue without a skill or use flat routing",
+        }
+        decision_reason = "shortlist stayed below the precision-first activation thresholds"
     else:
         lead = candidates[0]
         if lead["manual_invocation_required"]:
@@ -295,22 +438,30 @@ def build_decision_packet(
                 "skill": lead["name"],
                 "next_step": f"require explicit handle ${lead['name']} before activation",
             }
+            decision_reason = "lead candidate is explicit-only even though the shortlist is strong"
         else:
             suggested_decision = {
                 "decision_mode": "activate-candidate",
                 "skill": lead["name"],
                 "next_step": f"inspect or activate {lead['name']} using the skill runtime seam",
             }
+            decision_reason = "lead candidate cleared the precision-first activation thresholds"
 
     return {
         "task": task,
+        "confidence": confidence,
+        "lead_score": lead_score,
+        "lead_gap": lead_gap,
         "candidate_count": len(candidates),
+        "fallback_candidates": fallback_candidates,
         "candidates": candidates,
+        "decision_reason": decision_reason,
         "suggested_decision": suggested_decision,
         "stage_2_checklist": [
             "choose at most one skill to activate",
             "if the lead candidate is explicit-only, require an explicit handle",
             "do not load full skill bodies for non-shortlisted skills",
-            "continue without a skill when the shortlist is weak",
+            "continue without a skill when the shortlist is weak or empty",
+            "keep fallback candidates visible without treating them as the live shortlist",
         ],
     }
