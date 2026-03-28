@@ -141,6 +141,41 @@ It must not own:
 - retry policy
 - router-owned fallback for thin-router returns
 
+### Milestone 9: Two-stage skill selection
+
+Merged as an optional adjacent seam rather than a replacement for flat routing.
+
+This wave adds:
+
+- `generated/two_stage_skill_entrypoints.json`
+- `generated/two_stage_router_prompt_blocks.json`
+- `generated/two_stage_router_tool_schemas.json`
+- `generated/two_stage_router_examples.json`
+- `generated/two_stage_router_manifest.json`
+- `generated/two_stage_router_eval_cases.jsonl`
+
+It also consumes the new skill-derived bridge from `aoa-skills`:
+
+- `generated/tiny_router_skill_signals.json`
+- `generated/tiny_router_candidate_bands.json`
+- `generated/tiny_router_capsules.min.json`
+
+`aoa-routing` should own:
+
+- stage-1 shortlist policy
+- scoring weights and penalties
+- fallback behavior
+- repo-family boosts
+- stage wiring and decision modes
+- prompt and tool contracts for the two-stage seam
+
+It must not own:
+
+- skill wording
+- invocation posture
+- activation authority
+- a second skill canon hidden inside router examples or prompt blocks
+
 ## Boundaries To Preserve
 
 These boundaries come directly from the seed and should remain hard constraints:
@@ -160,6 +195,8 @@ These boundaries come directly from the seed and should remain hard constraints:
 - the ToS path may hand off from that source-owned route into a ToS-specific derived `kag_view`, but the default KAG starter remains `aoa-techniques`
 - declared federation kinds must stay documented but inactive until their contracts are narrower and more stable
 - the federation entry ABI must stay additive beside the thin router core instead of replacing it
+- the two-stage skill-selection seam must stay additive beside flat routing rather than replacing `tiny_model_entrypoints.json`
+- `aoa-skills` must merge source-owned bridge surfaces before downstream two-stage routing changes can be treated as green on GitHub checks that read sibling repos from `main`
 
 ## Definition Of Success
 
@@ -170,6 +207,10 @@ The roadmap is successful when a small model can follow one of these paths relia
 or
 
 `federation root -> entry card -> source authority -> bounded next hop`
+
+or
+
+`tiny preselect -> stage-2 skill decision -> source-owned activation seam`
 
 Without:
 
