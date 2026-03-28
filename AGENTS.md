@@ -16,6 +16,7 @@ This repository is the source of truth for:
 - routing projections
 - dispatch hints
 - recommended path surfaces
+- optional two-stage routing seams built on source-owned bridge surfaces
 - local routing schemas
 - routing validation logic
 - integrity checks that keep navigation aligned with source-owned surfaces
@@ -49,7 +50,8 @@ Before making changes, read in this order:
 3. `generated/task_to_surface_hints.json`
 4. `generated/recommended_paths.min.json`
 5. `ROADMAP.md`
-6. builder or validator scripts only if the task touches generation logic
+6. `docs/TWO_STAGE_SKILL_SELECTION.md` when the task touches wave-9
+7. builder or validator scripts only if the task touches generation logic
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
 
@@ -62,6 +64,8 @@ The most important objects in this repository are:
 - `scripts/build_router.py`
 - `scripts/router_core.py`
 - `scripts/validate_router.py`
+- `scripts/build_two_stage_skill_router.py`
+- `scripts/validate_two_stage_skill_router.py`
 - `schemas/*`
 - `generated/*.json`
 - tests that validate router output integrity
@@ -75,6 +79,7 @@ Safe, normal contributions include:
 - improving recommended-path generation
 - tightening validation and integrity checks
 - refining ingestion contracts without violating source ownership
+- improving the optional two-stage shortlist seam without copying skill meaning
 - improving error reporting around missing or drifted source surfaces
 
 ## Changes requiring extra care
@@ -96,6 +101,7 @@ Do not:
 - store memory here
 - store eval doctrine here
 - store workflow authoring here
+- let stage 1 activate a skill or override explicit-only posture
 - turn routing into a graph/KAG platform
 - make routing authoritative over source meaning
 - silently widen routing into a repo that “understands” content better than the source repo itself
@@ -110,6 +116,12 @@ A good routing change should make it easier for an agent to answer:
 - what remains intentionally out of scope
 
 A bad routing change usually makes routing heavier, more semantic, more duplicative, or more authoritative than it should be.
+
+Wave-9 follows the same rule:
+
+- `aoa-skills` owns tiny skill cards and invocation posture
+- `aoa-routing` owns shortlist policy, stage wiring, and tool/prompt surfaces
+- the two-stage seam is additive, not a replacement for flat routing
 
 ## Public hygiene
 

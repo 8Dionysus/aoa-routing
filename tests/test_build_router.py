@@ -35,6 +35,18 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
 
 
+def write_output(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.suffix == ".jsonl":
+        rows = payload if isinstance(payload, list) else [payload]
+        path.write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+            encoding="utf-8",
+        )
+        return
+    write_json(path, payload)
+
+
 def build_fixture_outputs(
     *,
     techniques_root: Path = FIXTURES_ROOT / "aoa-techniques",
@@ -1156,7 +1168,7 @@ def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
     generated_dir = tmp_path / "generated"
     outputs_a = build_fixture_outputs()
     for filename, payload in outputs_a.items():
-        write_json(generated_dir / filename, payload)
+        write_output(generated_dir / filename, payload)
     snapshot_a = {
         path.name: path.read_text(encoding="utf-8")
         for path in sorted(generated_dir.iterdir())
@@ -1164,7 +1176,7 @@ def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
 
     outputs_b = build_fixture_outputs()
     for filename, payload in outputs_b.items():
-        write_json(generated_dir / filename, payload)
+        write_output(generated_dir / filename, payload)
     snapshot_b = {
         path.name: path.read_text(encoding="utf-8")
         for path in sorted(generated_dir.iterdir())

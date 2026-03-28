@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "profile": "codex-facing-wave-9-tiny-router-inputs",
+  "band_count": 2,
+  "bands": [
+    {
+      "id": "change-validation",
+      "summary": "Scoped change execution and explicit verification.",
+      "cues": [
+        "bounded change",
+        "explicit verification",
+        "plan apply verify report"
+      ],
+      "skills": [
+        "aoa-change-protocol"
+      ],
+      "manual_only_skills": [],
+      "overlay_skills": []
+    },
+    {
+      "id": "boundary-architecture",
+      "summary": "Small bounded orientation and boundary surfacing before deeper execution.",
+      "cues": [
+        "context scan",
+        "repo orientation",
+        "small bounded scan"
+      ],
+      "skills": [
+        "aoa-context-scan"
+      ],
+      "manual_only_skills": [],
+      "overlay_skills": []
+    }
+  ]
+}

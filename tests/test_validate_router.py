@@ -27,6 +27,18 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
 
 
+def write_output(path: Path, payload: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.suffix == ".jsonl":
+        rows = payload if isinstance(payload, list) else [payload]
+        path.write_text(
+            "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows),
+            encoding="utf-8",
+        )
+        return
+    write_json(path, payload)
+
+
 def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
     roots: dict[str, Path] = {}
     for repo_name in FIXTURE_REPO_NAMES:
@@ -59,7 +71,7 @@ def build_fixture_generated(
     generated_dir = tmp_path / generated_dir_name
     outputs = build_outputs_from_roots(roots)
     for filename, payload in outputs.items():
-        write_json(generated_dir / filename, payload)
+        write_output(generated_dir / filename, payload)
     return generated_dir, roots
 
 
