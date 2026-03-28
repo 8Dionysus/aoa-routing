@@ -1,0 +1,11 @@
+{
+  "catalog_version": 1,
+  "source_of_truth": "aoa-memo-object-route-capsules-v1",
+  "memory_objects": [
+    {
+      "id": "memo.state.fixture.contract-hardening-current-axis",
+      "title": "Fixture contract-hardening axis",
+      "summary": "Compact object capsule for memory-object recall routing tests."
+    }
+  ]
+}

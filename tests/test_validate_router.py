@@ -605,6 +605,57 @@ def test_validate_generated_outputs_rejects_missing_recall_contract_target(tmp_p
     )
 
 
+def test_validate_generated_outputs_rejects_missing_memo_capsule_mode_mapping(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    del memo_hint["actions"]["recall"]["capsule_surfaces_by_mode"]["semantic"]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "memo capsule_surfaces_by_mode must include mode 'semantic'" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_memo_capsule_surface_mismatch(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    memo_hint["actions"]["recall"]["capsule_surfaces_by_mode"]["semantic"] = (
+        "generated/memory_object_capsules.json"
+    )
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "recall contract capsule_surface must match memo capsule_surfaces_by_mode for mode 'semantic'"
+        in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_missing_memo_capsule_surface_target(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    memo_hint["actions"]["recall"]["capsule_surfaces_by_mode"]["semantic"] = (
+        "generated/missing_memory_capsules.json"
+    )
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "aoa-memo/generated/missing_memory_capsules.json"
+        and "is missing" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_non_string_recall_contract_path_without_crashing(
     tmp_path: Path,
 ) -> None:
@@ -647,6 +698,46 @@ def test_validate_generated_outputs_rejects_parallel_object_contract_surface_mis
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         "parallel recall family 'memory_objects' contract expand_surface must match the family expand surface"
+        in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_missing_parallel_object_capsule_mode_mapping(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    del memo_hint["actions"]["recall"]["parallel_families"]["memory_objects"]["capsule_surfaces_by_mode"][
+        "semantic"
+    ]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "parallel recall family 'memory_objects' capsule_surfaces_by_mode must include mode 'semantic'"
+        in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_parallel_object_capsule_surface_mismatch(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    memo_hint = next(hint for hint in payload["hints"] if hint["kind"] == "memo")
+    memo_hint["actions"]["recall"]["parallel_families"]["memory_objects"]["capsule_surfaces_by_mode"][
+        "semantic"
+    ] = "generated/memory_capsules.json"
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "parallel recall family 'memory_objects' contract capsule_surface must match capsule_surfaces_by_mode for mode 'semantic'"
         in issue.message
         for issue in issues
     )

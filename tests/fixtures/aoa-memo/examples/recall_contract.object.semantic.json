@@ -21,6 +21,7 @@
     "hot"
   ],
   "inspect_surface": "generated/memory_object_catalog.min.json",
+  "capsule_surface": "generated/memory_object_capsules.json",
   "expand_surface": "generated/memory_object_sections.full.json",
   "source_route_required": false,
   "notes": "Fixture semantic recall contract for object-facing memo surfaces."

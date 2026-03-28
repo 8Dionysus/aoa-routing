@@ -75,6 +75,7 @@ MEMO_INSPECT_SURFACE_FILE = "generated/memory_catalog.min.json"
 MEMO_EXPAND_SURFACE_FILE = "generated/memory_sections.full.json"
 MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory_object_catalog.min.json"
 MEMO_OBJECT_EXPAND_SURFACE_FILE = "generated/memory_object_sections.full.json"
+MEMO_CAPSULE_RECALL_MODES = ("semantic", "lineage")
 DEFAULT_MEMO_RECALL_MODE = "semantic"
 ROUTER_READY_RECALL_CONTRACT_PREFIX = "recall_contract.router."
 MEMO_OBJECT_RECALL_FAMILY = "memory_objects"
@@ -789,6 +790,13 @@ def load_optional_parallel_memo_recall_families(memo_root: Path) -> dict[str, di
     return families
 
 
+def load_optional_contract_capsule_surface(contract: dict[str, Any], location: str) -> str | None:
+    capsule_surface = contract.get("capsule_surface")
+    if capsule_surface is None:
+        return None
+    return ensure_repo_relative_path(capsule_surface, f"{location}.capsule_surface")
+
+
 def load_optional_memo_object_recall_family(memo_root: Path) -> dict[str, Any] | None:
     catalog_path = memo_root / MEMO_OBJECT_INSPECT_SURFACE_FILE
     sections_path = memo_root / MEMO_OBJECT_EXPAND_SURFACE_FILE
@@ -810,6 +818,7 @@ def load_optional_memo_object_recall_family(memo_root: Path) -> dict[str, Any] |
         return None
 
     contracts_by_mode: dict[str, str] = {}
+    capsule_surfaces_by_mode: dict[str, str] = {}
     for mode, relative_contract_path in MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE.items():
         contract_path = memo_root / relative_contract_path
         location = relative_posix(contract_path, memo_root)
@@ -829,6 +838,7 @@ def load_optional_memo_object_recall_family(memo_root: Path) -> dict[str, Any] |
                 contract["expand_surface"],
                 f"{location}.expand_surface",
             )
+            capsule_surface = load_optional_contract_capsule_surface(contract, location)
         except RouterError:
             return None
         if contract_mode != mode:
@@ -838,24 +848,30 @@ def load_optional_memo_object_recall_family(memo_root: Path) -> dict[str, Any] |
         if expand_surface != MEMO_OBJECT_EXPAND_SURFACE_FILE:
             return None
         contracts_by_mode[mode] = location
+        if capsule_surface is not None:
+            capsule_surfaces_by_mode[mode] = capsule_surface
 
-    return {
+    family_payload = {
         "inspect_surface": MEMO_OBJECT_INSPECT_SURFACE_FILE,
         "expand_surface": MEMO_OBJECT_EXPAND_SURFACE_FILE,
         "default_mode": MEMO_OBJECT_RECALL_DEFAULT_MODE,
         "supported_modes": list(MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE.keys()),
         "contracts_by_mode": contracts_by_mode,
     }
+    if capsule_surfaces_by_mode:
+        family_payload["capsule_surfaces_by_mode"] = capsule_surfaces_by_mode
+    return family_payload
 
 
 def load_router_ready_memo_recall_contracts(
     memo_root: Path,
     memo_surfaces: list[dict[str, Any]] | None = None,
-) -> tuple[str | None, list[str], dict[str, str]]:
+) -> tuple[str | None, list[str], dict[str, str], dict[str, str]]:
     surfaces = memo_surfaces or load_memo_catalog_surfaces(memo_root)
     declared_modes = collect_memo_recall_mode_order(surfaces)
     declared_mode_set = set(declared_modes)
     contracts_by_mode: dict[str, str] = {}
+    capsule_surfaces_by_mode: dict[str, str] = {}
 
     examples_dir = memo_root / "examples"
     if examples_dir.exists():
@@ -875,13 +891,16 @@ def load_router_ready_memo_recall_contracts(
                     f"{location}.mode must be declared by aoa-memo/{MEMO_INSPECT_SURFACE_FILE}"
                 )
             contracts_by_mode[mode] = location
+            capsule_surface = load_optional_contract_capsule_surface(contract, location)
+            if capsule_surface is not None:
+                capsule_surfaces_by_mode[mode] = capsule_surface
 
     supported_modes = [mode for mode in declared_modes if mode in contracts_by_mode]
     if not supported_modes:
-        return None, [], {}
+        return None, [], {}, {}
 
     default_mode = DEFAULT_MEMO_RECALL_MODE if DEFAULT_MEMO_RECALL_MODE in contracts_by_mode else supported_modes[0]
-    return default_mode, supported_modes, contracts_by_mode
+    return default_mode, supported_modes, contracts_by_mode, capsule_surfaces_by_mode
 
 
 def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, Any]:
@@ -1856,6 +1875,7 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
         recall_default_mode: str | None = None,
         recall_supported_modes: list[str] | None = None,
         recall_contracts_by_mode: dict[str, str] | None = None,
+        recall_capsule_surfaces_by_mode: dict[str, str] | None = None,
         recall_parallel_families: dict[str, dict[str, Any]] | None = None,
     ) -> dict[str, dict[str, Any]]:
         inspect: dict[str, Any] = {"enabled": inspect_enabled}
@@ -1881,6 +1901,8 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
             recall["default_mode"] = recall_default_mode
             recall["supported_modes"] = list(recall_supported_modes or [])
             recall["contracts_by_mode"] = dict(recall_contracts_by_mode or {})
+            if recall_capsule_surfaces_by_mode:
+                recall["capsule_surfaces_by_mode"] = dict(recall_capsule_surfaces_by_mode)
             if recall_parallel_families:
                 recall["parallel_families"] = {
                     family_name: dict(family_payload)
@@ -1895,7 +1917,12 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
         }
 
     memo_surfaces = load_memo_catalog_surfaces(memo_root)
-    recall_default_mode, recall_supported_modes, recall_contracts_by_mode = (
+    (
+        recall_default_mode,
+        recall_supported_modes,
+        recall_contracts_by_mode,
+        recall_capsule_surfaces_by_mode,
+    ) = (
         load_router_ready_memo_recall_contracts(memo_root, memo_surfaces)
     )
     recall_parallel_families = load_optional_parallel_memo_recall_families(memo_root)
@@ -2058,6 +2085,7 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
                     recall_default_mode=recall_default_mode,
                     recall_supported_modes=recall_supported_modes,
                     recall_contracts_by_mode=recall_contracts_by_mode,
+                    recall_capsule_surfaces_by_mode=recall_capsule_surfaces_by_mode,
                     recall_parallel_families=recall_parallel_families,
                 ),
             },
