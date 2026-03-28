@@ -78,6 +78,7 @@ The builder writes these tracked artifacts under `generated/`:
 - `pairing_hints.min.json` - bounded pair suggestions derived from cross-kind dependencies and family-scoped direct relations
 - `federation_entrypoints.min.json` - bounded federation entry ABI with derived root cards, live entry cards, and explicit source authority refs
 - `federation_entrypoints.min.json` also keeps the current `tos-root -> source-owned tiny-entry route -> Tree-of-Sophia kag_view` handoff without activating a new federation kind
+- the `Tree-of-Sophia` `kag_view` now advertises one bounded `aoa-kag` adjunct via `generated/tos_zarathustra_route_retrieval_pack.min.json`, but only after the source-owned tiny-entry handoff
 - `return_navigation_hints.min.json` - bounded re-entry hints that point runtime and agent layers back to source-owned inspect, expand, or recall surfaces after a governed return decision
 - `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind roots, memo recall entry hints, and a separate federation-entry seam
 - `two_stage_skill_entrypoints.json` - optional stage-1 and stage-2 entry ABI for tiny skill preselection
@@ -105,6 +106,7 @@ The doctrinal explanation for that boundary lives in `docs/FEDERATION_ENTRY_ABI.
 The recurrence-specific routing boundary lives in `docs/RECURRENCE_NAVIGATION_BOUNDARY.md`.
 Return guidance stays orientation-only as well: the router may point back to source-owned authority or support surfaces, but it does not classify return semantics or checkpoint meaning.
 For ToS specifically, `tos-root` now hands off first to a source-owned tiny-entry route surface inside `Tree-of-Sophia`, then to a ToS-specific KAG view, before the bounded playbook hop.
+That ToS-specific `kag_view` can now advertise one bounded `aoa-kag` retrieval adjunct, but it does not replace ToS authority, does not widen the thin router core, and does not activate a new federation kind.
 
 Inspect actions point to repo-local capsule surfaces:
 

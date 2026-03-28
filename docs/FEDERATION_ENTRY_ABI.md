@@ -185,6 +185,11 @@ The current KAG-view layer now publishes two live derived entries:
 
 This does not widen the active kind list.
 It only lets `tos-root` hand off to a ToS-shaped derived readiness card after the source-owned tiny-entry route.
+In the current wave, that ToS-specific `kag_view` may also advertise one bounded
+`aoa-kag/generated/tos_zarathustra_route_retrieval_pack.min.json` adjunct.
+That adjunct is handles-only, appears only inside the ToS `kag_view`, and does
+not replace `Tree-of-Sophia` authority or grant routing ownership over ToS
+meaning.
 
 ## Non-Goals
 
@@ -193,6 +198,7 @@ This landing does not:
 - turn `aoa-routing` into a second charter layer
 - promote declared kinds to active routing
 - add a new federation starter for the current ToS tiny-entry route
+- turn the bounded `AOA-K-0011` adjunct into a new federation kind or thin-router starter
 - replace ToS authority with route-owned cards
 - replace KAG doctrine with router-owned summaries
 - fold federation entry routing into the thin router registry

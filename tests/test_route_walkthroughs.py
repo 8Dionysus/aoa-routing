@@ -462,6 +462,13 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
             "match_key": "route_id",
             "target_value": "tos-tiny-entry.zarathustra-prologue",
         },
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-kag",
+            "target_surface": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+            "match_key": "retrieval_id",
+            "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
+        },
     ]
     assert (roots["Tree-of-Sophia"] / "docs" / "TINY_ENTRY_ROUTE.md").exists()
 

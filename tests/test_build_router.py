@@ -853,6 +853,13 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
             "match_key": "route_id",
             "target_value": "tos-tiny-entry.zarathustra-prologue",
         },
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-kag",
+            "target_surface": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+            "match_key": "retrieval_id",
+            "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
+        },
     ]
     assert tos_kag_view["next_hops"] == [
         {"kind": "tier", "id": "router"},
@@ -886,6 +893,7 @@ def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
             "kind": "technique",
             "object_id": "AOA-T-0043",
             "entry_surface_ref": "aoa-techniques/generated/technique_capsules.json",
+            "adjunct_surfaces": [],
             "summary_50": payload["repos"][0]["provenance_note"],
             "provenance_note": payload["repos"][0]["provenance_note"],
             "non_identity_boundary": payload["repos"][0]["non_identity_boundary"],
@@ -897,6 +905,16 @@ def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
             "kind": "source_node",
             "object_id": "tos.source.thus-spoke-zarathustra.prologue",
             "entry_surface_ref": "Tree-of-Sophia/examples/source_node.example.json",
+            "adjunct_surfaces": [
+                {
+                    "surface_id": "AOA-K-0011",
+                    "surface_name": "tos-zarathustra-route-retrieval-surface",
+                    "surface_ref": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+                    "match_key": "retrieval_id",
+                    "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
+                    "route_id": "thus-spoke-zarathustra/prologue-1",
+                }
+            ],
             "summary_50": payload["repos"][1]["provenance_note"],
             "provenance_note": payload["repos"][1]["provenance_note"],
             "non_identity_boundary": payload["repos"][1]["non_identity_boundary"],
@@ -940,6 +958,13 @@ def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
             "target_surface": "examples/tos_tiny_entry_route.example.json",
             "match_key": "route_id",
             "target_value": "tos-tiny-entry.zarathustra-prologue",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "aoa-kag",
+            "target_surface": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+            "match_key": "retrieval_id",
+            "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
         },
     ]
 
