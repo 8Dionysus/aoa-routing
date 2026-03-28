@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/schemas/two-stage-router-manifest.schema.json",
+  "title": "aoa-routing two-stage router manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile",
+    "policy_ref",
+    "integration_mode",
+    "source_inputs",
+    "skill_count",
+    "band_count",
+    "example_count",
+    "eval_case_count",
+    "base_entrypoint_count",
+    "router_skill_entry_count",
+    "pairing_entry_count",
+    "task_hint_kinds"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "profile": { "const": "aoa-routing-wave-9-two-stage-skill-router" },
+    "policy_ref": { "type": "string", "minLength": 1 },
+    "integration_mode": { "const": "adjacent-seam" },
+    "source_inputs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "skill_count": { "type": "integer", "minimum": 0 },
+    "band_count": { "type": "integer", "minimum": 0 },
+    "example_count": { "type": "integer", "minimum": 0 },
+    "eval_case_count": { "type": "integer", "minimum": 0 },
+    "base_entrypoint_count": { "type": "integer", "minimum": 0 },
+    "router_skill_entry_count": { "type": "integer", "minimum": 0 },
+    "pairing_entry_count": { "type": "integer", "minimum": 0 },
+    "task_hint_kinds": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  }
+}

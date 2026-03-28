@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/schemas/two-stage-skill-entrypoints.schema.json",
+  "title": "aoa-routing two-stage skill entrypoints",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile",
+    "inherits_from",
+    "stage_1",
+    "stage_2",
+    "starters",
+    "routing_refs"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "profile": {
+      "const": "aoa-routing-wave-9-two-stage-skill-router"
+    },
+    "inherits_from": {
+      "type": "string",
+      "minLength": 1
+    },
+    "stage_1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "source_repo",
+        "target_surface",
+        "bands_surface",
+        "signals_surface",
+        "top_k_default",
+        "activation_policy",
+        "manual_policy",
+        "policy_ref"
+      ],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "source_repo": { "const": "aoa-skills" },
+        "target_surface": { "type": "string", "minLength": 1 },
+        "bands_surface": { "type": "string", "minLength": 1 },
+        "signals_surface": { "type": "string", "minLength": 1 },
+        "top_k_default": { "type": "integer", "minimum": 1 },
+        "activation_policy": { "const": "never-activate" },
+        "manual_policy": { "type": "string", "minLength": 1 },
+        "policy_ref": { "type": "string", "minLength": 1 }
+      }
+    },
+    "stage_2": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "source_repo",
+        "shortlist_surface",
+        "activation_manifest",
+        "context_manifest",
+        "decision_modes"
+      ],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "source_repo": { "const": "aoa-skills" },
+        "shortlist_surface": { "type": "string", "minLength": 1 },
+        "activation_manifest": { "type": "string", "minLength": 1 },
+        "context_manifest": { "type": "string", "minLength": 1 },
+        "decision_modes": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "starters": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "verb",
+          "source_repo",
+          "target_surface"
+        ],
+        "properties": {
+          "name": { "type": "string", "minLength": 1 },
+          "verb": { "type": "string", "enum": ["preselect", "decision-packet"] },
+          "source_repo": { "const": "aoa-skills" },
+          "target_surface": { "type": "string", "minLength": 1 },
+          "top_k": { "type": "integer", "minimum": 1 },
+          "band_hint": { "type": "string", "minLength": 1 },
+          "repo_family": { "type": "string", "minLength": 1 },
+          "activation_manifest": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "routing_refs": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tiny_model_entrypoints",
+        "aoa_router",
+        "pairing_hints",
+        "task_to_surface_hints"
+      ],
+      "properties": {
+        "tiny_model_entrypoints": { "type": "string", "minLength": 1 },
+        "aoa_router": { "type": "string", "minLength": 1 },
+        "pairing_hints": { "type": "string", "minLength": 1 },
+        "task_to_surface_hints": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

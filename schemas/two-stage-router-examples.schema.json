@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/schemas/two-stage-router-examples.schema.json",
+  "title": "aoa-routing two-stage router examples",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "profile",
+    "examples"
+  ],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "profile": { "const": "aoa-routing-wave-9-two-stage-skill-router" },
+    "examples": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "case_id",
+          "prompt",
+          "preselect_result",
+          "decision_packet"
+        ],
+        "properties": {
+          "case_id": { "type": "string", "minLength": 1 },
+          "prompt": { "type": "string", "minLength": 1 },
+          "preselect_result": { "type": "object" },
+          "decision_packet": { "type": "object" }
+        }
+      }
+    }
+  }
+}

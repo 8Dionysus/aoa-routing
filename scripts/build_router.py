@@ -4,9 +4,11 @@
 from __future__ import annotations
 
 import argparse
+import json
 from pathlib import Path
 from typing import Any
 
+from build_two_stage_skill_router import build_outputs as build_two_stage_outputs
 from router_core import (
     CANONICAL_REPO_BY_KIND,
     FEDERATION_ENTRYPOINTS_FILE,
@@ -360,6 +362,10 @@ def collect_memo_entries(memo_root: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def dump_jsonl(rows: list[dict[str, Any]]) -> str:
+    return "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
+
+
 def build_outputs(
     techniques_root: Path,
     skills_root: Path,
@@ -370,7 +376,7 @@ def build_outputs(
     playbooks_root: Path,
     kag_root: Path,
     tos_root: Path,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
         techniques_root
     )
@@ -432,7 +438,7 @@ def build_outputs(
         hints_payload,
         federation_entrypoints_payload,
     )
-    return {
+    outputs = {
         "cross_repo_registry.min.json": registry_payload,
         "aoa_router.min.json": router_payload,
         "task_to_surface_hints.json": hints_payload,
@@ -444,6 +450,17 @@ def build_outputs(
         "pairing_hints.min.json": pairing_payload,
         "tiny_model_entrypoints.json": tiny_model_entrypoints_payload,
     }
+    outputs.update(
+        build_two_stage_outputs(
+            routing_root=REPO_ROOT,
+            skills_root=skills_root,
+            tiny_model_entrypoints=tiny_model_entrypoints_payload,
+            aoa_router=router_payload,
+            pairing_hints=pairing_payload,
+            task_to_surface_hints=hints_payload,
+        )
+    )
+    return outputs
 
 
 def main() -> int:
@@ -464,7 +481,10 @@ def main() -> int:
 
     for filename, payload in outputs.items():
         path = generated_dir / filename
-        write_json_file(path, payload)
+        if filename.endswith(".jsonl"):
+            path.write_text(dump_jsonl(payload), encoding="utf-8", newline="\n")
+        else:
+            write_json_file(path, payload)
         print(f"[ok] wrote {relative_posix(path)}")
     return 0
 

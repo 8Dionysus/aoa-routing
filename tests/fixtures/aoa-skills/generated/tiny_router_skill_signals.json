@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "profile": "codex-facing-wave-9-tiny-router-inputs",
+  "skill_count": 2,
+  "band_count": 2,
+  "skills": [
+    {
+      "name": "aoa-change-protocol",
+      "band": "change-validation",
+      "band_summary": "Scoped change execution and explicit verification.",
+      "scope": "core",
+      "status": "canonical",
+      "invocation_mode": "explicit-preferred",
+      "allow_implicit_invocation": true,
+      "manual_invocation_required": false,
+      "project_overlay": false,
+      "summary": "Bounded workflow for Codex to plan a change, keep it scoped, verify it explicitly, and report it clearly.",
+      "summary_short": "Plan, scope, verify, and report a bounded change.",
+      "description": "Plan and execute a bounded repository change with explicit verification and reporting.",
+      "description_sha256": "fixture-change-protocol",
+      "positive_cues": [
+        "bounded change",
+        "explicit verification",
+        "plan apply verify report"
+      ],
+      "negative_cues": [
+        "tiny wording fix",
+        "open-ended exploration"
+      ],
+      "cue_tokens": [
+        "bounded",
+        "change",
+        "verification",
+        "report"
+      ],
+      "negative_tokens": [
+        "tiny",
+        "exploration"
+      ],
+      "auto_tokens": [
+        "change",
+        "bounded",
+        "verification",
+        "report"
+      ],
+      "companions": [],
+      "primary_positive_prompt": "Make a bounded repository change with a clear verification step and a final report.",
+      "primary_negative_prompt": "Take a tiny wording pass with no meaningful validation needs.",
+      "primary_defer_prompt": ""
+    },
+    {
+      "name": "aoa-context-scan",
+      "band": "boundary-architecture",
+      "band_summary": "Small bounded orientation and boundary surfacing before deeper execution.",
+      "scope": "core",
+      "status": "evaluated",
+      "invocation_mode": "implicit-friendly",
+      "allow_implicit_invocation": true,
+      "manual_invocation_required": false,
+      "project_overlay": false,
+      "summary": "Small context scan skill for bounded repository orientation before a change.",
+      "summary_short": "Scan just enough repo context before acting.",
+      "description": "Scan the repository just far enough to understand the relevant files, constraints, and next bounded surface.",
+      "description_sha256": "fixture-context-scan",
+      "positive_cues": [
+        "context scan",
+        "repo orientation",
+        "small bounded scan"
+      ],
+      "negative_cues": [
+        "deep implementation",
+        "open-ended exploration"
+      ],
+      "cue_tokens": [
+        "context",
+        "scan",
+        "orientation"
+      ],
+      "negative_tokens": [
+        "deep",
+        "exploration"
+      ],
+      "auto_tokens": [
+        "context",
+        "scan",
+        "orientation"
+      ],
+      "companions": [],
+      "primary_positive_prompt": "Before changing anything, do a bounded repo scan to identify the relevant files and stop once the key surfaces are clear.",
+      "primary_negative_prompt": "Apply the code change and verify it with tests right away.",
+      "primary_defer_prompt": ""
+    }
+  ]
+}

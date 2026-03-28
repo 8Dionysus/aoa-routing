@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "profile": "codex-facing-wave-3-context-retention",
+  "skills": [
+    {
+      "name": "aoa-change-protocol",
+      "rehydration_hint": "Reload trigger boundary, workflow, verification, and touched-surface notes before resuming."
+    },
+    {
+      "name": "aoa-context-scan",
+      "rehydration_hint": "Reload the bounded context map, surfaced files, and stop condition before resuming."
+    }
+  ]
+}

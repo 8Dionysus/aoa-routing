@@ -14,6 +14,7 @@ from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
 import validate_nested_agents
+from validate_two_stage_skill_router import validate_outputs as validate_two_stage_outputs
 
 from build_router import build_outputs
 from router_core import (
@@ -102,6 +103,11 @@ OUTPUT_SCHEMA_NAMES = {
     "kag_source_lift_relation_hints.min.json": "kag-source-lift-relation-hints.schema.json",
     "pairing_hints.min.json": "pairing-hints.schema.json",
     "tiny_model_entrypoints.json": "tiny-model-entrypoints.schema.json",
+    "two_stage_skill_entrypoints.json": "two-stage-skill-entrypoints.schema.json",
+    "two_stage_router_prompt_blocks.json": "two-stage-router-prompt-blocks.schema.json",
+    "two_stage_router_tool_schemas.json": "two-stage-router-tool-schemas.schema.json",
+    "two_stage_router_examples.json": "two-stage-router-examples.schema.json",
+    "two_stage_router_manifest.json": "two-stage-router-manifest.schema.json",
 }
 
 SOURCE_OWNED_PAYLOAD_KEYS = (
@@ -3479,6 +3485,9 @@ def validate_generated_outputs(
                         f"routing outputs must not copy source-owned payload key '{key}'",
                     )
                 )
+
+    for location, message in validate_two_stage_outputs(generated_dir, skills_root):
+        issues.append(ValidationIssue(location, message))
 
     return issues
 

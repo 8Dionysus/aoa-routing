@@ -1,0 +1,25 @@
+{
+  "manifest_version": 2,
+  "profile": "codex-facing-local-adapter",
+  "root": ".agents/skills",
+  "skills": [
+    {
+      "name": "aoa-change-protocol",
+      "description": "Plan and execute a bounded repository change with explicit verification and reporting.",
+      "allow_implicit_invocation": true,
+      "invocation_mode": "explicit-preferred",
+      "allowlist_paths": [
+        ".agents/skills/aoa-change-protocol"
+      ]
+    },
+    {
+      "name": "aoa-context-scan",
+      "description": "Scan the repository just far enough to understand the relevant files, constraints, and next bounded surface.",
+      "allow_implicit_invocation": true,
+      "invocation_mode": "implicit-friendly",
+      "allowlist_paths": [
+        ".agents/skills/aoa-context-scan"
+      ]
+    }
+  ]
+}

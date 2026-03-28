@@ -18,6 +18,10 @@ The new federation-entry path is separate and additive:
 
 `federation root -> entry card -> source authority -> bounded next hop`
 
+Wave-9 adds another separate and additive path for low-context skill selection:
+
+`tiny preselect -> stage-2 skill decision`
+
 ## Scope
 
 `aoa-routing` v0.1 covers:
@@ -76,6 +80,12 @@ The builder writes these tracked artifacts under `generated/`:
 - `federation_entrypoints.min.json` also keeps the current `tos-root -> source-owned tiny-entry route -> Tree-of-Sophia kag_view` handoff without activating a new federation kind
 - `return_navigation_hints.min.json` - bounded re-entry hints that point runtime and agent layers back to source-owned inspect, expand, or recall surfaces after a governed return decision
 - `tiny_model_entrypoints.json` - low-context query grammar and curated starters for small-model routing, including kind roots, memo recall entry hints, and a separate federation-entry seam
+- `two_stage_skill_entrypoints.json` - optional stage-1 and stage-2 entry ABI for tiny skill preselection
+- `two_stage_router_prompt_blocks.json` - router-owned prompt contract for the two-stage seam
+- `two_stage_router_tool_schemas.json` - tool schemas for preselect, packet build, and full route
+- `two_stage_router_examples.json` - bounded worked examples for the two-stage seam
+- `two_stage_router_manifest.json` - inventory and integration metadata for the two-stage seam
+- `two_stage_router_eval_cases.jsonl` - router-side shortlist and decision eval cases
 
 For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadata entrypoint.
 `AOA-T-0018` stays the section specialist, `AOA-T-0020` stays the provenance companion,
@@ -112,6 +122,15 @@ Expand actions point to repo-local section surfaces:
 
 `aoa-routing` does not copy section payloads into its own outputs.
 It only tells an agent which source-owned section surface to expand next.
+
+For wave-9, `aoa-routing` also consumes the skill-derived tiny-router bridge that `aoa-skills` publishes:
+
+- `aoa-skills/generated/tiny_router_skill_signals.json`
+- `aoa-skills/generated/tiny_router_candidate_bands.json`
+- `aoa-skills/generated/tiny_router_capsules.min.json`
+
+Those inputs remain source-owned by `aoa-skills`.
+Routing owns only the stage policy and the routing-facing seam built on top of them.
 
 Pair actions point to a route-owned bounded surface:
 
@@ -158,6 +177,14 @@ Validate the generated outputs:
 
 ```bash
 python scripts/validate_router.py
+```
+
+The optional wave-9 seam can also be exercised directly:
+
+```bash
+python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
+python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
+python scripts/two_stage_skill_router.py route --routing-root . --skills-root ../aoa-skills --task "Make a bounded repository change with a clear verification step and a final report."
 ```
 
 The validator enforces both:
@@ -213,3 +240,4 @@ Bounded pairing, tiny-model entrypoints, memo recall dispatch, and the federatio
 while source-owned meaning remains upstream.
 The current ToS tiny-entry sync stays inside that same posture: it improves handoff into `Tree-of-Sophia` without widening the live router taxonomy.
 The default `kag-view-root` starter still stays anchored to `aoa-techniques`, while `tos-root` now chooses the ToS-specific `kag_view`.
+The optional two-stage skill-selection seam follows the same rule: stage-1 shortlist policy lives here, but skill meaning and activation authority stay in `aoa-skills`.

@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "defaults": {
+    "top_k": 3,
+    "max_band_candidates": 2,
+    "max_stage_1_tokens": 1200,
+    "max_stage_2_shortlist": 3,
+    "decision_modes": [
+      "activate-candidate",
+      "manual-invocation-required",
+      "no-skill"
+    ],
+    "skill_root_starter": "skill-root",
+    "existing_tiny_entrypoints_ref": "generated/tiny_model_entrypoints.json",
+    "fallback_skills": [
+      "aoa-change-protocol",
+      "aoa-source-of-truth-check"
+    ]
+  },
+  "scoring": {
+    "band_score_weight": 3,
+    "phrase_score_weight": 5,
+    "token_score_weight": 2,
+    "negative_phrase_penalty": 4,
+    "negative_token_penalty": 2,
+    "overlay_repo_family_bonus": 6,
+    "companion_bonus": 1
+  },
+  "repo_families": {
+    "atm10": {
+      "tokens": [
+        "atm10",
+        "atm10-agent",
+        "atm10-agentic",
+        "atm10 repo"
+      ],
+      "project_skill_prefixes": [
+        "atm10-"
+      ]
+    }
+  }
+}
