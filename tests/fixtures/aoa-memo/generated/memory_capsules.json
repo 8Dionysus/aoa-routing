@@ -1,0 +1,16 @@
+{
+  "catalog_version": 1,
+  "source_of_truth": "aoa-memo-doctrine-route-capsules-v1",
+  "memo_surfaces": [
+    {
+      "id": "AOA-M-0001",
+      "name": "charter",
+      "summary": "Compact doctrine capsule for charter recall."
+    },
+    {
+      "id": "AOA-M-0002",
+      "name": "memory-model",
+      "summary": "Compact doctrine capsule for memory-model recall."
+    }
+  ]
+}

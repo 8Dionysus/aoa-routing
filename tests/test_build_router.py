@@ -365,6 +365,10 @@ def test_build_outputs_from_fixtures() -> None:
                     "source_route": "examples/recall_contract.router.source_route.json",
                     "lineage": "examples/recall_contract.router.lineage.json",
                 },
+                "capsule_surfaces_by_mode": {
+                    "semantic": "generated/memory_capsules.json",
+                    "lineage": "generated/memory_capsules.json",
+                },
                 "parallel_families": {
                     "memory_objects": {
                         "inspect_surface": "generated/memory_object_catalog.min.json",
@@ -375,6 +379,10 @@ def test_build_outputs_from_fixtures() -> None:
                             "working": "examples/recall_contract.object.working.json",
                             "semantic": "examples/recall_contract.object.semantic.json",
                             "lineage": "examples/recall_contract.object.lineage.json",
+                        },
+                        "capsule_surfaces_by_mode": {
+                            "semantic": "generated/memory_object_capsules.json",
+                            "lineage": "generated/memory_object_capsules.json",
                         },
                     }
                 },
@@ -1011,6 +1019,9 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
         "contracts_by_mode": {
             "semantic": "examples/recall_contract.router.semantic.json",
         },
+        "capsule_surfaces_by_mode": {
+            "semantic": "generated/memory_capsules.json",
+        },
         "parallel_families": {
             "memory_objects": {
                 "inspect_surface": "generated/memory_object_catalog.min.json",
@@ -1021,6 +1032,10 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
                     "working": "examples/recall_contract.object.working.json",
                     "semantic": "examples/recall_contract.object.semantic.json",
                     "lineage": "examples/recall_contract.object.lineage.json",
+                },
+                "capsule_surfaces_by_mode": {
+                    "semantic": "generated/memory_object_capsules.json",
+                    "lineage": "generated/memory_object_capsules.json",
                 },
             }
         },

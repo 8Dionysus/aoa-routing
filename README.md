@@ -143,6 +143,7 @@ Recall stays bounded.
 `aoa-routing` points memo recall requests at source-owned `aoa-memo` contracts and surfaces,
 advertises only router-ready recall modes that upstream `aoa-memo` exposes through contract files,
 keeps doctrine recall mode-indexed at the top level of the routing hint surface,
+may publish mode-indexed `capsule_surfaces_by_mode` so consumers can follow `inspect -> capsule -> expand` without inventing router-owned memo logic,
 and may publish an additional parallel object-facing recall family inside the memo recall hint when upstream object contracts and object surfaces are complete and coherent.
 The root memo inspect/expand path remains doctrine-first, while tiny-model entrypoints now keep doctrine recall as the default path and may also publish explicit `recall_family = memory_objects` queries and starters for the parallel object-facing family.
 It does not own recall policy authority, memory truth, or graph traversal.

@@ -164,6 +164,16 @@
         }
       }
     },
+    "surfacesByMode": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "patternProperties": {
+        "^[a-z][a-z0-9_-]*$": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
     "parallelRecallFamily": {
       "type": "object",
       "additionalProperties": false,
@@ -189,6 +199,9 @@
         },
         "contracts_by_mode": {
           "$ref": "#/$defs/contractsByMode"
+        },
+        "capsule_surfaces_by_mode": {
+          "$ref": "#/$defs/surfacesByMode"
         }
       }
     },
@@ -230,6 +243,9 @@
             },
             "contracts_by_mode": {
               "$ref": "#/$defs/contractsByMode"
+            },
+            "capsule_surfaces_by_mode": {
+              "$ref": "#/$defs/surfacesByMode"
             },
             "parallel_families": {
               "$ref": "#/$defs/parallelRecallFamilies"

@@ -23,3 +23,4 @@ Tracking starts with the community-docs baseline for this repository.
 - `docs/FEDERATION_ENTRY_ABI.md`, `README.md`, and `ROADMAP.md` now describe the ToS tiny-entry sync as additive and non-authoritative
 - `generated/federation_entrypoints.min.json` now publishes a second live `kag_view` for `Tree-of-Sophia`, while `kag-view-root` stays defaulted to `aoa-techniques`
 - ToS tiny-entry input validation now accepts `bounded_hop` as the primary hop field and keeps `lineage_or_context_hop` as a compatibility alias during the current transition window
+- memo recall hints now publish mode-indexed `capsule_surfaces_by_mode` for router-ready doctrine and parallel object-facing recall when upstream `aoa-memo` contracts expose a capsule step

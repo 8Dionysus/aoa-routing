@@ -35,6 +35,7 @@ from router_core import (
     FEDERATION_ROOT_IDS,
     KAG_REPO,
     KAG_SOURCE_LIFT_TECHNIQUE_SET,
+    MEMO_CAPSULE_RECALL_MODES,
     MEMO_INSPECT_SURFACE_FILE,
     MEMO_OBJECT_RECALL_DEFAULT_MODE,
     MEMO_OBJECT_RETURN_READY_CONTRACT,
@@ -928,7 +929,9 @@ def load_surface_entries_for_validation(
         "skill_capsules.json": "skills",
         "eval_capsules.json": "evals",
         "memory_catalog.min.json": "memo_surfaces",
+        "memory_capsules.json": "memo_surfaces",
         "memory_object_catalog.min.json": "memory_objects",
+        "memory_object_capsules.json": "memory_objects",
         "technique_sections.full.json": "techniques",
         "skill_sections.full.json": "skills",
         "eval_sections.full.json": "evals",
@@ -2645,7 +2648,8 @@ def validate_contract_targets_for_surface(
     mode_message: str,
     inspect_message: str,
     expand_message: str,
-) -> None:
+) -> dict[str, dict[str, str | None]]:
+    contract_targets_by_mode: dict[str, dict[str, str | None]] = {}
     for mode, mode_contract_file in sorted(
         (
             (mode, contract_file)
@@ -2680,6 +2684,12 @@ def validate_contract_targets_for_surface(
                 contract.get("expand_surface"),
                 f"{contract_location}.expand_surface",
             )
+            contract_capsule_surface = contract.get("capsule_surface")
+            if contract_capsule_surface is not None:
+                contract_capsule_surface = ensure_repo_relative_path(
+                    contract_capsule_surface,
+                    f"{contract_location}.capsule_surface",
+                )
         except RouterError as exc:
             issues.append(ValidationIssue(contract_location, str(exc)))
             continue
@@ -2689,6 +2699,102 @@ def validate_contract_targets_for_surface(
             issues.append(ValidationIssue(contract_location, inspect_message))
         if contract_expand_surface != expand_surface_file:
             issues.append(ValidationIssue(contract_location, expand_message))
+        contract_targets_by_mode[mode] = {
+            "contract_file": relative_contract_path,
+            "inspect_surface": contract_inspect_surface,
+            "expand_surface": contract_expand_surface,
+            "capsule_surface": contract_capsule_surface,
+        }
+    return contract_targets_by_mode
+
+
+def validate_capsule_surfaces_by_mode(
+    *,
+    capsule_surfaces_by_mode: Any,
+    supported_modes: list[str],
+    contract_targets_by_mode: dict[str, dict[str, str | None]],
+    required_capsule_modes: Iterable[str],
+    memo_root: Path,
+    issues: list[ValidationIssue],
+    location_prefix: str,
+    mapping_label: str,
+    subset_message: str,
+    required_contract_message: str,
+    missing_mapping_message: str,
+    mismatch_message: str,
+    unexpected_mapping_message: str,
+) -> None:
+    raw_mapping: dict[str, Any]
+    if capsule_surfaces_by_mode is None:
+        raw_mapping = {}
+    elif not isinstance(capsule_surfaces_by_mode, dict):
+        issues.append(ValidationIssue("task_to_surface_hints.json", f"{mapping_label} must be an object when present"))
+        return
+    else:
+        raw_mapping = capsule_surfaces_by_mode
+
+    if any(not isinstance(mode, str) or not mode.strip() for mode in raw_mapping):
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                f"{mapping_label} keys must be non-empty strings",
+            )
+        )
+
+    supported_mode_set = set(supported_modes)
+    mapping_keys = sorted(mode for mode in raw_mapping if isinstance(mode, str) and mode.strip())
+    unsupported_modes = sorted(set(mapping_keys) - supported_mode_set)
+    if unsupported_modes:
+        issues.append(ValidationIssue("task_to_surface_hints.json", subset_message))
+
+    normalized_capsule_surfaces: dict[str, str] = {}
+    for mode in mapping_keys:
+        if mode not in supported_mode_set:
+            continue
+        surface_file = validate_surface_lookup_target(
+            raw_mapping.get(mode),
+            f"{location_prefix}.{mode}",
+            memo_root,
+            issues,
+        )
+        if surface_file is not None:
+            normalized_capsule_surfaces[mode] = surface_file
+
+    required_capsule_mode_set = set(required_capsule_modes)
+    for mode in supported_modes:
+        contract_capsule_surface = contract_targets_by_mode.get(mode, {}).get("capsule_surface")
+        advertised_capsule_surface = raw_mapping.get(mode)
+        if mode in required_capsule_mode_set and contract_capsule_surface is None:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    required_contract_message.format(mode=mode),
+                )
+            )
+        if contract_capsule_surface is None:
+            if advertised_capsule_surface is not None:
+                issues.append(
+                    ValidationIssue(
+                        "task_to_surface_hints.json",
+                        unexpected_mapping_message.format(mode=mode),
+                    )
+                )
+            continue
+        if advertised_capsule_surface is None:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    missing_mapping_message.format(mode=mode),
+                )
+            )
+            continue
+        if normalized_capsule_surfaces.get(mode) != contract_capsule_surface:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    mismatch_message.format(mode=mode),
+                )
+            )
 
 
 def validate_parallel_recall_family(
@@ -2701,6 +2807,7 @@ def validate_parallel_recall_family(
     default_mode = family_payload.get("default_mode")
     supported_modes = family_payload.get("supported_modes")
     contracts_by_mode = family_payload.get("contracts_by_mode")
+    capsule_surfaces_by_mode = family_payload.get("capsule_surfaces_by_mode")
 
     if not isinstance(default_mode, str) or not default_mode.strip():
         issues.append(
@@ -2802,7 +2909,7 @@ def validate_parallel_recall_family(
             )
     if inspect_surface_file is None or expand_surface_file is None:
         return
-    validate_contract_targets_for_surface(
+    contract_targets_by_mode = validate_contract_targets_for_surface(
         contracts_by_mode=contracts_by_mode,
         supported_modes=supported_mode_values,
         inspect_surface_file=inspect_surface_file,
@@ -2818,6 +2925,31 @@ def validate_parallel_recall_family(
         ),
         expand_message=(
             f"parallel recall family '{family_name}' contract expand_surface must match the family expand surface"
+        ),
+    )
+    validate_capsule_surfaces_by_mode(
+        capsule_surfaces_by_mode=capsule_surfaces_by_mode,
+        supported_modes=supported_mode_values,
+        contract_targets_by_mode=contract_targets_by_mode,
+        required_capsule_modes=MEMO_CAPSULE_RECALL_MODES,
+        memo_root=memo_root,
+        issues=issues,
+        location_prefix=f"{location_prefix}.capsule_surfaces_by_mode",
+        mapping_label=f"parallel recall family '{family_name}' capsule_surfaces_by_mode",
+        subset_message=(
+            f"parallel recall family '{family_name}' capsule_surfaces_by_mode keys must be a subset of supported_modes"
+        ),
+        required_contract_message=(
+            f"parallel recall family '{family_name}' contract for mode '{{mode}}' must define capsule_surface for inspect -> capsule -> expand routing"
+        ),
+        missing_mapping_message=(
+            f"parallel recall family '{family_name}' capsule_surfaces_by_mode must include mode '{{mode}}'"
+        ),
+        mismatch_message=(
+            f"parallel recall family '{family_name}' contract capsule_surface must match capsule_surfaces_by_mode for mode '{{mode}}'"
+        ),
+        unexpected_mapping_message=(
+            f"parallel recall family '{family_name}' capsule_surfaces_by_mode advertises mode '{{mode}}' but its contract does not define capsule_surface"
         ),
     )
 
@@ -2854,6 +2986,7 @@ def validate_recall_targets(
         default_mode = recall.get("default_mode")
         supported_modes = recall.get("supported_modes")
         contracts_by_mode = recall.get("contracts_by_mode")
+        capsule_surfaces_by_mode = recall.get("capsule_surfaces_by_mode")
         if not isinstance(default_mode, str) or not default_mode.strip():
             issues.append(
                 ValidationIssue(
@@ -2924,7 +3057,7 @@ def validate_recall_targets(
             )
         inspect_surface_file = inspect.get("surface_file") if isinstance(inspect, dict) else None
         expand_surface_file = expand.get("surface_file") if isinstance(expand, dict) else None
-        validate_contract_targets_for_surface(
+        contract_targets_by_mode = validate_contract_targets_for_surface(
             contracts_by_mode=contracts_by_mode,
             supported_modes=supported_mode_values,
             inspect_surface_file=inspect_surface_file if isinstance(inspect_surface_file, str) else None,
@@ -2935,6 +3068,27 @@ def validate_recall_targets(
             mode_message="recall contract mode must match its advertised recall mode",
             inspect_message="recall contract inspect_surface must match the memo inspect surface hint",
             expand_message="recall contract expand_surface must match the memo expand surface hint",
+        )
+        validate_capsule_surfaces_by_mode(
+            capsule_surfaces_by_mode=capsule_surfaces_by_mode,
+            supported_modes=supported_mode_values,
+            contract_targets_by_mode=contract_targets_by_mode,
+            required_capsule_modes=MEMO_CAPSULE_RECALL_MODES,
+            memo_root=memo_root,
+            issues=issues,
+            location_prefix="task_to_surface_hints.json.memo.actions.recall.capsule_surfaces_by_mode",
+            mapping_label="memo capsule_surfaces_by_mode",
+            subset_message="memo capsule_surfaces_by_mode keys must be a subset of supported_modes",
+            required_contract_message=(
+                "recall contract for mode '{mode}' must define capsule_surface for router-ready inspect -> capsule -> expand routing"
+            ),
+            missing_mapping_message="memo capsule_surfaces_by_mode must include mode '{mode}'",
+            mismatch_message=(
+                "recall contract capsule_surface must match memo capsule_surfaces_by_mode for mode '{mode}'"
+            ),
+            unexpected_mapping_message=(
+                "memo capsule_surfaces_by_mode advertises mode '{mode}' but its recall contract does not define capsule_surface"
+            ),
         )
         parallel_families = recall.get("parallel_families")
         if parallel_families is None:
