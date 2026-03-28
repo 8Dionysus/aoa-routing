@@ -111,6 +111,20 @@ TOS_KAG_VIEW_ENTRY_SURFACE_REFS = (
 )
 TOS_KAG_VIEW_OBJECT_SURFACE_REF = "Tree-of-Sophia/examples/tos_tiny_entry_route.example.json"
 TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID = "AOA-P-0009"
+TOS_ROUTE_RETRIEVAL_SURFACE_ID = "AOA-K-0011"
+TOS_ROUTE_RETRIEVAL_SURFACE_NAME = "tos-zarathustra-route-retrieval-surface"
+TOS_ROUTE_RETRIEVAL_SURFACE_REF = "generated/tos_zarathustra_route_retrieval_pack.min.json"
+TOS_ROUTE_RETRIEVAL_MATCH_KEY = "retrieval_id"
+TOS_ROUTE_RETRIEVAL_ID = "AOA-K-0011::thus-spoke-zarathustra/prologue-1"
+TOS_ROUTE_RETRIEVAL_ROUTE_ID = "thus-spoke-zarathustra/prologue-1"
+EXPECTED_TOS_KAG_VIEW_ADJUNCT = {
+    "surface_id": TOS_ROUTE_RETRIEVAL_SURFACE_ID,
+    "surface_name": TOS_ROUTE_RETRIEVAL_SURFACE_NAME,
+    "surface_ref": TOS_ROUTE_RETRIEVAL_SURFACE_REF,
+    "match_key": TOS_ROUTE_RETRIEVAL_MATCH_KEY,
+    "target_value": TOS_ROUTE_RETRIEVAL_ID,
+    "route_id": TOS_ROUTE_RETRIEVAL_ROUTE_ID,
+}
 FALLBACK_ROUTER_KIND = "technique"
 RETURN_REASONS_BY_THIN_KIND = {
     "technique": ("artifact_contract_lost", "source_boundary_lost", "reroute_required"),
@@ -590,6 +604,52 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
 
     # Accept the current compact aoa-kag spine shape while keeping the
     # router-facing KAG view cards stable for this routing wave.
+    def normalize_adjunct_surfaces(
+        repo_name: str,
+        value: Any,
+        adjunct_location: str,
+    ) -> list[dict[str, str]]:
+        adjunct_items = ensure_list(value, adjunct_location)
+        normalized: list[dict[str, str]] = []
+        for adjunct_index, raw_adjunct in enumerate(adjunct_items):
+            item_location = f"{adjunct_location}[{adjunct_index}]"
+            adjunct = ensure_mapping(raw_adjunct, item_location)
+            require_keys(
+                adjunct,
+                (
+                    "surface_id",
+                    "surface_name",
+                    "surface_ref",
+                    "match_key",
+                    "target_value",
+                    "route_id",
+                ),
+                item_location,
+            )
+            normalized.append(
+                {
+                    "surface_id": ensure_string(
+                        adjunct["surface_id"], f"{item_location}.surface_id"
+                    ),
+                    "surface_name": ensure_string(
+                        adjunct["surface_name"], f"{item_location}.surface_name"
+                    ),
+                    "surface_ref": ensure_repo_relative_path(
+                        adjunct["surface_ref"], f"{item_location}.surface_ref"
+                    ),
+                    "match_key": ensure_string(
+                        adjunct["match_key"], f"{item_location}.match_key"
+                    ),
+                    "target_value": ensure_string(
+                        adjunct["target_value"], f"{item_location}.target_value"
+                    ),
+                    "route_id": ensure_string(
+                        adjunct["route_id"], f"{item_location}.route_id"
+                    ),
+                }
+            )
+        return normalized
+
     def normalize_repo_entry(
         repo_entry: dict[str, Any], repo_location: str
     ) -> dict[str, Any]:
@@ -608,14 +668,33 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
                     "current_entry_surface_refs",
                     "current_object_surface_ref",
                     "example_object_ids",
+                    "adjunct_surfaces",
                 ),
                 repo_location,
             )
-            return repo_entry
+            repo_name = normalize_repo_name(
+                ensure_string(repo_entry["repo"], f"{repo_location}.repo")
+            )
+            return {
+                **repo_entry,
+                "repo": repo_name,
+                "adjunct_surfaces": normalize_adjunct_surfaces(
+                    repo_name,
+                    repo_entry["adjunct_surfaces"],
+                    f"{repo_location}.adjunct_surfaces",
+                ),
+            }
 
         require_keys(
             repo_entry,
-            ("repo", "pilot_posture", "entry_surface_ref", "export_ref", "object_id"),
+            (
+                "repo",
+                "pilot_posture",
+                "entry_surface_ref",
+                "export_ref",
+                "object_id",
+                "adjunct_surfaces",
+            ),
             repo_location,
         )
         repo_name = normalize_repo_name(
@@ -627,6 +706,11 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
         ensure_string(repo_entry["entry_surface_ref"], f"{repo_location}.entry_surface_ref")
         ensure_string(repo_entry["export_ref"], f"{repo_location}.export_ref")
         ensure_string(repo_entry["object_id"], f"{repo_location}.object_id")
+        adjunct_surfaces = normalize_adjunct_surfaces(
+            repo_name,
+            repo_entry["adjunct_surfaces"],
+            f"{repo_location}.adjunct_surfaces",
+        )
         if pilot_posture != "source_owned_export_tiny":
             raise RouterError(
                 f"{repo_location}.pilot_posture must stay 'source_owned_export_tiny' in the compact federation spine format"
@@ -641,6 +725,7 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
                 ],
                 "current_object_surface_ref": AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF,
                 "example_object_ids": list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS),
+                "adjunct_surfaces": adjunct_surfaces,
             }
         if repo_name == TOS_KAG_VIEW_ENTRY_ID:
             return {
@@ -649,6 +734,7 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
                 "current_entry_surface_refs": list(TOS_KAG_VIEW_ENTRY_SURFACE_REFS),
                 "current_object_surface_ref": TOS_KAG_VIEW_OBJECT_SURFACE_REF,
                 "example_object_ids": [TOS_TINY_ENTRY_ROUTE_ID],
+                "adjunct_surfaces": adjunct_surfaces,
             }
         raise RouterError(
             f"{repo_location}.repo '{repo_name}' is not supported in the compact federation spine format"
@@ -659,6 +745,27 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
         repo_location = f"{location}.repos[{index}]"
         repo_entry = ensure_mapping(item, repo_location)
         repos.append(normalize_repo_entry(repo_entry, repo_location))
+
+    repo_index = {repo["repo"]: repo for repo in repos}
+    aoa_techniques_entry = repo_index.get(FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID)
+    if aoa_techniques_entry is None:
+        raise RouterError(
+            "federation spine must publish aoa-techniques in the current routing wave"
+        )
+    if aoa_techniques_entry.get("adjunct_surfaces") != []:
+        raise RouterError(
+            "aoa-techniques.adjunct_surfaces must stay [] in the current routing wave"
+        )
+    tos_entry = repo_index.get(TOS_KAG_VIEW_ENTRY_ID)
+    if tos_entry is None:
+        raise RouterError(
+            "federation spine must publish Tree-of-Sophia in the current routing wave"
+        )
+    if tos_entry.get("adjunct_surfaces") != [EXPECTED_TOS_KAG_VIEW_ADJUNCT]:
+        raise RouterError(
+            "Tree-of-Sophia.adjunct_surfaces must publish exactly the bounded "
+            "AOA-K-0011 adjunct in the current routing wave"
+        )
     return FEDERATION_SPINE_PATH, repos
 
 
@@ -1235,6 +1342,10 @@ def build_federation_entrypoints_payload(
             kag_entry["current_object_surface_ref"],
             f"{kag_view_id}.current_object_surface_ref",
         )
+        adjunct_surfaces = ensure_list(
+            kag_entry.get("adjunct_surfaces"),
+            f"{kag_view_id}.adjunct_surfaces",
+        )
         example_object_ids = ensure_string_list(
             kag_entry["example_object_ids"],
             f"{kag_view_id}.example_object_ids",
@@ -1257,6 +1368,10 @@ def build_federation_entrypoints_payload(
             if example_object_ids != list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS):
                 raise RouterError(
                     f"{kag_view_id}.example_object_ids must stay {list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS)!r} in the current routing wave"
+                )
+            if adjunct_surfaces != []:
+                raise RouterError(
+                    f"{kag_view_id}.adjunct_surfaces must stay [] in the current routing wave"
                 )
             entry_target_repo, entry_target_surface = ensure_cross_repo_surface_ref(
                 entry_surface_refs[0],
@@ -1309,6 +1424,27 @@ def build_federation_entrypoints_payload(
                 raise RouterError(
                     f"{kag_view_id}.example_object_ids must stay ['{TOS_TINY_ENTRY_ROUTE_ID}'] in the current routing wave"
                 )
+            if adjunct_surfaces != [EXPECTED_TOS_KAG_VIEW_ADJUNCT]:
+                raise RouterError(
+                    f"{kag_view_id}.adjunct_surfaces must publish exactly the bounded "
+                    "AOA-K-0011 adjunct in the current routing wave"
+                )
+            retrieval_adjunct = ensure_mapping(
+                adjunct_surfaces[0],
+                f"{kag_view_id}.adjunct_surfaces[0]",
+            )
+            adjunct_surface_ref = ensure_repo_relative_path(
+                retrieval_adjunct["surface_ref"],
+                f"{kag_view_id}.adjunct_surfaces[0].surface_ref",
+            )
+            adjunct_match_key = ensure_string(
+                retrieval_adjunct["match_key"],
+                f"{kag_view_id}.adjunct_surfaces[0].match_key",
+            )
+            adjunct_target_value = ensure_string(
+                retrieval_adjunct["target_value"],
+                f"{kag_view_id}.adjunct_surfaces[0].target_value",
+            )
             title = "Tree-of-Sophia Readiness View"
             next_actions = [
                 build_entry_action(
@@ -1325,8 +1461,20 @@ def build_federation_entrypoints_payload(
                     match_key="route_id",
                     target_value=TOS_TINY_ENTRY_ROUTE_ID,
                 ),
+                build_entry_action(
+                    verb="inspect",
+                    target_repo=KAG_REPO,
+                    target_surface=adjunct_surface_ref,
+                    match_key=adjunct_match_key,
+                    target_value=adjunct_target_value,
+                ),
             ]
-            risk = "KAG view cards summarize derived readiness and current source-facing surfaces; Tree-of-Sophia remains authoritative for ToS meaning while this derived view only orients entry through the current tiny-entry seam."
+            risk = (
+                "KAG view cards summarize derived readiness and current source-facing "
+                "surfaces; Tree-of-Sophia remains authoritative for ToS meaning, and "
+                "AOA-K-0011 is only a bounded handles-only adjunct that does not take "
+                "routing or canon ownership."
+            )
             next_hops = [
                 build_entry_hop("tier", FEDERATION_DEFAULT_TIER_ENTRY_ID),
                 build_entry_hop("playbook", TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID),

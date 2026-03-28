@@ -1016,6 +1016,22 @@ def test_validate_generated_outputs_rejects_tos_kag_view_route_id_drift(
     )
 
 
+def test_validate_generated_outputs_rejects_tos_kag_view_adjunct_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    spine_path = roots["aoa-kag"] / "generated" / "federation_spine.min.json"
+    payload = json.loads(spine_path.read_text(encoding="utf-8"))
+    payload["repos"][1]["adjunct_surfaces"][0]["target_value"] = "AOA-K-0011::drifted"
+    write_json(spine_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "adjunct_surfaces must publish exactly the bounded AOA-K-0011 adjunct" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_wrong_memo_return_primary_target(
     tmp_path: Path,
 ) -> None:

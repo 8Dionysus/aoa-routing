@@ -55,6 +55,8 @@ from router_core import (
     TOS_REPO,
     TOS_KAG_VIEW_ENTRY_ID,
     TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID,
+    TOS_ROUTE_RETRIEVAL_ID,
+    TOS_ROUTE_RETRIEVAL_SURFACE_REF,
     TOS_TINY_ENTRY_DOCTRINE_PATH,
     TOS_TINY_ENTRY_ROUTE_ID,
     TOS_TINY_ENTRY_ROUTE_PATH,
@@ -922,6 +924,7 @@ def load_surface_entries_for_validation(
         "aoa_router.min.json": "entries",
         "task_to_surface_hints.json": "hints",
         "pairing_hints.min.json": "entries",
+        Path(TOS_ROUTE_RETRIEVAL_SURFACE_REF).name: "routes",
         "repo_doc_surface_manifest.min.json": "docs",
         "technique_capsules.json": "techniques",
         "technique_catalog.json": "techniques",
@@ -1235,6 +1238,18 @@ def validate_federation_entrypoints(
                     "target_value": "AOA-P-0009",
                 },
             ]
+            if any(
+                isinstance(action, dict)
+                and action.get("target_repo") == KAG_REPO
+                and action.get("target_surface") == TOS_ROUTE_RETRIEVAL_SURFACE_REF
+                for action in next_actions
+            ):
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        "tos-root must stay tree-first and must not point directly to the aoa-kag Zarathustra retrieval adjunct",
+                    )
+                )
             if len(next_actions) != len(expected_actions):
                 issues.append(
                     ValidationIssue(
@@ -1446,11 +1461,18 @@ def validate_federation_entrypoints(
                 "match_key": "route_id",
                 "target_value": TOS_TINY_ENTRY_ROUTE_ID,
             },
+            {
+                "verb": "inspect",
+                "target_repo": KAG_REPO,
+                "target_surface": TOS_ROUTE_RETRIEVAL_SURFACE_REF,
+                "match_key": "retrieval_id",
+                "target_value": TOS_ROUTE_RETRIEVAL_ID,
+            },
         ]:
             issues.append(
                 ValidationIssue(
                     "federation_entrypoints.min.json",
-                    "Tree-of-Sophia kag_view must point first to TINY_ENTRY_ROUTE doctrine and then to the current tiny-entry route example",
+                    "Tree-of-Sophia kag_view must point first to TINY_ENTRY_ROUTE doctrine, then to the current tiny-entry route example, and finally to the bounded AOA-K-0011 retrieval adjunct",
                 )
             )
         if tos_kag_view.get("next_hops") != [
@@ -1464,11 +1486,15 @@ def validate_federation_entrypoints(
                 )
             )
         risk = tos_kag_view.get("risk")
-        if not isinstance(risk, str) or "Tree-of-Sophia remains authoritative" not in risk:
+        if (
+            not isinstance(risk, str)
+            or "Tree-of-Sophia remains authoritative" not in risk
+            or "AOA-K-0011 is only a bounded handles-only adjunct" not in risk
+        ):
             issues.append(
                 ValidationIssue(
                     "federation_entrypoints.min.json",
-                    "Tree-of-Sophia kag_view risk text must explicitly preserve ToS authority in Tree-of-Sophia",
+                    "Tree-of-Sophia kag_view risk text must explicitly preserve ToS authority in Tree-of-Sophia and bound AOA-K-0011 as a handles-only adjunct",
                 )
             )
 
