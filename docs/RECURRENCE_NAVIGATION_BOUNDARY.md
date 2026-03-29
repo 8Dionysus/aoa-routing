@@ -1,6 +1,6 @@
 # Recurrence Navigation Boundary
 
-This note defines what `aoa-routing` may safely contribute when recurrence reaches the routing layer.
+This note defines the strictly navigation-only contribution of `aoa-routing` when recurrence reaches the routing layer.
 
 The governing split stays unchanged:
 
