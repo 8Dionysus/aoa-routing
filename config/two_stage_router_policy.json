@@ -7,7 +7,7 @@
     "max_stage_1_tokens": 1200,
     "max_stage_2_shortlist": 3,
     "min_activate_score": 6,
-    "min_activate_gap": 3,
+    "min_activate_gap": 5,
     "fallback_visibility_mode": "out_of_band_only",
     "decision_modes": [
       "activate-candidate",

@@ -279,7 +279,7 @@ def load_output(path: Path, issues: list[ValidationIssue]) -> dict[str, Any] | N
 
 
 def validate_rebuild_parity(
-    outputs: dict[str, dict[str, Any]],
+    outputs: dict[str, Any],
     techniques_root: Path,
     skills_root: Path,
     evals_root: Path,
@@ -3258,6 +3258,11 @@ def validate_generated_outputs(
     relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
     pairing_path = generated_dir / "pairing_hints.min.json"
     tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
+    two_stage_entrypoints_path = generated_dir / "two_stage_skill_entrypoints.json"
+    two_stage_prompt_blocks_path = generated_dir / "two_stage_router_prompt_blocks.json"
+    two_stage_tool_schemas_path = generated_dir / "two_stage_router_tool_schemas.json"
+    two_stage_examples_path = generated_dir / "two_stage_router_examples.json"
+    two_stage_manifest_path = generated_dir / "two_stage_router_manifest.json"
 
     registry_payload = load_output(registry_path, issues)
     router_payload = load_output(router_path, issues)
@@ -3269,6 +3274,11 @@ def validate_generated_outputs(
     relation_hints_payload = load_output(relation_hints_path, issues)
     pairing_payload = load_output(pairing_path, issues)
     tiny_model_payload = load_output(tiny_model_path, issues)
+    two_stage_entrypoints_payload = load_output(two_stage_entrypoints_path, issues)
+    two_stage_prompt_blocks_payload = load_output(two_stage_prompt_blocks_path, issues)
+    two_stage_tool_schemas_payload = load_output(two_stage_tool_schemas_path, issues)
+    two_stage_examples_payload = load_output(two_stage_examples_path, issues)
+    two_stage_manifest_payload = load_output(two_stage_manifest_path, issues)
     if any(
         payload is None
         for payload in (
@@ -3282,6 +3292,11 @@ def validate_generated_outputs(
             relation_hints_payload,
             pairing_payload,
             tiny_model_payload,
+            two_stage_entrypoints_payload,
+            two_stage_prompt_blocks_payload,
+            two_stage_tool_schemas_payload,
+            two_stage_examples_payload,
+            two_stage_manifest_payload,
         )
     ):
         return issues
@@ -3298,6 +3313,11 @@ def validate_generated_outputs(
             relation_hints_path.name: relation_hints_payload,
             pairing_path.name: pairing_payload,
             tiny_model_path.name: tiny_model_payload,
+            two_stage_entrypoints_path.name: two_stage_entrypoints_payload,
+            two_stage_prompt_blocks_path.name: two_stage_prompt_blocks_payload,
+            two_stage_tool_schemas_path.name: two_stage_tool_schemas_payload,
+            two_stage_examples_path.name: two_stage_examples_payload,
+            two_stage_manifest_path.name: two_stage_manifest_payload,
         },
         techniques_root,
         skills_root,
@@ -3322,6 +3342,11 @@ def validate_generated_outputs(
         (relation_hints_path, relation_hints_payload),
         (pairing_path, pairing_payload),
         (tiny_model_path, tiny_model_payload),
+        (two_stage_entrypoints_path, two_stage_entrypoints_payload),
+        (two_stage_prompt_blocks_path, two_stage_prompt_blocks_payload),
+        (two_stage_tool_schemas_path, two_stage_tool_schemas_payload),
+        (two_stage_examples_path, two_stage_examples_payload),
+        (two_stage_manifest_path, two_stage_manifest_payload),
     ):
         validate_against_schema(
             payload,
@@ -3656,6 +3681,10 @@ def validate_generated_outputs(
         (relation_hints_path.name, relation_hints_payload),
         (pairing_path.name, pairing_payload),
         (tiny_model_path.name, tiny_model_payload),
+        (two_stage_entrypoints_path.name, two_stage_entrypoints_payload),
+        (two_stage_prompt_blocks_path.name, two_stage_prompt_blocks_payload),
+        (two_stage_tool_schemas_path.name, two_stage_tool_schemas_payload),
+        (two_stage_manifest_path.name, two_stage_manifest_payload),
     ):
         for key in SOURCE_OWNED_PAYLOAD_KEYS:
             if payload_contains_key(payload, key):

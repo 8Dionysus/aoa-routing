@@ -48,9 +48,28 @@ def test_build_outputs_include_two_stage_router_surfaces() -> None:
     assert "two_stage_router_manifest.json" in outputs
     assert "two_stage_router_eval_cases.jsonl" in outputs
     assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["activation_policy"] == "never-activate"
+    build_packet_tool = next(
+        tool
+        for tool in outputs["two_stage_router_tool_schemas.json"]["tools"]
+        if tool["name"] == "build_skill_decision_packet"
+    )
+    assert build_packet_tool["input_schema"]["properties"]["shortlist_names"].get("minItems", 0) == 0
     example = outputs["two_stage_router_examples.json"]["examples"][0]
     assert "confidence" in example["preselect_result"]
     assert "decision_reason" in example["decision_packet"]
+
+
+def test_build_outputs_anchor_eval_expectations_to_source_contracts() -> None:
+    outputs = build_fixture_outputs()
+    eval_cases = {
+        entry["case_id"]: entry
+        for entry in outputs["two_stage_router_eval_cases.jsonl"]
+    }
+
+    assert eval_cases["fixture-change"]["expected_band"] == "change-validation"
+    assert eval_cases["fixture-change"]["stage_2_expectation"] == "activate-candidate"
+    assert eval_cases["fixture-context"]["expected_band"] == "boundary-architecture"
+    assert eval_cases["fixture-context"]["stage_2_expectation"] == "activate-candidate"
 
 
 def test_validate_two_stage_outputs_accepts_fixture_build(tmp_path: Path) -> None:
@@ -118,6 +137,264 @@ def test_preselect_marks_close_scores_as_weak_and_stage_2_stays_no_skill() -> No
     assert preselected["lead_gap"] == 1
     assert packet["suggested_decision"]["decision_mode"] == "no-skill"
     assert packet["decision_reason"] == "shortlist stayed below the precision-first activation thresholds"
+
+
+def test_preselect_infers_top_band_from_shortlist_when_band_cues_absent() -> None:
+    policy = {
+        "defaults": {
+            "top_k": 3,
+            "max_band_candidates": 2,
+            "min_activate_score": 6,
+            "min_activate_gap": 3,
+            "fallback_skills": [],
+        },
+        "scoring": {
+            "band_score_weight": 3,
+            "phrase_score_weight": 5,
+            "token_score_weight": 2,
+            "negative_phrase_penalty": 4,
+            "negative_token_penalty": 2,
+            "overlay_repo_family_bonus": 6,
+            "companion_bonus": 1,
+        },
+        "repo_families": {},
+    }
+    signals = {
+        "skills": [
+            {
+                "name": "aoa-approval-gate-check",
+                "band": "risk-ops-safety",
+                "manual_invocation_required": True,
+                "project_overlay": False,
+                "positive_cues": ["approval gate"],
+                "negative_cues": [],
+                "cue_tokens": ["approval", "gate", "destructive"],
+                "negative_tokens": [],
+                "primary_positive_prompt": "",
+                "primary_negative_prompt": "",
+                "primary_defer_prompt": "",
+            }
+        ]
+    }
+    bands = {
+        "bands": [
+            {
+                "id": "risk-ops-safety",
+                "summary": "Risk review and operational safety.",
+                "cues": ["runtime bringup"],
+            }
+        ]
+    }
+
+    preselected = preselect(
+        "Use $aoa-approval-gate-check before this destructive action proceeds.",
+        signals,
+        bands,
+        policy,
+    )
+
+    assert [entry["name"] for entry in preselected["shortlist"]] == ["aoa-approval-gate-check"]
+    assert preselected["top_bands"][0]["id"] == "risk-ops-safety"
+    assert preselected["top_bands"][0]["reasons"] == ["shortlist:aoa-approval-gate-check"]
+
+
+def test_preselect_prefers_positive_base_skill_over_repo_family_only_overlay(tmp_path: Path) -> None:
+    policy = {
+        "defaults": {
+            "top_k": 3,
+            "max_band_candidates": 2,
+            "min_activate_score": 6,
+            "min_activate_gap": 3,
+            "fallback_skills": [],
+        },
+        "scoring": {
+            "band_score_weight": 3,
+            "phrase_score_weight": 5,
+            "token_score_weight": 2,
+            "negative_phrase_penalty": 4,
+            "negative_token_penalty": 2,
+            "overlay_repo_family_bonus": 6,
+            "companion_bonus": 1,
+        },
+        "repo_families": {
+            "atm10": {
+                "tokens": ["atm10"],
+                "project_skill_prefixes": ["atm10-"],
+            }
+        },
+    }
+    signals = {
+        "skills": [
+            {
+                "name": "aoa-source-of-truth-check",
+                "band": "decision-doc-authority",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+                "positive_cues": [],
+                "negative_cues": [],
+                "cue_tokens": [],
+                "negative_tokens": [],
+                "primary_positive_prompt": "which files authoritative",
+                "primary_negative_prompt": "which files authoritative",
+                "primary_defer_prompt": "which files authoritative",
+            },
+            {
+                "name": "atm10-change-protocol",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": True,
+                "companions": [],
+                "positive_cues": [],
+                "negative_cues": [],
+                "cue_tokens": [],
+                "negative_tokens": [],
+                "primary_positive_prompt": "repo relative atm10 paths",
+                "primary_negative_prompt": "",
+                "primary_defer_prompt": "",
+            },
+        ]
+    }
+    bands = {
+        "bands": [
+            {
+                "id": "decision-doc-authority",
+                "summary": "Canonical docs and authority maps.",
+                "cues": ["decision record"],
+            },
+            {
+                "id": "change-validation",
+                "summary": "Scoped changes and verification.",
+                "cues": ["bounded change"],
+            },
+        ]
+    }
+    prompt = (
+        "This repo has three conflicting architecture guides and two outdated runbooks. "
+        "Identify which files are authoritative and shorten the entrypoints into a link-driven map."
+    )
+
+    preselected = preselect(
+        prompt,
+        signals,
+        bands,
+        policy,
+        repo_family="atm10",
+    )
+
+    assert [entry["name"] for entry in preselected["shortlist"]] == ["aoa-source-of-truth-check"]
+    assert preselected["confidence"] == "strong"
+    assert preselected["top_bands"][0]["id"] == "decision-doc-authority"
+
+    skills_root = tmp_path / "aoa-skills"
+    generated_dir = skills_root / "generated"
+    write_json(generated_dir / "tiny_router_skill_signals.json", signals)
+    write_json(
+        generated_dir / "skill_capsules.json",
+        {
+            "skills": [
+                {
+                    "name": "aoa-source-of-truth-check",
+                    "summary": "Clarify which files are authoritative.",
+                    "trigger_boundary_short": "Use when repository guidance overlaps or conflicts.",
+                    "verification_short": "Report the authoritative files and entrypoints.",
+                }
+            ]
+        },
+    )
+    write_json(
+        generated_dir / "local_adapter_manifest.json",
+        {"skills": [{"name": "aoa-source-of-truth-check", "allowlist_paths": ["docs"]}]},
+    )
+    write_json(
+        generated_dir / "context_retention_manifest.json",
+        {"skills": [{"name": "aoa-source-of-truth-check", "rehydration_hint": "re-open the canonical docs"}]},
+    )
+
+    packet = build_decision_packet(prompt, preselected, skills_root)
+
+    assert packet["suggested_decision"]["decision_mode"] == "activate-candidate"
+    assert packet["suggested_decision"]["skill"] == "aoa-source-of-truth-check"
+
+
+def test_preselect_uses_defer_prompt_overlap_to_exclude_overlay_without_family() -> None:
+    policy = {
+        "defaults": {
+            "top_k": 3,
+            "max_band_candidates": 2,
+            "min_activate_score": 6,
+            "min_activate_gap": 3,
+            "fallback_skills": [],
+        },
+        "scoring": {
+            "band_score_weight": 3,
+            "phrase_score_weight": 5,
+            "token_score_weight": 2,
+            "negative_phrase_penalty": 4,
+            "negative_token_penalty": 2,
+            "overlay_repo_family_bonus": 6,
+            "companion_bonus": 1,
+        },
+        "repo_families": {
+            "atm10": {
+                "tokens": ["atm10"],
+                "project_skill_prefixes": ["atm10-"],
+            }
+        },
+    }
+    signals = {
+        "skills": [
+            {
+                "name": "aoa-change-protocol",
+                "band": "change-validation",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "positive_cues": ["bounded change"],
+                "negative_cues": [],
+                "cue_tokens": ["apply", "change", "service"],
+                "negative_tokens": [],
+                "primary_positive_prompt": "apply bounded change",
+                "primary_negative_prompt": "",
+                "primary_defer_prompt": "",
+            },
+            {
+                "name": "atm10-change-protocol",
+                "band": "change-validation",
+                "manual_invocation_required": False,
+                "project_overlay": True,
+                "positive_cues": ["bounded change"],
+                "negative_cues": [],
+                "cue_tokens": ["apply", "change", "service"],
+                "negative_tokens": [],
+                "primary_positive_prompt": "apply atm10 repo relative change",
+                "primary_negative_prompt": "",
+                "primary_defer_prompt": (
+                    "Apply the bounded change workflow in this generic service repo. "
+                    "There is no atm10 overlay or project-specific path layer here."
+                ),
+            },
+        ]
+    }
+    bands = {
+        "bands": [
+            {
+                "id": "change-validation",
+                "summary": "Scoped changes and verification.",
+                "cues": ["bounded change"],
+            }
+        ]
+    }
+    prompt = (
+        "Apply the bounded change workflow in this generic service repo. "
+        "There is no atm10 overlay or project-specific path layer here."
+    )
+
+    preselected = preselect(prompt, signals, bands, policy)
+
+    assert [entry["name"] for entry in preselected["shortlist"]] == ["aoa-change-protocol"]
+    assert preselected["confidence"] == "strong"
 
 
 def test_build_decision_packet_requires_manual_handle_for_strong_explicit_only_lead(tmp_path: Path) -> None:
