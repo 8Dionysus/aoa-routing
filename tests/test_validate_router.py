@@ -116,6 +116,38 @@ def test_validate_generated_outputs_rejects_missing_registry_version_key_via_sch
     )
 
 
+def test_validate_generated_outputs_rejects_two_stage_schema_drift_via_schema(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tool_schemas_path = generated_dir / "two_stage_router_tool_schemas.json"
+    payload = json.loads(tool_schemas_path.read_text(encoding="utf-8"))
+    del payload["tools"]
+    write_json(tool_schemas_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "two_stage_router_tool_schemas.json"
+        and "schema violation" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_stale_two_stage_manifest_against_rebuild(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    manifest_path = generated_dir / "two_stage_router_manifest.json"
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload["integration_mode"] = "stale-seam"
+    write_json(manifest_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "two_stage_router_manifest.json"
+        and "canonical rebuild from current sibling catalogs" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_duplicate_registry_entry(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     registry_path = generated_dir / "cross_repo_registry.min.json"

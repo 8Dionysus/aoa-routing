@@ -29,6 +29,40 @@ def render_or_check(path: Path, text: str, check: bool, repo_root: Path) -> None
     path.write_text(text, encoding="utf-8", newline="\n")
 
 
+def expected_stage_2_mode(
+    case: dict[str, Any],
+    *,
+    signal_by_name: dict[str, dict[str, Any]],
+) -> str:
+    explicit_expectation = case.get("stage_2_expectation")
+    if isinstance(explicit_expectation, str) and explicit_expectation:
+        return explicit_expectation
+
+    expected_top1 = case.get("expected_top1")
+    if isinstance(expected_top1, str) and expected_top1:
+        signal = signal_by_name.get(expected_top1, {})
+        return (
+            "manual-invocation-required"
+            if signal.get("manual_invocation_required")
+            else "activate-candidate"
+        )
+
+    expected_shortlist = [
+        name
+        for name in case.get("expected_shortlist_includes", [])
+        if isinstance(name, str) and name
+    ]
+    if len(expected_shortlist) == 1 and case.get("expected_band") is not None:
+        signal = signal_by_name.get(expected_shortlist[0], {})
+        return (
+            "manual-invocation-required"
+            if signal.get("manual_invocation_required")
+            else "activate-candidate"
+        )
+
+    return "no-skill"
+
+
 def build_outputs(
     *,
     routing_root: Path,
@@ -160,7 +194,6 @@ def build_outputs(
                         "shortlist_names": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "minItems": 1,
                             "maxItems": 5,
                         },
                     },
@@ -187,6 +220,7 @@ def build_outputs(
 
     examples: list[dict[str, Any]] = []
     routing_eval_cases: list[dict[str, Any]] = []
+    signal_by_name = {entry["name"]: entry for entry in tiny_signals.get("skills", [])}
     for case in tiny_eval_cases:
         preselected = preselect(
             task=case["prompt"],
@@ -217,8 +251,11 @@ def build_outputs(
                 "expected_shortlist_excludes": case.get("expected_shortlist_excludes", []),
                 "expected_top1": case.get("expected_top1"),
                 "expected_top1_not": case.get("expected_top1_not"),
-                "expected_band": top_band,
-                "stage_2_expectation": packet["suggested_decision"]["decision_mode"],
+                "expected_band": case.get("expected_band"),
+                "stage_2_expectation": expected_stage_2_mode(
+                    case,
+                    signal_by_name=signal_by_name,
+                ),
             }
         )
 

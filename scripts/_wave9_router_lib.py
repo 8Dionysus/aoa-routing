@@ -112,12 +112,40 @@ def token_hits(task_normalized: str, task_tokens: set[str], tokens: list[str]) -
     return sorted(set(hits))
 
 
+def token_match_ratio(matched_tokens: list[str], prompt_tokens: list[str]) -> float:
+    unique_tokens = sorted(set(prompt_tokens))
+    if not unique_tokens:
+        return 0.0
+    return len(matched_tokens) / len(unique_tokens)
+
+
+def should_apply_prompt_penalty(
+    matched_tokens: list[str],
+    *,
+    match_ratio: float,
+    positive_prompt_tokens: list[str],
+    positive_prompt_ratio: float,
+) -> bool:
+    return (
+        len(matched_tokens) >= 2
+        and match_ratio >= 0.2
+        and (
+            match_ratio > positive_prompt_ratio
+            or len(matched_tokens) >= len(positive_prompt_tokens) + 2
+        )
+    )
+
+
 def resolve_repo_family(task_normalized: str, repo_family: str | None, policy: dict[str, Any]) -> str | None:
     if repo_family:
         return repo_family
     for family_name, family_entry in (policy.get("repo_families") or {}).items():
         family_tokens = family_entry.get("tokens", [])
-        if any(normalize(token) in task_normalized for token in family_tokens):
+        if any(
+            normalize(token) in task_normalized
+            and not is_negated_phrase(task_normalized, normalize(token))
+            for token in family_tokens
+        ):
             return family_name
     return None
 
@@ -178,15 +206,33 @@ def score_skill(
         task_tokens,
         tokenize(signal.get("primary_positive_prompt", "")),
     )
+    positive_prompt_ratio = token_match_ratio(
+        positive_prompt_tokens,
+        tokenize(signal.get("primary_positive_prompt", "")),
+    )
     negative_prompt_tokens = token_hits(
         task_normalized,
         task_tokens,
+        tokenize(signal.get("primary_negative_prompt", "")),
+    )
+    negative_prompt_ratio = token_match_ratio(
+        negative_prompt_tokens,
         tokenize(signal.get("primary_negative_prompt", "")),
     )
     defer_prompt_tokens = token_hits(
         task_normalized,
         task_tokens,
         tokenize(signal.get("primary_defer_prompt", "")),
+    )
+    defer_prompt_ratio = token_match_ratio(
+        defer_prompt_tokens,
+        tokenize(signal.get("primary_defer_prompt", "")),
+    )
+    has_positive_skill_signal = (
+        explicit_skill_mention
+        or bool(positive_phrases)
+        or len(positive_tokens) >= 2
+        or len(positive_prompt_tokens) >= 2
     )
 
     if positive_phrases:
@@ -204,10 +250,20 @@ def score_skill(
     if negative_tokens:
         score -= len(negative_tokens) * scoring["negative_token_penalty"]
         reasons.extend(f"negative-token:{token}" for token in negative_tokens[:2])
-    if len(negative_prompt_tokens) >= 2:
+    if should_apply_prompt_penalty(
+        negative_prompt_tokens,
+        match_ratio=negative_prompt_ratio,
+        positive_prompt_tokens=positive_prompt_tokens,
+        positive_prompt_ratio=positive_prompt_ratio,
+    ):
         score -= len(negative_prompt_tokens) * scoring["negative_token_penalty"]
         reasons.extend(f"negative-prompt:{token}" for token in negative_prompt_tokens[:2])
-    if len(defer_prompt_tokens) >= 2:
+    if should_apply_prompt_penalty(
+        defer_prompt_tokens,
+        match_ratio=defer_prompt_ratio,
+        positive_prompt_tokens=positive_prompt_tokens,
+        positive_prompt_ratio=positive_prompt_ratio,
+    ):
         score -= len(defer_prompt_tokens) * scoring["negative_token_penalty"]
         reasons.extend(f"defer-prompt:{token}" for token in defer_prompt_tokens[:2])
 
@@ -215,11 +271,13 @@ def score_skill(
         if resolved_repo_family:
             family_entry = (policy.get("repo_families") or {}).get(resolved_repo_family, {})
             prefixes = family_entry.get("project_skill_prefixes", [])
-            if any(signal["name"].startswith(prefix) for prefix in prefixes):
+            if any(signal["name"].startswith(prefix) for prefix in prefixes) and (
+                has_positive_skill_signal or signal["band"] in top_band_ids
+            ):
                 score += scoring["overlay_repo_family_bonus"]
                 reasons.append(f"overlay-family:{resolved_repo_family}")
         elif not explicit_skill_mention:
-            score -= scoring["overlay_repo_family_bonus"]
+            score = min(score, 0)
             reasons.append("overlay-family-missing")
 
     return score, reasons
@@ -264,6 +322,30 @@ def summarize_shortlist(shortlist: list[dict[str, Any]], policy: dict[str, Any])
     ):
         return "weak", lead_score, lead_gap
     return "strong", lead_score, lead_gap
+
+
+def infer_top_bands_from_shortlist(
+    shortlist: list[dict[str, Any]],
+    *,
+    max_band_candidates: int,
+) -> list[dict[str, Any]]:
+    band_entries: dict[str, dict[str, Any]] = {}
+    for entry in shortlist:
+        band_id = entry["band"]
+        best = band_entries.get(band_id)
+        score = int(entry["score"])
+        if best is not None and int(best["score"]) >= score:
+            continue
+        band_entries[band_id] = {
+            "id": band_id,
+            "score": score,
+            "reasons": [f"shortlist:{entry['name']}"],
+        }
+    ranked_bands = sorted(
+        band_entries.values(),
+        key=lambda entry: (-int(entry["score"]), entry["id"]),
+    )
+    return ranked_bands[:max_band_candidates]
 
 
 def preselect(
@@ -319,6 +401,11 @@ def preselect(
 
     scored_skills.sort(key=lambda entry: (-entry["score"], entry["name"]))
     shortlist = [entry for entry in scored_skills if entry["score"] > 0][:top_k]
+    if not top_bands and shortlist:
+        top_bands = infer_top_bands_from_shortlist(
+            shortlist,
+            max_band_candidates=policy["defaults"]["max_band_candidates"],
+        )
     confidence, lead_score, lead_gap = summarize_shortlist(shortlist, policy)
     fallback_candidates = build_fallback_candidates(
         policy["defaults"].get("fallback_skills", []),
