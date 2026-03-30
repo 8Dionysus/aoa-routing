@@ -6,7 +6,7 @@ The governing split stays unchanged:
 
 **Recurrence is the law. Return is the concrete re-entry seam.**
 
-`aoa-routing` may compress the next valid surface for re-entry.
+`aoa-routing` provides bounded re-entry hints by compressing the next valid surface for re-entry.
 It must not decide whether return is justified, what a checkpoint means, or who owns the next authority judgment.
 
 ## Core Rule
