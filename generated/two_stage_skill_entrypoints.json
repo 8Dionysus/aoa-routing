@@ -1,1 +1,66 @@
-{"schema_version":1,"profile":"aoa-routing-wave-9-two-stage-skill-router","inherits_from":"generated/tiny_model_entrypoints.json","stage_1":{"name":"tiny-skill-preselector","source_repo":"aoa-skills","target_surface":"generated/tiny_router_capsules.min.json","bands_surface":"generated/tiny_router_candidate_bands.json","signals_surface":"generated/tiny_router_skill_signals.json","top_k_default":3,"activation_policy":"never-activate","manual_policy":"include-but-mark-manual","policy_ref":"config/two_stage_router_policy.json"},"stage_2":{"name":"main-model-skill-decider","source_repo":"aoa-skills","shortlist_surface":"generated/skill_capsules.json","activation_manifest":"generated/local_adapter_manifest.json","context_manifest":"generated/context_retention_manifest.json","decision_modes":["activate-candidate","manual-invocation-required","no-skill"]},"starters":[{"name":"skill-preselect","verb":"preselect","source_repo":"aoa-skills","target_surface":"generated/tiny_router_capsules.min.json","top_k":3},{"name":"skill-preselect-risk","verb":"preselect","source_repo":"aoa-skills","target_surface":"generated/tiny_router_capsules.min.json","band_hint":"risk-ops-safety","top_k":3},{"name":"skill-preselect-overlay","verb":"preselect","source_repo":"aoa-skills","target_surface":"generated/tiny_router_capsules.min.json","repo_family":"atm10","top_k":3},{"name":"skill-decision-packet","verb":"decision-packet","source_repo":"aoa-skills","target_surface":"generated/skill_capsules.json","activation_manifest":"generated/local_adapter_manifest.json"}],"routing_refs":{"tiny_model_entrypoints":"generated/tiny_model_entrypoints.json","aoa_router":"generated/aoa_router.min.json","pairing_hints":"generated/pairing_hints.min.json","task_to_surface_hints":"generated/task_to_surface_hints.json"}}
+{
+  "schema_version": 1,
+  "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "inherits_from": "generated/tiny_model_entrypoints.json",
+  "stage_1": {
+    "name": "tiny-skill-preselector",
+    "source_repo": "aoa-skills",
+    "target_surface": "generated/tiny_router_capsules.min.json",
+    "bands_surface": "generated/tiny_router_candidate_bands.json",
+    "signals_surface": "generated/tiny_router_skill_signals.json",
+    "top_k_default": 3,
+    "activation_policy": "never-activate",
+    "manual_policy": "include-but-mark-manual",
+    "policy_ref": "config/two_stage_router_policy.json"
+  },
+  "stage_2": {
+    "name": "main-model-skill-decider",
+    "source_repo": "aoa-skills",
+    "shortlist_surface": "generated/skill_capsules.json",
+    "activation_manifest": "generated/local_adapter_manifest.json",
+    "context_manifest": "generated/context_retention_manifest.json",
+    "decision_modes": [
+      "activate-candidate",
+      "manual-invocation-required",
+      "no-skill"
+    ]
+  },
+  "starters": [
+    {
+      "name": "skill-preselect",
+      "verb": "preselect",
+      "source_repo": "aoa-skills",
+      "target_surface": "generated/tiny_router_capsules.min.json",
+      "top_k": 3
+    },
+    {
+      "name": "skill-preselect-risk",
+      "verb": "preselect",
+      "source_repo": "aoa-skills",
+      "target_surface": "generated/tiny_router_capsules.min.json",
+      "band_hint": "risk-ops-safety",
+      "top_k": 3
+    },
+    {
+      "name": "skill-preselect-overlay",
+      "verb": "preselect",
+      "source_repo": "aoa-skills",
+      "target_surface": "generated/tiny_router_capsules.min.json",
+      "repo_family": "atm10",
+      "top_k": 3
+    },
+    {
+      "name": "skill-decision-packet",
+      "verb": "decision-packet",
+      "source_repo": "aoa-skills",
+      "target_surface": "generated/skill_capsules.json",
+      "activation_manifest": "generated/local_adapter_manifest.json"
+    }
+  ],
+  "routing_refs": {
+    "tiny_model_entrypoints": "generated/tiny_model_entrypoints.json",
+    "aoa_router": "generated/aoa_router.min.json",
+    "pairing_hints": "generated/pairing_hints.min.json",
+    "task_to_surface_hints": "generated/task_to_surface_hints.json"
+  }
+}
