@@ -27,6 +27,11 @@ def write_json(path: Path, payload: object) -> None:
     path.write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
 
 
+def write_text(path: Path, text: str) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+
+
 def write_output(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.suffix == ".jsonl":
@@ -94,6 +99,123 @@ def test_validate_generated_outputs_accepts_fixture_build(tmp_path: Path) -> Non
     generated_dir, roots = build_fixture_generated(tmp_path)
     issues = validate_fixture_generated(generated_dir, roots)
     assert issues == []
+
+
+def test_validate_local_questbook_surfaces_accepts_foundation_files(tmp_path: Path) -> None:
+    repo_root = tmp_path / "aoa-routing"
+    issues: list[validate_router.ValidationIssue] = []
+    write_text(
+        repo_root / "QUESTBOOK.md",
+        "\n".join(
+            (
+                "# QUESTBOOK.md — aoa-routing",
+                "",
+                "- `AOA-RT-Q-0001`",
+                "- `AOA-RT-Q-0002`",
+                "",
+            )
+        ),
+    )
+    write_text(
+        repo_root / "docs" / "QUEST_ROUTING_SEAM.md",
+        "\n".join(validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS) + "\n",
+    )
+    write_json(
+        repo_root / "schemas" / "quest_dispatch_hint.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v1.schema.json",
+            "title": "quest_dispatch_hint_v1",
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["schema_version", "id", "repo", "band", "difficulty", "risk", "delegate_tier", "next_action", "source_path", "public_safe"],
+            "properties": {
+                "schema_version": {"const": "quest_dispatch_hint_v1"},
+                "id": {"type": "string"},
+                "repo": {"type": "string"},
+                "band": {"type": "string"},
+                "difficulty": {"type": "string"},
+                "risk": {"type": "string"},
+                "delegate_tier": {"type": "string"},
+                "next_action": {"type": "string"},
+                "source_path": {"type": "string"},
+                "public_safe": {"type": "boolean"},
+            },
+        },
+    )
+    for quest_id in validate_router.REQUIRED_ROUTING_QUEST_IDS:
+        write_text(
+            repo_root / "quests" / f"{quest_id}.yaml",
+            "\n".join(
+                (
+                    "schema_version: work_quest_v1",
+                    f"id: {quest_id}",
+                    "repo: aoa-routing",
+                    "public_safe: true",
+                )
+            )
+            + "\n",
+        )
+
+    validate_router.validate_local_questbook_surfaces(repo_root, issues)
+
+    assert issues == []
+
+
+def test_validate_local_questbook_surfaces_rejects_wrong_repo(tmp_path: Path) -> None:
+    repo_root = tmp_path / "aoa-routing"
+    issues: list[validate_router.ValidationIssue] = []
+    write_text(repo_root / "QUESTBOOK.md", "- `AOA-RT-Q-0001`\n- `AOA-RT-Q-0002`\n")
+    write_text(repo_root / "docs" / "QUEST_ROUTING_SEAM.md", "\n".join(validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS) + "\n")
+    write_json(
+        repo_root / "schemas" / "quest_dispatch_hint.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v1.schema.json",
+            "title": "quest_dispatch_hint_v1",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [],
+            "properties": {"schema_version": {"const": "quest_dispatch_hint_v1"}},
+        },
+    )
+    write_text(repo_root / "quests" / "AOA-RT-Q-0001.yaml", "schema_version: work_quest_v1\nid: AOA-RT-Q-0001\nrepo: aoa-routing\npublic_safe: true\n")
+    write_text(repo_root / "quests" / "AOA-RT-Q-0002.yaml", "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-playbooks\npublic_safe: true\n")
+
+    validate_router.validate_local_questbook_surfaces(repo_root, issues)
+
+    assert any("quest must target repo 'aoa-routing'" in issue.message for issue in issues)
+
+
+def test_validate_local_questbook_surfaces_rejects_missing_live_parsing_refusal(tmp_path: Path) -> None:
+    repo_root = tmp_path / "aoa-routing"
+    issues: list[validate_router.ValidationIssue] = []
+    write_text(repo_root / "QUESTBOOK.md", "- `AOA-RT-Q-0001`\n- `AOA-RT-Q-0002`\n")
+    write_text(
+        repo_root / "docs" / "QUEST_ROUTING_SEAM.md",
+        "\n".join(snippet for snippet in validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS if "parse live" not in snippet) + "\n",
+    )
+    write_json(
+        repo_root / "schemas" / "quest_dispatch_hint.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v1.schema.json",
+            "title": "quest_dispatch_hint_v1",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [],
+            "properties": {"schema_version": {"const": "quest_dispatch_hint_v1"}},
+        },
+    )
+    for quest_id in validate_router.REQUIRED_ROUTING_QUEST_IDS:
+        write_text(
+            repo_root / "quests" / f"{quest_id}.yaml",
+            f"schema_version: work_quest_v1\nid: {quest_id}\nrepo: aoa-routing\npublic_safe: true\n",
+        )
+
+    validate_router.validate_local_questbook_surfaces(repo_root, issues)
+
+    assert any("generated-only ingestion" in issue.message for issue in issues)
 
 
 def test_validate_generated_outputs_accepts_custom_generated_dir(tmp_path: Path) -> None:

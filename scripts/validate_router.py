@@ -11,7 +11,13 @@ from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 from jsonschema import Draft202012Validator
+from jsonschema.exceptions import SchemaError
 from referencing import Registry, Resource
+
+try:
+    import yaml
+except ModuleNotFoundError:
+    yaml = None
 
 import validate_nested_agents
 from validate_two_stage_skill_router import validate_outputs as validate_two_stage_outputs
@@ -140,6 +146,23 @@ EXPECTED_KAG_VIEW_IDS = {
     FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
     TOS_KAG_VIEW_ENTRY_ID,
 }
+REQUIRED_ROUTING_QUEST_IDS = ("AOA-RT-Q-0001", "AOA-RT-Q-0002")
+REQUIRED_ROUTING_SEAM_SNIPPETS = (
+    "Source repos own quest meaning.",
+    "`aoa-routing` may only consume thin, derived quest projections.",
+    "- parse live `quests/*.yaml` as authority",
+    "- `generated/quest_catalog.min.json`",
+    "- `generated/quest_dispatch.min.json`",
+)
+REQUIRED_QUEST_SCHEMA_TOP_LEVEL_KEYS = (
+    "$schema",
+    "$id",
+    "title",
+    "type",
+    "additionalProperties",
+    "required",
+    "properties",
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -276,6 +299,121 @@ def load_output(path: Path, issues: list[ValidationIssue]) -> dict[str, Any] | N
     except RouterError as exc:
         issues.append(ValidationIssue(path.name, str(exc)))
         return None
+
+
+def repo_relative(repo_root: Path, path: Path) -> str:
+    return path.relative_to(repo_root).as_posix()
+
+
+def load_yaml_mapping(path: Path, issues: list[ValidationIssue], *, repo_root: Path) -> dict[str, Any] | None:
+    if yaml is None:
+        issues.append(ValidationIssue(repo_relative(repo_root, path), "PyYAML is required to validate questbook surfaces"))
+        return None
+    try:
+        payload = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        issues.append(ValidationIssue(repo_relative(repo_root, path), "missing required file"))
+        return None
+    except yaml.YAMLError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, path), f"invalid YAML: {exc}"))
+        return None
+    if not isinstance(payload, dict):
+        issues.append(ValidationIssue(repo_relative(repo_root, path), "YAML payload must be an object"))
+        return None
+    return payload
+
+
+def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIssue]) -> None:
+    questbook_path = repo_root / "QUESTBOOK.md"
+    seam_path = repo_root / "docs" / "QUEST_ROUTING_SEAM.md"
+    schema_path = repo_root / "schemas" / "quest_dispatch_hint.schema.json"
+    quests_dir = repo_root / "quests"
+
+    try:
+        questbook_text = questbook_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        issues.append(ValidationIssue(repo_relative(repo_root, questbook_path), "missing required file"))
+        return
+
+    try:
+        seam_text = seam_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        issues.append(ValidationIssue(repo_relative(repo_root, seam_path), "missing required file"))
+        return
+
+    try:
+        schema_payload = load_json_file(schema_path)
+        schema_object = ensure_mapping(schema_payload, repo_relative(repo_root, schema_path))
+    except RouterError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, schema_path), str(exc)))
+        schema_object = None
+    if schema_object is not None:
+        missing = [key for key in REQUIRED_QUEST_SCHEMA_TOP_LEVEL_KEYS if key not in schema_object]
+        if missing:
+            issues.append(
+                ValidationIssue(
+                    repo_relative(repo_root, schema_path),
+                    f"schema is missing required top-level keys: {', '.join(missing)}",
+                )
+            )
+        else:
+            schema_version = (
+                ensure_mapping(schema_object["properties"], repo_relative(repo_root, schema_path))
+                .get("schema_version", {})
+            )
+            if not isinstance(schema_version, dict) or schema_version.get("const") != "quest_dispatch_hint_v1":
+                issues.append(
+                    ValidationIssue(
+                        repo_relative(repo_root, schema_path),
+                        "schema must constrain properties.schema_version.const to 'quest_dispatch_hint_v1'",
+                    )
+                )
+        try:
+            Draft202012Validator.check_schema(schema_object)
+        except SchemaError as exc:
+            issues.append(ValidationIssue(repo_relative(repo_root, schema_path), f"invalid JSON schema: {exc.message}"))
+
+    actual_ids = {path.stem for path in quests_dir.glob("AOA-RT-Q-*.yaml") if path.is_file()}
+    expected_ids = set(REQUIRED_ROUTING_QUEST_IDS)
+    if actual_ids != expected_ids:
+        missing = sorted(expected_ids - actual_ids)
+        extra = sorted(actual_ids - expected_ids)
+        details: list[str] = []
+        if missing:
+            details.append(f"missing: {', '.join(missing)}")
+        if extra:
+            details.append(f"extra: {', '.join(extra)}")
+        joined = "; ".join(details) if details else "unexpected quest set"
+        issues.append(ValidationIssue("quests", f"routing quest set must match expected foundation quests ({joined})"))
+
+    for quest_id in REQUIRED_ROUTING_QUEST_IDS:
+        payload = load_yaml_mapping(quests_dir / f"{quest_id}.yaml", issues, repo_root=repo_root)
+        if payload is None:
+            continue
+        if payload.get("schema_version") != "work_quest_v1":
+            issues.append(
+                ValidationIssue(
+                    f"quests/{quest_id}.yaml",
+                    f"unsupported schema_version '{payload.get('schema_version')}'",
+                )
+            )
+        if payload.get("repo") != "aoa-routing":
+            issues.append(ValidationIssue(f"quests/{quest_id}.yaml", "quest must target repo 'aoa-routing'"))
+        if payload.get("id") != quest_id:
+            issues.append(ValidationIssue(f"quests/{quest_id}.yaml", f"id must match filename '{quest_id}'"))
+        if payload.get("public_safe") is not True:
+            issues.append(ValidationIssue(f"quests/{quest_id}.yaml", "quest must set public_safe: true"))
+        if quest_id not in questbook_text:
+            issues.append(ValidationIssue("QUESTBOOK.md", f"QUESTBOOK.md must reference quest id '{quest_id}'"))
+
+    for snippet in REQUIRED_ROUTING_SEAM_SNIPPETS:
+        if snippet not in seam_text:
+            issues.append(
+                ValidationIssue(
+                    "docs/QUEST_ROUTING_SEAM.md",
+                    "QUEST routing seam must refuse live quest authority and name generated-only ingestion",
+                )
+            )
 
 
 def validate_rebuild_parity(
@@ -3247,6 +3385,7 @@ def validate_generated_outputs(
 ) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     generated_dir = generated_dir.resolve()
+    validate_local_questbook_surfaces(REPO_ROOT, issues)
 
     registry_path = generated_dir / "cross_repo_registry.min.json"
     router_path = generated_dir / "aoa_router.min.json"
@@ -3726,6 +3865,7 @@ def main() -> int:
             print(f"[error] {issue.location}: {issue.message}")
         return 1
     print("[ok] validated nested AGENTS docs")
+    print("[ok] validated local questbook routing seam")
     print("[ok] validated generated routing outputs")
     return 0
 
