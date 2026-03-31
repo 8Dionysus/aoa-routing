@@ -535,7 +535,23 @@ def main() -> int:
 
     for filename, payload in outputs.items():
         path = generated_dir / filename
-        path.write_text(render_output_text(filename, payload), encoding="utf-8", newline="\n")
+        rendered_text = render_output_text(filename, payload)
+        if path.exists():
+            try:
+                actual_text = path.read_text(encoding="utf-8")
+                if filename.endswith(".jsonl"):
+                    actual_payload = [
+                        json.loads(line)
+                        for line in actual_text.splitlines()
+                        if line.strip()
+                    ]
+                else:
+                    actual_payload = json.loads(actual_text)
+                if actual_payload == payload:
+                    continue
+            except json.JSONDecodeError:
+                pass
+        path.write_text(rendered_text, encoding="utf-8", newline="\n")
         print(f"[ok] wrote {relative_posix(path)}")
     return 0
 
