@@ -528,6 +528,7 @@ def test_build_outputs_from_fixtures() -> None:
             "recall_family": "memory_objects",
         },
     ]
+
     assert tiny_model["starters"] == [
         {
             "name": "router-root",
@@ -733,6 +734,31 @@ def test_build_outputs_from_fixtures() -> None:
             "entry_kind": "kag_view",
         },
     ]
+
+
+def test_validate_generated_dir_matches_outputs_accepts_fixture_build(tmp_path: Path) -> None:
+    outputs = build_fixture_outputs()
+    generated_dir = tmp_path / "generated"
+    for filename, payload in outputs.items():
+        write_output(generated_dir / filename, payload)
+
+    mismatches = build_router.validate_generated_dir_matches_outputs(outputs, generated_dir=generated_dir)
+    assert mismatches == []
+
+
+def test_validate_generated_dir_matches_outputs_rejects_stale_output(tmp_path: Path) -> None:
+    outputs = build_fixture_outputs()
+    generated_dir = tmp_path / "generated"
+    for filename, payload in outputs.items():
+        write_output(generated_dir / filename, payload)
+
+    stale_path = generated_dir / "aoa_router.min.json"
+    stale_payload = json.loads(stale_path.read_text(encoding="utf-8"))
+    stale_payload["entries"][0]["summary"] = "stale router output"
+    write_output(stale_path, stale_payload)
+
+    mismatches = build_router.validate_generated_dir_matches_outputs(outputs, generated_dir=generated_dir)
+    assert mismatches == [f"stale generated output: {stale_path.as_posix()}"]
 
 
 def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
