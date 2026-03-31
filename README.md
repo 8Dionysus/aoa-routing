@@ -185,6 +185,12 @@ Validate the generated outputs:
 python scripts/validate_router.py
 ```
 
+Check canonical parity:
+
+```bash
+python scripts/build_router.py --check
+```
+
 The optional wave-9 seam can also be exercised directly:
 
 ```bash
