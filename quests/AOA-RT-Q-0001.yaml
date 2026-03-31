@@ -1,0 +1,47 @@
+schema_version: work_quest_v1
+id: AOA-RT-Q-0001
+title: "Define source-owned quest dispatch ingestion from generated surfaces only"
+summary: ''
+repo: aoa-routing
+owner_surface: docs/QUEST_ROUTING_SEAM.md
+theme_ref: ''
+milestone_ref: ''
+kind: seam
+state: triaged
+band: frontier
+difficulty: d3_seam
+risk: r1_repo_local
+control_mode: codex_supervised
+delegate_tier: planner
+fallback_tier: verifier
+wrapper_class: codex_primary
+write_scope: docs_only
+split_required: true
+complexity_basis:
+  scope: 2
+  ambiguity: 1
+  boundary: 2
+  verification: 1
+parent: null
+depends_on: []
+activation:
+  mode: on_review_of
+  ref: AOA-Q-0002
+anchor_ref:
+  artifact: routing-readme
+  ref: README.md
+handoff_role: routing-maintainer
+evidence:
+  - routing-only quest ingestion rule is explicit
+  - generated surfaces are named
+  - live source quest parsing is explicitly refused
+harvest:
+  target: routing
+opened_at: '2026-03-31'
+touched_at: '2026-03-31'
+tags:
+  - routing
+  - dispatch
+  - thin-layer
+notes: ''
+public_safe: true

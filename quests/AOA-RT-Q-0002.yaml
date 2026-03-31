@@ -1,0 +1,45 @@
+schema_version: work_quest_v1
+id: AOA-RT-Q-0002
+title: "Add tiny-model-safe frontier entry hints for low-risk quest leaves"
+summary: ''
+repo: aoa-routing
+owner_surface: generated/quest-dispatch-entrypoints
+theme_ref: ''
+milestone_ref: ''
+kind: support
+state: captured
+band: near
+difficulty: d2_slice
+risk: r1_repo_local
+control_mode: codex_supervised
+delegate_tier: router
+fallback_tier: planner
+wrapper_class: local_reader
+write_scope: generated_only
+split_required: false
+complexity_basis:
+  scope: 1
+  ambiguity: 1
+  boundary: 1
+  verification: 1
+parent: null
+depends_on: []
+activation:
+  mode: on_review_of
+  ref: AOA-RT-Q-0001
+anchor_ref:
+  artifact: dispatch-hint-schema
+  ref: schemas/quest_dispatch_hint.schema.json
+handoff_role: routing-maintainer
+evidence:
+  - safe first-entry conditions are explicit
+  - entry hints do not replace source-owned inspect surfaces
+harvest:
+  target: routing
+opened_at: '2026-03-31'
+touched_at: '2026-03-31'
+tags:
+  - tiny-models
+  - entrypoints
+notes: ''
+public_safe: true

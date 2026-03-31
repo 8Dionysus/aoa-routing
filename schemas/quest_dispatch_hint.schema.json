@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v1.schema.json",
+  "title": "quest_dispatch_hint_v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "repo",
+    "band",
+    "difficulty",
+    "risk",
+    "delegate_tier",
+    "next_action",
+    "source_path",
+    "public_safe"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "quest_dispatch_hint_v1"
+    },
+    "id": {
+      "type": "string"
+    },
+    "repo": {
+      "type": "string"
+    },
+    "band": {
+      "type": "string",
+      "enum": [
+        "frontier",
+        "near",
+        "latent",
+        "parked"
+      ]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "d0_probe",
+        "d1_patch",
+        "d2_slice",
+        "d3_seam",
+        "d4_architecture",
+        "d5_doctrine"
+      ]
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "r0_readonly",
+        "r1_repo_local",
+        "r2_contract",
+        "r3_side_effect"
+      ]
+    },
+    "delegate_tier": {
+      "type": "string",
+      "enum": [
+        "router",
+        "planner",
+        "executor",
+        "verifier",
+        "conductor",
+        "deep",
+        "archivist"
+      ]
+    },
+    "next_action": {
+      "type": "string",
+      "enum": [
+        "inspect",
+        "expand",
+        "pair",
+        "recall",
+        "handoff"
+      ]
+    },
+    "source_path": {
+      "type": "string"
+    },
+    "public_safe": {
+      "type": "boolean"
+    }
+  }
+}
