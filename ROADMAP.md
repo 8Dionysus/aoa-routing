@@ -105,6 +105,7 @@ This wave adds:
 - active entry cards for `agent`, `tier`, `playbook`, and `kag_view`
 - `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
 - schema-backed validation that orientation never points authority at route-owned generated surfaces
+- router-owned generated-surface refresh stays a parity-maintenance lane for routing-owned outputs and must not transfer source authority from sibling repos
 - a narrow `tos-root -> source-owned ToS tiny-entry route` handoff without activating `tos_node`
 - a second live `kag_view` for `Tree-of-Sophia`, while `kag-view-root` stays defaulted to `aoa-techniques`
 - one bounded `AOA-K-0011` adjunct advertised only inside the `Tree-of-Sophia` `kag_view`, after the source-owned tiny-entry handoff and without widening federation kinds
