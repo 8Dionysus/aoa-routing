@@ -108,7 +108,53 @@ def parse_args() -> argparse.Namespace:
         default=REPO_ROOT / "generated",
         help="Directory where generated outputs should be written.",
     )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help="Verify that the generated directory already matches the canonical rebuild instead of rewriting files.",
+    )
     return parser.parse_args()
+
+
+def render_output_text(filename: str, payload: Any) -> str:
+    if filename.endswith(".jsonl"):
+        return dump_jsonl(payload)
+    return json.dumps(
+        payload,
+        ensure_ascii=False,
+        indent=None,
+        separators=(",", ":"),
+        sort_keys=False,
+    ) + "\n"
+
+
+def validate_generated_dir_matches_outputs(
+    outputs: dict[str, Any],
+    *,
+    generated_dir: Path,
+) -> list[str]:
+    mismatches: list[str] = []
+    for filename, payload in outputs.items():
+        path = generated_dir / filename
+        if not path.exists():
+            mismatches.append(f"missing generated output: {relative_posix(path)}")
+            continue
+        actual_text = path.read_text(encoding="utf-8")
+        try:
+            if filename.endswith(".jsonl"):
+                actual_payload = [
+                    json.loads(line)
+                    for line in actual_text.splitlines()
+                    if line.strip()
+                ]
+            else:
+                actual_payload = json.loads(actual_text)
+        except json.JSONDecodeError:
+            mismatches.append(f"invalid generated output: {relative_posix(path)}")
+            continue
+        if actual_payload != payload:
+            mismatches.append(f"stale generated output: {relative_posix(path)}")
+    return mismatches
 
 
 def collect_technique_entries(techniques_root: Path) -> list[dict[str, Any]]:
@@ -479,12 +525,17 @@ def main() -> int:
     generated_dir = args.generated_dir.resolve()
     generated_dir.mkdir(parents=True, exist_ok=True)
 
+    if args.check:
+        mismatches = validate_generated_dir_matches_outputs(outputs, generated_dir=generated_dir)
+        if mismatches:
+            raise RouterError("; ".join(mismatches))
+        for filename in outputs:
+            print(f"[ok] verified {relative_posix(generated_dir / filename)}")
+        return 0
+
     for filename, payload in outputs.items():
         path = generated_dir / filename
-        if filename.endswith(".jsonl"):
-            path.write_text(dump_jsonl(payload), encoding="utf-8", newline="\n")
-        else:
-            write_json_file(path, payload)
+        path.write_text(render_output_text(filename, payload), encoding="utf-8", newline="\n")
         print(f"[ok] wrote {relative_posix(path)}")
     return 0
 
