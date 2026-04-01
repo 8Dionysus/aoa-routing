@@ -74,6 +74,7 @@ from router_core import (
     TOS_TINY_ENTRY_ROUTE_PATH,
     build_federation_entrypoints_payload,
     build_quest_dispatch_hints_payload,
+    build_quest_routing_source_inputs,
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
     build_recommended_paths_payload,
@@ -652,22 +653,7 @@ def validate_quest_dispatch_hints(
             )
         )
 
-    expected_source_inputs: list[dict[str, str]] = []
-    for repo_name in QUEST_ROUTING_SOURCE_REPOS:
-        expected_source_inputs.extend(
-            (
-                {
-                    "repo": repo_name,
-                    "surface_kind": "quest_catalog",
-                    "ref": "generated/quest_catalog.min.json",
-                },
-                {
-                    "repo": repo_name,
-                    "surface_kind": "quest_dispatch",
-                    "ref": "generated/quest_dispatch.min.json",
-                },
-            )
-        )
+    expected_source_inputs = build_quest_routing_source_inputs()
     if source_inputs != expected_source_inputs:
         issues.append(
             ValidationIssue(

@@ -853,19 +853,20 @@ def load_live_quest_projection_entries(
     return normalized_catalog_entries, normalized_dispatch_entries
 
 
-def build_quest_dispatch_hints_payload(
+def build_quest_routing_source_roots(
     techniques_root: Path,
     skills_root: Path,
     evals_root: Path,
-) -> dict[str, Any]:
-    source_roots = {
+) -> dict[str, Path]:
+    return {
         "aoa-techniques": techniques_root,
         "aoa-skills": skills_root,
         "aoa-evals": evals_root,
     }
-    source_inputs: list[dict[str, str]] = []
-    hints: list[dict[str, Any]] = []
 
+
+def build_quest_routing_source_inputs() -> list[dict[str, str]]:
+    source_inputs: list[dict[str, str]] = []
     for repo_name in QUEST_ROUTING_SOURCE_REPOS:
         source_inputs.extend(
             (
@@ -881,6 +882,23 @@ def build_quest_dispatch_hints_payload(
                 },
             )
         )
+    return source_inputs
+
+
+def build_quest_dispatch_hints_payload(
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+) -> dict[str, Any]:
+    source_roots = build_quest_routing_source_roots(
+        techniques_root,
+        skills_root,
+        evals_root,
+    )
+    source_inputs = build_quest_routing_source_inputs()
+    hints: list[dict[str, Any]] = []
+
+    for repo_name in QUEST_ROUTING_SOURCE_REPOS:
         catalog_entries, dispatch_entries = load_live_quest_projection_entries(
             source_roots[repo_name],
             repo_name,
