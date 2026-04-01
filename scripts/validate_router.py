@@ -379,17 +379,24 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
                 )
             )
         else:
-            schema_version = (
-                ensure_mapping(schema_object["properties"], repo_relative(repo_root, schema_path))
-                .get("schema_version", {})
-            )
-            if not isinstance(schema_version, dict) or schema_version.get("const") != "quest_dispatch_hint_v2":
-                issues.append(
-                    ValidationIssue(
-                        repo_relative(repo_root, schema_path),
-                        "schema must constrain properties.schema_version.const to 'quest_dispatch_hint_v2'",
-                    )
+            try:
+                properties = ensure_mapping(
+                    schema_object["properties"],
+                    repo_relative(repo_root, schema_path),
                 )
+            except RouterError as exc:
+                issues.append(
+                    ValidationIssue(repo_relative(repo_root, schema_path), str(exc))
+                )
+            else:
+                schema_version = properties.get("schema_version", {})
+                if not isinstance(schema_version, dict) or schema_version.get("const") != "quest_dispatch_hint_v2":
+                    issues.append(
+                        ValidationIssue(
+                            repo_relative(repo_root, schema_path),
+                            "schema must constrain properties.schema_version.const to 'quest_dispatch_hint_v2'",
+                        )
+                    )
         try:
             Draft202012Validator.check_schema(schema_object)
         except SchemaError as exc:
