@@ -24,6 +24,7 @@ In this wave, routing may ingest only:
 - `generated/quest_dispatch.min.json`
 
 Production routing does not read `.example.json` quest fixtures.
+The adjunct `generated/quest_board.min.example.json` surface is example-only and does not feed the live router in this wave.
 
 ## Minimal routing actions
 

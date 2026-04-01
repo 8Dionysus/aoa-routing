@@ -156,7 +156,8 @@ EXPECTED_KAG_VIEW_IDS = {
     FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
     TOS_KAG_VIEW_ENTRY_ID,
 }
-REQUIRED_ROUTING_QUEST_IDS = ("AOA-RT-Q-0001", "AOA-RT-Q-0002")
+FOUNDATION_ROUTING_QUEST_IDS = ("AOA-RT-Q-0001", "AOA-RT-Q-0002")
+REQUIRED_ROUTING_QUEST_IDS = FOUNDATION_ROUTING_QUEST_IDS
 REQUIRED_ROUTING_SEAM_SNIPPETS = (
     "Source repos own quest meaning.",
     "`aoa-routing` may only consume thin, derived quest projections from live generated quest surfaces.",
@@ -181,10 +182,14 @@ EXPECTED_QUEST_HINT_ACTION_ORDER = ["inspect", "expand", "handoff"]
 EXPECTED_ROUTING_QUEST_STATES = {
     "AOA-RT-Q-0001": "done",
     "AOA-RT-Q-0002": "reanchor",
+    "AOA-RT-Q-0003": "captured",
 }
 REQUIRED_REANCHOR_NOTE_SNIPPET = (
     "no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist"
 )
+QUEST_BOARD_SCHEMA_NAME = "quest_board_entry.schema.json"
+QUEST_BOARD_EXAMPLE_NAME = "quest_board.min.example.json"
+QUEST_BOARD_REQUIRED_INPUT_REPOS = ("aoa-skills", "aoa-agents", "aoa-evals")
 
 
 def parse_args() -> argparse.Namespace:
@@ -345,6 +350,117 @@ def load_yaml_mapping(path: Path, issues: list[ValidationIssue], *, repo_root: P
     return payload
 
 
+def quest_sort_key(quest_id: str) -> tuple[int, str]:
+    suffix = quest_id.rsplit("-", 1)[-1]
+    try:
+        return (int(suffix), quest_id)
+    except ValueError:
+        return (10**9, quest_id)
+
+
+def discover_routing_quest_ids(repo_root: Path) -> list[str]:
+    quest_ids = sorted(
+        {
+            path.stem
+            for path in (repo_root / "quests").glob("AOA-RT-Q-*.yaml")
+            if path.is_file()
+        },
+        key=quest_sort_key,
+    )
+    if not quest_ids:
+        return list(FOUNDATION_ROUTING_QUEST_IDS)
+    return quest_ids
+
+
+def validate_adjunct_quest_board_surface(repo_root: Path, issues: list[ValidationIssue]) -> None:
+    schema_path = repo_root / "schemas" / QUEST_BOARD_SCHEMA_NAME
+    example_path = repo_root / "generated" / QUEST_BOARD_EXAMPLE_NAME
+
+    try:
+        schema_payload = load_json_file(schema_path)
+        schema_object = ensure_mapping(schema_payload, repo_relative(repo_root, schema_path))
+    except RouterError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, schema_path), str(exc)))
+        return
+
+    if schema_object.get("title") != "quest_board_entry_v1":
+        issues.append(
+            ValidationIssue(
+                repo_relative(repo_root, schema_path),
+                "schema title must stay 'quest_board_entry_v1'",
+            )
+        )
+    try:
+        Draft202012Validator.check_schema(schema_object)
+    except SchemaError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, schema_path), f"invalid JSON schema: {exc.message}"))
+
+    example_payload = load_output(example_path, issues)
+    if example_payload is None:
+        return
+
+    if example_payload.get("version") != 1:
+        issues.append(ValidationIssue(QUEST_BOARD_EXAMPLE_NAME, "version must stay 1"))
+    if example_payload.get("authority") != "derived-example-only":
+        issues.append(
+            ValidationIssue(
+                QUEST_BOARD_EXAMPLE_NAME,
+                "authority must stay 'derived-example-only'",
+            )
+        )
+    if example_payload.get("wave_scope") != "adjunct-rpg-first-wave":
+        issues.append(
+            ValidationIssue(
+                QUEST_BOARD_EXAMPLE_NAME,
+                "wave_scope must stay 'adjunct-rpg-first-wave'",
+            )
+        )
+
+    try:
+        inputs = ensure_list(example_payload.get("inputs"), f"{QUEST_BOARD_EXAMPLE_NAME}.inputs")
+        entries = ensure_list(example_payload.get("entries"), f"{QUEST_BOARD_EXAMPLE_NAME}.entries")
+    except RouterError as exc:
+        issues.append(ValidationIssue(QUEST_BOARD_EXAMPLE_NAME, str(exc)))
+        return
+
+    input_repos: list[str] = []
+    for index, raw_input in enumerate(inputs):
+        location = f"{QUEST_BOARD_EXAMPLE_NAME}.inputs[{index}]"
+        try:
+            input_payload = ensure_mapping(raw_input, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(QUEST_BOARD_EXAMPLE_NAME, str(exc)))
+            continue
+        repo_name = input_payload.get("repo")
+        if isinstance(repo_name, str):
+            input_repos.append(repo_name)
+
+    if tuple(input_repos) != QUEST_BOARD_REQUIRED_INPUT_REPOS:
+        issues.append(
+            ValidationIssue(
+                QUEST_BOARD_EXAMPLE_NAME,
+                "inputs must stay ordered as aoa-skills, aoa-agents, aoa-evals for the first adjunct example wave",
+            )
+        )
+
+    for index, raw_entry in enumerate(entries):
+        location = f"{QUEST_BOARD_EXAMPLE_NAME}.entries[{index}]"
+        try:
+            entry = ensure_mapping(raw_entry, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(QUEST_BOARD_EXAMPLE_NAME, str(exc)))
+            continue
+        validate_against_schema(entry, QUEST_BOARD_SCHEMA_NAME, location, issues)
+        actions = entry.get("entry_actions")
+        if actions != EXPECTED_QUEST_HINT_ACTION_ORDER:
+            issues.append(
+                ValidationIssue(
+                    QUEST_BOARD_EXAMPLE_NAME,
+                    f"{location}.entry_actions must stay exactly {EXPECTED_QUEST_HINT_ACTION_ORDER}",
+                )
+            )
+
+
 def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIssue]) -> None:
     questbook_path = repo_root / "QUESTBOOK.md"
     seam_path = repo_root / "docs" / "QUEST_ROUTING_SEAM.md"
@@ -402,20 +518,21 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
         except SchemaError as exc:
             issues.append(ValidationIssue(repo_relative(repo_root, schema_path), f"invalid JSON schema: {exc.message}"))
 
-    actual_ids = {path.stem for path in quests_dir.glob("AOA-RT-Q-*.yaml") if path.is_file()}
-    expected_ids = set(REQUIRED_ROUTING_QUEST_IDS)
-    if actual_ids != expected_ids:
-        missing = sorted(expected_ids - actual_ids)
-        extra = sorted(actual_ids - expected_ids)
-        details: list[str] = []
-        if missing:
-            details.append(f"missing: {', '.join(missing)}")
-        if extra:
-            details.append(f"extra: {', '.join(extra)}")
-        joined = "; ".join(details) if details else "unexpected quest set"
-        issues.append(ValidationIssue("quests", f"routing quest set must match expected foundation quests ({joined})"))
+    actual_ids = discover_routing_quest_ids(repo_root)
+    missing_foundation = [
+        quest_id for quest_id in FOUNDATION_ROUTING_QUEST_IDS if quest_id not in actual_ids
+    ]
+    if missing_foundation:
+        issues.append(
+            ValidationIssue(
+                "quests",
+                "routing quest set must include the foundation quests (missing: "
+                + ", ".join(missing_foundation)
+                + ")",
+            )
+        )
 
-    for quest_id in REQUIRED_ROUTING_QUEST_IDS:
+    for quest_id in actual_ids:
         payload = load_yaml_mapping(quests_dir / f"{quest_id}.yaml", issues, repo_root=repo_root)
         if payload is None:
             continue
@@ -432,12 +549,12 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
             issues.append(ValidationIssue(f"quests/{quest_id}.yaml", f"id must match filename '{quest_id}'"))
         if payload.get("public_safe") is not True:
             issues.append(ValidationIssue(f"quests/{quest_id}.yaml", "quest must set public_safe: true"))
-        expected_state = EXPECTED_ROUTING_QUEST_STATES[quest_id]
-        if payload.get("state") != expected_state:
+        expected_state = EXPECTED_ROUTING_QUEST_STATES.get(quest_id)
+        if expected_state is not None and payload.get("state") != expected_state:
             issues.append(
                 ValidationIssue(
                     f"quests/{quest_id}.yaml",
-                    f"quest state must stay '{expected_state}' in the first live routing wave",
+                    f"quest state must stay '{expected_state}' in the current routing wave",
                 )
             )
         if expected_state in {"done", "dropped"}:
@@ -465,6 +582,8 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
                         "reanchored quest must record the current lack of live frontier d0/d1 r0/r1 leaves",
                     )
                 )
+        if quest_id == "AOA-RT-Q-0003":
+            validate_adjunct_quest_board_surface(repo_root, issues)
 
     if "## Blocked / reanchor" not in questbook_text:
         issues.append(

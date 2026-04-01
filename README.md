@@ -97,6 +97,11 @@ For the KAG/source-lift family, `AOA-T-0019` is the default bundle-level metadat
 The relation-hint and pairing surfaces stay family-scoped to that seam and do not introduce graph traversal,
 rationale layers, or open-ended same-kind exploration.
 
+One adjunct RPG reflection surface also now lives here as an example-only file:
+- `generated/quest_board.min.example.json`
+
+That board seam is validator-checked, but it is not emitted by `build_router.py`, not read by production routing, and not treated as a live dispatch authority.
+
 These public outputs are schema-backed and validator-checked.
 `aoa-routing` treats them as stable navigation contracts, not ad hoc helper files.
 
