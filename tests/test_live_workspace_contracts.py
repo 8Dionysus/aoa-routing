@@ -118,6 +118,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertEqual(packet_by_id["AOA-P-0017"]["gate_verdict"], "composition-landed")
         self.assertEqual(
             packet_by_id["AOA-P-0017"]["source_review_refs"][0],
+            "playbooks/split-wave-cross-repo-rollout/PLAYBOOK.md",
+        )
+        self.assertEqual(
+            packet_by_id["AOA-P-0017"]["source_review_refs"][1],
             "docs/gate-reviews/split-wave-cross-repo-rollout.md",
         )
 
@@ -137,6 +141,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             for entry in runtime_template_index["templates"]
             if entry.get("eval_anchor")
         }
+        normalized_eval_template_artifacts = {
+            entry["template_name"]: entry["required_runtime_artifacts"]
+            for entry in runtime_template_index["templates"]
+        }
         available_runtime_surfaces = {
             entry["runtime_surface"] for entry in runtime_writeback_targets["targets"]
         }
@@ -144,11 +152,45 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         for contract in review_packet_contracts["playbooks"]:
             self.assertTrue(set(contract["eval_anchors"]).issubset(available_eval_anchors))
             self.assertTrue(set(contract["memo_runtime_surfaces"]).issubset(available_runtime_surfaces))
+            if contract["review_required"]:
+                self.assertTrue(contract["source_review_refs"])
+                self.assertTrue(contract["source_review_refs"][0].endswith("/PLAYBOOK.md"))
+            self.assertEqual(
+                contract["candidate_packet_kinds"],
+                list(dict.fromkeys(contract["candidate_packet_kinds"])),
+            )
 
         by_id = {item["playbook_id"]: item for item in review_packet_contracts["playbooks"]}
         self.assertEqual(by_id["AOA-P-0011"]["eval_anchors"], ["aoa-approval-boundary-adherence"])
         self.assertEqual(by_id["AOA-P-0011"]["memo_runtime_surfaces"], ["approval_record"])
+        self.assertEqual(
+            by_id["AOA-P-0011"]["source_review_refs"][0],
+            "playbooks/bounded-change-safe/PLAYBOOK.md",
+        )
         self.assertEqual(by_id["AOA-P-0017"]["eval_anchors"], ["aoa-approval-boundary-adherence"])
+
+        for template_name, required_runtime_artifacts in normalized_eval_template_artifacts.items():
+            self.assertEqual(required_runtime_artifacts, list(dict.fromkeys(required_runtime_artifacts)))
+            self.assertTrue(
+                all(
+                    artifact
+                    and artifact == artifact.lower()
+                    and " " not in artifact
+                    for artifact in required_runtime_artifacts
+                ),
+                msg=f"{template_name} must keep normalized required_runtime_artifacts",
+            )
+
+        reviewed_candidate_targets = [
+            entry
+            for entry in runtime_writeback_targets["targets"]
+            if entry["writeback_class"] == "reviewed_candidate"
+        ]
+        self.assertTrue(reviewed_candidate_targets)
+        self.assertTrue(all(entry["requires_human_review"] for entry in reviewed_candidate_targets))
+        self.assertTrue(
+            all(entry["review_state_default"] == "proposed" for entry in reviewed_candidate_targets)
+        )
 
     def test_live_workspace_memo_and_kag_execution_seams_resolve_to_real_surfaces(self) -> None:
         hints = load_json(REPO_ROOT / "generated" / "task_to_surface_hints.json")
