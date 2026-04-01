@@ -14,6 +14,7 @@ The current generated set includes:
 - `aoa_router.min.json` as the thin projection surface
 - `task_to_surface_hints.json` as inspect, expand, pair, and recall dispatch hints
 - `task_to_tier_hints.json` as task-family dispatch hints derived from `aoa-agents`
+- `quest_dispatch_hints.min.json` as the first live source-only quest inspect, expand, and handoff routing surface
 - `recommended_paths.min.json` as bounded upstream and downstream hops
 - `kag_source_lift_relation_hints.min.json` as bounded direct relation hints for the KAG/source-lift seam
 - `pairing_hints.min.json` as bounded pair suggestions
@@ -44,4 +45,4 @@ python scripts/validate_router.py
 pytest tests
 ```
 
-The validator should confirm rebuild parity, schema integrity, and source-owned inspect and expand targets.
+The validator should confirm rebuild parity, schema integrity, live quest hint integrity, and source-owned inspect and expand targets.
