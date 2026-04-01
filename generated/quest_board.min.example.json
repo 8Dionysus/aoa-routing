@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "authority": "derived-example-only",
+  "wave_scope": "adjunct-rpg-first-wave",
+  "inputs": [
+    {
+      "repo": "aoa-skills",
+      "surface_kind": "quest_dispatch",
+      "ref": "generated/quest_dispatch.min.json"
+    },
+    {
+      "repo": "aoa-agents",
+      "surface_kind": "agent_progression_example",
+      "ref": "examples/agent_progression.example.json"
+    },
+    {
+      "repo": "aoa-evals",
+      "surface_kind": "progression_evidence_example",
+      "ref": "examples/progression_evidence.example.json"
+    }
+  ],
+  "entries": [
+    {
+      "schema_version": "quest_board_entry_v1",
+      "id": "AOA-SK-Q-0003",
+      "title": "Tighten the Codex portable layer and local adapter contract for .agents/skills export",
+      "repo": "aoa-skills",
+      "state": "triaged",
+      "band": "frontier",
+      "difficulty": "d3_seam",
+      "risk": "r2_contract",
+      "control_mode": "human_codex_copilot",
+      "delegate_tier": "planner",
+      "source_dispatch_ref": "generated/quest_dispatch.min.json#AOA-SK-Q-0003",
+      "entry_actions": [
+        "inspect",
+        "expand",
+        "handoff"
+      ],
+      "recommended_party": {
+        "cohort_pattern": "pair",
+        "roles": [
+          "architect",
+          "coder",
+          "reviewer"
+        ],
+        "tier_path": [
+          "planner",
+          "executor",
+          "verifier"
+        ]
+      },
+      "progression_gate": {
+        "min_rank": "adept",
+        "preferred_axes": [
+          "boundary_integrity",
+          "proof_discipline",
+          "change_legibility"
+        ],
+        "note": "Derived hint only. Source quest and source progression remain authoritative in their home repos."
+      },
+      "public_safe": true
+    }
+  ]
+}

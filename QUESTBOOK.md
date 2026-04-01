@@ -8,7 +8,7 @@ This questbook tracks routing-layer work around quest discovery and thin dispatc
 
 ## Near
 
-- none right now
+- `AOA-RT-Q-0003` — keep the adjunct quest-board seam example-only and downstream of source quest authority
 
 ## Blocked / reanchor
 

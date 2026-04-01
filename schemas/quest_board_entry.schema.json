@@ -1,0 +1,206 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://8dionysus.github.io/schemas/quest_board_entry_v1.schema.json",
+  "title": "quest_board_entry_v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "id",
+    "title",
+    "repo",
+    "state",
+    "band",
+    "difficulty",
+    "risk",
+    "control_mode",
+    "delegate_tier",
+    "source_dispatch_ref",
+    "entry_actions",
+    "recommended_party",
+    "progression_gate",
+    "public_safe"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "quest_board_entry_v1"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5
+    },
+    "repo": {
+      "type": "string",
+      "minLength": 1
+    },
+    "state": {
+      "type": "string",
+      "enum": [
+        "captured",
+        "triaged",
+        "ready",
+        "active",
+        "blocked",
+        "reanchor",
+        "done",
+        "dropped"
+      ]
+    },
+    "band": {
+      "type": "string",
+      "enum": [
+        "frontier",
+        "near",
+        "latent",
+        "parked"
+      ]
+    },
+    "difficulty": {
+      "type": "string",
+      "enum": [
+        "d0_probe",
+        "d1_patch",
+        "d2_slice",
+        "d3_seam",
+        "d4_architecture",
+        "d5_doctrine"
+      ]
+    },
+    "risk": {
+      "type": "string",
+      "enum": [
+        "r0_readonly",
+        "r1_repo_local",
+        "r2_contract",
+        "r3_side_effect"
+      ]
+    },
+    "control_mode": {
+      "type": "string",
+      "enum": [
+        "codex_supervised",
+        "human_gate",
+        "human_codex_copilot",
+        "blocked"
+      ]
+    },
+    "delegate_tier": {
+      "type": "string",
+      "enum": [
+        "router",
+        "planner",
+        "executor",
+        "verifier",
+        "conductor",
+        "deep",
+        "archivist"
+      ]
+    },
+    "source_dispatch_ref": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entry_actions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "inspect",
+          "expand",
+          "handoff"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "recommended_party": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cohort_pattern",
+        "roles",
+        "tier_path"
+      ],
+      "properties": {
+        "cohort_pattern": {
+          "type": "string",
+          "minLength": 1
+        },
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "tier_path": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "router",
+              "planner",
+              "executor",
+              "verifier",
+              "conductor",
+              "deep",
+              "archivist"
+            ]
+          },
+          "minItems": 1
+        }
+      }
+    },
+    "progression_gate": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min_rank",
+        "preferred_axes",
+        "note"
+      ],
+      "properties": {
+        "min_rank": {
+          "type": "string",
+          "enum": [
+            "initiate",
+            "adept",
+            "specialist",
+            "veteran",
+            "master"
+          ]
+        },
+        "preferred_axes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "boundary_integrity",
+              "execution_reliability",
+              "change_legibility",
+              "review_sharpness",
+              "proof_discipline",
+              "provenance_hygiene",
+              "deep_readiness"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "note": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "public_safe": {
+      "type": "boolean"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+schema_version: work_quest_v1
+id: AOA-RT-Q-0003
+title: Define a derived quest-board entry seam for adjunct RPG reflection
+summary: Add an example-only quest-board hint surface that stays downstream of source quest and progression authority.
+repo: aoa-routing
+owner_surface: generated/quest_board.min.example.json
+theme_ref: ''
+milestone_ref: ''
+kind: support
+state: captured
+band: near
+difficulty: d3_seam
+risk: r1_repo_local
+control_mode: human_codex_copilot
+delegate_tier: planner
+fallback_tier: verifier
+wrapper_class: codex_primary
+write_scope: generated_only
+split_required: false
+complexity_basis:
+  scope: 2
+  ambiguity: 1
+  boundary: 2
+  verification: 1
+parent: null
+depends_on: []
+activation:
+  mode: manual
+  note: keep example-only until a real builder and validator contour exists
+anchor_ref:
+  artifact: quest_board_seam
+  ref: docs/QUEST_BOARD_SEAM.md
+  note: quest-board cards stay derived hints with inspect / expand / handoff posture
+handoff_role: routing-maintainer
+evidence:
+  - entry actions stay narrow
+  - progression gates stay derived hints only
+  - source quest and progression authority remain upstream
+harvest:
+  target: routing
+opened_at: '2026-04-01'
+touched_at: '2026-04-01'
+tags:
+  - quest-board
+  - routing
+  - rpg
+notes: >
+  This first-wave board is example-only. Do not turn it into a live service, quest claimant, or reward writer in this pass.
+public_safe: true

@@ -187,6 +187,186 @@ def test_validate_local_questbook_surfaces_accepts_foundation_files(tmp_path: Pa
     assert issues == []
 
 
+def test_validate_local_questbook_surfaces_accepts_additive_quest_board_files(tmp_path: Path) -> None:
+    repo_root = tmp_path / "aoa-routing"
+    issues: list[validate_router.ValidationIssue] = []
+    write_text(
+        repo_root / "QUESTBOOK.md",
+        "\n".join(
+            (
+                "# QUESTBOOK.md — aoa-routing",
+                "",
+                "## Frontier",
+                "",
+                "- none right now",
+                "",
+                "## Near",
+                "",
+                "- `AOA-RT-Q-0003`",
+                "",
+                "## Blocked / reanchor",
+                "",
+                "- `AOA-RT-Q-0002`",
+                "",
+            )
+        ),
+    )
+    write_text(
+        repo_root / "docs" / "QUEST_ROUTING_SEAM.md",
+        "\n".join(validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS) + "\n",
+    )
+    write_text(
+        repo_root / "docs" / "QUEST_BOARD_SEAM.md",
+        "# Quest Board Seam\n\nExample-only.\n",
+    )
+    write_json(
+        repo_root / "schemas" / "quest_dispatch_hint.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v2.schema.json",
+            "title": "quest_dispatch_hint_v2",
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["schema_version", "id", "repo", "state", "band", "difficulty", "risk", "delegate_tier", "source_path", "public_safe", "next_actions", "fallback"],
+            "properties": {
+                "schema_version": {"const": "quest_dispatch_hint_v2"},
+                "id": {"type": "string"},
+                "repo": {"type": "string"},
+                "state": {"type": "string"},
+                "band": {"type": "string"},
+                "difficulty": {"type": "string"},
+                "risk": {"type": "string"},
+                "delegate_tier": {"type": "string"},
+                "source_path": {"type": "string"},
+                "public_safe": {"type": "boolean"},
+                "next_actions": {"type": "array"},
+                "fallback": {"type": "object"},
+            },
+        },
+    )
+    write_json(
+        repo_root / "schemas" / "quest_board_entry.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_board_entry_v1.schema.json",
+            "title": "quest_board_entry_v1",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [
+                "schema_version",
+                "id",
+                "title",
+                "repo",
+                "state",
+                "band",
+                "difficulty",
+                "risk",
+                "control_mode",
+                "delegate_tier",
+                "source_dispatch_ref",
+                "entry_actions",
+                "recommended_party",
+                "progression_gate",
+                "public_safe",
+            ],
+            "properties": {
+                "schema_version": {"const": "quest_board_entry_v1"},
+                "id": {"type": "string"},
+                "title": {"type": "string"},
+                "repo": {"type": "string"},
+                "state": {"type": "string"},
+                "band": {"type": "string"},
+                "difficulty": {"type": "string"},
+                "risk": {"type": "string"},
+                "control_mode": {"type": "string"},
+                "delegate_tier": {"type": "string"},
+                "source_dispatch_ref": {"type": "string"},
+                "entry_actions": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "recommended_party": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["cohort_pattern", "roles", "tier_path"],
+                    "properties": {
+                        "cohort_pattern": {"type": "string"},
+                        "roles": {"type": "array", "items": {"type": "string"}},
+                        "tier_path": {"type": "array", "items": {"type": "string"}},
+                    },
+                },
+                "progression_gate": {
+                    "type": "object",
+                    "additionalProperties": False,
+                    "required": ["min_rank", "preferred_axes", "note"],
+                    "properties": {
+                        "min_rank": {"type": "string"},
+                        "preferred_axes": {"type": "array", "items": {"type": "string"}},
+                        "note": {"type": "string"},
+                    },
+                },
+                "public_safe": {"type": "boolean"},
+            },
+        },
+    )
+    write_json(
+        repo_root / "generated" / "quest_board.min.example.json",
+        {
+            "version": 1,
+            "authority": "derived-example-only",
+            "wave_scope": "adjunct-rpg-first-wave",
+            "inputs": [
+                {"repo": "aoa-skills", "surface_kind": "quest_dispatch", "ref": "generated/quest_dispatch.min.json"},
+                {"repo": "aoa-agents", "surface_kind": "agent_progression_example", "ref": "examples/agent_progression.example.json"},
+                {"repo": "aoa-evals", "surface_kind": "progression_evidence_example", "ref": "examples/progression_evidence.example.json"},
+            ],
+            "entries": [
+                {
+                    "schema_version": "quest_board_entry_v1",
+                    "id": "AOA-SK-Q-0003",
+                    "title": "Portable-layer contract hardening",
+                    "repo": "aoa-skills",
+                    "state": "triaged",
+                    "band": "frontier",
+                    "difficulty": "d3_seam",
+                    "risk": "r2_contract",
+                    "control_mode": "human_codex_copilot",
+                    "delegate_tier": "planner",
+                    "source_dispatch_ref": "generated/quest_dispatch.min.json#AOA-SK-Q-0003",
+                    "entry_actions": ["inspect", "expand", "handoff"],
+                    "recommended_party": {
+                        "cohort_pattern": "pair",
+                        "roles": ["architect", "coder", "reviewer"],
+                        "tier_path": ["planner", "executor", "verifier"],
+                    },
+                    "progression_gate": {
+                        "min_rank": "adept",
+                        "preferred_axes": ["boundary_integrity"],
+                        "note": "Derived hint only.",
+                    },
+                    "public_safe": True,
+                }
+            ],
+        },
+    )
+    write_text(
+        repo_root / "quests" / "AOA-RT-Q-0001.yaml",
+        "schema_version: work_quest_v1\nid: AOA-RT-Q-0001\nrepo: aoa-routing\nstate: done\npublic_safe: true\n",
+    )
+    write_text(
+        repo_root / "quests" / "AOA-RT-Q-0002.yaml",
+        "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-routing\nstate: reanchor\nnotes: \"reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist\"\npublic_safe: true\n",
+    )
+    write_text(
+        repo_root / "quests" / "AOA-RT-Q-0003.yaml",
+        "schema_version: work_quest_v1\nid: AOA-RT-Q-0003\nrepo: aoa-routing\nstate: captured\npublic_safe: true\n",
+    )
+
+    validate_router.validate_local_questbook_surfaces(repo_root, issues)
+
+    assert issues == []
+
+
 def test_validate_local_questbook_surfaces_rejects_wrong_repo(tmp_path: Path) -> None:
     repo_root = tmp_path / "aoa-routing"
     issues: list[validate_router.ValidationIssue] = []
@@ -210,6 +390,30 @@ def test_validate_local_questbook_surfaces_rejects_wrong_repo(tmp_path: Path) ->
     validate_router.validate_local_questbook_surfaces(repo_root, issues)
 
     assert any("quest must target repo 'aoa-routing'" in issue.message for issue in issues)
+
+
+def test_validate_local_questbook_surfaces_rejects_missing_foundation_quest(tmp_path: Path) -> None:
+    repo_root = tmp_path / "aoa-routing"
+    issues: list[validate_router.ValidationIssue] = []
+    write_text(repo_root / "QUESTBOOK.md", "## Near\n\n- `AOA-RT-Q-0003`\n\n## Blocked / reanchor\n\n- `AOA-RT-Q-0002`\n")
+    write_text(repo_root / "docs" / "QUEST_ROUTING_SEAM.md", "\n".join(validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS) + "\n")
+    write_json(
+        repo_root / "schemas" / "quest_dispatch_hint.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v2.schema.json",
+            "title": "quest_dispatch_hint_v2",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [],
+            "properties": {"schema_version": {"const": "quest_dispatch_hint_v2"}},
+        },
+    )
+    write_text(repo_root / "quests" / "AOA-RT-Q-0002.yaml", "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-routing\nstate: reanchor\nnotes: \"reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist\"\npublic_safe: true\n")
+
+    validate_router.validate_local_questbook_surfaces(repo_root, issues)
+
+    assert any("foundation quests" in issue.message and "AOA-RT-Q-0001" in issue.message for issue in issues)
 
 
 def test_validate_local_questbook_surfaces_rejects_missing_live_parsing_refusal(tmp_path: Path) -> None:
@@ -276,6 +480,17 @@ def test_validate_generated_outputs_accepts_custom_generated_dir(tmp_path: Path)
     generated_dir, roots = build_fixture_generated(tmp_path, generated_dir_name="custom-output")
     issues = validate_fixture_generated(generated_dir, roots)
     assert issues == []
+
+
+def test_validate_generated_outputs_keeps_fixture_bytes_stable(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    before = {path.name: path.read_bytes() for path in generated_dir.iterdir() if path.is_file()}
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    after = {path.name: path.read_bytes() for path in generated_dir.iterdir() if path.is_file()}
+    assert issues == []
+    assert before == after
 
 
 def test_validate_generated_outputs_rejects_missing_live_quest_dispatch_surface(tmp_path: Path) -> None:
