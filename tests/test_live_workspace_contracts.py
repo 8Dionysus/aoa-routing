@@ -70,7 +70,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
 
         self.assertEqual(issues, [])
 
-    def test_live_workspace_playbook_routes_resolve_to_registry_activation_and_federation_surfaces(self) -> None:
+    def test_live_workspace_playbook_routes_resolve_to_registry_activation_federation_and_review_status(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
         registry = load_json(LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_registry.min.json")
         activation = load_json(
@@ -78,6 +78,9 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         )
         federation_surfaces = load_json(
             LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_federation_surfaces.min.json"
+        )
+        review_status = load_json(
+            LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_review_status.min.json"
         )
 
         routed_playbook_ids = [
@@ -88,12 +91,21 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         registry_ids = [item["id"] for item in registry["playbooks"]]
         activation_ids = [item["playbook_id"] for item in activation]
         federation_ids = [item["playbook_id"] for item in federation_surfaces]
+        review_ids = [item["playbook_id"] for item in review_status["playbooks"]]
 
         self.assertEqual(routed_playbook_ids, registry_ids)
         self.assertTrue(set(activation_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(federation_ids).issubset(set(routed_playbook_ids)))
+        self.assertTrue(set(review_ids).issubset(set(routed_playbook_ids)))
+        self.assertEqual(review_ids, ["AOA-P-0017", "AOA-P-0019", "AOA-P-0020"])
         self.assertIsInstance(activation, list)
         self.assertIsInstance(federation_surfaces, list)
+        self.assertEqual(review_status["schema_version"], 1)
+
+        review_by_id = {item["playbook_id"]: item for item in review_status["playbooks"]}
+        self.assertEqual(review_by_id["AOA-P-0017"]["gate_verdict"], "composition-landed")
+        self.assertEqual(review_by_id["AOA-P-0019"]["gate_verdict"], "hold")
+        self.assertEqual(review_by_id["AOA-P-0020"]["gate_verdict"], "hold")
 
     def test_live_workspace_memo_and_kag_execution_seams_resolve_to_real_surfaces(self) -> None:
         hints = load_json(REPO_ROOT / "generated" / "task_to_surface_hints.json")
@@ -122,6 +134,14 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             self.assertTrue((memo_root / contract_path).exists())
         for surface_path in object_family["capsule_surfaces_by_mode"].values():
             self.assertTrue((memo_root / surface_path).exists())
+        checkpoint_contract = load_json(
+            memo_root / "examples" / "checkpoint_to_memory_contract.example.json"
+        )
+        mapped_runtime_surfaces = {
+            item["runtime_surface"] for item in checkpoint_contract["mapping_rules"]
+        }
+        self.assertIn("checkpoint_export", mapped_runtime_surfaces)
+        self.assertIn("distillation_claim_candidate", mapped_runtime_surfaces)
 
         kag_action = tos_kag_view["next_actions"][2]
         kag_payload = load_json(LIVE_ROOTS["aoa-kag"] / kag_action["target_surface"])
