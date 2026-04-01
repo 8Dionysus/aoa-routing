@@ -240,6 +240,38 @@ def test_validate_local_questbook_surfaces_rejects_missing_live_parsing_refusal(
     assert any("generated-only ingestion" in issue.message for issue in issues)
 
 
+def test_validate_local_questbook_surfaces_reports_non_mapping_schema_properties(tmp_path: Path) -> None:
+    repo_root = tmp_path / "aoa-routing"
+    issues: list[validate_router.ValidationIssue] = []
+    write_text(repo_root / "QUESTBOOK.md", "## Blocked / reanchor\n\n- `AOA-RT-Q-0002`\n")
+    write_text(
+        repo_root / "docs" / "QUEST_ROUTING_SEAM.md",
+        "\n".join(validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS) + "\n",
+    )
+    write_json(
+        repo_root / "schemas" / "quest_dispatch_hint.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v2.schema.json",
+            "title": "quest_dispatch_hint_v2",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [],
+            "properties": [],
+        },
+    )
+    write_text(repo_root / "quests" / "AOA-RT-Q-0001.yaml", "schema_version: work_quest_v1\nid: AOA-RT-Q-0001\nrepo: aoa-routing\nstate: done\npublic_safe: true\n")
+    write_text(repo_root / "quests" / "AOA-RT-Q-0002.yaml", "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-routing\nstate: reanchor\nnotes: \"reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist\"\npublic_safe: true\n")
+
+    validate_router.validate_local_questbook_surfaces(repo_root, issues)
+
+    assert any(
+        issue.location == "schemas/quest_dispatch_hint.schema.json"
+        and "must be a mapping" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_accepts_custom_generated_dir(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path, generated_dir_name="custom-output")
     issues = validate_fixture_generated(generated_dir, roots)
