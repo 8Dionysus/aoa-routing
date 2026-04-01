@@ -3,11 +3,11 @@ id: AOA-RT-Q-0002
 title: "Add tiny-model-safe frontier entry hints for low-risk quest leaves"
 summary: ''
 repo: aoa-routing
-owner_surface: generated/quest-dispatch-entrypoints
+owner_surface: generated/quest_dispatch_hints.min.json
 theme_ref: ''
 milestone_ref: ''
 kind: support
-state: captured
+state: reanchor
 band: near
 difficulty: d2_slice
 risk: r1_repo_local
@@ -41,5 +41,5 @@ touched_at: '2026-03-31'
 tags:
   - tiny-models
   - entrypoints
-notes: ''
+notes: 'reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist, so tiny-safe quest entry stays deferred until a real leaf wave is available.'
 public_safe: true

@@ -1,30 +1,37 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v1.schema.json",
-  "title": "quest_dispatch_hint_v1",
+  "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v2.schema.json",
+  "title": "quest_dispatch_hint_v2",
   "type": "object",
   "additionalProperties": false,
   "required": [
     "schema_version",
     "id",
     "repo",
+    "state",
     "band",
     "difficulty",
     "risk",
     "delegate_tier",
-    "next_action",
     "source_path",
-    "public_safe"
+    "public_safe",
+    "next_actions",
+    "fallback"
   ],
   "properties": {
     "schema_version": {
-      "const": "quest_dispatch_hint_v1"
+      "const": "quest_dispatch_hint_v2"
     },
     "id": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "repo": {
-      "type": "string"
+      "$ref": "#/$defs/sourceRepo"
+    },
+    "state": {
+      "type": "string",
+      "minLength": 1
     },
     "band": {
       "type": "string",
@@ -67,21 +74,78 @@
         "archivist"
       ]
     },
-    "next_action": {
-      "type": "string",
-      "enum": [
-        "inspect",
-        "expand",
-        "pair",
-        "recall",
-        "handoff"
-      ]
-    },
     "source_path": {
-      "type": "string"
+      "type": "string",
+      "minLength": 1
     },
     "public_safe": {
       "type": "boolean"
+    },
+    "next_actions": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/actionObject"
+      }
+    },
+    "fallback": {
+      "$ref": "#/$defs/actionObject"
+    }
+  },
+  "$defs": {
+    "sourceRepo": {
+      "type": "string",
+      "enum": [
+        "aoa-techniques",
+        "aoa-skills",
+        "aoa-evals"
+      ]
+    },
+    "targetRepo": {
+      "type": "string",
+      "enum": [
+        "aoa-routing",
+        "aoa-techniques",
+        "aoa-skills",
+        "aoa-evals"
+      ]
+    },
+    "actionObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verb",
+        "target_repo",
+        "target_surface",
+        "match_key",
+        "target_value"
+      ],
+      "properties": {
+        "verb": {
+          "type": "string",
+          "enum": [
+            "inspect",
+            "expand",
+            "handoff"
+          ]
+        },
+        "target_repo": {
+          "$ref": "#/$defs/targetRepo"
+        },
+        "target_surface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "match_key": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_value": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
     }
   }
 }

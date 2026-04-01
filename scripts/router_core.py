@@ -71,6 +71,7 @@ PAIRING_SURFACE_FILE = "generated/pairing_hints.min.json"
 TINY_MODEL_ENTRYPOINTS_FILE = "generated/tiny_model_entrypoints.json"
 FEDERATION_ENTRYPOINTS_FILE = "generated/federation_entrypoints.min.json"
 RETURN_NAVIGATION_HINTS_FILE = "generated/return_navigation_hints.min.json"
+QUEST_DISPATCH_HINTS_FILE = "generated/quest_dispatch_hints.min.json"
 MEMO_INSPECT_SURFACE_FILE = "generated/memory_catalog.min.json"
 MEMO_EXPAND_SURFACE_FILE = "generated/memory_sections.full.json"
 MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory_object_catalog.min.json"
@@ -151,6 +152,19 @@ TIER_PHASE_ORDER = (
     "deep",
     "distill",
 )
+QUEST_ROUTING_SOURCE_REPOS = (
+    "aoa-techniques",
+    "aoa-skills",
+    "aoa-evals",
+)
+QUEST_ROUTING_ACTIONS_ENABLED = ("inspect", "expand", "handoff")
+QUEST_ROUTING_WAVE_SCOPE = "source-only"
+QUEST_ROUTING_CLOSED_STATES = frozenset({"done", "dropped"})
+QUEST_ROUTING_EXPAND_DOC_BY_REPO = {
+    "aoa-techniques": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
+    "aoa-skills": "docs/QUESTBOOK_SKILL_INTEGRATION.md",
+    "aoa-evals": "docs/QUESTBOOK_EVAL_INTEGRATION.md",
+}
 TASK_TO_TIER_HINT_SPECS = (
     {
         "task_family": "task-triage",
@@ -805,6 +819,235 @@ def build_entry_action(
         "target_surface": ensure_repo_relative_path(target_surface, "target_surface"),
         "match_key": ensure_string(match_key, "match_key"),
         "target_value": ensure_string(target_value, "target_value"),
+    }
+
+
+def load_live_quest_projection_entries(
+    repo_root: Path,
+    repo_name: str,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    normalized_repo = normalize_repo_name(repo_name)
+    if normalized_repo not in QUEST_ROUTING_SOURCE_REPOS:
+        raise RouterError(
+            f"live quest routing currently supports only {', '.join(QUEST_ROUTING_SOURCE_REPOS)}"
+        )
+
+    catalog_path = repo_root / "generated" / "quest_catalog.min.json"
+    dispatch_path = repo_root / "generated" / "quest_dispatch.min.json"
+    catalog_entries = ensure_list(
+        load_json_file(catalog_path),
+        relative_posix(catalog_path),
+    )
+    dispatch_entries = ensure_list(
+        load_json_file(dispatch_path),
+        relative_posix(dispatch_path),
+    )
+    normalized_catalog_entries: list[dict[str, Any]] = []
+    normalized_dispatch_entries: list[dict[str, Any]] = []
+    for index, raw_entry in enumerate(catalog_entries):
+        location = f"{relative_posix(catalog_path)}[{index}]"
+        normalized_catalog_entries.append(ensure_mapping(raw_entry, location))
+    for index, raw_entry in enumerate(dispatch_entries):
+        location = f"{relative_posix(dispatch_path)}[{index}]"
+        normalized_dispatch_entries.append(ensure_mapping(raw_entry, location))
+    return normalized_catalog_entries, normalized_dispatch_entries
+
+
+def build_quest_dispatch_hints_payload(
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+) -> dict[str, Any]:
+    source_roots = {
+        "aoa-techniques": techniques_root,
+        "aoa-skills": skills_root,
+        "aoa-evals": evals_root,
+    }
+    source_inputs: list[dict[str, str]] = []
+    hints: list[dict[str, Any]] = []
+
+    for repo_name in QUEST_ROUTING_SOURCE_REPOS:
+        source_inputs.extend(
+            (
+                {
+                    "repo": repo_name,
+                    "surface_kind": "quest_catalog",
+                    "ref": "generated/quest_catalog.min.json",
+                },
+                {
+                    "repo": repo_name,
+                    "surface_kind": "quest_dispatch",
+                    "ref": "generated/quest_dispatch.min.json",
+                },
+            )
+        )
+        catalog_entries, dispatch_entries = load_live_quest_projection_entries(
+            source_roots[repo_name],
+            repo_name,
+        )
+        catalog_by_id: dict[str, dict[str, Any]] = {}
+        for index, entry in enumerate(catalog_entries):
+            location = f"{repo_name}/generated/quest_catalog.min.json[{index}]"
+            require_keys(
+                entry,
+                (
+                    "id",
+                    "repo",
+                    "state",
+                    "band",
+                    "difficulty",
+                    "risk",
+                    "source_path",
+                    "public_safe",
+                ),
+                location,
+            )
+            quest_id = ensure_string(entry["id"], f"{location}.id")
+            if quest_id in catalog_by_id:
+                raise RouterError(f"{location}.id duplicates quest '{quest_id}'")
+            catalog_by_id[quest_id] = {
+                "repo": ensure_string(entry["repo"], f"{location}.repo"),
+                "state": ensure_string(entry["state"], f"{location}.state"),
+                "band": ensure_string(entry["band"], f"{location}.band"),
+                "difficulty": ensure_string(entry["difficulty"], f"{location}.difficulty"),
+                "risk": ensure_string(entry["risk"], f"{location}.risk"),
+                "source_path": ensure_repo_relative_path(
+                    entry["source_path"],
+                    f"{location}.source_path",
+                ),
+                "public_safe": ensure_bool(entry["public_safe"], f"{location}.public_safe"),
+            }
+            if catalog_by_id[quest_id]["repo"] != repo_name:
+                raise RouterError(f"{location}.repo must stay '{repo_name}'")
+
+        dispatch_by_id: dict[str, dict[str, Any]] = {}
+        for index, entry in enumerate(dispatch_entries):
+            location = f"{repo_name}/generated/quest_dispatch.min.json[{index}]"
+            require_keys(
+                entry,
+                (
+                    "schema_version",
+                    "id",
+                    "repo",
+                    "state",
+                    "band",
+                    "difficulty",
+                    "risk",
+                    "delegate_tier",
+                    "source_path",
+                    "public_safe",
+                ),
+                location,
+            )
+            schema_version = ensure_string(entry["schema_version"], f"{location}.schema_version")
+            if schema_version != "quest_dispatch_v1":
+                raise RouterError(
+                    f"{location}.schema_version must stay 'quest_dispatch_v1'"
+                )
+            quest_id = ensure_string(entry["id"], f"{location}.id")
+            if quest_id in dispatch_by_id:
+                raise RouterError(f"{location}.id duplicates quest '{quest_id}'")
+            dispatch_repo = ensure_string(entry["repo"], f"{location}.repo")
+            dispatch_entry = {
+                "repo": dispatch_repo,
+                "state": ensure_string(entry["state"], f"{location}.state"),
+                "band": ensure_string(entry["band"], f"{location}.band"),
+                "difficulty": ensure_string(entry["difficulty"], f"{location}.difficulty"),
+                "risk": ensure_string(entry["risk"], f"{location}.risk"),
+                "delegate_tier": ensure_string(
+                    entry["delegate_tier"],
+                    f"{location}.delegate_tier",
+                ),
+                "source_path": ensure_repo_relative_path(
+                    entry["source_path"],
+                    f"{location}.source_path",
+                ),
+                "public_safe": ensure_bool(entry["public_safe"], f"{location}.public_safe"),
+            }
+            if dispatch_entry["repo"] != repo_name:
+                raise RouterError(f"{location}.repo must stay '{repo_name}'")
+            catalog_entry = catalog_by_id.get(quest_id)
+            if catalog_entry is None:
+                raise RouterError(
+                    f"{location}.id '{quest_id}' is missing from {repo_name}/generated/quest_catalog.min.json"
+                )
+            for key in ("repo", "state", "band", "difficulty", "risk", "source_path", "public_safe"):
+                if dispatch_entry[key] != catalog_entry[key]:
+                    raise RouterError(
+                        f"{location}.{key} must stay aligned with {repo_name}/generated/quest_catalog.min.json"
+                    )
+            dispatch_by_id[quest_id] = dispatch_entry
+
+        missing_from_dispatch = sorted(set(catalog_by_id) - set(dispatch_by_id))
+        extra_in_dispatch = sorted(set(dispatch_by_id) - set(catalog_by_id))
+        if missing_from_dispatch or extra_in_dispatch:
+            details: list[str] = []
+            if missing_from_dispatch:
+                details.append(f"missing in dispatch: {', '.join(missing_from_dispatch)}")
+            if extra_in_dispatch:
+                details.append(f"extra in dispatch: {', '.join(extra_in_dispatch)}")
+            raise RouterError(
+                f"{repo_name} live quest catalog/dispatch ids are not aligned ({'; '.join(details)})"
+            )
+
+        expand_surface = QUEST_ROUTING_EXPAND_DOC_BY_REPO[repo_name]
+        for quest_id in sorted(dispatch_by_id):
+            dispatch_entry = dispatch_by_id[quest_id]
+            if not dispatch_entry["public_safe"]:
+                continue
+            if dispatch_entry["state"] in QUEST_ROUTING_CLOSED_STATES:
+                continue
+            hints.append(
+                {
+                    "schema_version": "quest_dispatch_hint_v2",
+                    "id": quest_id,
+                    "repo": dispatch_entry["repo"],
+                    "state": dispatch_entry["state"],
+                    "band": dispatch_entry["band"],
+                    "difficulty": dispatch_entry["difficulty"],
+                    "risk": dispatch_entry["risk"],
+                    "delegate_tier": dispatch_entry["delegate_tier"],
+                    "source_path": dispatch_entry["source_path"],
+                    "public_safe": dispatch_entry["public_safe"],
+                    "next_actions": [
+                        build_entry_action(
+                            verb="inspect",
+                            target_repo=repo_name,
+                            target_surface="generated/quest_dispatch.min.json",
+                            match_key="id",
+                            target_value=quest_id,
+                        ),
+                        build_entry_action(
+                            verb="expand",
+                            target_repo=repo_name,
+                            target_surface=expand_surface,
+                            match_key="path",
+                            target_value=expand_surface,
+                        ),
+                        build_entry_action(
+                            verb="handoff",
+                            target_repo="aoa-routing",
+                            target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                            match_key="id",
+                            target_value=dispatch_entry["delegate_tier"],
+                        ),
+                    ],
+                    "fallback": build_entry_action(
+                        verb="inspect",
+                        target_repo=repo_name,
+                        target_surface="generated/quest_catalog.min.json",
+                        match_key="id",
+                        target_value=quest_id,
+                    ),
+                }
+            )
+
+    return {
+        "version": 1,
+        "wave_scope": QUEST_ROUTING_WAVE_SCOPE,
+        "actions_enabled": list(QUEST_ROUTING_ACTIONS_ENABLED),
+        "source_inputs": source_inputs,
+        "hints": hints,
     }
 
 

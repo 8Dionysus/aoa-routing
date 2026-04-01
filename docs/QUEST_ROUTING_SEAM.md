@@ -7,7 +7,7 @@ This document defines how `aoa-routing` may assist quest discovery without becom
 ## Core rule
 
 Source repos own quest meaning.
-`aoa-routing` may only consume thin, derived quest projections.
+`aoa-routing` may only consume thin, derived quest projections from live generated quest surfaces.
 
 It should not:
 - parse live `quests/*.yaml` as authority
@@ -17,25 +17,29 @@ It should not:
 
 ## Preferred inputs
 
-Once a repo is ready, routing may ingest:
+The first live quest-routing wave is source-only.
+In this wave, routing may ingest only:
 
 - `generated/quest_catalog.min.json`
 - `generated/quest_dispatch.min.json`
 
-Until builders exist, repos may temporarily carry `.example.json` seed files, but routing should not depend on them in production.
+Production routing does not read `.example.json` quest fixtures.
 
 ## Minimal routing actions
+
+The only live quest actions in this wave are `inspect`, `expand`, and `handoff`.
 
 Routing may help choose:
 - `inspect` — open the source quest or questbook
 - `expand` — open neighboring source-owned docs or parent quests
-- `pair` — suggest a planner/verifier handoff when a quest is not leaf-safe
-- `recall` — route toward memo only when a quest names memory-relevant evidence or witness traces
 - `handoff` — route to the next source authority when a quest crosses repo boundaries
+
+`pair` and `recall` belong to later routing waves.
 
 ## Tiny-model safe entry
 
-The first safe routing posture for small local wrappers should be narrow:
+Tiny-model-safe entry remains deferred in this wave.
+The future safe routing posture for small local wrappers should stay narrow:
 - `frontier` quests only
 - `d0_probe` or `d1_patch` by default
 - `r0_readonly` first, then bounded `r1_repo_local`

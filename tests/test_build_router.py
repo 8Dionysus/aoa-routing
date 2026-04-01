@@ -208,6 +208,50 @@ def test_collect_skill_entries_raises_on_missing_generated_catalog(tmp_path: Pat
         build_router.collect_skill_entries(skills_root)
 
 
+def test_build_outputs_rejects_missing_live_quest_catalog_surface(tmp_path: Path) -> None:
+    roots = {}
+    for repo_name in FIXTURE_REPO_NAMES:
+        target = tmp_path / repo_name
+        shutil.copytree(FIXTURES_ROOT / repo_name, target)
+        roots[repo_name] = target
+    (roots["aoa-techniques"] / "generated" / "quest_catalog.min.json").unlink()
+
+    with pytest.raises(build_router.RouterError, match="quest_catalog.min.json"):
+        build_router.build_outputs(
+            roots["aoa-techniques"],
+            roots["aoa-skills"],
+            roots["aoa-evals"],
+            roots["aoa-memo"],
+            roots["aoa-agents"],
+            roots["Agents-of-Abyss"],
+            roots["aoa-playbooks"],
+            roots["aoa-kag"],
+            roots["Tree-of-Sophia"],
+        )
+
+
+def test_build_outputs_rejects_missing_live_quest_dispatch_surface(tmp_path: Path) -> None:
+    roots = {}
+    for repo_name in FIXTURE_REPO_NAMES:
+        target = tmp_path / repo_name
+        shutil.copytree(FIXTURES_ROOT / repo_name, target)
+        roots[repo_name] = target
+    (roots["aoa-skills"] / "generated" / "quest_dispatch.min.json").unlink()
+
+    with pytest.raises(build_router.RouterError, match="quest_dispatch.min.json"):
+        build_router.build_outputs(
+            roots["aoa-techniques"],
+            roots["aoa-skills"],
+            roots["aoa-evals"],
+            roots["aoa-memo"],
+            roots["aoa-agents"],
+            roots["Agents-of-Abyss"],
+            roots["aoa-playbooks"],
+            roots["aoa-kag"],
+            roots["Tree-of-Sophia"],
+        )
+
+
 def test_collect_eval_entries_raises_on_missing_required_field(tmp_path: Path) -> None:
     evals_root = tmp_path / "aoa-evals"
     shutil.copytree(FIXTURES_ROOT / "aoa-evals", evals_root)
@@ -256,6 +300,7 @@ def test_build_outputs_from_fixtures() -> None:
     recommended = outputs["recommended_paths.min.json"]
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
     pairing = outputs["pairing_hints.min.json"]
+    quest_dispatch_hints = outputs["quest_dispatch_hints.min.json"]
     tiny_model = outputs["tiny_model_entrypoints.json"]
 
     assert [entry["kind"] for entry in registry["entries"]] == [
@@ -286,6 +331,67 @@ def test_build_outputs_from_fixtures() -> None:
         "source_catalog": "generated/technique_catalog.min.json",
         "family_ids": KAG_SOURCE_LIFT_TECHNIQUE_IDS,
         "entries": [],
+    }
+    assert quest_dispatch_hints["version"] == 1
+    assert quest_dispatch_hints["wave_scope"] == "source-only"
+    assert quest_dispatch_hints["actions_enabled"] == ["inspect", "expand", "handoff"]
+    assert quest_dispatch_hints["source_inputs"] == [
+        {"repo": "aoa-techniques", "surface_kind": "quest_catalog", "ref": "generated/quest_catalog.min.json"},
+        {"repo": "aoa-techniques", "surface_kind": "quest_dispatch", "ref": "generated/quest_dispatch.min.json"},
+        {"repo": "aoa-skills", "surface_kind": "quest_catalog", "ref": "generated/quest_catalog.min.json"},
+        {"repo": "aoa-skills", "surface_kind": "quest_dispatch", "ref": "generated/quest_dispatch.min.json"},
+        {"repo": "aoa-evals", "surface_kind": "quest_catalog", "ref": "generated/quest_catalog.min.json"},
+        {"repo": "aoa-evals", "surface_kind": "quest_dispatch", "ref": "generated/quest_dispatch.min.json"},
+    ]
+    assert [(hint["repo"], hint["id"]) for hint in quest_dispatch_hints["hints"]] == [
+        ("aoa-techniques", "AOA-TECH-Q-0003"),
+        ("aoa-techniques", "AOA-TECH-Q-0004"),
+        ("aoa-skills", "AOA-SK-Q-0003"),
+        ("aoa-skills", "AOA-SK-Q-0004"),
+        ("aoa-evals", "AOA-EV-Q-0003"),
+        ("aoa-evals", "AOA-EV-Q-0004"),
+    ]
+    assert quest_dispatch_hints["hints"][0] == {
+        "schema_version": "quest_dispatch_hint_v2",
+        "id": "AOA-TECH-Q-0003",
+        "repo": "aoa-techniques",
+        "state": "captured",
+        "band": "near",
+        "difficulty": "d3_seam",
+        "risk": "r2_contract",
+        "delegate_tier": "planner",
+        "source_path": "quests/AOA-TECH-Q-0003.yaml",
+        "public_safe": True,
+        "next_actions": [
+            {
+                "verb": "inspect",
+                "target_repo": "aoa-techniques",
+                "target_surface": "generated/quest_dispatch.min.json",
+                "match_key": "id",
+                "target_value": "AOA-TECH-Q-0003",
+            },
+            {
+                "verb": "expand",
+                "target_repo": "aoa-techniques",
+                "target_surface": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
+                "match_key": "path",
+                "target_value": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
+            },
+            {
+                "verb": "handoff",
+                "target_repo": "aoa-routing",
+                "target_surface": "generated/federation_entrypoints.min.json",
+                "match_key": "id",
+                "target_value": "planner",
+            },
+        ],
+        "fallback": {
+            "verb": "inspect",
+            "target_repo": "aoa-techniques",
+            "target_surface": "generated/quest_catalog.min.json",
+            "match_key": "id",
+            "target_value": "AOA-TECH-Q-0003",
+        },
     }
 
     technique_hint = next(hint for hint in hints["hints"] if hint["kind"] == "technique")

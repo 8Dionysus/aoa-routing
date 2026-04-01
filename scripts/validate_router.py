@@ -53,6 +53,12 @@ from router_core import (
     PAIRABLE_KINDS,
     PAIRING_SURFACE_REPO,
     PLAYBOOKS_REPO,
+    QUEST_DISPATCH_HINTS_FILE,
+    QUEST_ROUTING_ACTIONS_ENABLED,
+    QUEST_ROUTING_CLOSED_STATES,
+    QUEST_ROUTING_EXPAND_DOC_BY_REPO,
+    QUEST_ROUTING_SOURCE_REPOS,
+    QUEST_ROUTING_WAVE_SCOPE,
     RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
     RESERVED_KINDS,
@@ -67,6 +73,7 @@ from router_core import (
     TOS_TINY_ENTRY_ROUTE_ID,
     TOS_TINY_ENTRY_ROUTE_PATH,
     build_federation_entrypoints_payload,
+    build_quest_dispatch_hints_payload,
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
     build_recommended_paths_payload,
@@ -76,6 +83,7 @@ from router_core import (
     build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
     collect_memo_recall_mode_order,
+    ensure_bool,
     ensure_cross_repo_surface_ref,
     ensure_list,
     ensure_mapping,
@@ -86,6 +94,7 @@ from router_core import (
     is_pending_technique_id,
     load_json_file,
     load_agent_registry_entries,
+    load_live_quest_projection_entries,
     load_memo_catalog_surfaces,
     load_model_tier_entries,
     load_model_tier_registry,
@@ -106,6 +115,7 @@ OUTPUT_SCHEMA_NAMES = {
     "aoa_router.min.json": "aoa-router.schema.json",
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
     "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
+    Path(QUEST_DISPATCH_HINTS_FILE).name: "quest-dispatch-hints.schema.json",
     Path(FEDERATION_ENTRYPOINTS_FILE).name: "federation-entrypoints.schema.json",
     Path(RETURN_NAVIGATION_HINTS_FILE).name: "return-navigation-hints.schema.json",
     "recommended_paths.min.json": "recommended-paths.schema.json",
@@ -149,10 +159,14 @@ EXPECTED_KAG_VIEW_IDS = {
 REQUIRED_ROUTING_QUEST_IDS = ("AOA-RT-Q-0001", "AOA-RT-Q-0002")
 REQUIRED_ROUTING_SEAM_SNIPPETS = (
     "Source repos own quest meaning.",
-    "`aoa-routing` may only consume thin, derived quest projections.",
+    "`aoa-routing` may only consume thin, derived quest projections from live generated quest surfaces.",
     "- parse live `quests/*.yaml` as authority",
     "- `generated/quest_catalog.min.json`",
     "- `generated/quest_dispatch.min.json`",
+    "The first live quest-routing wave is source-only.",
+    "Production routing does not read `.example.json` quest fixtures.",
+    "The only live quest actions in this wave are `inspect`, `expand`, and `handoff`.",
+    "`pair` and `recall` belong to later routing waves.",
 )
 REQUIRED_QUEST_SCHEMA_TOP_LEVEL_KEYS = (
     "$schema",
@@ -162,6 +176,14 @@ REQUIRED_QUEST_SCHEMA_TOP_LEVEL_KEYS = (
     "additionalProperties",
     "required",
     "properties",
+)
+EXPECTED_QUEST_HINT_ACTION_ORDER = ["inspect", "expand", "handoff"]
+EXPECTED_ROUTING_QUEST_STATES = {
+    "AOA-RT-Q-0001": "done",
+    "AOA-RT-Q-0002": "reanchor",
+}
+REQUIRED_REANCHOR_NOTE_SNIPPET = (
+    "no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist"
 )
 
 
@@ -361,11 +383,11 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
                 ensure_mapping(schema_object["properties"], repo_relative(repo_root, schema_path))
                 .get("schema_version", {})
             )
-            if not isinstance(schema_version, dict) or schema_version.get("const") != "quest_dispatch_hint_v1":
+            if not isinstance(schema_version, dict) or schema_version.get("const") != "quest_dispatch_hint_v2":
                 issues.append(
                     ValidationIssue(
                         repo_relative(repo_root, schema_path),
-                        "schema must constrain properties.schema_version.const to 'quest_dispatch_hint_v1'",
+                        "schema must constrain properties.schema_version.const to 'quest_dispatch_hint_v2'",
                     )
                 )
         try:
@@ -403,8 +425,47 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
             issues.append(ValidationIssue(f"quests/{quest_id}.yaml", f"id must match filename '{quest_id}'"))
         if payload.get("public_safe") is not True:
             issues.append(ValidationIssue(f"quests/{quest_id}.yaml", "quest must set public_safe: true"))
-        if quest_id not in questbook_text:
-            issues.append(ValidationIssue("QUESTBOOK.md", f"QUESTBOOK.md must reference quest id '{quest_id}'"))
+        expected_state = EXPECTED_ROUTING_QUEST_STATES[quest_id]
+        if payload.get("state") != expected_state:
+            issues.append(
+                ValidationIssue(
+                    f"quests/{quest_id}.yaml",
+                    f"quest state must stay '{expected_state}' in the first live routing wave",
+                )
+            )
+        if expected_state in {"done", "dropped"}:
+            if quest_id in questbook_text:
+                issues.append(
+                    ValidationIssue(
+                        "QUESTBOOK.md",
+                        f"closed quest id '{quest_id}' must not stay in the active human questbook",
+                    )
+                )
+        else:
+            if quest_id not in questbook_text:
+                issues.append(
+                    ValidationIssue(
+                        "QUESTBOOK.md",
+                        f"active or reanchored quest id '{quest_id}' must stay visible in QUESTBOOK.md",
+                    )
+                )
+        if quest_id == "AOA-RT-Q-0002":
+            notes = payload.get("notes")
+            if not isinstance(notes, str) or REQUIRED_REANCHOR_NOTE_SNIPPET not in notes:
+                issues.append(
+                    ValidationIssue(
+                        f"quests/{quest_id}.yaml",
+                        "reanchored quest must record the current lack of live frontier d0/d1 r0/r1 leaves",
+                    )
+                )
+
+    if "## Blocked / reanchor" not in questbook_text:
+        issues.append(
+            ValidationIssue(
+                "QUESTBOOK.md",
+                "QUESTBOOK.md must keep a 'Blocked / reanchor' bucket in the first live routing wave",
+            )
+        )
 
     for snippet in REQUIRED_ROUTING_SEAM_SNIPPETS:
         if snippet not in seam_text:
@@ -414,6 +475,419 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
                     "QUEST routing seam must refuse live quest authority and name generated-only ingestion",
                 )
             )
+
+
+def validate_quest_dispatch_hints(
+    quest_dispatch_hints_payload: dict[str, Any],
+    techniques_root: Path,
+    skills_root: Path,
+    evals_root: Path,
+    federation_payload: dict[str, Any],
+    issues: list[ValidationIssue],
+) -> None:
+    source_roots = {
+        "aoa-techniques": techniques_root.resolve(),
+        "aoa-skills": skills_root.resolve(),
+        "aoa-evals": evals_root.resolve(),
+    }
+    try:
+        source_inputs = ensure_list(
+            quest_dispatch_hints_payload.get("source_inputs"),
+            "quest_dispatch_hints.min.json.source_inputs",
+        )
+        actions_enabled = ensure_string_list(
+            quest_dispatch_hints_payload.get("actions_enabled"),
+            "quest_dispatch_hints.min.json.actions_enabled",
+        )
+        hints = ensure_list(
+            quest_dispatch_hints_payload.get("hints"),
+            "quest_dispatch_hints.min.json.hints",
+        )
+        federation_entries = ensure_list(
+            federation_payload.get("entrypoints"),
+            "federation_entrypoints.min.json.entrypoints",
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+        return
+
+    if quest_dispatch_hints_payload.get("wave_scope") != QUEST_ROUTING_WAVE_SCOPE:
+        issues.append(
+            ValidationIssue(
+                "quest_dispatch_hints.min.json",
+                f"wave_scope must stay '{QUEST_ROUTING_WAVE_SCOPE}' in the first live routing wave",
+            )
+        )
+    if actions_enabled != list(QUEST_ROUTING_ACTIONS_ENABLED):
+        issues.append(
+            ValidationIssue(
+                "quest_dispatch_hints.min.json",
+                "actions_enabled must stay exactly ['inspect', 'expand', 'handoff']",
+            )
+        )
+
+    expected_source_inputs: list[dict[str, str]] = []
+    for repo_name in QUEST_ROUTING_SOURCE_REPOS:
+        expected_source_inputs.extend(
+            (
+                {
+                    "repo": repo_name,
+                    "surface_kind": "quest_catalog",
+                    "ref": "generated/quest_catalog.min.json",
+                },
+                {
+                    "repo": repo_name,
+                    "surface_kind": "quest_dispatch",
+                    "ref": "generated/quest_dispatch.min.json",
+                },
+            )
+        )
+    if source_inputs != expected_source_inputs:
+        issues.append(
+            ValidationIssue(
+                "quest_dispatch_hints.min.json",
+                "source_inputs must list only the live source/proof quest catalog and dispatch surfaces in repo order",
+            )
+        )
+
+    tier_ids: set[str] = set()
+    for index, raw_entry in enumerate(federation_entries):
+        location = f"federation_entrypoints.min.json.entrypoints[{index}]"
+        try:
+            entry = ensure_mapping(raw_entry, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            continue
+        if entry.get("kind") == "tier":
+            try:
+                tier_ids.add(ensure_string(entry.get("id"), f"{location}.id"))
+            except RouterError as exc:
+                issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+
+    catalog_index_by_repo: dict[str, dict[str, dict[str, Any]]] = {}
+    dispatch_index_by_repo: dict[str, dict[str, dict[str, Any]]] = {}
+    eligible_hint_keys: set[tuple[str, str]] = set()
+    tiny_safe_frontier_exists = False
+    for repo_name in QUEST_ROUTING_SOURCE_REPOS:
+        try:
+            catalog_entries, dispatch_entries = load_live_quest_projection_entries(
+                source_roots[repo_name],
+                repo_name,
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+            return
+        catalog_index: dict[str, dict[str, Any]] = {}
+        dispatch_index: dict[str, dict[str, Any]] = {}
+        for index, raw_entry in enumerate(catalog_entries):
+            location = f"{repo_name}/generated/quest_catalog.min.json[{index}]"
+            try:
+                entry = ensure_mapping(raw_entry, location)
+                quest_id = ensure_string(entry.get("id"), f"{location}.id")
+            except RouterError as exc:
+                issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+                continue
+            catalog_index[quest_id] = entry
+        for index, raw_entry in enumerate(dispatch_entries):
+            location = f"{repo_name}/generated/quest_dispatch.min.json[{index}]"
+            try:
+                entry = ensure_mapping(raw_entry, location)
+                quest_id = ensure_string(entry.get("id"), f"{location}.id")
+                state = ensure_string(entry.get("state"), f"{location}.state")
+                band = ensure_string(entry.get("band"), f"{location}.band")
+                difficulty = ensure_string(entry.get("difficulty"), f"{location}.difficulty")
+                risk = ensure_string(entry.get("risk"), f"{location}.risk")
+                public_safe = entry.get("public_safe")
+                if public_safe is not True:
+                    continue
+                if state in QUEST_ROUTING_CLOSED_STATES:
+                    continue
+            except RouterError as exc:
+                issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+                continue
+            dispatch_index[quest_id] = entry
+            eligible_hint_keys.add((repo_name, quest_id))
+            if band == "frontier" and difficulty in {"d0_probe", "d1_patch"} and risk in {
+                "r0_readonly",
+                "r1_repo_local",
+            }:
+                tiny_safe_frontier_exists = True
+        catalog_index_by_repo[repo_name] = catalog_index
+        dispatch_index_by_repo[repo_name] = dispatch_index
+
+    if tiny_safe_frontier_exists:
+        issues.append(
+            ValidationIssue(
+                "quest_dispatch_hints.min.json",
+                "AOA-RT-Q-0002 must not remain reanchored once live frontier d0/d1 r0/r1 leaves exist",
+            )
+        )
+
+    seen_hint_keys: set[tuple[str, str]] = set()
+    for index, raw_hint in enumerate(hints):
+        location = f"quest_dispatch_hints.min.json.hints[{index}]"
+        try:
+            hint = ensure_mapping(raw_hint, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+            continue
+        validate_against_schema(hint, "quest_dispatch_hint.schema.json", location, issues)
+        try:
+            repo_name = ensure_string(hint.get("repo"), f"{location}.repo")
+            quest_id = ensure_string(hint.get("id"), f"{location}.id")
+            state = ensure_string(hint.get("state"), f"{location}.state")
+            band = ensure_string(hint.get("band"), f"{location}.band")
+            difficulty = ensure_string(hint.get("difficulty"), f"{location}.difficulty")
+            risk = ensure_string(hint.get("risk"), f"{location}.risk")
+            delegate_tier = ensure_string(
+                hint.get("delegate_tier"),
+                f"{location}.delegate_tier",
+            )
+            source_path = ensure_repo_relative_path(
+                hint.get("source_path"),
+                f"{location}.source_path",
+            )
+            public_safe = ensure_bool(hint.get("public_safe"), f"{location}.public_safe")
+        except RouterError as exc:
+            issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+            continue
+
+        if repo_name not in source_roots:
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{location}.repo must stay within the first live source-only wave",
+                )
+            )
+            continue
+        if repo_name == "Dionysus":
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    "Dionysus quests must stay out of the first live source-only routing wave",
+                )
+            )
+        if state in QUEST_ROUTING_CLOSED_STATES:
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{location}.state must not include closed quests in live routing hints",
+                )
+            )
+        if public_safe is not True:
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{location}.public_safe must stay true for routed quest hints",
+                )
+            )
+
+        catalog_entry = catalog_index_by_repo[repo_name].get(quest_id)
+        dispatch_entry = dispatch_index_by_repo[repo_name].get(quest_id)
+        if catalog_entry is None or dispatch_entry is None:
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{location} must point to a live non-closed quest from {repo_name}",
+                )
+            )
+            continue
+        for key, expected_value in (
+            ("repo", repo_name),
+            ("state", dispatch_entry.get("state")),
+            ("band", dispatch_entry.get("band")),
+            ("difficulty", dispatch_entry.get("difficulty")),
+            ("risk", dispatch_entry.get("risk")),
+            ("delegate_tier", dispatch_entry.get("delegate_tier")),
+            ("source_path", dispatch_entry.get("source_path")),
+            ("public_safe", dispatch_entry.get("public_safe")),
+        ):
+            actual_value = hint.get(key)
+            if actual_value != expected_value:
+                issues.append(
+                    ValidationIssue(
+                        "quest_dispatch_hints.min.json",
+                        f"{location}.{key} must stay aligned with {repo_name}/generated/quest_dispatch.min.json",
+                    )
+                )
+        if quest_id not in catalog_index_by_repo[repo_name]:
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{location}.id must exist in {repo_name}/generated/quest_catalog.min.json",
+                )
+            )
+        seen_hint_keys.add((repo_name, quest_id))
+
+        try:
+            next_actions = ensure_list(hint.get("next_actions"), f"{location}.next_actions")
+        except RouterError as exc:
+            issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+            next_actions = []
+        if len(next_actions) != len(EXPECTED_QUEST_HINT_ACTION_ORDER):
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{location}.next_actions must publish exactly three bounded actions",
+                )
+            )
+        for action_index, expected_verb in enumerate(EXPECTED_QUEST_HINT_ACTION_ORDER):
+            if action_index >= len(next_actions):
+                continue
+            action_location = f"{location}.next_actions[{action_index}]"
+            try:
+                action = ensure_mapping(next_actions[action_index], action_location)
+                verb = ensure_string(action.get("verb"), f"{action_location}.verb")
+                target_repo = ensure_string(
+                    action.get("target_repo"),
+                    f"{action_location}.target_repo",
+                )
+                target_surface = ensure_repo_relative_path(
+                    action.get("target_surface"),
+                    f"{action_location}.target_surface",
+                )
+                match_key = ensure_string(
+                    action.get("match_key"),
+                    f"{action_location}.match_key",
+                )
+                target_value = ensure_string(
+                    action.get("target_value"),
+                    f"{action_location}.target_value",
+                )
+            except RouterError as exc:
+                issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+                continue
+            if verb != expected_verb:
+                issues.append(
+                    ValidationIssue(
+                        "quest_dispatch_hints.min.json",
+                        f"{action_location}.verb must stay '{expected_verb}'",
+                    )
+                )
+            if target_surface.endswith(".example.json") or target_surface.startswith("quests/"):
+                issues.append(
+                    ValidationIssue(
+                        "quest_dispatch_hints.min.json",
+                        f"{action_location}.target_surface must stay on live generated surfaces or source docs, never example fixtures or live quest YAML",
+                    )
+                )
+            if expected_verb == "inspect":
+                if (
+                    target_repo != repo_name
+                    or target_surface != "generated/quest_dispatch.min.json"
+                    or match_key != "id"
+                    or target_value != quest_id
+                ):
+                    issues.append(
+                        ValidationIssue(
+                            "quest_dispatch_hints.min.json",
+                            f"{action_location} must inspect the owning repo live quest dispatch surface",
+                        )
+                    )
+            elif expected_verb == "expand":
+                expected_surface = QUEST_ROUTING_EXPAND_DOC_BY_REPO[repo_name]
+                expected_path = source_roots[repo_name] / expected_surface
+                if (
+                    target_repo != repo_name
+                    or target_surface != expected_surface
+                    or match_key != "path"
+                    or target_value != expected_surface
+                ):
+                    issues.append(
+                        ValidationIssue(
+                            "quest_dispatch_hints.min.json",
+                            f"{action_location} must expand to the repo-local quest integration note",
+                        )
+                    )
+                if not expected_path.exists():
+                    issues.append(
+                        ValidationIssue(
+                            "quest_dispatch_hints.min.json",
+                            f"{repo_name}/{expected_surface} is missing",
+                        )
+                    )
+            elif expected_verb == "handoff":
+                if (
+                    target_repo != "aoa-routing"
+                    or target_surface != FEDERATION_ENTRYPOINTS_FILE
+                    or match_key != "id"
+                ):
+                    issues.append(
+                        ValidationIssue(
+                            "quest_dispatch_hints.min.json",
+                            f"{action_location} must hand off through aoa-routing/{FEDERATION_ENTRYPOINTS_FILE}",
+                        )
+                    )
+                if target_value != delegate_tier:
+                    issues.append(
+                        ValidationIssue(
+                            "quest_dispatch_hints.min.json",
+                            f"{action_location}.target_value must stay aligned with delegate_tier",
+                        )
+                    )
+                if target_value not in tier_ids:
+                    issues.append(
+                        ValidationIssue(
+                            "quest_dispatch_hints.min.json",
+                            f"{action_location}.target_value references unknown federation tier '{target_value}'",
+                        )
+                    )
+
+        fallback_location = f"{location}.fallback"
+        try:
+            fallback = ensure_mapping(hint.get("fallback"), fallback_location)
+            fallback_verb = ensure_string(fallback.get("verb"), f"{fallback_location}.verb")
+            fallback_repo = ensure_string(fallback.get("target_repo"), f"{fallback_location}.target_repo")
+            fallback_surface = ensure_repo_relative_path(
+                fallback.get("target_surface"),
+                f"{fallback_location}.target_surface",
+            )
+            fallback_match_key = ensure_string(
+                fallback.get("match_key"),
+                f"{fallback_location}.match_key",
+            )
+            fallback_target_value = ensure_string(
+                fallback.get("target_value"),
+                f"{fallback_location}.target_value",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
+            continue
+        if fallback_surface.endswith(".example.json") or fallback_surface.startswith("quests/"):
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{fallback_location}.target_surface must stay on live generated catalog surfaces",
+                )
+            )
+        if (
+            fallback_verb != "inspect"
+            or fallback_repo != repo_name
+            or fallback_surface != "generated/quest_catalog.min.json"
+            or fallback_match_key != "id"
+            or fallback_target_value != quest_id
+        ):
+            issues.append(
+                ValidationIssue(
+                    "quest_dispatch_hints.min.json",
+                    f"{fallback_location} must point back to the owning repo live quest catalog surface",
+                )
+            )
+
+    if seen_hint_keys != eligible_hint_keys:
+        missing = sorted(f"{repo}:{quest_id}" for repo, quest_id in (eligible_hint_keys - seen_hint_keys))
+        extra = sorted(f"{repo}:{quest_id}" for repo, quest_id in (seen_hint_keys - eligible_hint_keys))
+        details: list[str] = []
+        if missing:
+            details.append(f"missing hints: {', '.join(missing)}")
+        if extra:
+            details.append(f"unexpected hints: {', '.join(extra)}")
+        issues.append(
+            ValidationIssue(
+                "quest_dispatch_hints.min.json",
+                f"live quest routing hints must match the current non-closed source/proof quest set ({'; '.join(details)})",
+            )
+        )
 
 
 def validate_rebuild_parity(
@@ -3391,6 +3865,7 @@ def validate_generated_outputs(
     router_path = generated_dir / "aoa_router.min.json"
     hints_path = generated_dir / "task_to_surface_hints.json"
     tier_hints_path = generated_dir / "task_to_tier_hints.json"
+    quest_dispatch_hints_path = generated_dir / Path(QUEST_DISPATCH_HINTS_FILE).name
     federation_entrypoints_path = generated_dir / Path(FEDERATION_ENTRYPOINTS_FILE).name
     return_navigation_path = generated_dir / Path(RETURN_NAVIGATION_HINTS_FILE).name
     recommended_path = generated_dir / "recommended_paths.min.json"
@@ -3407,6 +3882,7 @@ def validate_generated_outputs(
     router_payload = load_output(router_path, issues)
     hints_payload = load_output(hints_path, issues)
     tier_hints_payload = load_output(tier_hints_path, issues)
+    quest_dispatch_hints_payload = load_output(quest_dispatch_hints_path, issues)
     federation_entrypoints_payload = load_output(federation_entrypoints_path, issues)
     return_navigation_payload = load_output(return_navigation_path, issues)
     recommended_payload = load_output(recommended_path, issues)
@@ -3425,6 +3901,7 @@ def validate_generated_outputs(
             router_payload,
             hints_payload,
             tier_hints_payload,
+            quest_dispatch_hints_payload,
             federation_entrypoints_payload,
             return_navigation_payload,
             recommended_payload,
@@ -3446,6 +3923,7 @@ def validate_generated_outputs(
             router_path.name: router_payload,
             hints_path.name: hints_payload,
             tier_hints_path.name: tier_hints_payload,
+            quest_dispatch_hints_path.name: quest_dispatch_hints_payload,
             federation_entrypoints_path.name: federation_entrypoints_payload,
             return_navigation_path.name: return_navigation_payload,
             recommended_path.name: recommended_payload,
@@ -3475,6 +3953,7 @@ def validate_generated_outputs(
         (router_path, router_payload),
         (hints_path, hints_payload),
         (tier_hints_path, tier_hints_payload),
+        (quest_dispatch_hints_path, quest_dispatch_hints_payload),
         (federation_entrypoints_path, federation_entrypoints_payload),
         (return_navigation_path, return_navigation_payload),
         (recommended_path, recommended_payload),
@@ -3595,6 +4074,28 @@ def validate_generated_outputs(
         if tier_hints_payload != expected_tier_hints_payload:
             issues.append(ValidationIssue(tier_hints_path.name, "task_to_tier_hints.json does not match the expected static tier dispatch surface"))
     validate_task_tier_hints(tier_hints_payload, agents_root, issues)
+    expected_quest_dispatch_hints_payload: dict[str, Any] | None = None
+    try:
+        expected_quest_dispatch_hints_payload = build_quest_dispatch_hints_payload(
+            techniques_root,
+            skills_root,
+            evals_root,
+        )
+    except RouterError as exc:
+        issues.append(
+            ValidationIssue(
+                quest_dispatch_hints_path.name,
+                f"could not rebuild {quest_dispatch_hints_path.name} from live source/proof quest surfaces: {exc}",
+            )
+        )
+    else:
+        if quest_dispatch_hints_payload != expected_quest_dispatch_hints_payload:
+            issues.append(
+                ValidationIssue(
+                    quest_dispatch_hints_path.name,
+                    f"{quest_dispatch_hints_path.name} does not match the expected live source-only quest routing surface",
+                )
+            )
     expected_federation_entrypoints_payload: dict[str, Any] | None = None
     try:
         expected_federation_entrypoints_payload = build_federation_entrypoints_payload(
@@ -3632,6 +4133,14 @@ def validate_generated_outputs(
         kag_root,
         aoa_root,
         tos_root,
+        issues,
+    )
+    validate_quest_dispatch_hints(
+        quest_dispatch_hints_payload,
+        techniques_root,
+        skills_root,
+        evals_root,
+        canonical_federation_entrypoints_payload,
         issues,
     )
     expected_return_navigation_payload: dict[str, Any] | None = None
@@ -3815,6 +4324,7 @@ def validate_generated_outputs(
         (router_path.name, router_payload),
         (hints_path.name, hints_payload),
         (tier_hints_path.name, tier_hints_payload),
+        (quest_dispatch_hints_path.name, quest_dispatch_hints_payload),
         (federation_entrypoints_path.name, federation_entrypoints_payload),
         (recommended_path.name, recommended_payload),
         (relation_hints_path.name, relation_hints_payload),

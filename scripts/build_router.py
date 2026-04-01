@@ -12,10 +12,12 @@ from build_two_stage_skill_router import build_outputs as build_two_stage_output
 from router_core import (
     CANONICAL_REPO_BY_KIND,
     FEDERATION_ENTRYPOINTS_FILE,
+    QUEST_DISPATCH_HINTS_FILE,
     REPO_ROOT,
     RETURN_NAVIGATION_HINTS_FILE,
     RouterError,
     build_federation_entrypoints_payload,
+    build_quest_dispatch_hints_payload,
     build_kag_source_lift_relation_hints_payload,
     build_pairing_hints_payload,
     build_recommended_paths_payload,
@@ -447,6 +449,11 @@ def build_outputs(
     router_payload = build_router_payload(registry_entries)
     hints_payload = build_task_to_surface_hints_payload(memo_root)
     tier_hints_payload = build_task_to_tier_hints_payload(agents_root)
+    quest_dispatch_hints_payload = build_quest_dispatch_hints_payload(
+        techniques_root,
+        skills_root,
+        evals_root,
+    )
     federation_entrypoints_payload = build_federation_entrypoints_payload(
         aoa_root,
         techniques_root,
@@ -489,6 +496,7 @@ def build_outputs(
         "aoa_router.min.json": router_payload,
         "task_to_surface_hints.json": hints_payload,
         "task_to_tier_hints.json": tier_hints_payload,
+        Path(QUEST_DISPATCH_HINTS_FILE).name: quest_dispatch_hints_payload,
         Path(FEDERATION_ENTRYPOINTS_FILE).name: federation_entrypoints_payload,
         Path(RETURN_NAVIGATION_HINTS_FILE).name: return_navigation_payload,
         "recommended_paths.min.json": recommended_payload,

@@ -14,6 +14,8 @@ Key schemas here include:
 - `router-entry.schema.json`
 - `task-to-surface-hints.schema.json`
 - `task-to-tier-hints.schema.json`
+- `quest_dispatch_hint.schema.json`
+- `quest-dispatch-hints.schema.json`
 - `recommended-paths.schema.json`
 - `pairing-hints.schema.json`
 - `kag-source-lift-relation-hints.schema.json`

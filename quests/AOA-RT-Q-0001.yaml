@@ -7,7 +7,7 @@ owner_surface: docs/QUEST_ROUTING_SEAM.md
 theme_ref: ''
 milestone_ref: ''
 kind: seam
-state: triaged
+state: done
 band: frontier
 difficulty: d3_seam
 risk: r1_repo_local
@@ -33,8 +33,9 @@ anchor_ref:
 handoff_role: routing-maintainer
 evidence:
   - routing-only quest ingestion rule is explicit
-  - generated surfaces are named
+  - live generated quest surfaces are named
   - live source quest parsing is explicitly refused
+  - source-only inspect expand handoff hints are published
 harvest:
   target: routing
 opened_at: '2026-03-31'
