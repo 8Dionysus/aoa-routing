@@ -70,7 +70,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
 
         self.assertEqual(issues, [])
 
-    def test_live_workspace_playbook_routes_resolve_to_registry_activation_federation_and_review_status(self) -> None:
+    def test_live_workspace_playbook_routes_resolve_to_registry_activation_federation_review_status_and_packet_contracts(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
         registry = load_json(LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_registry.min.json")
         activation = load_json(
@@ -82,6 +82,9 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         review_status = load_json(
             LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_review_status.min.json"
         )
+        review_packet_contracts = load_json(
+            LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_review_packet_contracts.min.json"
+        )
 
         routed_playbook_ids = [
             entry["id"]
@@ -92,20 +95,60 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         activation_ids = [item["playbook_id"] for item in activation]
         federation_ids = [item["playbook_id"] for item in federation_surfaces]
         review_ids = [item["playbook_id"] for item in review_status["playbooks"]]
+        review_packet_ids = [item["playbook_id"] for item in review_packet_contracts["playbooks"]]
 
         self.assertEqual(routed_playbook_ids, registry_ids)
         self.assertTrue(set(activation_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(federation_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_ids).issubset(set(routed_playbook_ids)))
+        self.assertTrue(set(review_packet_ids).issubset(set(routed_playbook_ids)))
         self.assertEqual(review_ids, ["AOA-P-0017", "AOA-P-0019", "AOA-P-0020"])
         self.assertIsInstance(activation, list)
         self.assertIsInstance(federation_surfaces, list)
         self.assertEqual(review_status["schema_version"], 1)
+        self.assertEqual(review_packet_contracts["schema_version"], 1)
 
         review_by_id = {item["playbook_id"]: item for item in review_status["playbooks"]}
         self.assertEqual(review_by_id["AOA-P-0017"]["gate_verdict"], "composition-landed")
         self.assertEqual(review_by_id["AOA-P-0019"]["gate_verdict"], "hold")
         self.assertEqual(review_by_id["AOA-P-0020"]["gate_verdict"], "hold")
+
+        packet_by_id = {item["playbook_id"]: item for item in review_packet_contracts["playbooks"]}
+        self.assertEqual(packet_by_id["AOA-P-0011"]["memo_runtime_surfaces"], ["approval_record"])
+        self.assertEqual(packet_by_id["AOA-P-0017"]["gate_verdict"], "composition-landed")
+        self.assertEqual(
+            packet_by_id["AOA-P-0017"]["source_review_refs"][0],
+            "docs/gate-reviews/split-wave-cross-repo-rollout.md",
+        )
+
+    def test_live_workspace_playbook_eval_and_memo_review_packet_chain_resolves_to_real_surfaces(self) -> None:
+        review_packet_contracts = load_json(
+            LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_review_packet_contracts.min.json"
+        )
+        runtime_template_index = load_json(
+            LIVE_ROOTS["aoa-evals"] / "generated" / "runtime_candidate_template_index.min.json"
+        )
+        runtime_writeback_targets = load_json(
+            LIVE_ROOTS["aoa-memo"] / "generated" / "runtime_writeback_targets.min.json"
+        )
+
+        available_eval_anchors = {
+            entry["eval_anchor"]
+            for entry in runtime_template_index["templates"]
+            if entry.get("eval_anchor")
+        }
+        available_runtime_surfaces = {
+            entry["runtime_surface"] for entry in runtime_writeback_targets["targets"]
+        }
+
+        for contract in review_packet_contracts["playbooks"]:
+            self.assertTrue(set(contract["eval_anchors"]).issubset(available_eval_anchors))
+            self.assertTrue(set(contract["memo_runtime_surfaces"]).issubset(available_runtime_surfaces))
+
+        by_id = {item["playbook_id"]: item for item in review_packet_contracts["playbooks"]}
+        self.assertEqual(by_id["AOA-P-0011"]["eval_anchors"], ["aoa-approval-boundary-adherence"])
+        self.assertEqual(by_id["AOA-P-0011"]["memo_runtime_surfaces"], ["approval_record"])
+        self.assertEqual(by_id["AOA-P-0017"]["eval_anchors"], ["aoa-approval-boundary-adherence"])
 
     def test_live_workspace_memo_and_kag_execution_seams_resolve_to_real_surfaces(self) -> None:
         hints = load_json(REPO_ROOT / "generated" / "task_to_surface_hints.json")
@@ -137,11 +180,18 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         checkpoint_contract = load_json(
             memo_root / "examples" / "checkpoint_to_memory_contract.example.json"
         )
+        writeback_targets = load_json(
+            memo_root / "generated" / "runtime_writeback_targets.min.json"
+        )
         mapped_runtime_surfaces = {
             item["runtime_surface"] for item in checkpoint_contract["mapping_rules"]
         }
+        mapped_target_runtime_surfaces = {
+            item["runtime_surface"] for item in writeback_targets["targets"]
+        }
         self.assertIn("checkpoint_export", mapped_runtime_surfaces)
         self.assertIn("distillation_claim_candidate", mapped_runtime_surfaces)
+        self.assertEqual(mapped_runtime_surfaces, mapped_target_runtime_surfaces)
 
         kag_action = tos_kag_view["next_actions"][2]
         kag_payload = load_json(LIVE_ROOTS["aoa-kag"] / kag_action["target_surface"])
