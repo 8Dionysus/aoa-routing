@@ -4,22 +4,16 @@ Guidance for coding agents and humans contributing to `aoa-routing`.
 
 ## Purpose
 
-`aoa-routing` is the thin navigation and dispatch layer for AoA.
-
-It does not author new meaning.
-It derives small routing surfaces that point agents to the next source-owned object without copying source corpora into a second canon.
+`aoa-routing` is the thin navigation and dispatch layer for AoA. It derives small routing surfaces that point agents to the next source-owned object without copying source corpora into a second canon.
 
 ## Owns
 
 This repository is the source of truth for:
 
-- routing projections
-- dispatch hints
-- recommended path surfaces
-- optional two-stage routing seams built on source-owned bridge surfaces
-- local routing schemas
-- routing validation logic
-- integrity checks that keep navigation aligned with source-owned surfaces
+- routing projections and registries
+- dispatch hints and recommended paths
+- bounded pairing, return-navigation, and low-context routing seams
+- local schemas, build scripts, validators, and integrity checks
 
 ## Does not own
 
@@ -28,10 +22,10 @@ Do not treat this repository as the source of truth for:
 - technique meaning in `aoa-techniques`
 - skill meaning in `aoa-skills`
 - eval meaning in `aoa-evals`
-- memory objects in `aoa-memo`
+- memory objects or recall doctrine in `aoa-memo`
 - role contracts in `aoa-agents`
 - scenario composition in `aoa-playbooks`
-- derived knowledge substrate semantics in `aoa-kag`
+- derived substrate semantics in `aoa-kag`
 
 This repo owns navigation. It does not own the meaning of the things it routes to.
 
@@ -39,7 +33,7 @@ This repo owns navigation. It does not own the meaning of the things it routes t
 
 Source repos own meaning. Routing repo owns navigation.
 
-If the task requires authored meaning, go to the source repository rather than recreating meaning here.
+If a task requires authored meaning, go to the owning repository instead of recreating it here.
 
 ## Read this first
 
@@ -49,8 +43,8 @@ Before making changes, read in this order:
 2. `generated/aoa_router.min.json`
 3. `generated/task_to_surface_hints.json`
 4. `generated/recommended_paths.min.json`
-5. `ROADMAP.md`
-6. `docs/TWO_STAGE_SKILL_SELECTION.md` when the task touches wave-9
+5. `generated/federation_entrypoints.min.json` if the task touches federation entry
+6. `docs/TWO_STAGE_SKILL_SELECTION.md` if the task touches wave-9
 7. builder or validator scripts only if the task touches generation logic
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
@@ -68,93 +62,35 @@ The most important objects in this repository are:
 - `scripts/validate_two_stage_skill_router.py`
 - `schemas/*`
 - `generated/*.json`
-- tests that validate router output integrity
-
-## Allowed changes
-
-Safe, normal contributions include:
-
-- improving routing clarity and determinism
-- improving dispatch hints
-- improving recommended-path generation
-- tightening validation and integrity checks
-- refining ingestion contracts without violating source ownership
-- improving the optional two-stage shortlist seam without copying skill meaning
-- improving error reporting around missing or drifted source surfaces
-
-## Changes requiring extra care
-
-Use extra caution when:
-
-- changing generated output shape
-- changing routeable object assumptions
-- changing kind handling
-- changing inspect-action logic
-- changing dependency logic across repositories
-- introducing any feature that makes routing behave like a second source of truth
+- tests that validate routing integrity
 
 ## Hard NO
 
 Do not:
 
 - copy source text into routing outputs unless the repository canon explicitly allows it
-- store memory here
-- store eval doctrine here
-- store workflow authoring here
+- store memory, eval doctrine, or playbook authoring here
 - let stage 1 activate a skill or override explicit-only posture
-- turn routing into a graph/KAG platform
+- turn routing into a graph or KAG platform
 - make routing authoritative over source meaning
-- silently widen routing into a repo that “understands” content better than the source repo itself
-
-## Routing doctrine
-
-A good routing change should make it easier for an agent to answer:
-
-- what kind of surface is needed
-- what the smallest next object is
-- which source-owned file should be inspected next
-- what remains intentionally out of scope
-
-A bad routing change usually makes routing heavier, more semantic, more duplicative, or more authoritative than it should be.
-
-Wave-9 follows the same rule:
-
-- `aoa-skills` owns tiny skill cards and invocation posture
-- `aoa-routing` owns shortlist policy, stage wiring, and tool/prompt surfaces
-- the two-stage seam is additive, not a replacement for flat routing
-
-## Public hygiene
-
-Assume routing outputs are public, inspectable, and contestable.
-
-Write for portability:
-
-- keep kind definitions explicit
-- keep dispatch rules deterministic where possible
-- prefer source-owned references over copied summaries
-- make missing-source failure modes visible
-- avoid hidden magic
+- silently widen routing into a repo that appears to understand content better than the source repo itself
 
 ## Contribution doctrine
 
-Use this flow:
-
-`PLAN -> DIFF -> VERIFY -> REPORT`
+Use this flow: `PLAN -> DIFF -> VERIFY -> REPORT`
 
 ### PLAN
 
 State:
 
-- what routing surface or script is being changed
-- which source repos are affected
+- what routing surface or script is changing
+- which source repositories are affected
 - whether output shape changes
 - what boundary risk exists
 
 ### DIFF
 
-Keep the change focused.
-
-Do not mix unrelated repository cleanup into routing logic changes unless it is necessary for repository integrity.
+Keep the change focused. Do not mix unrelated cleanup into routing logic changes unless it is necessary for repository integrity.
 
 ### VERIFY
 
@@ -162,11 +98,9 @@ Confirm that:
 
 - source ownership is still preserved
 - generated outputs remain deterministic
-- inspect targets still point to source-owned surfaces
-- no output is pretending to be a second source of truth
-- tests and validators still pass
-
-Rebuild generated outputs when the task affects generation logic.
+- inspect and expand targets still point to source-owned surfaces
+- no output behaves like a second source of truth
+- tests and validators still pass when generation logic changes
 
 ### REPORT
 
@@ -175,41 +109,23 @@ Summarize:
 - what changed
 - which generated outputs changed
 - whether output shape changed
-- which source repos were involved
+- which source repositories were involved
 - any remaining follow-up work
 
 ## Validation
 
-Run the documented build and validation commands from `README.md`.
+Run the documented commands from `README.md`.
 
-If routing logic changes, rebuild generated outputs and run tests before finishing.
-`python scripts/validate_router.py` also checks the nested local guidance surfaces in `generated/`, `schemas/`, `scripts/`, and `tests/`.
+When routing logic changes, rebuild generated outputs and run tests before finishing.
+
+The core commands are:
+
+```bash
+python scripts/build_router.py
+python scripts/validate_router.py
+pytest
+```
+
+`python scripts/validate_router.py` also checks the local guidance surfaces in `generated/`, `schemas/`, `scripts/`, and `tests/`.
 
 Do not claim validation you did not run.
-
-## Cross-repo neighbors
-
-Use these neighboring repositories when the task crosses boundaries:
-
-- `aoa-techniques` for source practice meaning
-- `aoa-skills` for execution workflow meaning
-- `aoa-evals` for proof-surface meaning
-- `aoa-memo` for future memory surfaces
-- `Agents-of-Abyss` for ecosystem-level map and boundary doctrine
-
-## Output expectations
-
-When reporting back after a change, include:
-
-- which routing scripts or surfaces changed
-- whether generated outputs changed
-- whether output shape changed
-- what validation was run
-- whether any source repo assumptions changed
-- any boundary risks or follow-up work
-
-## Default editing posture
-
-Prefer the smallest reviewable change.
-Preserve canonical wording unless the task explicitly requires semantic change.
-If semantic change is made, report it explicitly.
