@@ -1,10 +1,9 @@
-name: Repo Validation
+name: Compatibility Canary
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  schedule:
+    - cron: "23 5 * * *"
+  workflow_dispatch:
 
 jobs:
   validate:
@@ -17,63 +16,54 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-techniques
-          ref: 0f386836a9f67a165da0eb271601eab557009bad
           path: aoa-techniques
 
       - name: Checkout aoa-skills
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-skills
-          ref: f71955c5e970728e6a1d1fc3bebcd7a9fe6b5690
           path: aoa-skills
 
       - name: Checkout aoa-evals
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-evals
-          ref: 036e9c66b0cbe9255708a4d4442c2c8aa28a0ccf
           path: aoa-evals
 
       - name: Checkout aoa-memo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-memo
-          ref: cd678fa2aea33132200d415cb88822c4dc577088
           path: aoa-memo
 
       - name: Checkout aoa-agents
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-agents
-          ref: d3cace5a4ca5d7bc1ffc3c031660939d124dab53
           path: aoa-agents
 
       - name: Checkout Agents-of-Abyss
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Agents-of-Abyss
-          ref: 505c14805d947e0a37119d41eb9711df1c5cdd72
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-playbooks
-          ref: 7d2b2dfbcf3d5b42d95c8aa8ef17bc668fed0ba1
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-kag
-          ref: b73723c7ef46bf2bdecaece16c79906a1fedf7c9
           path: aoa-kag
 
       - name: Checkout Tree-of-Sophia
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Tree-of-Sophia
-          ref: a71578d9bb5a10e15a7cc24968bf94c7980544ad
           path: Tree-of-Sophia
 
       - name: Setup Python
