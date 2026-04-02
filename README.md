@@ -23,6 +23,15 @@ Use the shortest route by need:
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
 
+## Route by need
+
+- core routing registries and cross-repo bridge: `generated/cross_repo_registry.min.json`, `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/task_to_tier_hints.json`, `generated/recommended_paths.min.json`, and [docs/CROSS_REPO_ROUTER_BRIDGE](docs/CROSS_REPO_ROUTER_BRIDGE.md)
+- pairing, recall, and KAG/source-lift hints: `generated/pairing_hints.min.json`, `generated/kag_source_lift_relation_hints.min.json`, and `generated/return_navigation_hints.min.json`
+- federation-entry and bounded return surfaces: `generated/federation_entrypoints.min.json`, [docs/FEDERATION_ENTRY_ABI](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
+- low-context and two-stage routing surfaces: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION](docs/TWO_STAGE_SKILL_SELECTION.md)
+- quest-style adjunct seams: `generated/quest_board.min.example.json`, `generated/quest_dispatch_hints.min.json`, [docs/QUEST_BOARD_SEAM](docs/QUEST_BOARD_SEAM.md), and [docs/QUEST_ROUTING_SEAM](docs/QUEST_ROUTING_SEAM.md)
+- local build, schema, and validation path: `schemas/`, `python scripts/build_router.py`, `python scripts/validate_router.py`, and `pytest`
+
 ## What `aoa-routing` owns
 
 This repository is the source of truth for:
