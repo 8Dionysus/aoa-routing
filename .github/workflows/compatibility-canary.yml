@@ -74,19 +74,6 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements-dev.txt
 
-      - name: Build routing surfaces
-        run: |
-          python scripts/build_router.py \
-            --techniques-root ./aoa-techniques \
-            --skills-root ./aoa-skills \
-            --evals-root ./aoa-evals \
-            --memo-root ./aoa-memo \
-            --agents-root ./aoa-agents \
-            --aoa-root ./Agents-of-Abyss \
-            --playbooks-root ./aoa-playbooks \
-            --kag-root ./aoa-kag \
-            --tos-root ./Tree-of-Sophia
-
       - name: Validate routing surfaces
         run: |
           python scripts/validate_router.py \
@@ -99,6 +86,20 @@ jobs:
             --playbooks-root ./aoa-playbooks \
             --kag-root ./aoa-kag \
             --tos-root ./Tree-of-Sophia
+
+      - name: Check rebuild parity
+        run: |
+          python scripts/build_router.py \
+            --techniques-root ./aoa-techniques \
+            --skills-root ./aoa-skills \
+            --evals-root ./aoa-evals \
+            --memo-root ./aoa-memo \
+            --agents-root ./aoa-agents \
+            --aoa-root ./Agents-of-Abyss \
+            --playbooks-root ./aoa-playbooks \
+            --kag-root ./aoa-kag \
+            --tos-root ./Tree-of-Sophia \
+            --check
 
       - name: Run routing tests
         run: pytest tests
