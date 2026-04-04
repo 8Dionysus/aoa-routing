@@ -4,7 +4,7 @@ This questbook tracks routing-layer work around quest discovery and thin dispatc
 
 ## Frontier
 
-- none right now
+- `AOA-RT-Q-0004` — add example-only RPG navigation cards for the bridge wave
 
 ## Near
 
