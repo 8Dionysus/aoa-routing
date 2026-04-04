@@ -184,6 +184,7 @@ EXPECTED_ROUTING_QUEST_STATES = {
     "AOA-RT-Q-0001": "done",
     "AOA-RT-Q-0002": "reanchor",
     "AOA-RT-Q-0003": "captured",
+    "AOA-RT-Q-0004": "triaged",
 }
 REQUIRED_REANCHOR_NOTE_SNIPPET = (
     "no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist"
@@ -191,6 +192,20 @@ REQUIRED_REANCHOR_NOTE_SNIPPET = (
 QUEST_BOARD_SCHEMA_NAME = "quest_board_entry.schema.json"
 QUEST_BOARD_EXAMPLE_NAME = "quest_board.min.example.json"
 QUEST_BOARD_REQUIRED_INPUT_REPOS = ("aoa-skills", "aoa-agents", "aoa-evals")
+RPG_NAVIGATION_SCHEMA_NAME = "rpg_navigation_bundle.schema.json"
+RPG_NAVIGATION_EXAMPLE_NAME = "rpg_navigation.min.example.json"
+RPG_NAVIGATION_DOC_NAME = "docs/RPG_NAVIGATION_BRIDGE.md"
+RPG_NAVIGATION_REQUIRED_DOC_TOKENS = (
+    "## Core rule",
+    "Routing owns navigation.",
+    "Do not add reward verbs, completion verbs, or state-writing verbs here.",
+    "Until live builders exist, keep this seam example-only and validator-shaped.",
+)
+RPG_NAVIGATION_REQUIRED_INPUTS = (
+    ("aoa-playbooks", "quest_dispatch"),
+    ("aoa-playbooks", "party_template_cards"),
+    ("aoa-evals", "unlock_proof_cards"),
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -462,6 +477,116 @@ def validate_adjunct_quest_board_surface(repo_root: Path, issues: list[Validatio
             )
 
 
+def validate_rpg_navigation_bridge_surface(repo_root: Path, issues: list[ValidationIssue]) -> None:
+    doc_path = repo_root / RPG_NAVIGATION_DOC_NAME
+    schema_path = repo_root / "schemas" / RPG_NAVIGATION_SCHEMA_NAME
+    example_path = repo_root / "generated" / RPG_NAVIGATION_EXAMPLE_NAME
+
+    try:
+        doc_text = doc_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        issues.append(ValidationIssue(repo_relative(repo_root, doc_path), "missing required file"))
+        return
+    for token in RPG_NAVIGATION_REQUIRED_DOC_TOKENS:
+        if token not in doc_text:
+            issues.append(
+                ValidationIssue(
+                    repo_relative(repo_root, doc_path),
+                    f"RPG navigation bridge note must mention '{token}'",
+                )
+            )
+
+    try:
+        schema_payload = load_json_file(schema_path)
+        schema_object = ensure_mapping(schema_payload, repo_relative(repo_root, schema_path))
+    except RouterError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, schema_path), str(exc)))
+        return
+
+    if schema_object.get("title") != "rpg_navigation_bundle_v1":
+        issues.append(
+            ValidationIssue(
+                repo_relative(repo_root, schema_path),
+                "schema title must stay 'rpg_navigation_bundle_v1'",
+            )
+        )
+    try:
+        Draft202012Validator.check_schema(schema_object)
+    except SchemaError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, schema_path), f"invalid JSON schema: {exc.message}"))
+
+    example_payload = load_output(example_path, issues)
+    if example_payload is None:
+        return
+    validate_against_schema(example_payload, RPG_NAVIGATION_SCHEMA_NAME, RPG_NAVIGATION_EXAMPLE_NAME, issues)
+
+    if example_payload.get("schema_version") != "rpg_navigation_bundle_v1":
+        issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, "schema_version must stay 'rpg_navigation_bundle_v1'"))
+    if example_payload.get("authority") != "derived-example-only":
+        issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, "authority must stay 'derived-example-only'"))
+    if example_payload.get("wave_scope") != "adjunct-rpg-bridge-wave":
+        issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, "wave_scope must stay 'adjunct-rpg-bridge-wave'"))
+
+    try:
+        inputs = ensure_list(example_payload.get("inputs"), f"{RPG_NAVIGATION_EXAMPLE_NAME}.inputs")
+        entries = ensure_list(example_payload.get("entries"), f"{RPG_NAVIGATION_EXAMPLE_NAME}.entries")
+    except RouterError as exc:
+        issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, str(exc)))
+        return
+
+    actual_inputs: list[tuple[str, str]] = []
+    for index, raw_input in enumerate(inputs):
+        location = f"{RPG_NAVIGATION_EXAMPLE_NAME}.inputs[{index}]"
+        try:
+            input_payload = ensure_mapping(raw_input, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, str(exc)))
+            continue
+        repo_name = input_payload.get("repo")
+        surface_kind = input_payload.get("surface_kind")
+        if isinstance(repo_name, str) and isinstance(surface_kind, str):
+            actual_inputs.append((repo_name, surface_kind))
+    if tuple(actual_inputs) != RPG_NAVIGATION_REQUIRED_INPUTS:
+        issues.append(
+            ValidationIssue(
+                RPG_NAVIGATION_EXAMPLE_NAME,
+                "inputs must stay ordered as playbook quest_dispatch, playbook party_template_cards, and eval unlock_proof_cards",
+            )
+        )
+
+    for index, raw_entry in enumerate(entries):
+        location = f"{RPG_NAVIGATION_EXAMPLE_NAME}.entries[{index}]"
+        try:
+            entry = ensure_mapping(raw_entry, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, str(exc)))
+            continue
+        actions = entry.get("entry_actions")
+        if actions != EXPECTED_QUEST_HINT_ACTION_ORDER:
+            issues.append(
+                ValidationIssue(
+                    RPG_NAVIGATION_EXAMPLE_NAME,
+                    f"{location}.entry_actions must stay exactly {EXPECTED_QUEST_HINT_ACTION_ORDER}",
+                )
+            )
+
+    example_text = example_path.read_text(encoding="utf-8")
+    if "AOA-PB-Q-0004" in example_text:
+        issues.append(
+            ValidationIssue(
+                RPG_NAVIGATION_EXAMPLE_NAME,
+                "example must not keep legacy playbook quest id 'AOA-PB-Q-0004'",
+            )
+        )
+    if '"repo": "aoa-routing"' in example_text and '"surface_kind": "quest_dispatch"' in example_text:
+        issues.append(
+            ValidationIssue(
+                RPG_NAVIGATION_EXAMPLE_NAME,
+                "example must not pretend aoa-routing owns quest_dispatch source inputs",
+            )
+        )
+
+
 def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIssue]) -> None:
     questbook_path = repo_root / "QUESTBOOK.md"
     seam_path = repo_root / "docs" / "QUEST_ROUTING_SEAM.md"
@@ -585,6 +710,8 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
                 )
         if quest_id == "AOA-RT-Q-0003":
             validate_adjunct_quest_board_surface(repo_root, issues)
+        if quest_id == "AOA-RT-Q-0004":
+            validate_rpg_navigation_bridge_surface(repo_root, issues)
 
     if "## Blocked / reanchor" not in questbook_text:
         issues.append(
