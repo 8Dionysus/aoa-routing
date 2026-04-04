@@ -196,13 +196,13 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 contract["candidate_packet_kinds"],
                 list(dict.fromkeys(contract["candidate_packet_kinds"])),
             )
-            intake_entry = intake_by_id.get(contract["playbook_id"])
-            if intake_entry is not None:
-                self.assertEqual(
-                    intake_entry["accepted_packet_kinds"],
-                    contract["candidate_packet_kinds"],
-                )
-                self.assertTrue(intake_entry["source_review_refs"])
+            self.assertIn(contract["playbook_id"], intake_by_id)
+            intake_entry = intake_by_id[contract["playbook_id"]]
+            self.assertEqual(
+                intake_entry["accepted_packet_kinds"],
+                contract["candidate_packet_kinds"],
+            )
+            self.assertTrue(intake_entry["source_review_refs"])
 
         by_id = {item["playbook_id"]: item for item in review_packet_contracts["playbooks"]}
         self.assertEqual(by_id["AOA-P-0011"]["eval_anchors"], ["aoa-approval-boundary-adherence"])
@@ -211,7 +211,14 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             by_id["AOA-P-0011"]["source_review_refs"][0],
             "playbooks/bounded-change-safe/PLAYBOOK.md",
         )
-        self.assertEqual(by_id["AOA-P-0017"]["eval_anchors"], ["aoa-approval-boundary-adherence"])
+        self.assertEqual(
+            by_id["AOA-P-0017"]["eval_anchors"],
+            [
+                "aoa-approval-boundary-adherence",
+                "aoa-scope-drift-detection",
+                "aoa-verification-honesty",
+            ],
+        )
 
         for template_key, required_runtime_artifacts in normalized_eval_template_artifacts.items():
             self.assertEqual(required_runtime_artifacts, list(dict.fromkeys(required_runtime_artifacts)))
