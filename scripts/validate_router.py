@@ -578,7 +578,7 @@ def validate_rpg_navigation_bridge_surface(repo_root: Path, issues: list[Validat
                 "example must not keep legacy playbook quest id 'AOA-PB-Q-0004'",
             )
         )
-    if '"repo": "aoa-routing"' in example_text and '"surface_kind": "quest_dispatch"' in example_text:
+    if ("aoa-routing", "quest_dispatch") in actual_inputs:
         issues.append(
             ValidationIssue(
                 RPG_NAVIGATION_EXAMPLE_NAME,
