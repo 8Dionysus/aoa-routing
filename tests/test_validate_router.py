@@ -462,12 +462,13 @@ def test_validate_local_questbook_surfaces_rejects_legacy_rpg_navigation_input_r
     )
     copy_repo_text(repo_root, "docs/RPG_NAVIGATION_BRIDGE.md")
     copy_repo_text(repo_root, "schemas/rpg_navigation_bundle.schema.json")
-    write_text(
-        repo_root / "generated" / "rpg_navigation.min.example.json",
-        (Path(__file__).resolve().parents[1] / "generated" / "rpg_navigation.min.example.json")
-        .read_text(encoding="utf-8")
-        .replace('"repo": "aoa-playbooks"', '"repo": "aoa-routing"', 1),
+    navigation_payload = json.loads(
+        (Path(__file__).resolve().parents[1] / "generated" / "rpg_navigation.min.example.json").read_text(
+            encoding="utf-8"
+        )
     )
+    navigation_payload["inputs"][0]["repo"] = "aoa-routing"
+    write_json(repo_root / "generated" / "rpg_navigation.min.example.json", navigation_payload)
     write_json(
         repo_root / "schemas" / "quest_dispatch_hint.schema.json",
         {
@@ -524,16 +525,16 @@ def test_validate_local_questbook_surfaces_ignores_quest_dispatch_text_outside_i
         "\n".join(validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS) + "\n",
     )
     copy_repo_text(repo_root, "docs/RPG_NAVIGATION_BRIDGE.md")
-    write_text(
-        repo_root / "generated" / "rpg_navigation.min.example.json",
-        (Path(__file__).resolve().parents[1] / "generated" / "rpg_navigation.min.example.json")
-        .read_text(encoding="utf-8")
-        .replace(
-            '"notes": "Unlock proof cards stay evidence-owned; routing only composes the read path."',
-            '"notes": "Unlock proof cards stay evidence-owned; routing only composes the read path. Example anti-pattern text: {\\"repo\\": \\"aoa-routing\\", \\"surface_kind\\": \\"quest_dispatch\\"}."',
-            1,
-        ),
+    navigation_payload = json.loads(
+        (Path(__file__).resolve().parents[1] / "generated" / "rpg_navigation.min.example.json").read_text(
+            encoding="utf-8"
+        )
     )
+    navigation_payload["notes"] = (
+        f"{navigation_payload['notes']} "
+        'Example anti-pattern text: {"repo": "aoa-routing", "surface_kind": "quest_dispatch"}.'
+    )
+    write_json(repo_root / "generated" / "rpg_navigation.min.example.json", navigation_payload)
     copy_repo_text(repo_root, "schemas/rpg_navigation_bundle.schema.json")
     write_json(
         repo_root / "schemas" / "quest_dispatch_hint.schema.json",
