@@ -24,42 +24,42 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-skills
-          ref: e54b8294c689b8efd109cf222514c106369e3f8d
+          ref: f789d6fd76cecc2020a26bface27a3a296627266
           path: aoa-skills
 
       - name: Checkout aoa-evals
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-evals
-          ref: d0fe7d0aed99b08398badd239d4ec5b97b2db382
+          ref: f9c383b02b5370c5561273a499e2e4a6e6179716
           path: aoa-evals
 
       - name: Checkout aoa-memo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-memo
-          ref: 9209090430d38c8f2faefcdf8e5cc2e67abc94e2
+          ref: 0a62eada1b82390bb79568c602f5874733ca8950
           path: aoa-memo
 
       - name: Checkout aoa-agents
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-agents
-          ref: c3fdb815bd652d9610124bddf7d1838d4081708b
+          ref: abf31dd14dafac210c950b4374b61799d8355e68
           path: aoa-agents
 
       - name: Checkout Agents-of-Abyss
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Agents-of-Abyss
-          ref: 95e218354928d234f80e2288b0c5442b3ddfebf0
+          ref: 3e3feeaeeaf22156daa13f1b4a63562009198ecf
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-playbooks
-          ref: c39c46f93ba1a2c687d46c7dc2745461f864e02f
+          ref: 2c6eca6137889edd68f94522fc59ad7c6a80fda4
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
