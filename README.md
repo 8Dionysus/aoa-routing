@@ -6,22 +6,31 @@ It does not author new meaning. It derives lightweight routing surfaces from sib
 
 **Source repos own meaning. Routing repo owns navigation.**
 
-The live paths are:
+The current public paths are:
 
-- thin-router runtime path: `pick -> inspect -> expand -> object use -> optional pair -> optional recall`
-- federation-entry path: `federation root -> entry card -> source authority -> bounded next hop`
+- default thin-router path: `pick -> inspect -> expand -> object use -> optional pair -> optional recall`
+- additive federation-entry path: `federation root -> entry card -> source authority -> bounded next hop`
 - optional wave-9 path: `tiny preselect -> stage-2 skill decision`
 
 ## Start here
 
 Use the shortest route by need:
 
-- core routing surfaces: `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/recommended_paths.min.json`, and `generated/task_to_tier_hints.json`
-- federation-entry and return posture: `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, [docs/FEDERATION_ENTRY_ABI.md](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY.md](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
-- small-model and two-stage routing seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION.md](docs/TWO_STAGE_SKILL_SELECTION.md)
+- current thin-router core: `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/recommended_paths.min.json`, and `generated/task_to_tier_hints.json`
+- bounded federation-entry and return posture: `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, [docs/FEDERATION_ENTRY_ABI.md](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY.md](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
+- optional wave-9 seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION.md](docs/TWO_STAGE_SKILL_SELECTION.md)
 - current direction: [ROADMAP](ROADMAP.md)
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
+
+## Verify current outputs
+
+Use this order for the current promoted routing contour:
+
+1. `python scripts/validate_router.py`
+2. `python scripts/build_router.py --check`
+3. `pytest`
+4. optional wave-9 seam: `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`
 
 ## Route by need
 
@@ -82,6 +91,8 @@ Memo recall also stays bounded. The root recall path remains doctrine-first thro
 For ToS, `tos-root` now hands off first to a source-owned tiny-entry route inside `Tree-of-Sophia`, then to a ToS-specific `kag_view`, and only then to one bounded `aoa-kag` retrieval adjunct. That improves the handoff without turning routing into ToS authority.
 
 For the KAG/source-lift family, the router stays on direct typed one-hop relations only. No graph traversal or open-ended same-kind exploration is introduced at the routing layer.
+
+The optional wave-9 seam stays additive beside that core. It may help with small-model skill preselection, but it does not replace the flat thin-router path as the default public route.
 
 ## Repository layout
 
