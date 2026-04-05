@@ -495,6 +495,73 @@ def test_validate_local_questbook_surfaces_rejects_legacy_rpg_navigation_input_r
     assert any("must not pretend aoa-routing owns quest_dispatch" in issue.message for issue in issues)
 
 
+def test_validate_local_questbook_surfaces_ignores_quest_dispatch_text_outside_inputs(tmp_path: Path) -> None:
+    repo_root = tmp_path / "aoa-routing"
+    issues: list[validate_router.ValidationIssue] = []
+    write_text(
+        repo_root / "QUESTBOOK.md",
+        "\n".join(
+            (
+                "# QUESTBOOK.md — aoa-routing",
+                "",
+                "## Frontier",
+                "",
+                "- `AOA-RT-Q-0004`",
+                "",
+                "## Near",
+                "",
+                "- none yet",
+                "",
+                "## Blocked / reanchor",
+                "",
+                "- `AOA-RT-Q-0002`",
+                "",
+            )
+        ),
+    )
+    write_text(
+        repo_root / "docs" / "QUEST_ROUTING_SEAM.md",
+        "\n".join(validate_router.REQUIRED_ROUTING_SEAM_SNIPPETS) + "\n",
+    )
+    copy_repo_text(repo_root, "docs/RPG_NAVIGATION_BRIDGE.md")
+    write_text(
+        repo_root / "generated" / "rpg_navigation.min.example.json",
+        (Path(__file__).resolve().parents[1] / "generated" / "rpg_navigation.min.example.json")
+        .read_text(encoding="utf-8")
+        .replace(
+            '"notes": "Unlock proof cards stay evidence-owned; routing only composes the read path."',
+            '"notes": "Unlock proof cards stay evidence-owned; routing only composes the read path. Example anti-pattern text: {\\"repo\\": \\"aoa-routing\\", \\"surface_kind\\": \\"quest_dispatch\\"}."',
+            1,
+        ),
+    )
+    copy_repo_text(repo_root, "schemas/rpg_navigation_bundle.schema.json")
+    write_json(
+        repo_root / "schemas" / "quest_dispatch_hint.schema.json",
+        {
+            "$schema": "https://json-schema.org/draft/2020-12/schema",
+            "$id": "https://8dionysus.github.io/schemas/quest_dispatch_hint_v2.schema.json",
+            "title": "quest_dispatch_hint_v2",
+            "type": "object",
+            "additionalProperties": False,
+            "required": [],
+            "properties": {"schema_version": {"const": "quest_dispatch_hint_v2"}},
+        },
+    )
+    write_text(
+        repo_root / "quests" / "AOA-RT-Q-0001.yaml",
+        "schema_version: work_quest_v1\nid: AOA-RT-Q-0001\nrepo: aoa-routing\nstate: done\npublic_safe: true\n",
+    )
+    write_text(
+        repo_root / "quests" / "AOA-RT-Q-0002.yaml",
+        "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-routing\nstate: reanchor\nnotes: \"reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist\"\npublic_safe: true\n",
+    )
+    copy_repo_text(repo_root, "quests/AOA-RT-Q-0004.yaml")
+
+    validate_router.validate_local_questbook_surfaces(repo_root, issues)
+
+    assert issues == []
+
+
 def test_validate_local_questbook_surfaces_rejects_wrong_repo(tmp_path: Path) -> None:
     repo_root = tmp_path / "aoa-routing"
     issues: list[validate_router.ValidationIssue] = []
