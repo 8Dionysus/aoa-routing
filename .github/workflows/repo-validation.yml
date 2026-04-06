@@ -17,63 +17,63 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-techniques
-          ref: dd6316204b4c456a89c8f9647c5125c6cb1d01b4
+          ref: 6c5e36b1063347da9675980b6da750ec856e2c59
           path: aoa-techniques
 
       - name: Checkout aoa-skills
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-skills
-          ref: f789d6fd76cecc2020a26bface27a3a296627266
+          ref: e0b9043e129139ee36a2e6fb8d1f8f9f87d70d38
           path: aoa-skills
 
       - name: Checkout aoa-evals
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-evals
-          ref: f9c383b02b5370c5561273a499e2e4a6e6179716
+          ref: b68c167db2887121ec362d4ce7ad852eb0f70b14
           path: aoa-evals
 
       - name: Checkout aoa-memo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-memo
-          ref: 0a62eada1b82390bb79568c602f5874733ca8950
+          ref: d990733045af9d212aff283272947dbb329d6511
           path: aoa-memo
 
       - name: Checkout aoa-agents
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-agents
-          ref: abf31dd14dafac210c950b4374b61799d8355e68
+          ref: fb41a4062c5026969bf29ad32d09c50ff5911083
           path: aoa-agents
 
       - name: Checkout Agents-of-Abyss
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Agents-of-Abyss
-          ref: 3e3feeaeeaf22156daa13f1b4a63562009198ecf
+          ref: ab0703be01ec68b62f0496aac43a7f12664fe1b6
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-playbooks
-          ref: 2c6eca6137889edd68f94522fc59ad7c6a80fda4
+          ref: 2fd7893c7a961c3597d84c3fcbe259f2d3161986
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-kag
-          ref: 122d1b12155f5b0b0559ca5705e2ac9eef990a9c
+          ref: a00c2e60ef468f8750c3b2dddddff37deea99987
           path: aoa-kag
 
       - name: Checkout Tree-of-Sophia
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Tree-of-Sophia
-          ref: 36d3358b54b23469b2e429eb00cdb1f425737f08
+          ref: 88ab3f62c21662283e0c1eebb42741a2d6fc653e
           path: Tree-of-Sophia
 
       - name: Setup Python
@@ -112,4 +112,14 @@ jobs:
             --check
 
       - name: Run routing tests
-        run: pytest tests
+        run: python -m pytest -q tests
+
+      - name: Check wave-9 routing seam
+        run: |
+          python scripts/build_two_stage_skill_router.py \
+            --routing-root . \
+            --skills-root ./aoa-skills \
+            --check
+          python scripts/validate_two_stage_skill_router.py \
+            --routing-root . \
+            --skills-root ./aoa-skills
