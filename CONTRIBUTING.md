@@ -32,7 +32,10 @@ Run the documented local path before opening a PR:
 python -m pip install -r requirements-dev.txt
 python scripts/build_router.py
 python scripts/validate_router.py
-pytest
+python scripts/build_router.py --check
+python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
+python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
+python -m pytest -q tests
 ```
 
 ## Preferred PR scope

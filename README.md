@@ -29,8 +29,9 @@ Use this order for the current promoted routing contour:
 
 1. `python scripts/validate_router.py`
 2. `python scripts/build_router.py --check`
-3. `pytest`
-4. optional wave-9 seam: `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`
+3. `python -m pytest -q tests`
+4. `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`
+5. `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`
 
 ## Route by need
 
@@ -39,7 +40,7 @@ Use this order for the current promoted routing contour:
 - federation-entry and bounded return surfaces: `generated/federation_entrypoints.min.json`, [docs/FEDERATION_ENTRY_ABI](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
 - low-context and two-stage routing surfaces: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION](docs/TWO_STAGE_SKILL_SELECTION.md)
 - quest-style adjunct seams: `generated/quest_board.min.example.json`, `generated/quest_dispatch_hints.min.json`, [docs/QUEST_BOARD_SEAM](docs/QUEST_BOARD_SEAM.md), and [docs/QUEST_ROUTING_SEAM](docs/QUEST_ROUTING_SEAM.md)
-- local build, schema, and validation path: `schemas/`, `python scripts/build_router.py`, `python scripts/validate_router.py`, and `pytest`
+- local build, schema, and validation path: `schemas/`, `python scripts/build_router.py`, `python scripts/build_router.py --check`, `python scripts/validate_router.py`, `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`, `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`, and `python -m pytest -q tests`
 
 ## What `aoa-routing` owns
 
@@ -109,31 +110,33 @@ Install local dependencies:
 python -m pip install -r requirements-dev.txt
 ```
 
-Build the routing surfaces:
+For a read-only current-state verify pass:
+
+```bash
+python scripts/validate_router.py
+python scripts/build_router.py --check
+python -m pytest -q tests
+python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
+python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
+```
+
+Refresh the tracked routing surfaces:
 
 ```bash
 python scripts/build_router.py
 ```
 
-Validate them:
+Validate the refreshed outputs:
 
 ```bash
 python scripts/validate_router.py
-```
-
-Check rebuild parity:
-
-```bash
 python scripts/build_router.py --check
+python -m pytest -q tests
+python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
+python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 ```
 
-Run tests:
-
-```bash
-pytest
-```
-
-The optional wave-9 seam can also be exercised directly:
+The optional wave-9 seam can also be refreshed directly when you need a targeted stage-wiring update:
 
 ```bash
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills

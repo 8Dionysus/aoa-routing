@@ -42,7 +42,10 @@ After changing generation logic or any upstream routing contract, run:
 ```bash
 python scripts/build_router.py
 python scripts/validate_router.py
-pytest tests
+python scripts/build_router.py --check
+python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
+python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
+python -m pytest -q tests
 ```
 
 The validator should confirm rebuild parity, schema integrity, live quest hint integrity, and source-owned inspect and expand targets.

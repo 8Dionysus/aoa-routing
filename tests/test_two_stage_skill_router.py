@@ -7,6 +7,7 @@ import sys
 import tempfile
 from pathlib import Path
 
+import build_two_stage_skill_router
 import build_router
 import validate_two_stage_skill_router
 from _wave9_router_lib import build_decision_packet, preselect
@@ -70,6 +71,26 @@ def test_build_outputs_anchor_eval_expectations_to_source_contracts() -> None:
     assert eval_cases["fixture-change"]["stage_2_expectation"] == "activate-candidate"
     assert eval_cases["fixture-context"]["expected_band"] == "boundary-architecture"
     assert eval_cases["fixture-context"]["stage_2_expectation"] == "activate-candidate"
+
+
+def test_expected_stage_2_mode_tracks_strong_manual_only_lead_when_no_explicit_expectation() -> None:
+    stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
+        {
+            "case_id": "manual-only-lead-without-explicit-stage-2",
+            "expected_shortlist_excludes": ["aoa-quest-harvest"],
+        },
+        preselected={
+            "shortlist": [{"name": "aoa-session-donor-harvest", "score": 11}],
+            "confidence": "strong",
+        },
+        signal_by_name={
+            "aoa-session-donor-harvest": {
+                "manual_invocation_required": True,
+            }
+        },
+    )
+
+    assert stage_2_mode == "manual-invocation-required"
 
 
 def test_validate_two_stage_outputs_accepts_fixture_build(tmp_path: Path) -> None:

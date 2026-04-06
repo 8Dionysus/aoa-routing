@@ -33,8 +33,11 @@ A good test should clarify whether the router stayed thin, bounded, and aligned 
 Run:
 
 ```bash
-pytest tests
 python scripts/validate_router.py
+python scripts/build_router.py --check
+python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
+python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
+python -m pytest -q tests
 ```
 
 If you changed build logic, rebuild the generated surfaces before judging test failures.

@@ -43,7 +43,10 @@ After script changes, run the normal build and validation path:
 ```bash
 python scripts/build_router.py
 python scripts/validate_router.py
-pytest tests
+python scripts/build_router.py --check
+python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
+python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
+python -m pytest -q tests
 ```
 
 If only validator wiring changed, still run at least the validator and the relevant tests you touched.
