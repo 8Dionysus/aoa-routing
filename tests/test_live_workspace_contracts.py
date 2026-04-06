@@ -107,7 +107,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertTrue(set(review_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_packet_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_intake_ids).issubset(set(routed_playbook_ids)))
-        self.assertEqual(review_ids, ["AOA-P-0017", "AOA-P-0019", "AOA-P-0020"])
+        self.assertEqual(review_ids, ["AOA-P-0017", "AOA-P-0018", "AOA-P-0019", "AOA-P-0020"])
         self.assertIsInstance(activation, list)
         self.assertIsInstance(federation_surfaces, list)
         self.assertEqual(review_status["schema_version"], 1)
@@ -116,6 +116,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
 
         review_by_id = {item["playbook_id"]: item for item in review_status["playbooks"]}
         self.assertEqual(review_by_id["AOA-P-0017"]["gate_verdict"], "composition-landed")
+        self.assertEqual(review_by_id["AOA-P-0018"]["gate_verdict"], "hold")
         self.assertEqual(review_by_id["AOA-P-0019"]["gate_verdict"], "hold")
         self.assertEqual(review_by_id["AOA-P-0020"]["gate_verdict"], "hold")
 

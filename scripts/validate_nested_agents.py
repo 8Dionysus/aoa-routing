@@ -19,6 +19,9 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "Do not hand-edit",
         "python scripts/build_router.py",
         "python scripts/validate_router.py",
+        "python scripts/build_router.py --check",
+        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
+        "python -m pytest -q tests",
     ),
     "schemas/AGENTS.md": (
         "aoa-router.schema.json",
@@ -38,7 +41,9 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "Source repos own meaning. Routing repo owns navigation.",
         "deterministic",
         "python scripts/build_router.py",
-        "pytest tests",
+        "python scripts/build_router.py --check",
+        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
+        "python -m pytest -q tests",
     ),
     "tests/AGENTS.md": (
         "tests/fixtures",
@@ -47,7 +52,9 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "tests/test_route_walkthroughs.py",
         "source-owned surfaces",
         "walkthroughs",
-        "pytest tests",
+        "python scripts/build_router.py --check",
+        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
+        "python -m pytest -q tests",
     ),
 }
 
