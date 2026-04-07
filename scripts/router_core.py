@@ -2148,35 +2148,42 @@ def build_return_navigation_hints_payload(
             raise RouterError(f"{location}.primary_action must stay inside owner repo '{owner_repo}'")
         owner_root = federation_owner_roots[owner_repo]
         ensure_source_surface_exists(owner_root, authority_surface, f"{location}.primary_action")
-        federation_root_returns.append(
-            {
-                "root_id": root_id,
-                "owner_repo": owner_repo,
-                "supported_return_reasons": list(RETURN_REASONS_BY_ROOT_ID[root_id]),
-                "primary_action": build_return_navigation_action(
-                    verb="inspect",
-                    target_repo=authority_repo,
-                    target_surface=authority_surface,
+        record = {
+            "root_id": root_id,
+            "owner_repo": owner_repo,
+            "supported_return_reasons": list(RETURN_REASONS_BY_ROOT_ID[root_id]),
+            "primary_action": build_return_navigation_action(
+                verb="inspect",
+                target_repo=authority_repo,
+                target_surface=authority_surface,
+            ),
+            "fallback_action": build_return_navigation_action(
+                verb="inspect",
+                target_repo=PAIRING_SURFACE_REPO,
+                target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                match_field="id",
+                target_value=root_id,
+            ),
+            "ownership_note": {
+                "aoa-root": (
+                    "AoA root authority stays in Agents-of-Abyss. Routing may only point "
+                    "back to that source-owned root."
                 ),
-                "fallback_action": build_return_navigation_action(
-                    verb="inspect",
-                    target_repo=PAIRING_SURFACE_REPO,
-                    target_surface=FEDERATION_ENTRYPOINTS_FILE,
-                    match_field="id",
-                    target_value=root_id,
+                "tos-root": (
+                    "ToS authority stays in Tree-of-Sophia. Routing may only restore the "
+                    "source-owned root and the bounded tiny-entry re-entry hop."
                 ),
-                "ownership_note": {
-                    "aoa-root": (
-                        "AoA root authority stays in Agents-of-Abyss. Routing may only point "
-                        "back to that source-owned root."
-                    ),
-                    "tos-root": (
-                        "ToS authority stays in Tree-of-Sophia. Routing may only restore the "
-                        "handoff to that source-owned root."
-                    ),
-                }[root_id],
-            }
-        )
+            }[root_id],
+        }
+        if root_id == "tos-root":
+            record["secondary_action"] = build_return_navigation_action(
+                verb="inspect",
+                target_repo=TOS_REPO,
+                target_surface=TOS_TINY_ENTRY_ROUTE_PATH,
+                match_field="route_id",
+                target_value=TOS_TINY_ENTRY_ROUTE_ID,
+            )
+        federation_root_returns.append(record)
 
     federation_entries = ensure_list(
         federation_payload.get("entrypoints"),

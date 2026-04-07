@@ -1882,6 +1882,26 @@ def test_validate_generated_outputs_rejects_federation_root_primary_target_away_
     )
 
 
+def test_validate_generated_outputs_rejects_tos_root_secondary_reentry_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    return_path = generated_dir / "return_navigation_hints.min.json"
+    payload = json.loads(return_path.read_text(encoding="utf-8"))
+    tos_root_return = next(
+        record for record in payload["federation_root_returns"] if record["root_id"] == "tos-root"
+    )
+    tos_root_return["secondary_action"]["target_surface"] = "docs/TINY_ENTRY_ROUTE.md"
+    write_json(return_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "secondary_action.target_surface must stay 'examples/tos_tiny_entry_route.example.json'"
+        in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_router_owned_primary_return_target(
     tmp_path: Path,
 ) -> None:

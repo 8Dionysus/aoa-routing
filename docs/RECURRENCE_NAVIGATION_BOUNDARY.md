@@ -38,6 +38,11 @@ When a small model or bounded actor loses federation orientation, routing may po
 - the owning repo capsule surface for a live federation kind
 - one router-owned fallback card for orientation only
 
+For `tos-root`, routing may also publish one bounded secondary re-entry back into
+`Tree-of-Sophia/examples/tos_tiny_entry_route.example.json` after the root
+authority surface is restored. That secondary hop stays source-owned and must
+not jump straight to downstream `aoa-kag` adjuncts.
+
 ### 4. Stay deterministic and bounded
 
 Return navigation should stay:

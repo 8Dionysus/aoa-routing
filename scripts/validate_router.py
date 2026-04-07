@@ -2674,6 +2674,13 @@ def validate_return_navigation_hints(
             f"{location}.fallback_action",
             router_owned_allowed=True,
         )
+        secondary_action = None
+        if record.get("secondary_action") is not None:
+            secondary_action = validate_action(
+                record.get("secondary_action"),
+                f"{location}.secondary_action",
+                router_owned_allowed=False,
+            )
         if primary_action is not None and primary_action["target_repo"] != owner_repo:
             issues.append(
                 ValidationIssue(
@@ -2688,6 +2695,44 @@ def validate_return_navigation_hints(
                     f"{location}.fallback_action.target_repo must stay 'aoa-routing'",
                 )
             )
+        if secondary_action is not None and secondary_action["target_repo"] != owner_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.secondary_action.target_repo must equal owner_repo '{owner_repo}'",
+                )
+            )
+        if root_id == "aoa-root" and secondary_action is not None:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location} must not publish secondary_action for aoa-root in the current routing wave",
+                )
+            )
+        if root_id == "tos-root":
+            expected_secondary_action = {
+                "verb": "inspect",
+                "target_repo": TOS_REPO,
+                "target_surface": TOS_TINY_ENTRY_ROUTE_PATH,
+                "match_field": "route_id",
+                "target_value": TOS_TINY_ENTRY_ROUTE_ID,
+            }
+            if secondary_action is None:
+                issues.append(
+                    ValidationIssue(
+                        location_prefix,
+                        f"{location} must publish the source-owned tiny-entry re-entry as secondary_action",
+                    )
+                )
+            else:
+                for key, expected_value in expected_secondary_action.items():
+                    if secondary_action.get(key) != expected_value:
+                        issues.append(
+                            ValidationIssue(
+                                location_prefix,
+                                f"{location}.secondary_action.{key} must stay '{expected_value}'",
+                            )
+                        )
     missing_root_ids = sorted(set(FEDERATION_ROOT_IDS) - seen_root_ids)
     for missing_root in missing_root_ids:
         issues.append(
