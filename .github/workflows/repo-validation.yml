@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-techniques
-          ref: bc3edff1a6ea3f8789f2247a07d093fa3bec4f4a
+          ref: 77610ceae53eea70524bfb25e06b93ce94ebc26b
           path: aoa-techniques
 
       - name: Checkout aoa-skills
@@ -31,7 +31,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-evals
-          ref: b68c167db2887121ec362d4ce7ad852eb0f70b14
+          ref: a75d0738f33ac4af8777faccc346753aaefe7a71
           path: aoa-evals
 
       - name: Checkout aoa-memo
