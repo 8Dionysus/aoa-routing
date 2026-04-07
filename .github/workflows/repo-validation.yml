@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-memo
-          ref: d990733045af9d212aff283272947dbb329d6511
+          ref: 23f6a7c01cb5baeea52f44a6df563779b353b998
           path: aoa-memo
 
       - name: Checkout aoa-agents
@@ -66,7 +66,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-kag
-          ref: a00c2e60ef468f8750c3b2dddddff37deea99987
+          ref: 20be6c8903d3a5be0a638ed66841e3a7eb8f975d
           path: aoa-kag
 
       - name: Checkout Tree-of-Sophia
