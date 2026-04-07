@@ -578,6 +578,16 @@ def test_build_outputs_from_fixtures() -> None:
         "target_repo": "Agents-of-Abyss",
         "target_surface": "CHARTER.md",
     }
+    tos_root_return = next(
+        record for record in return_navigation["federation_root_returns"] if record["root_id"] == "tos-root"
+    )
+    assert tos_root_return["secondary_action"] == {
+        "verb": "inspect",
+        "target_repo": "Tree-of-Sophia",
+        "target_surface": "examples/tos_tiny_entry_route.example.json",
+        "match_field": "route_id",
+        "target_value": "tos-tiny-entry.zarathustra-prologue",
+    }
     playbook_return = next(
         record
         for record in return_navigation["federation_kind_returns"]

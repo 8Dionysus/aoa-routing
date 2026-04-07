@@ -15,13 +15,13 @@
     "../aoa-skills/generated/local_adapter_manifest.json",
     "../aoa-skills/generated/context_retention_manifest.json"
   ],
-  "skill_count": 21,
+  "skill_count": 26,
   "band_count": 6,
   "example_count": 8,
-  "eval_case_count": 56,
+  "eval_case_count": 66,
   "base_entrypoint_count": 12,
-  "router_skill_entry_count": 21,
-  "pairing_entry_count": 115,
+  "router_skill_entry_count": 26,
+  "pairing_entry_count": 138,
   "task_hint_kinds": [
     "technique",
     "skill",
