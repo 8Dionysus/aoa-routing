@@ -117,6 +117,7 @@ OUTPUT_SCHEMA_NAMES = {
     "aoa_router.min.json": "aoa-router.schema.json",
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
     "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
+    "owner_layer_shortlist.min.json": "owner-layer-shortlist.schema.json",
     Path(QUEST_DISPATCH_HINTS_FILE).name: "quest-dispatch-hints.schema.json",
     Path(FEDERATION_ENTRYPOINTS_FILE).name: "federation-entrypoints.schema.json",
     Path(RETURN_NAVIGATION_HINTS_FILE).name: "return-navigation-hints.schema.json",

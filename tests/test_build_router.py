@@ -299,6 +299,7 @@ def test_build_outputs_from_fixtures() -> None:
     return_navigation = outputs["return_navigation_hints.min.json"]
     recommended = outputs["recommended_paths.min.json"]
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
+    shortlist = outputs["owner_layer_shortlist.min.json"]
     pairing = outputs["pairing_hints.min.json"]
     quest_dispatch_hints = outputs["quest_dispatch_hints.min.json"]
     tiny_model = outputs["tiny_model_entrypoints.json"]
@@ -335,6 +336,17 @@ def test_build_outputs_from_fixtures() -> None:
     assert quest_dispatch_hints["version"] == 1
     assert quest_dispatch_hints["wave_scope"] == "source-only"
     assert quest_dispatch_hints["actions_enabled"] == ["inspect", "expand", "handoff"]
+    assert shortlist["schema_version"] == 1
+    assert {
+        (entry["signal"], entry["owner_repo"], entry["ambiguity"])
+        for entry in shortlist["hints"]
+        if entry["signal"] in {"proof-need", "scenario-recurring", "repeated-pattern"}
+    } >= {
+        ("proof-need", "aoa-evals", "clear"),
+        ("scenario-recurring", "aoa-playbooks", "clear"),
+        ("scenario-recurring", "aoa-techniques", "ambiguous"),
+        ("repeated-pattern", "aoa-techniques", "clear"),
+    }
     assert quest_dispatch_hints["source_inputs"] == [
         {"repo": "aoa-techniques", "surface_kind": "quest_catalog", "ref": "generated/quest_catalog.min.json"},
         {"repo": "aoa-techniques", "surface_kind": "quest_dispatch", "ref": "generated/quest_dispatch.min.json"},
@@ -1365,6 +1377,30 @@ def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
     }
 
     assert snapshot_a == snapshot_b
+
+
+def test_owner_layer_shortlist_includes_explicit_and_ambiguous_family_hints() -> None:
+    outputs = build_fixture_outputs()
+
+    shortlist = outputs["owner_layer_shortlist.min.json"]
+    explicit_skill = next(
+        entry
+        for entry in shortlist["hints"]
+        if entry["signal"] == "explicit-request" and entry["owner_repo"] == "aoa-skills"
+    )
+    recurring_entries = [
+        entry
+        for entry in shortlist["hints"]
+        if entry["signal"] == "scenario-recurring"
+    ]
+
+    assert explicit_skill["target_surface"] == "aoa-skills.runtime_discovery_index"
+    assert explicit_skill["confidence"] == "high"
+    assert {entry["owner_repo"] for entry in recurring_entries} == {
+        "aoa-playbooks",
+        "aoa-techniques",
+    }
+    assert {entry["ambiguity"] for entry in recurring_entries} == {"clear", "ambiguous"}
 
 
 def test_build_task_to_tier_hints_reads_agents_registry_artifacts(tmp_path: Path) -> None:

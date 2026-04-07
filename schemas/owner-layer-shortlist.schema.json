@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/schemas/owner-layer-shortlist.schema.json",
+  "title": "aoa-routing owner layer shortlist",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "hints"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "hints": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/hint"
+      }
+    }
+  },
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "hint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "shortlist_id",
+        "signal",
+        "owner_repo",
+        "object_kind",
+        "target_surface",
+        "hint_reason",
+        "confidence",
+        "ambiguity"
+      ],
+      "properties": {
+        "shortlist_id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "signal": {
+          "enum": [
+            "explicit-request",
+            "proof-need",
+            "recall-need",
+            "scenario-recurring",
+            "role-posture",
+            "repeated-pattern",
+            "risk-gate"
+          ]
+        },
+        "owner_repo": {
+          "enum": [
+            "aoa-techniques",
+            "aoa-skills",
+            "aoa-evals",
+            "aoa-memo",
+            "aoa-playbooks",
+            "aoa-agents"
+          ]
+        },
+        "object_kind": {
+          "enum": [
+            "technique",
+            "skill",
+            "eval",
+            "memo",
+            "playbook",
+            "agent"
+          ]
+        },
+        "target_surface": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "inspect_surface": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "hint_reason": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "confidence": {
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ]
+        },
+        "ambiguity": {
+          "enum": [
+            "clear",
+            "ambiguous"
+          ]
+        }
+      }
+    }
+  }
+}

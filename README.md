@@ -16,7 +16,7 @@ The current public paths are:
 
 Use the shortest route by need:
 
-- current thin-router core: `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/recommended_paths.min.json`, and `generated/task_to_tier_hints.json`
+- current thin-router core: `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/recommended_paths.min.json`, `generated/task_to_tier_hints.json`, and `generated/owner_layer_shortlist.min.json`
 - bounded federation-entry and return posture: `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, [docs/FEDERATION_ENTRY_ABI.md](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY.md](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
 - optional wave-9 seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION.md](docs/TWO_STAGE_SKILL_SELECTION.md)
 - current direction: [ROADMAP](ROADMAP.md)
@@ -35,7 +35,7 @@ Use this order for the current promoted routing contour:
 
 ## Route by need
 
-- core routing registries and cross-repo bridge: `generated/cross_repo_registry.min.json`, `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/task_to_tier_hints.json`, `generated/recommended_paths.min.json`, and [docs/CROSS_REPO_ROUTER_BRIDGE](docs/CROSS_REPO_ROUTER_BRIDGE.md)
+- core routing registries and cross-repo bridge: `generated/cross_repo_registry.min.json`, `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/task_to_tier_hints.json`, `generated/recommended_paths.min.json`, `generated/owner_layer_shortlist.min.json`, and [docs/CROSS_REPO_ROUTER_BRIDGE](docs/CROSS_REPO_ROUTER_BRIDGE.md)
 - pairing, recall, and KAG/source-lift hints: `generated/pairing_hints.min.json`, `generated/kag_source_lift_relation_hints.min.json`, and `generated/return_navigation_hints.min.json`
 - federation-entry and bounded return surfaces: `generated/federation_entrypoints.min.json`, [docs/FEDERATION_ENTRY_ABI](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
 - low-context and two-stage routing surfaces: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION](docs/TWO_STAGE_SKILL_SELECTION.md)
@@ -48,6 +48,7 @@ This repository is the source of truth for:
 
 - routing projections and registries
 - dispatch hints and recommended next hops
+- advisory owner-layer shortlist hints
 - bounded pairing and return-navigation hints
 - optional two-stage routing policy and tool/prompt surfaces
 - local schemas, builders, validators, and routing integrity checks
@@ -72,7 +73,7 @@ The federation-entry seam also reads root or generated entry surfaces from `Agen
 
 The tracked outputs under `generated/` are grouped into four families:
 
-- core routing: `cross_repo_registry.min.json`, `aoa_router.min.json`, `task_to_surface_hints.json`, `task_to_tier_hints.json`, and `recommended_paths.min.json`
+- core routing: `cross_repo_registry.min.json`, `aoa_router.min.json`, `task_to_surface_hints.json`, `task_to_tier_hints.json`, `recommended_paths.min.json`, and `owner_layer_shortlist.min.json`
 - pairing, recall, and return posture: `pairing_hints.min.json`, `kag_source_lift_relation_hints.min.json`, and `return_navigation_hints.min.json`
 - federation entry: `federation_entrypoints.min.json`
 - low-context routing: `tiny_model_entrypoints.json` plus the `two_stage_*` family for the optional wave-9 seam
@@ -88,6 +89,11 @@ That board is validator-checked but it is not emitted by `build_router.py`, not 
 Inspect actions point to source-owned capsule surfaces. Expand actions point to source-owned section surfaces. `aoa-routing` tells an agent what to read next; it does not copy the owned payloads into a second canon.
 
 Memo recall also stays bounded. The root recall path remains doctrine-first through `aoa-memo`, while the routing hint surface may expose a parallel object-facing family when upstream object contracts and object surfaces are coherent.
+
+Second-wave surface detection also stays bounded. `owner_layer_shortlist.min.json`
+may advertise advisory owner-layer candidates and ambiguity markers, but it
+does not become semantic truth or activation authority for eval, memo,
+playbook, agent, technique, or skill meaning.
 
 For ToS, `tos-root` now hands off first to a source-owned tiny-entry route inside `Tree-of-Sophia`, then to a ToS-specific `kag_view`, and only then to one bounded `aoa-kag` retrieval adjunct. That improves the handoff without turning routing into ToS authority.
 
