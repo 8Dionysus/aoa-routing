@@ -1,0 +1,168 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa.local/aoa-routing/schemas/stress_navigation_hint_v1.json",
+  "title": "stress_navigation_hint_v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "hint_id",
+    "applies_to",
+    "preferred_posture",
+    "next_hops",
+    "evidence_inputs",
+    "suppression"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "stress_navigation_hint_v1"
+    },
+    "hint_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "applies_to": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repo",
+        "surface",
+        "severity_at_least"
+      ],
+      "properties": {
+        "repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surface": {
+          "type": "string",
+          "minLength": 1
+        },
+        "stressor_class": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "degraded_mode": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "severity_at_least": {
+          "enum": [
+            "any",
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ]
+        }
+      }
+    },
+    "preferred_posture": {
+      "enum": [
+        "reground_first",
+        "degrade_preferred",
+        "human_review_first",
+        "stop_before_mutation",
+        "route_around_unhealthy_surface"
+      ]
+    },
+    "next_hops": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "kind",
+          "target",
+          "reason",
+          "bounded"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "repo",
+              "surface",
+              "doc",
+              "generated_surface",
+              "artifact",
+              "command"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "bounded": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "evidence_inputs": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "optional_context": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "confidence_band": {
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ]
+    },
+    "suppression": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status"
+      ],
+      "properties": {
+        "status": {
+          "enum": [
+            "active",
+            "low_evidence",
+            "disabled"
+          ]
+        },
+        "reason": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "expires_at_utc": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date-time"
+    },
+    "notes": {
+      "type": [
+        "string",
+        "null"
+      ]
+    }
+  }
+}
