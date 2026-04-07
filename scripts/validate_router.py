@@ -43,6 +43,7 @@ from router_core import (
     KAG_SOURCE_LIFT_TECHNIQUE_SET,
     MEMO_CAPSULE_RECALL_MODES,
     MEMO_INSPECT_SURFACE_FILE,
+    MEMO_OBJECT_CAPSULE_SURFACE_FILE,
     MEMO_OBJECT_RECALL_DEFAULT_MODE,
     MEMO_OBJECT_RETURN_READY_CONTRACT,
     MEMO_OBJECT_EXPAND_SURFACE_FILE,
@@ -2636,6 +2637,70 @@ def validate_return_navigation_hints(
                         "memo return secondary_action must point to aoa-memo/generated/memory_object_catalog.min.json",
                     )
                 )
+            contract_location = f"aoa-memo/{MEMO_OBJECT_RETURN_READY_CONTRACT}"
+            try:
+                return_contract = ensure_mapping(
+                    load_json_file(memo_root.resolve() / MEMO_OBJECT_RETURN_READY_CONTRACT),
+                    contract_location,
+                )
+                contract_mode = return_contract.get("mode")
+                contract_inspect_surface = ensure_repo_relative_path(
+                    return_contract.get("inspect_surface"),
+                    f"{contract_location}.inspect_surface",
+                )
+                contract_capsule_surface = ensure_repo_relative_path(
+                    return_contract.get("capsule_surface"),
+                    f"{contract_location}.capsule_surface",
+                )
+                contract_expand_surface = ensure_repo_relative_path(
+                    return_contract.get("expand_surface"),
+                    f"{contract_location}.expand_surface",
+                )
+            except RouterError as exc:
+                issues.append(ValidationIssue(contract_location, str(exc)))
+            else:
+                if contract_mode != MEMO_OBJECT_RECALL_DEFAULT_MODE:
+                    issues.append(
+                        ValidationIssue(
+                            contract_location,
+                            f"{contract_location}.mode must stay '{MEMO_OBJECT_RECALL_DEFAULT_MODE}'",
+                        )
+                    )
+                if contract_inspect_surface != MEMO_OBJECT_INSPECT_SURFACE_FILE:
+                    issues.append(
+                        ValidationIssue(
+                            contract_location,
+                            f"{contract_location}.inspect_surface must stay '{MEMO_OBJECT_INSPECT_SURFACE_FILE}'",
+                        )
+                    )
+                if contract_capsule_surface != MEMO_OBJECT_CAPSULE_SURFACE_FILE:
+                    issues.append(
+                        ValidationIssue(
+                            contract_location,
+                            f"{contract_location}.capsule_surface must stay '{MEMO_OBJECT_CAPSULE_SURFACE_FILE}'",
+                        )
+                    )
+                if contract_expand_surface != MEMO_OBJECT_EXPAND_SURFACE_FILE:
+                    issues.append(
+                        ValidationIssue(
+                            contract_location,
+                            f"{contract_location}.expand_surface must stay '{MEMO_OBJECT_EXPAND_SURFACE_FILE}'",
+                        )
+                    )
+                if return_contract.get("checkpoint_continuity_supported") is not True:
+                    issues.append(
+                        ValidationIssue(
+                            contract_location,
+                            f"{contract_location}.checkpoint_continuity_supported must stay true",
+                        )
+                    )
+                if return_contract.get("return_ready") is not True:
+                    issues.append(
+                        ValidationIssue(
+                            contract_location,
+                            f"{contract_location}.return_ready must stay true",
+                        )
+                    )
     missing_thin_kinds = sorted(set(ACTIVE_KINDS) - seen_thin_kinds)
     for missing_kind in missing_thin_kinds:
         issues.append(
