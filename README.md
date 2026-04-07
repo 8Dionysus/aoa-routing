@@ -18,6 +18,7 @@ Use the shortest route by need:
 
 - current thin-router core: `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/recommended_paths.min.json`, `generated/task_to_tier_hints.json`, and `generated/owner_layer_shortlist.min.json`
 - bounded federation-entry and return posture: `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, [docs/FEDERATION_ENTRY_ABI.md](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY.md](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
+- additive stress-routing contract surfaces: [docs/STRESS_POSTURE_ROUTING.md](docs/STRESS_POSTURE_ROUTING.md), [docs/DEGRADED_ROUTE_HINTS.md](docs/DEGRADED_ROUTE_HINTS.md), `schemas/stress_navigation_hint_v1.json`, and `examples/stress_navigation_hint.example.json`
 - optional wave-9 seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION.md](docs/TWO_STAGE_SKILL_SELECTION.md)
 - current direction: [ROADMAP](ROADMAP.md)
 
@@ -40,6 +41,7 @@ Use this order for the current promoted routing contour:
 - federation-entry and bounded return surfaces: `generated/federation_entrypoints.min.json`, [docs/FEDERATION_ENTRY_ABI](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
 - low-context and two-stage routing surfaces: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION](docs/TWO_STAGE_SKILL_SELECTION.md)
 - quest-style adjunct seams: `generated/quest_board.min.example.json`, `generated/quest_dispatch_hints.min.json`, [docs/QUEST_BOARD_SEAM](docs/QUEST_BOARD_SEAM.md), and [docs/QUEST_ROUTING_SEAM](docs/QUEST_ROUTING_SEAM.md)
+- stress-overlay doctrine and contract surfaces: [docs/STRESS_POSTURE_ROUTING](docs/STRESS_POSTURE_ROUTING.md), [docs/DEGRADED_ROUTE_HINTS](docs/DEGRADED_ROUTE_HINTS.md), `schemas/stress_navigation_hint_v1.json`, and `examples/stress_navigation_hint.example.json`
 - local build, schema, and validation path: `schemas/`, `python scripts/build_router.py`, `python scripts/build_router.py --check`, `python scripts/validate_router.py`, `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`, `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`, and `python -m pytest -q tests`
 
 ## What `aoa-routing` owns
@@ -95,6 +97,10 @@ may advertise advisory owner-layer candidates and ambiguity markers, but it
 does not become semantic truth or activation authority for eval, memo,
 playbook, agent, technique, or skill meaning.
 
+Antifragility wave two also stays bounded. The current landing adds routing
+doctrine plus one schema/example contract for stress-aware hints, but it does
+not add a new generated authority layer or change router dispatch logic yet.
+
 For ToS, `tos-root` now hands off first to a source-owned tiny-entry route inside `Tree-of-Sophia`, then to a ToS-specific `kag_view`, and only then to one bounded `aoa-kag` retrieval adjunct. That improves the handoff without turning routing into ToS authority.
 
 For the KAG/source-lift family, the router stays on direct typed one-hop relations only. No graph traversal or open-ended same-kind exploration is introduced at the routing layer.
@@ -105,6 +111,7 @@ The optional wave-9 seam stays additive beside that core. It may help with small
 
 - `scripts/` for builders, validators, and shared helpers
 - `schemas/` for local public-output contracts
+- `examples/` for additive contract examples and validator-backed fixtures
 - `generated/` for committed derived routing surfaces
 - `tests/` for unit and integration coverage
 

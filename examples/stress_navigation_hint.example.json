@@ -1,0 +1,46 @@
+{
+  "schema_version": "stress_navigation_hint_v1",
+  "hint_id": "route:stress:atm10-hybrid-query:retrieval-only-fallback",
+  "applies_to": {
+    "repo": "ATM10-Agent",
+    "surface": "hybrid-query",
+    "stressor_class": "derived_knowledge_unavailable",
+    "degraded_mode": "planner_status=retrieval_only_fallback",
+    "severity_at_least": "medium"
+  },
+  "preferred_posture": "reground_first",
+  "next_hops": [
+    {
+      "kind": "artifact",
+      "target": "ATM10-Agent:run/hybrid_query_results.json",
+      "reason": "Inspect the owner-local degraded result before seeking wider cross-repo expansion.",
+      "bounded": true
+    },
+    {
+      "kind": "doc",
+      "target": "ATM10-Agent:docs/ANTIFRAGILITY_FIRST_WAVE.md",
+      "reason": "Review the owner-local degraded-family doctrine.",
+      "bounded": true
+    },
+    {
+      "kind": "doc",
+      "target": "aoa-techniques:techniques/system-recovery/degrade-reground-recover/TECHNIQUE.md",
+      "reason": "Reground through a bounded recovery pattern before broader routing or mutation.",
+      "bounded": true
+    }
+  ],
+  "evidence_inputs": [
+    "ATM10-Agent:stressor_receipt_v1#stress:2026-04-07:retrieval-only-fallback",
+    "aoa-evals:antifragility_eval_report_v1#eval:ATM10-Agent:hybrid-query:2026-W14"
+  ],
+  "optional_context": [
+    "aoa-memo:failure_lesson_memory_v1#memo:hybrid-query-reground-first"
+  ],
+  "confidence_band": "medium",
+  "suppression": {
+    "status": "active",
+    "reason": null
+  },
+  "expires_at_utc": null,
+  "notes": "Do not jump straight into mutation paths while the degraded retrieval result remains the bounded owner-local truth."
+}
