@@ -12,6 +12,7 @@ This repository is the source of truth for:
 
 - routing projections and registries
 - dispatch hints and recommended paths
+- advisory owner-layer shortlist hints
 - bounded pairing, return-navigation, and low-context routing seams
 - local schemas, build scripts, validators, and integrity checks
 
@@ -42,10 +43,11 @@ Before making changes, read in this order:
 1. `README.md`
 2. `generated/aoa_router.min.json`
 3. `generated/task_to_surface_hints.json`
-4. `generated/recommended_paths.min.json`
-5. `generated/federation_entrypoints.min.json` if the task touches federation entry
-6. `docs/TWO_STAGE_SKILL_SELECTION.md` if the task touches wave-9
-7. builder or validator scripts only if the task touches generation logic
+4. `generated/owner_layer_shortlist.min.json` if the task touches second-wave surface detection
+5. `generated/recommended_paths.min.json`
+6. `generated/federation_entrypoints.min.json` if the task touches federation entry
+7. `docs/TWO_STAGE_SKILL_SELECTION.md` if the task touches wave-9
+8. builder or validator scripts only if the task touches generation logic
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
 
@@ -71,6 +73,7 @@ Do not:
 - copy source text into routing outputs unless the repository canon explicitly allows it
 - store memory, eval doctrine, or playbook authoring here
 - let stage 1 activate a skill or override explicit-only posture
+- let owner-layer shortlist hints become semantic truth or activation authority
 - turn routing into a graph or KAG platform
 - make routing authoritative over source meaning
 - silently widen routing into a repo that appears to understand content better than the source repo itself

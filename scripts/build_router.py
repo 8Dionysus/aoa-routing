@@ -46,6 +46,174 @@ TECHNIQUE_SOURCE_TYPE = "generated-catalog"
 SKILL_SOURCE_TYPE = "generated-catalog"
 EVAL_SOURCE_TYPE = "generated-catalog"
 MEMO_SOURCE_TYPE = "generated-catalog"
+OWNER_LAYER_SHORTLIST_FILE = "generated/owner_layer_shortlist.min.json"
+OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
+    {
+        "shortlist_id": "explicit-request.skills.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-skills",
+        "object_kind": "skill",
+        "target_surface": "aoa-skills.runtime_discovery_index",
+        "inspect_surface": "aoa-skills.runtime_discovery_index",
+        "hint_reason": "explicit owner-layer request for skills should stay on the bounded execution layer first",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.evals.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-evals",
+        "object_kind": "eval",
+        "target_surface": "aoa-evals.runtime_candidate_template_index.min",
+        "inspect_surface": "aoa-evals.runtime_candidate_template_index.min",
+        "hint_reason": "explicit owner-layer request for proof should inspect eval surfaces before inventing a new path",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.memo.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-memo",
+        "object_kind": "memo",
+        "target_surface": "aoa-memo.memory_catalog.min",
+        "inspect_surface": "aoa-memo.memory_catalog.min",
+        "hint_reason": "explicit owner-layer request for recall should inspect memo catalog surfaces directly",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.playbooks.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-playbooks",
+        "object_kind": "playbook",
+        "target_surface": "aoa-playbooks.playbook_registry.min",
+        "inspect_surface": "aoa-playbooks.playbook_registry.min",
+        "hint_reason": "explicit owner-layer request for recurring scenarios should inspect playbook registry surfaces directly",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.agents.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-agents",
+        "object_kind": "agent",
+        "target_surface": "aoa-agents.runtime_seam_bindings",
+        "inspect_surface": "aoa-agents.runtime_seam_bindings",
+        "hint_reason": "explicit owner-layer request for role posture should inspect agent runtime seam bindings",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.techniques.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-techniques",
+        "object_kind": "technique",
+        "target_surface": "aoa-techniques.technique_promotion_readiness.min",
+        "inspect_surface": "aoa-techniques.technique_promotion_readiness.min",
+        "hint_reason": "explicit owner-layer request for reuse should inspect technique promotion readiness rather than guess from routing",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "proof-need.evals.primary",
+        "signal": "proof-need",
+        "owner_repo": "aoa-evals",
+        "object_kind": "eval",
+        "target_surface": "aoa-evals.runtime_candidate_template_index.min",
+        "inspect_surface": "aoa-evals.runtime_candidate_template_index.min",
+        "hint_reason": "proof-heavy intent usually wants an eval-owned inspect surface first",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "proof-need.skills.adjacent",
+        "signal": "proof-need",
+        "owner_repo": "aoa-skills",
+        "object_kind": "skill",
+        "target_surface": "aoa-skills.runtime_discovery_index",
+        "inspect_surface": "aoa-skills.runtime_discovery_index",
+        "hint_reason": "some proof-shaped routes are still bounded skill execution slices, so keep the skill lane visible as an adjacent option",
+        "confidence": "low",
+        "ambiguity": "ambiguous",
+    },
+    {
+        "shortlist_id": "recall-need.memo.primary",
+        "signal": "recall-need",
+        "owner_repo": "aoa-memo",
+        "object_kind": "memo",
+        "target_surface": "aoa-memo.memory_catalog.min",
+        "inspect_surface": "aoa-memo.memory_catalog.min",
+        "hint_reason": "recall or provenance posture should inspect memo surfaces first",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "scenario-recurring.playbooks.primary",
+        "signal": "scenario-recurring",
+        "owner_repo": "aoa-playbooks",
+        "object_kind": "playbook",
+        "target_surface": "aoa-playbooks.playbook_registry.min",
+        "inspect_surface": "aoa-playbooks.playbook_registry.min",
+        "hint_reason": "recurring multi-step routes usually belong to playbook inspection before any promotion call",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "scenario-recurring.techniques.adjacent",
+        "signal": "scenario-recurring",
+        "owner_repo": "aoa-techniques",
+        "object_kind": "technique",
+        "target_surface": "aoa-techniques.technique_promotion_readiness.min",
+        "inspect_surface": "aoa-techniques.technique_promotion_readiness.min",
+        "hint_reason": "some recurring scenarios are really repeated bounded discipline, so keep technique promotion visible as an adjacent read",
+        "confidence": "medium",
+        "ambiguity": "ambiguous",
+    },
+    {
+        "shortlist_id": "role-posture.agents.primary",
+        "signal": "role-posture",
+        "owner_repo": "aoa-agents",
+        "object_kind": "agent",
+        "target_surface": "aoa-agents.runtime_seam_bindings",
+        "inspect_surface": "aoa-agents.runtime_seam_bindings",
+        "hint_reason": "role and handoff posture work should inspect agent seam bindings first",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "repeated-pattern.techniques.primary",
+        "signal": "repeated-pattern",
+        "owner_repo": "aoa-techniques",
+        "object_kind": "technique",
+        "target_surface": "aoa-techniques.technique_promotion_readiness.min",
+        "inspect_surface": "aoa-techniques.technique_promotion_readiness.min",
+        "hint_reason": "repeated bounded discipline points toward technique promotion readiness first",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "repeated-pattern.playbooks.adjacent",
+        "signal": "repeated-pattern",
+        "owner_repo": "aoa-playbooks",
+        "object_kind": "playbook",
+        "target_surface": "aoa-playbooks.playbook_registry.min",
+        "inspect_surface": "aoa-playbooks.playbook_registry.min",
+        "hint_reason": "some repeated signals are really recurring scenarios, so keep playbooks visible as an adjacent shortlist target",
+        "confidence": "medium",
+        "ambiguity": "ambiguous",
+    },
+    {
+        "shortlist_id": "risk-gate.skills.primary",
+        "signal": "risk-gate",
+        "owner_repo": "aoa-skills",
+        "object_kind": "skill",
+        "target_surface": "aoa-skills.runtime_discovery_index",
+        "inspect_surface": "aoa-skills.runtime_discovery_index",
+        "hint_reason": "risk-gate signals stay skill-first even when the route later hands off to owner layers",
+        "confidence": "medium",
+        "ambiguity": "clear",
+    },
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -414,6 +582,13 @@ def dump_jsonl(rows: list[dict[str, Any]]) -> str:
     return "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
 
 
+def build_owner_layer_shortlist_payload() -> dict[str, Any]:
+    return {
+        "schema_version": 1,
+        "hints": [dict(spec) for spec in OWNER_LAYER_SHORTLIST_SPECS],
+    }
+
+
 def build_outputs(
     techniques_root: Path,
     skills_root: Path,
@@ -481,6 +656,7 @@ def build_outputs(
         technique_catalog_source,
         technique_catalog_entries,
     )
+    owner_layer_shortlist_payload = build_owner_layer_shortlist_payload()
     pairing_payload = build_pairing_hints_payload(
         registry_entries,
         technique_catalog_source,
@@ -501,6 +677,7 @@ def build_outputs(
         Path(RETURN_NAVIGATION_HINTS_FILE).name: return_navigation_payload,
         "recommended_paths.min.json": recommended_payload,
         "kag_source_lift_relation_hints.min.json": relation_hints_payload,
+        Path(OWNER_LAYER_SHORTLIST_FILE).name: owner_layer_shortlist_payload,
         "pairing_hints.min.json": pairing_payload,
         "tiny_model_entrypoints.json": tiny_model_entrypoints_payload,
     }

@@ -107,7 +107,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertTrue(set(review_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_packet_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_intake_ids).issubset(set(routed_playbook_ids)))
-        self.assertEqual(review_ids, ["AOA-P-0017", "AOA-P-0018", "AOA-P-0019", "AOA-P-0020"])
+        self.assertEqual(
+            review_ids,
+            ["AOA-P-0017", "AOA-P-0018", "AOA-P-0019", "AOA-P-0020", "AOA-P-0021", "AOA-P-0024"],
+        )
         self.assertIsInstance(activation, list)
         self.assertIsInstance(federation_surfaces, list)
         self.assertEqual(review_status["schema_version"], 1)
@@ -119,6 +122,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertEqual(review_by_id["AOA-P-0018"]["gate_verdict"], "hold")
         self.assertEqual(review_by_id["AOA-P-0019"]["gate_verdict"], "hold")
         self.assertEqual(review_by_id["AOA-P-0020"]["gate_verdict"], "hold")
+        self.assertEqual(review_by_id["AOA-P-0021"]["gate_verdict"], "composition-landed")
+        self.assertEqual(review_by_id["AOA-P-0024"]["gate_verdict"], "hold")
 
         packet_by_id = {item["playbook_id"]: item for item in review_packet_contracts["playbooks"]}
         self.assertEqual(packet_by_id["AOA-P-0011"]["memo_runtime_surfaces"], ["approval_record"])
@@ -131,12 +136,34 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             packet_by_id["AOA-P-0017"]["source_review_refs"][1],
             "docs/gate-reviews/split-wave-cross-repo-rollout.md",
         )
+        self.assertEqual(packet_by_id["AOA-P-0021"]["gate_verdict"], "composition-landed")
+        self.assertEqual(
+            packet_by_id["AOA-P-0021"]["source_review_refs"],
+            [
+                "playbooks/owner-first-capability-landing/PLAYBOOK.md",
+                "docs/gate-reviews/owner-first-capability-landing.md",
+                "docs/real-runs/2026-04-07.owner-first-capability-landing.md",
+            ],
+        )
+        self.assertEqual(packet_by_id["AOA-P-0024"]["gate_verdict"], "hold")
+        self.assertEqual(
+            packet_by_id["AOA-P-0024"]["source_review_refs"],
+            [
+                "playbooks/federated-live-publisher-activation/PLAYBOOK.md",
+                "docs/gate-reviews/federated-live-publisher-activation.md",
+                "docs/real-runs/2026-04-07.federated-live-publisher-activation.md",
+            ],
+        )
 
         intake_by_id = {item["playbook_id"]: item for item in review_intake["playbooks"]}
         self.assertEqual(intake_by_id["AOA-P-0017"]["gate_verdict"], "composition-landed")
         self.assertEqual(intake_by_id["AOA-P-0017"]["composition_posture"], "landed")
         self.assertEqual(intake_by_id["AOA-P-0019"]["gate_verdict"], "hold")
         self.assertEqual(intake_by_id["AOA-P-0019"]["composition_posture"], "awaiting-reviewed-run")
+        self.assertEqual(intake_by_id["AOA-P-0021"]["gate_verdict"], "composition-landed")
+        self.assertEqual(intake_by_id["AOA-P-0021"]["composition_posture"], "landed")
+        self.assertEqual(intake_by_id["AOA-P-0024"]["gate_verdict"], "hold")
+        self.assertEqual(intake_by_id["AOA-P-0024"]["composition_posture"], "held-after-review")
         self.assertEqual(
             intake_by_id["AOA-P-0017"]["accepted_packet_kinds"],
             packet_by_id["AOA-P-0017"]["candidate_packet_kinds"],
