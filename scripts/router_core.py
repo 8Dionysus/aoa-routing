@@ -75,6 +75,7 @@ QUEST_DISPATCH_HINTS_FILE = "generated/quest_dispatch_hints.min.json"
 MEMO_INSPECT_SURFACE_FILE = "generated/memory_catalog.min.json"
 MEMO_EXPAND_SURFACE_FILE = "generated/memory_sections.full.json"
 MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory_object_catalog.min.json"
+MEMO_OBJECT_CAPSULE_SURFACE_FILE = "generated/memory_object_capsules.json"
 MEMO_OBJECT_EXPAND_SURFACE_FILE = "generated/memory_object_sections.full.json"
 MEMO_CAPSULE_RECALL_MODES = ("semantic", "lineage")
 DEFAULT_MEMO_RECALL_MODE = "semantic"
@@ -1997,6 +1998,7 @@ def build_return_navigation_hints_payload(
                 (
                     "mode",
                     "inspect_surface",
+                    "capsule_surface",
                     "expand_surface",
                     "checkpoint_continuity_supported",
                     "return_ready",
@@ -2022,6 +2024,16 @@ def build_return_navigation_hints_payload(
                 )
             if (
                 ensure_repo_relative_path(
+                    return_contract.get("capsule_surface"),
+                    f"{return_contract_location}.capsule_surface",
+                )
+                != MEMO_OBJECT_CAPSULE_SURFACE_FILE
+            ):
+                raise RouterError(
+                    f"{return_contract_location}.capsule_surface must stay '{MEMO_OBJECT_CAPSULE_SURFACE_FILE}'"
+                )
+            if (
+                ensure_repo_relative_path(
                     return_contract.get("expand_surface"),
                     f"{return_contract_location}.expand_surface",
                 )
@@ -2038,6 +2050,11 @@ def build_return_navigation_hints_payload(
                 raise RouterError(f"{return_contract_location}.return_ready must stay true")
             ensure_source_surface_exists(memo_root, return_contract_path, f"{location}.primary_action")
             ensure_source_surface_exists(memo_root, inspect_surface, f"{location}.secondary_action")
+            ensure_source_surface_exists(
+                memo_root,
+                MEMO_OBJECT_CAPSULE_SURFACE_FILE,
+                f"{return_contract_location}.capsule_surface",
+            )
             thin_router_returns.append(
                 {
                     "context_kind": "memo",

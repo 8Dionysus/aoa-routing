@@ -1837,6 +1837,25 @@ def test_validate_generated_outputs_rejects_wrong_memo_return_primary_target(
     )
 
 
+def test_validate_generated_outputs_rejects_memo_return_contract_without_capsule_surface(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    contract_path = (
+        roots["aoa-memo"] / "examples" / "recall_contract.object.working.return.json"
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+    payload.pop("capsule_surface", None)
+    write_json(contract_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "aoa-memo/examples/recall_contract.object.working.return.json.capsule_surface must be a non-empty string"
+        in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_thin_router_return_with_router_owned_fallback(
     tmp_path: Path,
 ) -> None:
