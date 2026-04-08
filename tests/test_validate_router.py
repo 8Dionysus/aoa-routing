@@ -1204,6 +1204,23 @@ def test_validate_generated_outputs_rejects_malformed_enabled_pair_action_via_sc
     )
 
 
+def test_validate_generated_outputs_rejects_malformed_technique_second_cut_action_via_schema(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    del payload["hints"][0]["actions"]["second_cut"]["selection_axis"]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        ("schema violation" in issue.message and "actions.second_cut" in issue.message)
+        or "selection_axis" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_malformed_enabled_recall_action_via_schema(
     tmp_path: Path,
 ) -> None:
@@ -1332,6 +1349,18 @@ def test_validate_generated_outputs_rejects_missing_expand_target(tmp_path: Path
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any("expand surface is missing skill match 'aoa-context-scan'" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_missing_technique_second_cut_target(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    (roots["aoa-techniques"] / "generated" / "technique_kind_manifest.min.json").unlink()
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "aoa-techniques/generated/technique_kind_manifest.min.json"
+        and "is missing" in issue.message
+        for issue in issues
+    )
 
 
 def test_validate_generated_outputs_rejects_section_payload_leakage(tmp_path: Path) -> None:

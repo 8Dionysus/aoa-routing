@@ -17,6 +17,7 @@ The current public paths are:
 Use the shortest route by need:
 
 - current thin-router core: `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/recommended_paths.min.json`, `generated/task_to_tier_hints.json`, and `generated/owner_layer_shortlist.min.json`
+  with technique second-cut routing delegated back to `aoa-techniques/generated/technique_kind_manifest.min.json`
 - bounded federation-entry and return posture: `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, [docs/FEDERATION_ENTRY_ABI.md](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY.md](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
 - additive stress-routing contract surfaces: [docs/STRESS_POSTURE_ROUTING.md](docs/STRESS_POSTURE_ROUTING.md), [docs/DEGRADED_ROUTE_HINTS.md](docs/DEGRADED_ROUTE_HINTS.md), `schemas/stress_navigation_hint_v1.json`, and `examples/stress_navigation_hint.example.json`
 - additive composite stress-route family: `generated/composite_stress_route_hints.min.json`, [docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md](docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md), [docs/KAG_QUARANTINE_ROUTE_HINTS.md](docs/KAG_QUARANTINE_ROUTE_HINTS.md), `schemas/composite_stress_route_hint_v1.json`, and `examples/composite_stress_route_hint.example.json`
@@ -64,6 +65,7 @@ The build stays thin by reading repo-local generated catalogs and registries fro
 Core inputs include:
 
 - `aoa-techniques/generated/technique_catalog.min.json`
+- `aoa-techniques/generated/technique_kind_manifest.min.json`
 - `aoa-skills/generated/skill_catalog.min.json`
 - `aoa-evals/generated/eval_catalog.min.json`
 - `aoa-memo/generated/memory_catalog.min.json`
@@ -108,6 +110,11 @@ Second-wave surface detection also stays bounded. `owner_layer_shortlist.min.jso
 may advertise advisory owner-layer candidates and ambiguity markers, but it
 does not become semantic truth or activation authority for eval, memo,
 playbook, agent, technique, or skill meaning.
+
+Inside the technique lane, `task_to_surface_hints.json` now points back to the
+source-owned `aoa-techniques/generated/technique_kind_manifest.min.json` for
+the bounded `domain -> kind` second cut instead of reclassifying technique
+meaning inside `aoa-routing`.
 
 Antifragility wave two also stays bounded. The current landing adds routing
 doctrine plus one schema/example contract for stress-aware hints, but it does

@@ -475,6 +475,15 @@ def test_build_outputs_from_fixtures() -> None:
         "surface_file": "generated/pairing_hints.min.json",
         "match_field": "id",
     }
+    assert technique_hint["actions"]["second_cut"] == {
+        "enabled": True,
+        "surface_repo": "aoa-techniques",
+        "surface_file": "generated/technique_kind_manifest.min.json",
+        "collection_key": "kinds",
+        "match_field": "kind",
+        "selection_axis": "kind",
+        "prerequisite_axes": ["domain"],
+    }
     memo_hint = next(hint for hint in hints["hints"] if hint["kind"] == "memo")
     assert memo_hint == {
         "kind": "memo",
