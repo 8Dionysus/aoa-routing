@@ -154,6 +154,59 @@
         }
       ]
     },
+    "secondCutAction": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/disabledAction"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "surface_repo",
+            "surface_file",
+            "collection_key",
+            "match_field",
+            "selection_axis",
+            "prerequisite_axes"
+          ],
+          "properties": {
+            "enabled": {
+              "const": true
+            },
+            "surface_repo": {
+              "enum": [
+                "aoa-techniques"
+              ]
+            },
+            "surface_file": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "collection_key": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "match_field": {
+              "$ref": "#/$defs/nonEmptyString"
+            },
+            "selection_axis": {
+              "const": "kind"
+            },
+            "prerequisite_axes": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "domain"
+                ]
+              },
+              "minItems": 1,
+              "maxItems": 1,
+              "uniqueItems": true
+            }
+          }
+        }
+      ]
+    },
     "contractsByMode": {
       "type": "object",
       "minProperties": 1,
@@ -276,6 +329,9 @@
         },
         "pair": {
           "$ref": "#/$defs/pairAction"
+        },
+        "second_cut": {
+          "$ref": "#/$defs/secondCutAction"
         },
         "recall": {
           "$ref": "#/$defs/recallAction"

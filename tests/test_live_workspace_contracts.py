@@ -308,15 +308,26 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             )
         )
 
-    def test_live_workspace_memo_and_kag_execution_seams_resolve_to_real_surfaces(self) -> None:
+    def test_live_workspace_technique_memo_and_kag_execution_seams_resolve_to_real_surfaces(self) -> None:
         hints = load_json(REPO_ROOT / "generated" / "task_to_surface_hints.json")
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        technique_hint = next(item for item in hints["hints"] if item["kind"] == "technique")
         memo_hint = next(item for item in hints["hints"] if item["kind"] == "memo")
         tos_kag_view = next(
             entry
             for entry in federation["entrypoints"]
             if entry["kind"] == "kag_view" and entry["id"] == "Tree-of-Sophia"
         )
+
+        techniques_root = LIVE_ROOTS["aoa-techniques"]
+        technique_second_cut = technique_hint["actions"]["second_cut"]
+        self.assertEqual(technique_second_cut["surface_repo"], "aoa-techniques")
+        self.assertEqual(technique_second_cut["selection_axis"], "kind")
+        self.assertEqual(technique_second_cut["prerequisite_axes"], ["domain"])
+        kind_manifest = load_json(techniques_root / technique_second_cut["surface_file"])
+        routed_kind_values = [entry["kind"] for entry in kind_manifest["kinds"]]
+        self.assertEqual(kind_manifest["selection_order"], routed_kind_values)
+        self.assertTrue(all(entry["technique_ids"] for entry in kind_manifest["kinds"]))
 
         memo_root = LIVE_ROOTS["aoa-memo"]
         memo_actions = memo_hint["actions"]

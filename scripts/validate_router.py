@@ -65,6 +65,12 @@ from router_core import (
     RESERVED_KINDS,
     RETURN_NAVIGATION_HINTS_FILE,
     RouterError,
+    TECHNIQUE_KIND_SECOND_CUT_COLLECTION_KEY,
+    TECHNIQUE_KIND_SECOND_CUT_MATCH_FIELD,
+    TECHNIQUE_KIND_SECOND_CUT_PREREQUISITE_AXES,
+    TECHNIQUE_KIND_SECOND_CUT_SELECTION_AXIS,
+    TECHNIQUE_KIND_SECOND_CUT_SOURCE_REPO,
+    TECHNIQUE_KIND_SECOND_CUT_SURFACE_FILE,
     TOS_REPO,
     TOS_KAG_VIEW_ENTRY_ID,
     TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID,
@@ -1791,6 +1797,7 @@ def load_surface_entries_for_validation(
         "technique_capsules.json": "techniques",
         "technique_catalog.json": "techniques",
         "technique_catalog.min.json": "techniques",
+        "technique_kind_manifest.min.json": "kinds",
         "skill_capsules.json": "skills",
         "eval_capsules.json": "evals",
         "memory_catalog.min.json": "memo_surfaces",
@@ -3063,6 +3070,348 @@ def validate_pair_targets(
                     f"pair surface is missing {kind} match '{match_value}'",
                 )
             )
+
+
+def validate_technique_second_cut_targets(
+    registry_entries: list[dict[str, Any]],
+    technique_catalog_entries: list[dict[str, Any]],
+    hints_payload: dict[str, Any],
+    techniques_root: Path,
+    issues: list[ValidationIssue],
+) -> None:
+    catalog_location = "aoa-techniques/generated/technique_catalog.min.json"
+    manifest_location = f"aoa-techniques/{TECHNIQUE_KIND_SECOND_CUT_SURFACE_FILE}"
+    expected_technique_ids = {
+        entry["id"]
+        for entry in registry_entries
+        if entry.get("kind") == "technique" and isinstance(entry.get("id"), str)
+    }
+    technique_catalog_index: dict[str, dict[str, str]] = {}
+    all_domains: set[str] = set()
+    for index, raw_entry in enumerate(technique_catalog_entries):
+        location = f"{catalog_location}.techniques[{index}]"
+        try:
+            entry = ensure_mapping(raw_entry, location)
+            technique_id = ensure_string(entry.get("id"), f"{location}.id")
+            domain = ensure_string(entry.get("domain"), f"{location}.domain")
+            status = ensure_string(entry.get("status"), f"{location}.status")
+        except RouterError as exc:
+            issues.append(ValidationIssue(catalog_location, str(exc)))
+            continue
+        technique_catalog_index[technique_id] = {"domain": domain, "status": status}
+        all_domains.add(domain)
+
+    try:
+        hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
+    except RouterError as exc:
+        issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+        return
+
+    technique_hint_found = False
+    expected_prerequisite_axes = list(TECHNIQUE_KIND_SECOND_CUT_PREREQUISITE_AXES)
+    for index, raw_hint in enumerate(hints):
+        hint_location = f"task_to_surface_hints.json.hints[{index}]"
+        try:
+            hint = ensure_mapping(raw_hint, hint_location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+        actions = hint.get("actions")
+        if not isinstance(actions, dict):
+            continue
+        if hint.get("kind") != "technique":
+            if "second_cut" in actions:
+                issues.append(
+                    ValidationIssue(
+                        "task_to_surface_hints.json",
+                        "only the technique hint may advertise second_cut routing",
+                    )
+                )
+            continue
+
+        technique_hint_found = True
+        second_cut = actions.get("second_cut")
+        if not isinstance(second_cut, dict):
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "hint for kind 'technique' must define second_cut routing",
+                )
+            )
+            continue
+        if second_cut.get("enabled") is not True:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "technique second_cut routing must stay enabled",
+                )
+            )
+            continue
+
+        try:
+            surface_file = ensure_repo_relative_path(
+                second_cut.get("surface_file"),
+                "task_to_surface_hints.json.technique.actions.second_cut.surface_file",
+            )
+            collection_key = ensure_string(
+                second_cut.get("collection_key"),
+                "task_to_surface_hints.json.technique.actions.second_cut.collection_key",
+            )
+            match_field = ensure_string(
+                second_cut.get("match_field"),
+                "task_to_surface_hints.json.technique.actions.second_cut.match_field",
+            )
+            selection_axis = ensure_string(
+                second_cut.get("selection_axis"),
+                "task_to_surface_hints.json.technique.actions.second_cut.selection_axis",
+            )
+            prerequisite_axes = ensure_string_list(
+                second_cut.get("prerequisite_axes"),
+                "task_to_surface_hints.json.technique.actions.second_cut.prerequisite_axes",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue("task_to_surface_hints.json", str(exc)))
+            continue
+
+        surface_repo = second_cut.get("surface_repo")
+        if surface_repo != TECHNIQUE_KIND_SECOND_CUT_SOURCE_REPO:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"technique second_cut routing must use surface_repo '{TECHNIQUE_KIND_SECOND_CUT_SOURCE_REPO}'",
+                )
+            )
+        if surface_file != TECHNIQUE_KIND_SECOND_CUT_SURFACE_FILE:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"technique second_cut routing must target {TECHNIQUE_KIND_SECOND_CUT_SURFACE_FILE}",
+                )
+            )
+        if collection_key != TECHNIQUE_KIND_SECOND_CUT_COLLECTION_KEY:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"technique second_cut routing must use collection_key '{TECHNIQUE_KIND_SECOND_CUT_COLLECTION_KEY}'",
+                )
+            )
+        if match_field != TECHNIQUE_KIND_SECOND_CUT_MATCH_FIELD:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"technique second_cut routing must use match_field '{TECHNIQUE_KIND_SECOND_CUT_MATCH_FIELD}'",
+                )
+            )
+        if selection_axis != TECHNIQUE_KIND_SECOND_CUT_SELECTION_AXIS:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    f"technique second_cut routing must use selection_axis '{TECHNIQUE_KIND_SECOND_CUT_SELECTION_AXIS}'",
+                )
+            )
+        if prerequisite_axes != expected_prerequisite_axes:
+            issues.append(
+                ValidationIssue(
+                    "task_to_surface_hints.json",
+                    "technique second_cut routing must declare prerequisite_axes ['domain']",
+                )
+            )
+
+        try:
+            payload = ensure_mapping(
+                load_json_file(techniques_root.resolve() / surface_file),
+                manifest_location,
+            )
+            selection_order = ensure_string_list(
+                payload.get("selection_order"),
+                f"{manifest_location}.selection_order",
+            )
+            kind_entries = ensure_list(
+                payload.get(collection_key),
+                f"{manifest_location}.{collection_key}",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue(manifest_location, str(exc)))
+            continue
+
+        kind_values_in_order: list[str] = []
+        seen_kind_values: set[str] = set()
+        covered_technique_ids: set[str] = set()
+        full_domain_counts = {domain: 0 for domain in sorted(all_domains)}
+        for kind_index, raw_kind_entry in enumerate(kind_entries):
+            kind_location = f"{manifest_location}.{collection_key}[{kind_index}]"
+            try:
+                kind_entry = ensure_mapping(raw_kind_entry, kind_location)
+                kind_value = ensure_string(kind_entry.get(match_field), f"{kind_location}.{match_field}")
+                ensure_string(kind_entry.get("summary"), f"{kind_location}.summary")
+                counts = ensure_mapping(kind_entry.get("counts"), f"{kind_location}.counts")
+                technique_ids = ensure_string_list(
+                    kind_entry.get("technique_ids"),
+                    f"{kind_location}.technique_ids",
+                )
+            except RouterError as exc:
+                issues.append(ValidationIssue(manifest_location, str(exc)))
+                continue
+
+            if kind_value in seen_kind_values:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"duplicate kind '{kind_value}' in technique kind manifest",
+                    )
+                )
+                continue
+            seen_kind_values.add(kind_value)
+            kind_values_in_order.append(kind_value)
+
+            raw_total = counts.get("total")
+            raw_canonical = counts.get("canonical")
+            raw_promoted = counts.get("promoted")
+            raw_by_domain = counts.get("by_domain")
+            if not isinstance(raw_total, int) or isinstance(raw_total, bool) or raw_total < 0:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.total must be a non-negative integer",
+                    )
+                )
+            if not isinstance(raw_canonical, int) or isinstance(raw_canonical, bool) or raw_canonical < 0:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.canonical must be a non-negative integer",
+                    )
+                )
+            if not isinstance(raw_promoted, int) or isinstance(raw_promoted, bool) or raw_promoted < 0:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.promoted must be a non-negative integer",
+                    )
+                )
+            if not isinstance(raw_by_domain, dict):
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.by_domain must be an object",
+                    )
+                )
+                raw_by_domain = {}
+
+            unknown_ids = sorted(set(technique_ids) - set(technique_catalog_index))
+            for technique_id in unknown_ids:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.technique_ids contains unknown technique '{technique_id}'",
+                    )
+                )
+            overlapping_ids = sorted(covered_technique_ids & set(technique_ids))
+            for technique_id in overlapping_ids:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"technique '{technique_id}' must not appear in more than one kind bucket",
+                    )
+                )
+
+            actual_total = 0
+            actual_canonical = 0
+            actual_promoted = 0
+            actual_by_domain = dict(full_domain_counts)
+            for technique_id in technique_ids:
+                info = technique_catalog_index.get(technique_id)
+                if info is None:
+                    continue
+                covered_technique_ids.add(technique_id)
+                actual_total += 1
+                if info["status"] == "canonical":
+                    actual_canonical += 1
+                if info["status"] == "promoted":
+                    actual_promoted += 1
+                actual_by_domain[info["domain"]] = actual_by_domain.get(info["domain"], 0) + 1
+
+            normalized_by_domain: dict[str, int] = {}
+            for domain_name, value in sorted(raw_by_domain.items()):
+                if not isinstance(domain_name, str) or not domain_name.strip():
+                    issues.append(
+                        ValidationIssue(
+                            manifest_location,
+                            f"{kind_location}.counts.by_domain keys must be non-empty strings",
+                        )
+                    )
+                    continue
+                if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+                    issues.append(
+                        ValidationIssue(
+                            manifest_location,
+                            f"{kind_location}.counts.by_domain.{domain_name} must be a non-negative integer",
+                        )
+                    )
+                    continue
+                normalized_by_domain[domain_name] = value
+
+            if raw_total != actual_total:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.total must match technique_ids coverage",
+                    )
+                )
+            if raw_canonical != actual_canonical:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.canonical must match technique catalog status counts",
+                    )
+                )
+            if raw_promoted != actual_promoted:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.promoted must match technique catalog status counts",
+                    )
+                )
+            if normalized_by_domain != actual_by_domain:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.counts.by_domain must match technique catalog domain counts",
+                    )
+                )
+
+        if selection_order != kind_values_in_order:
+            issues.append(
+                ValidationIssue(
+                    manifest_location,
+                    "selection_order must match the published kind entry order",
+                )
+            )
+        if expected_technique_ids != covered_technique_ids:
+            missing_ids = sorted(expected_technique_ids - covered_technique_ids)
+            unexpected_ids = sorted(covered_technique_ids - expected_technique_ids)
+            for technique_id in missing_ids:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"technique kind manifest is missing routed technique '{technique_id}'",
+                    )
+                )
+            for technique_id in unexpected_ids:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"technique kind manifest contains unrouted technique '{technique_id}'",
+                    )
+                )
+
+    if not technique_hint_found:
+        issues.append(
+            ValidationIssue(
+                "task_to_surface_hints.json",
+                "task_to_surface_hints.json must publish a technique hint with second_cut routing",
+            )
+        )
 
 
 def validate_tiny_model_entrypoints(
@@ -4575,6 +4924,13 @@ def validate_generated_outputs(
         projection_safe_registry_entries,
         hints_payload,
         generated_dir,
+        issues,
+    )
+    validate_technique_second_cut_targets(
+        projection_safe_registry_entries,
+        technique_catalog_entries,
+        hints_payload,
+        techniques_root,
         issues,
     )
     validate_recall_targets(hints_payload, memo_root, issues)

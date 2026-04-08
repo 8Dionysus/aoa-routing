@@ -106,6 +106,12 @@ AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF = (
 )
 AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF = "aoa-techniques/generated/technique_catalog.min.json"
 AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS = ("AOA-T-0001", "AOA-T-0002", "AOA-T-0003")
+TECHNIQUE_KIND_SECOND_CUT_SOURCE_REPO = "aoa-techniques"
+TECHNIQUE_KIND_SECOND_CUT_SURFACE_FILE = "generated/technique_kind_manifest.min.json"
+TECHNIQUE_KIND_SECOND_CUT_COLLECTION_KEY = "kinds"
+TECHNIQUE_KIND_SECOND_CUT_MATCH_FIELD = "kind"
+TECHNIQUE_KIND_SECOND_CUT_SELECTION_AXIS = "kind"
+TECHNIQUE_KIND_SECOND_CUT_PREREQUISITE_AXES = ("domain",)
 TOS_KAG_VIEW_ENTRY_ID = TOS_REPO
 TOS_KAG_VIEW_ENTRY_SURFACE_REFS = (
     "Tree-of-Sophia/README.md",
@@ -2310,6 +2316,13 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
         recall_contracts_by_mode: dict[str, str] | None = None,
         recall_capsule_surfaces_by_mode: dict[str, str] | None = None,
         recall_parallel_families: dict[str, dict[str, Any]] | None = None,
+        second_cut_enabled: bool = False,
+        second_cut_surface_repo: str | None = None,
+        second_cut_surface_file: str | None = None,
+        second_cut_collection_key: str | None = None,
+        second_cut_match_field: str | None = None,
+        second_cut_selection_axis: str | None = None,
+        second_cut_prerequisite_axes: list[str] | None = None,
     ) -> dict[str, dict[str, Any]]:
         inspect: dict[str, Any] = {"enabled": inspect_enabled}
         if inspect_enabled:
@@ -2341,13 +2354,24 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
                     family_name: dict(family_payload)
                     for family_name, family_payload in sorted(recall_parallel_families.items())
                 }
-        return {
+        actions: dict[str, dict[str, Any]] = {
             "pick": {"enabled": pick_enabled},
             "inspect": inspect,
             "expand": expand,
             "pair": pair,
             "recall": recall,
         }
+        if second_cut_enabled:
+            actions["second_cut"] = {
+                "enabled": True,
+                "surface_repo": second_cut_surface_repo,
+                "surface_file": second_cut_surface_file,
+                "collection_key": second_cut_collection_key,
+                "match_field": second_cut_match_field,
+                "selection_axis": second_cut_selection_axis,
+                "prerequisite_axes": list(second_cut_prerequisite_axes or []),
+            }
+        return actions
 
     memo_surfaces = load_memo_catalog_surfaces(memo_root)
     (
@@ -2409,6 +2433,15 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
                     pair_surface_repo=PAIRING_SURFACE_REPO,
                     pair_surface_file=PAIRING_SURFACE_FILE,
                     pair_match_field="id",
+                    second_cut_enabled=True,
+                    second_cut_surface_repo=TECHNIQUE_KIND_SECOND_CUT_SOURCE_REPO,
+                    second_cut_surface_file=TECHNIQUE_KIND_SECOND_CUT_SURFACE_FILE,
+                    second_cut_collection_key=TECHNIQUE_KIND_SECOND_CUT_COLLECTION_KEY,
+                    second_cut_match_field=TECHNIQUE_KIND_SECOND_CUT_MATCH_FIELD,
+                    second_cut_selection_axis=TECHNIQUE_KIND_SECOND_CUT_SELECTION_AXIS,
+                    second_cut_prerequisite_axes=list(
+                        TECHNIQUE_KIND_SECOND_CUT_PREREQUISITE_AXES
+                    ),
                 ),
             },
             {
