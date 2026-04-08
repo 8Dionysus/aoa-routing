@@ -14,6 +14,7 @@ LIVE_ROOTS = {
     "aoa-skills": Path("/srv/aoa-skills"),
     "aoa-evals": Path("/srv/aoa-evals"),
     "aoa-memo": Path("/srv/aoa-memo"),
+    "aoa-stats": Path("/srv/aoa-stats"),
     "aoa-agents": Path("/srv/aoa-agents"),
     "Agents-of-Abyss": Path("/srv/Agents-of-Abyss"),
     "aoa-playbooks": Path("/srv/aoa-playbooks"),
@@ -23,6 +24,15 @@ LIVE_ROOTS = {
 MISSING_LIVE_ROOTS = sorted(
     repo_name for repo_name, repo_root in LIVE_ROOTS.items() if not repo_root.exists()
 )
+LIVE_REQUIRED_INPUTS = {
+    "aoa-stats": [Path("generated/stress_recovery_window_summary.min.json")],
+}
+MISSING_LIVE_INPUTS = sorted(
+    f"{repo_name}/{relative_path.as_posix()}"
+    for repo_name, relative_paths in LIVE_REQUIRED_INPUTS.items()
+    for relative_path in relative_paths
+    if not (LIVE_ROOTS[repo_name] / relative_path).exists()
+)
 
 
 def load_json(path: Path):
@@ -30,8 +40,9 @@ def load_json(path: Path):
 
 
 @unittest.skipUnless(
-    not MISSING_LIVE_ROOTS,
-    f"live /srv workspace roots missing: {', '.join(MISSING_LIVE_ROOTS)}",
+    not MISSING_LIVE_ROOTS and not MISSING_LIVE_INPUTS,
+    "live /srv workspace roots or required generated inputs missing: "
+    + ", ".join(MISSING_LIVE_ROOTS + MISSING_LIVE_INPUTS),
 )
 class LiveWorkspaceContractTests(unittest.TestCase):
     def test_live_workspace_rebuild_matches_checked_in_generated_outputs(self) -> None:
@@ -40,6 +51,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-skills"],
             LIVE_ROOTS["aoa-evals"],
             LIVE_ROOTS["aoa-memo"],
+            LIVE_ROOTS["aoa-stats"],
             LIVE_ROOTS["aoa-agents"],
             LIVE_ROOTS["Agents-of-Abyss"],
             LIVE_ROOTS["aoa-playbooks"],
@@ -61,6 +73,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-skills"],
             LIVE_ROOTS["aoa-evals"],
             LIVE_ROOTS["aoa-memo"],
+            LIVE_ROOTS["aoa-stats"],
             LIVE_ROOTS["aoa-agents"],
             LIVE_ROOTS["Agents-of-Abyss"],
             LIVE_ROOTS["aoa-playbooks"],

@@ -117,6 +117,7 @@ OUTPUT_SCHEMA_NAMES = {
     "aoa_router.min.json": "aoa-router.schema.json",
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
     "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
+    "composite_stress_route_hints.min.json": "composite-stress-route-hints.schema.json",
     "owner_layer_shortlist.min.json": "owner-layer-shortlist.schema.json",
     Path(QUEST_DISPATCH_HINTS_FILE).name: "quest-dispatch-hints.schema.json",
     Path(FEDERATION_ENTRYPOINTS_FILE).name: "federation-entrypoints.schema.json",
@@ -235,6 +236,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT.parent / "aoa-memo",
         help="Path to the aoa-memo repository root. Reserved only in v0.1.",
+    )
+    parser.add_argument(
+        "--stats-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-stats",
+        help="Path to the aoa-stats repository root for additive stress-route inputs.",
     )
     parser.add_argument(
         "--agents-root",
@@ -1137,6 +1144,7 @@ def validate_rebuild_parity(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    stats_root: Path,
     agents_root: Path,
     aoa_root: Path,
     playbooks_root: Path,
@@ -1150,6 +1158,7 @@ def validate_rebuild_parity(
             skills_root.resolve(),
             evals_root.resolve(),
             memo_root.resolve(),
+            stats_root.resolve(),
             agents_root.resolve(),
             aoa_root.resolve(),
             playbooks_root.resolve(),
@@ -4201,6 +4210,7 @@ def validate_generated_outputs(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    stats_root: Path,
     agents_root: Path,
     aoa_root: Path,
     playbooks_root: Path,
@@ -4220,6 +4230,7 @@ def validate_generated_outputs(
     return_navigation_path = generated_dir / Path(RETURN_NAVIGATION_HINTS_FILE).name
     recommended_path = generated_dir / "recommended_paths.min.json"
     relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
+    composite_stress_route_hints_path = generated_dir / "composite_stress_route_hints.min.json"
     pairing_path = generated_dir / "pairing_hints.min.json"
     tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
     two_stage_entrypoints_path = generated_dir / "two_stage_skill_entrypoints.json"
@@ -4237,6 +4248,7 @@ def validate_generated_outputs(
     return_navigation_payload = load_output(return_navigation_path, issues)
     recommended_payload = load_output(recommended_path, issues)
     relation_hints_payload = load_output(relation_hints_path, issues)
+    composite_stress_route_hints_payload = load_output(composite_stress_route_hints_path, issues)
     pairing_payload = load_output(pairing_path, issues)
     tiny_model_payload = load_output(tiny_model_path, issues)
     two_stage_entrypoints_payload = load_output(two_stage_entrypoints_path, issues)
@@ -4256,6 +4268,7 @@ def validate_generated_outputs(
             return_navigation_payload,
             recommended_payload,
             relation_hints_payload,
+            composite_stress_route_hints_payload,
             pairing_payload,
             tiny_model_payload,
             two_stage_entrypoints_payload,
@@ -4278,6 +4291,7 @@ def validate_generated_outputs(
             return_navigation_path.name: return_navigation_payload,
             recommended_path.name: recommended_payload,
             relation_hints_path.name: relation_hints_payload,
+            composite_stress_route_hints_path.name: composite_stress_route_hints_payload,
             pairing_path.name: pairing_payload,
             tiny_model_path.name: tiny_model_payload,
             two_stage_entrypoints_path.name: two_stage_entrypoints_payload,
@@ -4290,6 +4304,7 @@ def validate_generated_outputs(
         skills_root,
         evals_root,
         memo_root,
+        stats_root,
         agents_root,
         aoa_root,
         playbooks_root,
@@ -4308,6 +4323,7 @@ def validate_generated_outputs(
         (return_navigation_path, return_navigation_payload),
         (recommended_path, recommended_payload),
         (relation_hints_path, relation_hints_payload),
+        (composite_stress_route_hints_path, composite_stress_route_hints_payload),
         (pairing_path, pairing_payload),
         (tiny_model_path, tiny_model_payload),
         (two_stage_entrypoints_path, two_stage_entrypoints_payload),
@@ -4702,6 +4718,7 @@ def validate_generated_outputs(
 
 def main() -> int:
     args = parse_args()
+    stats_root = getattr(args, "stats_root", REPO_ROOT.parent / "aoa-stats")
     issues = [
         ValidationIssue(location, message)
         for location, message in validate_nested_agents.run_validation(REPO_ROOT)
@@ -4713,6 +4730,7 @@ def main() -> int:
             args.skills_root,
             args.evals_root,
             args.memo_root,
+            stats_root,
             args.agents_root,
             args.aoa_root,
             args.playbooks_root,

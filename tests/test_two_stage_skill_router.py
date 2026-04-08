@@ -27,6 +27,7 @@ def build_fixture_outputs() -> dict[str, dict[str, object] | list[dict[str, obje
         FIXTURES_ROOT / "aoa-skills",
         FIXTURES_ROOT / "aoa-evals",
         FIXTURES_ROOT / "aoa-memo",
+        FIXTURES_ROOT / "aoa-stats",
         FIXTURES_ROOT / "aoa-agents",
         FIXTURES_ROOT / "Agents-of-Abyss",
         FIXTURES_ROOT / "aoa-playbooks",

@@ -15,6 +15,7 @@ FIXTURE_REPO_NAMES = (
     "aoa-skills",
     "aoa-evals",
     "aoa-memo",
+    "aoa-stats",
     "aoa-agents",
     "Agents-of-Abyss",
     "aoa-playbooks",
@@ -53,6 +54,7 @@ def build_fixture_outputs(
     skills_root: Path = FIXTURES_ROOT / "aoa-skills",
     evals_root: Path = FIXTURES_ROOT / "aoa-evals",
     memo_root: Path = FIXTURES_ROOT / "aoa-memo",
+    stats_root: Path = FIXTURES_ROOT / "aoa-stats",
     agents_root: Path = FIXTURES_ROOT / "aoa-agents",
     aoa_root: Path = FIXTURES_ROOT / "Agents-of-Abyss",
     playbooks_root: Path = FIXTURES_ROOT / "aoa-playbooks",
@@ -64,6 +66,7 @@ def build_fixture_outputs(
         skills_root,
         evals_root,
         memo_root,
+        stats_root,
         agents_root,
         aoa_root,
         playbooks_root,
@@ -222,6 +225,7 @@ def test_build_outputs_rejects_missing_live_quest_catalog_surface(tmp_path: Path
             roots["aoa-skills"],
             roots["aoa-evals"],
             roots["aoa-memo"],
+            roots["aoa-stats"],
             roots["aoa-agents"],
             roots["Agents-of-Abyss"],
             roots["aoa-playbooks"],
@@ -244,6 +248,7 @@ def test_build_outputs_rejects_missing_live_quest_dispatch_surface(tmp_path: Pat
             roots["aoa-skills"],
             roots["aoa-evals"],
             roots["aoa-memo"],
+            roots["aoa-stats"],
             roots["aoa-agents"],
             roots["Agents-of-Abyss"],
             roots["aoa-playbooks"],
@@ -299,6 +304,7 @@ def test_build_outputs_from_fixtures() -> None:
     return_navigation = outputs["return_navigation_hints.min.json"]
     recommended = outputs["recommended_paths.min.json"]
     relation_hints = outputs["kag_source_lift_relation_hints.min.json"]
+    composite = outputs["composite_stress_route_hints.min.json"]
     shortlist = outputs["owner_layer_shortlist.min.json"]
     pairing = outputs["pairing_hints.min.json"]
     quest_dispatch_hints = outputs["quest_dispatch_hints.min.json"]
@@ -333,6 +339,24 @@ def test_build_outputs_from_fixtures() -> None:
         "family_ids": KAG_SOURCE_LIFT_TECHNIQUE_IDS,
         "entries": [],
     }
+    assert composite["schema_version"] == "aoa_routing_composite_stress_route_hints_v1"
+    assert [item["repo"] for item in composite["source_inputs"]] == [
+        "aoa-stats",
+        "aoa-playbooks",
+        "aoa-playbooks",
+        "aoa-kag",
+        "aoa-kag",
+        "aoa-memo",
+    ]
+    assert composite["hints"][0]["preferred_posture"] == "source_first_until_pass"
+    assert composite["hints"][0]["memo_context"] == []
+    assert [step["kind"] for step in composite["hints"][0]["next_hops"]] == [
+        "source_receipt",
+        "playbook_lane",
+        "reentry_gate",
+        "projection_health",
+        "regrounding_ticket",
+    ]
     assert quest_dispatch_hints["version"] == 1
     assert quest_dispatch_hints["wave_scope"] == "source-only"
     assert quest_dispatch_hints["actions_enabled"] == ["inspect", "expand", "handoff"]
@@ -1356,6 +1380,71 @@ def test_build_allows_pending_technique_dependencies_without_creating_paths(tmp_
         for entry in outputs["recommended_paths.min.json"]["entries"]
     }
     assert by_key[("skill", "aoa-context-scan")]["upstream"] == []
+
+
+def test_build_outputs_composite_stress_hints_include_memo_recovery_context(
+    tmp_path: Path,
+) -> None:
+    roots = {}
+    for repo_name in FIXTURE_REPO_NAMES:
+        target = tmp_path / repo_name
+        shutil.copytree(FIXTURES_ROOT / repo_name, target)
+        roots[repo_name] = target
+
+    catalog_path = roots["aoa-memo"] / "generated" / "memory_object_catalog.min.json"
+    catalog_payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    catalog_payload["memory_objects"].append(
+        {
+            "id": "memo.pattern.2026-04-07.antifragility-stress-recovery-window",
+            "kind": "pattern",
+            "title": "Stress recovery stays bounded only when replay follows source receipt, gate, and regrounding order",
+            "summary": "Reviewed recovery pattern for the fourth-wave stress window.",
+            "scope_classes": ["repo", "project"],
+            "temperature": "cool",
+            "review_state": "confirmed",
+            "current_recall_status": "preferred",
+            "authority_kind": "human_reviewed",
+            "primary_recall_modes": ["procedural", "semantic"],
+            "source_path": "examples/pattern.antifragility-stress-recovery-window.example.json",
+            "inspect_key": "memo.pattern.2026-04-07.antifragility-stress-recovery-window",
+            "expand_key": "memo.pattern.2026-04-07.antifragility-stress-recovery-window",
+        }
+    )
+    write_json(catalog_path, catalog_payload)
+
+    outputs = build_router.build_outputs(
+        roots["aoa-techniques"],
+        roots["aoa-skills"],
+        roots["aoa-evals"],
+        roots["aoa-memo"],
+        roots["aoa-stats"],
+        roots["aoa-agents"],
+        roots["Agents-of-Abyss"],
+        roots["aoa-playbooks"],
+        roots["aoa-kag"],
+        roots["Tree-of-Sophia"],
+    )
+
+    hint = outputs["composite_stress_route_hints.min.json"]["hints"][0]
+    assert hint["input_refs"]["memo_pattern_refs"] == [
+        "aoa-memo:examples/pattern.antifragility-stress-recovery-window.example.json"
+    ]
+    assert hint["memo_context"] == [
+        {
+            "memory_id": "memo.pattern.2026-04-07.antifragility-stress-recovery-window",
+            "title": "Stress recovery stays bounded only when replay follows source receipt, gate, and regrounding order",
+            "source_path": "examples/pattern.antifragility-stress-recovery-window.example.json",
+            "review_state": "confirmed",
+            "current_recall_status": "preferred",
+        }
+    ]
+    assert hint["next_hops"][-1] == {
+        "kind": "memo_pattern",
+        "target_repo": "aoa-memo",
+        "target_surface": "examples/pattern.antifragility-stress-recovery-window.example.json",
+        "reason": "Reviewed recovery-pattern context may be recalled after source receipts and re-entry gates are named.",
+        "bounded": True,
+    }
 
 
 def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
