@@ -19,6 +19,7 @@ Use the shortest route by need:
 - current thin-router core: `generated/aoa_router.min.json`, `generated/task_to_surface_hints.json`, `generated/recommended_paths.min.json`, `generated/task_to_tier_hints.json`, and `generated/owner_layer_shortlist.min.json`
 - bounded federation-entry and return posture: `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, [docs/FEDERATION_ENTRY_ABI.md](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY.md](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
 - additive stress-routing contract surfaces: [docs/STRESS_POSTURE_ROUTING.md](docs/STRESS_POSTURE_ROUTING.md), [docs/DEGRADED_ROUTE_HINTS.md](docs/DEGRADED_ROUTE_HINTS.md), `schemas/stress_navigation_hint_v1.json`, and `examples/stress_navigation_hint.example.json`
+- additive composite stress-route family: `generated/composite_stress_route_hints.min.json`, [docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md](docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md), [docs/KAG_QUARANTINE_ROUTE_HINTS.md](docs/KAG_QUARANTINE_ROUTE_HINTS.md), `schemas/composite_stress_route_hint_v1.json`, and `examples/composite_stress_route_hint.example.json`
 - optional wave-9 seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION.md](docs/TWO_STAGE_SKILL_SELECTION.md)
 - current direction: [ROADMAP](ROADMAP.md)
 
@@ -42,6 +43,7 @@ Use this order for the current promoted routing contour:
 - low-context and two-stage routing surfaces: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION](docs/TWO_STAGE_SKILL_SELECTION.md)
 - quest-style adjunct seams: `generated/quest_board.min.example.json`, `generated/quest_dispatch_hints.min.json`, [docs/QUEST_BOARD_SEAM](docs/QUEST_BOARD_SEAM.md), and [docs/QUEST_ROUTING_SEAM](docs/QUEST_ROUTING_SEAM.md)
 - stress-overlay doctrine and contract surfaces: [docs/STRESS_POSTURE_ROUTING](docs/STRESS_POSTURE_ROUTING.md), [docs/DEGRADED_ROUTE_HINTS](docs/DEGRADED_ROUTE_HINTS.md), `schemas/stress_navigation_hint_v1.json`, and `examples/stress_navigation_hint.example.json`
+- additive composite stress-route overlays: `generated/composite_stress_route_hints.min.json`, [docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION](docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md), [docs/KAG_QUARANTINE_ROUTE_HINTS](docs/KAG_QUARANTINE_ROUTE_HINTS.md), `schemas/composite_stress_route_hint_v1.json`, and `examples/composite_stress_route_hint.example.json`
 - local build, schema, and validation path: `schemas/`, `python scripts/build_router.py`, `python scripts/build_router.py --check`, `python scripts/validate_router.py`, `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`, `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`, and `python -m pytest -q tests`
 
 ## What `aoa-routing` owns
@@ -65,11 +67,20 @@ Core inputs include:
 - `aoa-skills/generated/skill_catalog.min.json`
 - `aoa-evals/generated/eval_catalog.min.json`
 - `aoa-memo/generated/memory_catalog.min.json`
+- `aoa-stats/generated/stress_recovery_window_summary.min.json`
 - `aoa-agents/generated/model_tier_registry.json`
 
 The federation-entry seam also reads root or generated entry surfaces from `Agents-of-Abyss`, `Tree-of-Sophia`, `aoa-agents`, `aoa-playbooks`, and `aoa-kag`.
 
 `aoa-routing` no longer parses live `SKILL.md`, `techniques.yaml`, `EVAL.md`, or `eval.yaml`.
+
+The fourth-wave stress overlay reads structured adjunct surfaces only:
+
+- `aoa-playbooks/examples/playbook_stress_lane.example.json`
+- `aoa-playbooks/examples/playbook_reentry_gate.example.json`
+- `aoa-kag/examples/projection_health_receipt.example.json`
+- `aoa-kag/examples/regrounding_ticket.example.json`
+- `aoa-memo/generated/memory_object_catalog.min.json`
 
 ## Generated outputs
 
@@ -77,6 +88,7 @@ The tracked outputs under `generated/` are grouped into four families:
 
 - core routing: `cross_repo_registry.min.json`, `aoa_router.min.json`, `task_to_surface_hints.json`, `task_to_tier_hints.json`, `recommended_paths.min.json`, and `owner_layer_shortlist.min.json`
 - pairing, recall, and return posture: `pairing_hints.min.json`, `kag_source_lift_relation_hints.min.json`, and `return_navigation_hints.min.json`
+- additive stress overlays: `composite_stress_route_hints.min.json`
 - federation entry: `federation_entrypoints.min.json`
 - low-context routing: `tiny_model_entrypoints.json` plus the `two_stage_*` family for the optional wave-9 seam
 
@@ -100,6 +112,11 @@ playbook, agent, technique, or skill meaning.
 Antifragility wave two also stays bounded. The current landing adds routing
 doctrine plus one schema/example contract for stress-aware hints, but it does
 not add a new generated authority layer or change router dispatch logic yet.
+
+Antifragility wave four stays additive too. `composite_stress_route_hints.min.json`
+consumes the new stats summary plus structured playbook, KAG, and memo surfaces,
+but it does not replace `recommended_paths.min.json`, `owner_layer_shortlist.min.json`,
+or thin-router dispatch authority.
 
 For ToS, `tos-root` now hands off first to a source-owned tiny-entry route inside `Tree-of-Sophia`, then to a ToS-specific `kag_view`, and only then to one bounded `aoa-kag` retrieval adjunct. That improves the handoff without turning routing into ToS authority.
 

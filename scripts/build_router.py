@@ -47,6 +47,18 @@ SKILL_SOURCE_TYPE = "generated-catalog"
 EVAL_SOURCE_TYPE = "generated-catalog"
 MEMO_SOURCE_TYPE = "generated-catalog"
 OWNER_LAYER_SHORTLIST_FILE = "generated/owner_layer_shortlist.min.json"
+COMPOSITE_STRESS_ROUTE_HINTS_FILE = "generated/composite_stress_route_hints.min.json"
+STATS_STRESS_RECOVERY_WINDOW_SUMMARY_FILE = "generated/stress_recovery_window_summary.min.json"
+PLAYBOOK_STRESS_LANE_FILE = "examples/playbook_stress_lane.example.json"
+PLAYBOOK_REENTRY_GATE_FILE = "examples/playbook_reentry_gate.example.json"
+KAG_PROJECTION_HEALTH_FILE = "examples/projection_health_receipt.example.json"
+KAG_REGROUNDING_TICKET_FILE = "examples/regrounding_ticket.example.json"
+MEMO_OBJECT_CATALOG_FILE = "generated/memory_object_catalog.min.json"
+MEMO_RECOVERY_PATTERN_MARKERS = (
+    "stress-recovery-window",
+    "recovery-pattern",
+    "antifragility",
+)
 OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
     {
         "shortlist_id": "explicit-request.skills.primary",
@@ -241,6 +253,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT.parent / "aoa-memo",
         help="Path to the aoa-memo repository root for bounded memo routing surfaces.",
+    )
+    parser.add_argument(
+        "--stats-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-stats",
+        help="Path to the aoa-stats repository root for additive stress recovery summary surfaces.",
     )
     parser.add_argument(
         "--agents-root",
@@ -578,6 +596,278 @@ def collect_memo_entries(memo_root: Path) -> list[dict[str, Any]]:
     return entries
 
 
+def load_required_mapping(path: Path) -> dict[str, Any]:
+    return ensure_mapping(load_json_file(path), relative_posix(path))
+
+
+def load_recovery_pattern_contexts(memo_root: Path) -> list[dict[str, Any]]:
+    catalog_path = memo_root / MEMO_OBJECT_CATALOG_FILE
+    payload = load_required_mapping(catalog_path)
+    memory_objects = ensure_list(
+        payload.get("memory_objects"),
+        f"{relative_posix(catalog_path)}.memory_objects",
+    )
+    contexts: list[dict[str, Any]] = []
+    for index, item in enumerate(memory_objects):
+        location = f"{relative_posix(catalog_path)}.memory_objects[{index}]"
+        memory_object = ensure_mapping(item, location)
+        kind = ensure_string(memory_object.get("kind"), f"{location}.kind")
+        if kind != "pattern":
+            continue
+        memory_id = ensure_string(memory_object.get("id"), f"{location}.id")
+        source_path = ensure_repo_relative_path(
+            memory_object.get("source_path"),
+            f"{location}.source_path",
+        )
+        marker_text = f"{memory_id} {source_path}".lower()
+        if not any(marker in marker_text for marker in MEMO_RECOVERY_PATTERN_MARKERS):
+            continue
+        contexts.append(
+            {
+                "memory_id": memory_id,
+                "title": ensure_string(memory_object.get("title"), f"{location}.title"),
+                "source_path": source_path,
+                "review_state": ensure_string(
+                    memory_object.get("review_state"),
+                    f"{location}.review_state",
+                ),
+                "current_recall_status": ensure_string(
+                    memory_object.get("current_recall_status"),
+                    f"{location}.current_recall_status",
+                ),
+            }
+        )
+    return contexts
+
+
+def split_repo_surface_ref(ref: str, *, location: str) -> tuple[str, str]:
+    value = ensure_string(ref, location)
+    if value.startswith("repo:"):
+        trimmed = value[len("repo:") :]
+        repo, separator, surface = trimmed.partition("/")
+        if not separator or not repo or not surface:
+            raise RouterError(f"{location} must use repo:<repo>/<path> form")
+        return repo, surface
+    repo, separator, surface = value.partition("/")
+    if not separator or not repo or not surface:
+        raise RouterError(f"{location} must name <repo>/<path>")
+    return repo, surface
+
+
+def build_composite_stress_route_hints_payload(
+    *,
+    stats_root: Path,
+    playbooks_root: Path,
+    kag_root: Path,
+    memo_root: Path,
+) -> dict[str, Any]:
+    stats_path = stats_root / STATS_STRESS_RECOVERY_WINDOW_SUMMARY_FILE
+    playbook_lane_path = playbooks_root / PLAYBOOK_STRESS_LANE_FILE
+    playbook_gate_path = playbooks_root / PLAYBOOK_REENTRY_GATE_FILE
+    projection_health_path = kag_root / KAG_PROJECTION_HEALTH_FILE
+    regrounding_ticket_path = kag_root / KAG_REGROUNDING_TICKET_FILE
+
+    stats_summary = load_required_mapping(stats_path)
+    playbook_lane = load_required_mapping(playbook_lane_path)
+    playbook_gate = load_required_mapping(playbook_gate_path)
+    projection_health = load_required_mapping(projection_health_path)
+    regrounding_ticket = load_required_mapping(regrounding_ticket_path)
+    memo_contexts = load_recovery_pattern_contexts(memo_root)
+
+    stats_location = relative_posix(stats_path)
+    scope = ensure_mapping(stats_summary.get("scope"), f"{stats_location}.scope")
+    summary = ensure_mapping(stats_summary.get("summary"), f"{stats_location}.summary")
+    inputs = ensure_mapping(stats_summary.get("inputs"), f"{stats_location}.inputs")
+    suppression = ensure_mapping(
+        stats_summary.get("suppression"),
+        f"{stats_location}.suppression",
+    )
+    receipt_refs = ensure_string_list(
+        inputs.get("receipt_refs", []),
+        f"{stats_location}.inputs.receipt_refs",
+    )
+    eval_report_refs = ensure_string_list(
+        inputs.get("eval_report_refs", []),
+        f"{stats_location}.inputs.eval_report_refs",
+    )
+    trend_flags = ensure_string_list(
+        stats_summary.get("trend_flags", []),
+        f"{stats_location}.trend_flags",
+    )
+
+    if receipt_refs:
+        owner_repo, owner_surface = split_repo_surface_ref(
+            receipt_refs[0],
+            location=f"{stats_location}.inputs.receipt_refs[0]",
+        )
+    else:
+        gate_scope = ensure_mapping(playbook_gate.get("scope"), "playbook_reentry_gate.scope")
+        owner_repo = ensure_string(gate_scope.get("repo"), "playbook_reentry_gate.scope.repo")
+        owner_surface = ensure_string(
+            gate_scope.get("surface"),
+            "playbook_reentry_gate.scope.surface",
+        )
+
+    memo_pattern_refs = [context["source_path"] for context in memo_contexts]
+    adjacent_source_refs = ensure_string_list(
+        playbook_gate.get("required_evidence", []),
+        "playbook_reentry_gate.required_evidence",
+    ) + ensure_string_list(
+        projection_health.get("source_fallback_refs", []),
+        "projection_health_receipt.source_fallback_refs",
+    )
+
+    next_hops = [
+        {
+            "kind": "source_receipt",
+            "target_repo": owner_repo,
+            "target_surface": owner_surface,
+            "reason": "Start from the source-owned stress receipt before trusting any downstream route overlay.",
+            "bounded": True,
+        },
+        {
+            "kind": "playbook_lane",
+            "target_repo": "aoa-playbooks",
+            "target_surface": PLAYBOOK_STRESS_LANE_FILE,
+            "reason": "Use the structured degraded lane contract instead of reparsing authored playbook markdown.",
+            "bounded": True,
+        },
+        {
+            "kind": "reentry_gate",
+            "target_repo": "aoa-playbooks",
+            "target_surface": PLAYBOOK_REENTRY_GATE_FILE,
+            "reason": "Re-entry posture stays source-owned by the explicit gate surface.",
+            "bounded": True,
+        },
+        {
+            "kind": "projection_health",
+            "target_repo": "aoa-kag",
+            "target_surface": KAG_PROJECTION_HEALTH_FILE,
+            "reason": "Quarantined or degraded KAG posture must be read from the source-owned health receipt.",
+            "bounded": True,
+        },
+        {
+            "kind": "regrounding_ticket",
+            "target_repo": "aoa-kag",
+            "target_surface": KAG_REGROUNDING_TICKET_FILE,
+            "reason": "Regrounding remains a bounded KAG repair plan, not a router-owned recovery action.",
+            "bounded": True,
+        },
+    ]
+    if memo_contexts:
+        next_hops.append(
+            {
+                "kind": "memo_pattern",
+                "target_repo": "aoa-memo",
+                "target_surface": memo_contexts[0]["source_path"],
+                "reason": "Reviewed recovery-pattern context may be recalled after source receipts and re-entry gates are named.",
+                "bounded": True,
+            }
+        )
+
+    hint = {
+        "schema_version": "composite_stress_route_hint_v1",
+        "hint_id": "composite-stress-route:"
+        + ensure_string(scope.get("stressor_family"), f"{stats_location}.scope.stressor_family"),
+        "stressor_family": ensure_string(
+            scope.get("stressor_family"),
+            f"{stats_location}.scope.stressor_family",
+        ),
+        "owner_surface": {
+            "repo": owner_repo,
+            "surface": owner_surface,
+            "surface_family": ensure_string(
+                scope.get("surface_family"),
+                f"{stats_location}.scope.surface_family",
+            ),
+        },
+        "preferred_posture": ensure_string(
+            regrounding_ticket.get("return_posture"),
+            "regrounding_ticket.return_posture",
+        ),
+        "input_refs": {
+            "stats_summary_ref": f"aoa-stats:{STATS_STRESS_RECOVERY_WINDOW_SUMMARY_FILE}",
+            "playbook_lane_ref": f"aoa-playbooks:{PLAYBOOK_STRESS_LANE_FILE}",
+            "reentry_gate_ref": f"aoa-playbooks:{PLAYBOOK_REENTRY_GATE_FILE}",
+            "projection_health_ref": f"aoa-kag:{KAG_PROJECTION_HEALTH_FILE}",
+            "regrounding_ticket_ref": f"aoa-kag:{KAG_REGROUNDING_TICKET_FILE}",
+            "memo_pattern_refs": [f"aoa-memo:{path}" for path in memo_pattern_refs],
+        },
+        "route_status": {
+            "stats_suppression_status": ensure_string(
+                suppression.get("status"),
+                f"{stats_location}.suppression.status",
+            ),
+            "projection_health_state": ensure_string(
+                projection_health.get("health_state"),
+                "projection_health_receipt.health_state",
+            ),
+            "consumer_posture": ensure_string(
+                projection_health.get("consumer_posture"),
+                "projection_health_receipt.consumer_posture",
+            ),
+            "reentry_decision": ensure_string(
+                playbook_gate.get("decision"),
+                "playbook_reentry_gate.decision",
+            ),
+            "regrounding_status": ensure_string(
+                regrounding_ticket.get("status"),
+                "regrounding_ticket.status",
+            ),
+            "route_discipline": summary.get("route_discipline"),
+            "reentry_quality": summary.get("reentry_quality"),
+            "regrounding_effectiveness": summary.get("regrounding_effectiveness"),
+            "trend_flags": trend_flags,
+        },
+        "source_priority": {
+            "owner_receipt_refs": receipt_refs,
+            "proof_refs": eval_report_refs,
+            "adjacent_source_refs": adjacent_source_refs,
+            "routing_is_advisory": True,
+        },
+        "next_hops": next_hops,
+        "memo_context": memo_contexts,
+        "notes": "Additive stress-route overlay only; do not let this surface override thin-router defaults or source-owned evidence.",
+    }
+
+    return {
+        "schema_version": "aoa_routing_composite_stress_route_hints_v1",
+        "source_inputs": [
+            {
+                "repo": "aoa-stats",
+                "surface_kind": "stress_recovery_window_summary",
+                "ref": STATS_STRESS_RECOVERY_WINDOW_SUMMARY_FILE,
+            },
+            {
+                "repo": "aoa-playbooks",
+                "surface_kind": "playbook_stress_lane",
+                "ref": PLAYBOOK_STRESS_LANE_FILE,
+            },
+            {
+                "repo": "aoa-playbooks",
+                "surface_kind": "playbook_reentry_gate",
+                "ref": PLAYBOOK_REENTRY_GATE_FILE,
+            },
+            {
+                "repo": "aoa-kag",
+                "surface_kind": "projection_health_receipt",
+                "ref": KAG_PROJECTION_HEALTH_FILE,
+            },
+            {
+                "repo": "aoa-kag",
+                "surface_kind": "regrounding_ticket",
+                "ref": KAG_REGROUNDING_TICKET_FILE,
+            },
+            {
+                "repo": "aoa-memo",
+                "surface_kind": "memory_object_catalog",
+                "ref": MEMO_OBJECT_CATALOG_FILE,
+            },
+        ],
+        "hints": [hint],
+    }
+
+
 def dump_jsonl(rows: list[dict[str, Any]]) -> str:
     return "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in rows)
 
@@ -594,6 +884,7 @@ def build_outputs(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    stats_root: Path,
     agents_root: Path,
     aoa_root: Path,
     playbooks_root: Path,
@@ -656,6 +947,12 @@ def build_outputs(
         technique_catalog_source,
         technique_catalog_entries,
     )
+    composite_stress_route_hints_payload = build_composite_stress_route_hints_payload(
+        stats_root=stats_root,
+        playbooks_root=playbooks_root,
+        kag_root=kag_root,
+        memo_root=memo_root,
+    )
     owner_layer_shortlist_payload = build_owner_layer_shortlist_payload()
     pairing_payload = build_pairing_hints_payload(
         registry_entries,
@@ -677,6 +974,7 @@ def build_outputs(
         Path(RETURN_NAVIGATION_HINTS_FILE).name: return_navigation_payload,
         "recommended_paths.min.json": recommended_payload,
         "kag_source_lift_relation_hints.min.json": relation_hints_payload,
+        Path(COMPOSITE_STRESS_ROUTE_HINTS_FILE).name: composite_stress_route_hints_payload,
         Path(OWNER_LAYER_SHORTLIST_FILE).name: owner_layer_shortlist_payload,
         "pairing_hints.min.json": pairing_payload,
         "tiny_model_entrypoints.json": tiny_model_entrypoints_payload,
@@ -701,6 +999,7 @@ def main() -> int:
         args.skills_root.resolve(),
         args.evals_root.resolve(),
         args.memo_root.resolve(),
+        args.stats_root.resolve(),
         args.agents_root.resolve(),
         args.aoa_root.resolve(),
         args.playbooks_root.resolve(),
