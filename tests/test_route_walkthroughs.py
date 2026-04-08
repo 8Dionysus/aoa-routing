@@ -409,6 +409,7 @@ def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> Non
     assert starters["tos-root"]["target_value"] in root_by_id
     assert starters["tier-root"]["target_value"] in entry_by_id
     assert starters["kag-view-root"]["target_value"] in entry_by_id
+    assert starters["checkpoint-root"]["target_value"] in entry_by_id
 
     assert entry_by_id["router"]["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
     assert entry_by_id["aoa-techniques"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"

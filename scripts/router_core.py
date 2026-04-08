@@ -3474,6 +3474,15 @@ def build_tiny_model_entrypoints_payload(
             "entry_kind": "runtime_surface",
         },
         {
+            "name": "checkpoint-root",
+            "verb": "inspect",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_key": "id",
+            "target_value": FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID,
+            "entry_kind": "runtime_surface",
+        },
+        {
             "name": "orientation-surface-root",
             "verb": "inspect",
             "source_repo": PAIRING_SURFACE_REPO,

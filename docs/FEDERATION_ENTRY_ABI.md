@@ -169,10 +169,13 @@ Current federation starters are:
 - `kag-view-root`
 - `seed-root`
 - `runtime-surface-root`
+- `checkpoint-root`
 - `orientation-surface-root`
 
 This wave does not add a separate tiny-entry federation starter.
 Small-model ToS entry still begins at `tos-root`.
+A dedicated checkpoint starter reuses the existing `aoa-sdk-control-plane`
+runtime entry instead of creating a new federation kind.
 
 A dedicated `return_navigation_hints` surface may coexist with federation entry cards so that small-model recovery stays explicit without widening the authority boundary.
 

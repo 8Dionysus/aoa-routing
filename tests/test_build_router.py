@@ -1029,6 +1029,15 @@ def test_build_outputs_from_fixtures() -> None:
             "entry_kind": "runtime_surface",
         },
         {
+            "name": "checkpoint-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "aoa-sdk-control-plane",
+            "entry_kind": "runtime_surface",
+        },
+        {
             "name": "orientation-surface-root",
             "verb": "inspect",
             "source_repo": "aoa-routing",
