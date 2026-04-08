@@ -33,6 +33,12 @@ jobs:
           repository: 8Dionysus/aoa-evals
           path: aoa-evals
 
+      - name: Checkout aoa-stats
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: 8Dionysus/aoa-stats
+          path: aoa-stats
+
       - name: Checkout aoa-memo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
@@ -83,6 +89,7 @@ jobs:
             --techniques-root ./aoa-techniques \
             --skills-root ./aoa-skills \
             --evals-root ./aoa-evals \
+            --stats-root ./aoa-stats \
             --memo-root ./aoa-memo \
             --agents-root ./aoa-agents \
             --aoa-root ./Agents-of-Abyss \
@@ -96,6 +103,7 @@ jobs:
             --techniques-root ./aoa-techniques \
             --skills-root ./aoa-skills \
             --evals-root ./aoa-evals \
+            --stats-root ./aoa-stats \
             --memo-root ./aoa-memo \
             --agents-root ./aoa-agents \
             --aoa-root ./Agents-of-Abyss \
