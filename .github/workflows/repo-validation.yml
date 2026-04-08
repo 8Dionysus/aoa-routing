@@ -17,63 +17,70 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-techniques
-          ref: 77610ceae53eea70524bfb25e06b93ce94ebc26b
+          ref: 5c6f0496edc3c2e74590baa35627c85fe58ef765
           path: aoa-techniques
 
       - name: Checkout aoa-skills
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-skills
-          ref: ac553fb504ac3b8784dc4dd381014c28ccdb9d52
+          ref: c0ae5fae80e2f8e234b560a3da913a34f9a8f616
           path: aoa-skills
 
       - name: Checkout aoa-evals
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-evals
-          ref: a75d0738f33ac4af8777faccc346753aaefe7a71
+          ref: be8475bc5095b8797f736cfc8a60ef3d2a9e9d79
           path: aoa-evals
+
+      - name: Checkout aoa-stats
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: 8Dionysus/aoa-stats
+          ref: d5d2df835125e7f86dc05e8928246fc781f06272
+          path: aoa-stats
 
       - name: Checkout aoa-memo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-memo
-          ref: 23f6a7c01cb5baeea52f44a6df563779b353b998
+          ref: d7fbc8d6e8cec5e757170ef4355ae5afbdc9ab7d
           path: aoa-memo
 
       - name: Checkout aoa-agents
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-agents
-          ref: fb41a4062c5026969bf29ad32d09c50ff5911083
+          ref: 071477bf240c7589d7446e9befe84393591a2a08
           path: aoa-agents
 
       - name: Checkout Agents-of-Abyss
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Agents-of-Abyss
-          ref: ab0703be01ec68b62f0496aac43a7f12664fe1b6
+          ref: e8c6b979e891bfc0064b6b3a9f02655ff859530a
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-playbooks
-          ref: 90c35ad1e449d76332118657de1fe4220dd12938
+          ref: 1b5dc324d5bb5f643e23be98fd725ffc7160e5f2
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-kag
-          ref: 20be6c8903d3a5be0a638ed66841e3a7eb8f975d
+          ref: 1556b070052360301d8eba91a0e98547e75f3e46
           path: aoa-kag
 
       - name: Checkout Tree-of-Sophia
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Tree-of-Sophia
-          ref: 88ab3f62c21662283e0c1eebb42741a2d6fc653e
+          ref: a0e31efc55d12f1b62b3cbbf6309b64032336027
           path: Tree-of-Sophia
 
       - name: Setup Python
@@ -90,6 +97,7 @@ jobs:
             --techniques-root ./aoa-techniques \
             --skills-root ./aoa-skills \
             --evals-root ./aoa-evals \
+            --stats-root ./aoa-stats \
             --memo-root ./aoa-memo \
             --agents-root ./aoa-agents \
             --aoa-root ./Agents-of-Abyss \
@@ -103,6 +111,7 @@ jobs:
             --techniques-root ./aoa-techniques \
             --skills-root ./aoa-skills \
             --evals-root ./aoa-evals \
+            --stats-root ./aoa-stats \
             --memo-root ./aoa-memo \
             --agents-root ./aoa-agents \
             --aoa-root ./Agents-of-Abyss \
