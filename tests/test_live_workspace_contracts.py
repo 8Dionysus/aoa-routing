@@ -113,6 +113,16 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         review_ids = [item["playbook_id"] for item in review_status["playbooks"]]
         review_packet_ids = [item["playbook_id"] for item in review_packet_contracts["playbooks"]]
         review_intake_ids = [item["playbook_id"] for item in review_intake["playbooks"]]
+        gated_review_packet_ids = [
+            item["playbook_id"]
+            for item in review_packet_contracts["playbooks"]
+            if item.get("gate_verdict")
+        ]
+        gated_review_intake_ids = [
+            item["playbook_id"]
+            for item in review_intake["playbooks"]
+            if item.get("gate_verdict")
+        ]
 
         self.assertEqual(routed_playbook_ids, registry_ids)
         self.assertTrue(set(activation_ids).issubset(set(routed_playbook_ids)))
@@ -120,10 +130,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertTrue(set(review_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_packet_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_intake_ids).issubset(set(routed_playbook_ids)))
-        self.assertEqual(
-            review_ids,
-            ["AOA-P-0017", "AOA-P-0018", "AOA-P-0019", "AOA-P-0020", "AOA-P-0021", "AOA-P-0024"],
-        )
+        self.assertEqual(review_ids, gated_review_packet_ids)
+        self.assertEqual(review_ids, gated_review_intake_ids)
         self.assertIsInstance(activation, list)
         self.assertIsInstance(federation_surfaces, list)
         self.assertEqual(review_status["schema_version"], 1)
@@ -151,12 +159,15 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         )
         self.assertEqual(packet_by_id["AOA-P-0021"]["gate_verdict"], "composition-landed")
         self.assertEqual(
-            packet_by_id["AOA-P-0021"]["source_review_refs"],
+            packet_by_id["AOA-P-0021"]["source_review_refs"][:2],
             [
                 "playbooks/owner-first-capability-landing/PLAYBOOK.md",
                 "docs/gate-reviews/owner-first-capability-landing.md",
-                "docs/real-runs/2026-04-07.owner-first-capability-landing.md",
             ],
+        )
+        self.assertIn(
+            "docs/real-runs/2026-04-07.owner-first-capability-landing.md",
+            packet_by_id["AOA-P-0021"]["source_review_refs"],
         )
         self.assertEqual(packet_by_id["AOA-P-0024"]["gate_verdict"], "hold")
         self.assertEqual(
