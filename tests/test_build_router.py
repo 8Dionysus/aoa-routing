@@ -16,11 +16,15 @@ FIXTURE_REPO_NAMES = (
     "aoa-evals",
     "aoa-memo",
     "aoa-stats",
+    "aoa-sdk",
     "aoa-agents",
     "Agents-of-Abyss",
     "aoa-playbooks",
     "aoa-kag",
     "Tree-of-Sophia",
+    "Dionysus",
+    "8Dionysus",
+    "abyss-stack",
 )
 KAG_SOURCE_LIFT_TECHNIQUE_IDS = [
     "AOA-T-0018",
@@ -55,11 +59,15 @@ def build_fixture_outputs(
     evals_root: Path = FIXTURES_ROOT / "aoa-evals",
     memo_root: Path = FIXTURES_ROOT / "aoa-memo",
     stats_root: Path = FIXTURES_ROOT / "aoa-stats",
+    sdk_root: Path = FIXTURES_ROOT / "aoa-sdk",
     agents_root: Path = FIXTURES_ROOT / "aoa-agents",
     aoa_root: Path = FIXTURES_ROOT / "Agents-of-Abyss",
     playbooks_root: Path = FIXTURES_ROOT / "aoa-playbooks",
     kag_root: Path = FIXTURES_ROOT / "aoa-kag",
     tos_root: Path = FIXTURES_ROOT / "Tree-of-Sophia",
+    seed_root: Path = FIXTURES_ROOT / "Dionysus",
+    profile_root: Path = FIXTURES_ROOT / "8Dionysus",
+    abyss_stack_root: Path = FIXTURES_ROOT / "abyss-stack",
 ) -> dict[str, dict[str, object]]:
     return build_router.build_outputs(
         techniques_root,
@@ -72,6 +80,10 @@ def build_fixture_outputs(
         playbooks_root,
         kag_root,
         tos_root,
+        sdk_root,
+        seed_root,
+        profile_root,
+        abyss_stack_root,
     )
 
 
@@ -231,6 +243,10 @@ def test_build_outputs_rejects_missing_live_quest_catalog_surface(tmp_path: Path
             roots["aoa-playbooks"],
             roots["aoa-kag"],
             roots["Tree-of-Sophia"],
+            roots["aoa-sdk"],
+            roots["Dionysus"],
+            roots["8Dionysus"],
+            roots["abyss-stack"],
         )
 
 
@@ -254,6 +270,10 @@ def test_build_outputs_rejects_missing_live_quest_dispatch_surface(tmp_path: Pat
             roots["aoa-playbooks"],
             roots["aoa-kag"],
             roots["Tree-of-Sophia"],
+            roots["aoa-sdk"],
+            roots["Dionysus"],
+            roots["8Dionysus"],
+            roots["abyss-stack"],
         )
 
 
@@ -588,8 +608,16 @@ def test_build_outputs_from_fixtures() -> None:
         ],
     }
     assert federation["version"] == 1
-    assert federation["active_entry_kinds"] == ["agent", "tier", "playbook", "kag_view"]
-    assert federation["declared_entry_kinds"] == ["seed", "tos_node", "runtime_surface"]
+    assert federation["active_entry_kinds"] == [
+        "agent",
+        "tier",
+        "playbook",
+        "kag_view",
+        "seed",
+        "runtime_surface",
+        "orientation_surface",
+    ]
+    assert federation["declared_entry_kinds"] == ["tos_node"]
     assert return_navigation["version"] == 1
     memo_return = next(
         record for record in return_navigation["thin_router_returns"] if record["context_kind"] == "memo"
@@ -649,6 +677,36 @@ def test_build_outputs_from_fixtures() -> None:
         "target_surface": "generated/federation_entrypoints.min.json",
         "match_field": "kind",
         "target_value": "playbook",
+    }
+    seed_return = next(
+        record
+        for record in return_navigation["federation_kind_returns"]
+        if record["entry_kind"] == "seed"
+    )
+    assert seed_return["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "Dionysus",
+        "target_surface": "seed-registry.yaml",
+    }
+    runtime_return = next(
+        record
+        for record in return_navigation["federation_kind_returns"]
+        if record["entry_kind"] == "runtime_surface"
+    )
+    assert runtime_return["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-sdk",
+        "target_surface": ".aoa/workspace.toml",
+    }
+    orientation_return = next(
+        record
+        for record in return_navigation["federation_kind_returns"]
+        if record["entry_kind"] == "orientation_surface"
+    )
+    assert orientation_return["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "8Dionysus",
+        "target_surface": "generated/public_route_map.min.json",
     }
     assert federation["source_inputs"][1:3] == [
         {
@@ -816,7 +874,15 @@ def test_build_outputs_from_fixtures() -> None:
             "source_repo": "aoa-routing",
             "target_surface": "generated/federation_entrypoints.min.json",
             "match_key": "kind",
-            "allowed_entry_kinds": ["agent", "tier", "playbook", "kag_view"],
+            "allowed_entry_kinds": [
+                "agent",
+                "tier",
+                "playbook",
+                "kag_view",
+                "seed",
+                "runtime_surface",
+                "orientation_surface",
+            ],
         },
         {
             "name": "federation-entry-inspect",
@@ -824,7 +890,15 @@ def test_build_outputs_from_fixtures() -> None:
             "source_repo": "aoa-routing",
             "target_surface": "generated/federation_entrypoints.min.json",
             "match_key": "id",
-            "allowed_entry_kinds": ["agent", "tier", "playbook", "kag_view"],
+            "allowed_entry_kinds": [
+                "agent",
+                "tier",
+                "playbook",
+                "kag_view",
+                "seed",
+                "runtime_surface",
+                "orientation_surface",
+            ],
         },
         {
             "name": "federation-root-inspect",
@@ -893,6 +967,33 @@ def test_build_outputs_from_fixtures() -> None:
             "match_key": "id",
             "target_value": "aoa-techniques",
             "entry_kind": "kag_view",
+        },
+        {
+            "name": "seed-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "dionysus-seed-garden",
+            "entry_kind": "seed",
+        },
+        {
+            "name": "runtime-surface-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "aoa-sdk-control-plane",
+            "entry_kind": "runtime_surface",
+        },
+        {
+            "name": "orientation-surface-root",
+            "verb": "inspect",
+            "source_repo": "aoa-routing",
+            "target_surface": "generated/federation_entrypoints.min.json",
+            "match_key": "id",
+            "target_value": "8dionysus-public-route-map",
+            "entry_kind": "orientation_surface",
         },
     ]
 
@@ -1432,6 +1533,10 @@ def test_build_outputs_composite_stress_hints_include_memo_recovery_context(
         roots["aoa-playbooks"],
         roots["aoa-kag"],
         roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
     )
 
     hint = outputs["composite_stress_route_hints.min.json"]["hints"][0]

@@ -15,17 +15,22 @@ LIVE_ROOTS = {
     "aoa-evals": Path("/srv/aoa-evals"),
     "aoa-memo": Path("/srv/aoa-memo"),
     "aoa-stats": Path("/srv/aoa-stats"),
+    "aoa-sdk": Path("/srv/aoa-sdk"),
     "aoa-agents": Path("/srv/aoa-agents"),
     "Agents-of-Abyss": Path("/srv/Agents-of-Abyss"),
     "aoa-playbooks": Path("/srv/aoa-playbooks"),
     "aoa-kag": Path("/srv/aoa-kag"),
     "Tree-of-Sophia": Path("/srv/Tree-of-Sophia"),
+    "Dionysus": Path("/srv/Dionysus"),
+    "8Dionysus": Path("/srv/8Dionysus"),
+    "abyss-stack": Path("/home/dionysus/src/abyss-stack"),
 }
 MISSING_LIVE_ROOTS = sorted(
     repo_name for repo_name, repo_root in LIVE_ROOTS.items() if not repo_root.exists()
 )
 LIVE_REQUIRED_INPUTS = {
     "aoa-stats": [Path("generated/stress_recovery_window_summary.min.json")],
+    "8Dionysus": [Path("generated/public_route_map.min.json")],
 }
 MISSING_LIVE_INPUTS = sorted(
     f"{repo_name}/{relative_path.as_posix()}"
@@ -57,6 +62,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-playbooks"],
             LIVE_ROOTS["aoa-kag"],
             LIVE_ROOTS["Tree-of-Sophia"],
+            LIVE_ROOTS["aoa-sdk"],
+            LIVE_ROOTS["Dionysus"],
+            LIVE_ROOTS["8Dionysus"],
+            LIVE_ROOTS["abyss-stack"],
         )
 
         mismatches = build_router.validate_generated_dir_matches_outputs(
@@ -79,6 +88,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-playbooks"],
             LIVE_ROOTS["aoa-kag"],
             LIVE_ROOTS["Tree-of-Sophia"],
+            LIVE_ROOTS["aoa-sdk"],
+            LIVE_ROOTS["Dionysus"],
+            LIVE_ROOTS["8Dionysus"],
+            LIVE_ROOTS["abyss-stack"],
         )
 
         self.assertEqual(issues, [])

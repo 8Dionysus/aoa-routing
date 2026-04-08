@@ -33,6 +33,10 @@ def build_fixture_outputs() -> dict[str, dict[str, object] | list[dict[str, obje
         FIXTURES_ROOT / "aoa-playbooks",
         FIXTURES_ROOT / "aoa-kag",
         FIXTURES_ROOT / "Tree-of-Sophia",
+        FIXTURES_ROOT / "aoa-sdk",
+        FIXTURES_ROOT / "Dionysus",
+        FIXTURES_ROOT / "8Dionysus",
+        FIXTURES_ROOT / "abyss-stack",
     )
 
 

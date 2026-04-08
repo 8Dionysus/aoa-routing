@@ -16,11 +16,15 @@ FIXTURE_REPO_NAMES = (
     "aoa-evals",
     "aoa-memo",
     "aoa-stats",
+    "aoa-sdk",
     "aoa-agents",
     "Agents-of-Abyss",
     "aoa-playbooks",
     "aoa-kag",
     "Tree-of-Sophia",
+    "Dionysus",
+    "8Dionysus",
+    "abyss-stack",
 )
 WALKTHROUGHS = json.loads((FIXTURES_ROOT / "route_walkthroughs.json").read_text(encoding="utf-8"))[
     "walkthroughs"
@@ -223,6 +227,10 @@ def build_fixture_outputs(roots: dict[str, Path]) -> dict[str, dict[str, object]
         roots["aoa-playbooks"],
         roots["aoa-kag"],
         roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
     )
 
 

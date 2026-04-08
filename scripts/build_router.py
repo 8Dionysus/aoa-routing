@@ -127,6 +127,61 @@ OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
         "ambiguity": "clear",
     },
     {
+        "shortlist_id": "explicit-request.sdk.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-sdk",
+        "object_kind": "runtime_surface",
+        "target_surface": "aoa-sdk.workspace_control_plane",
+        "inspect_surface": "aoa-sdk.workspace_control_plane",
+        "hint_reason": "explicit control-plane requests should inspect aoa-sdk before widening into runtime or profile lanes",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.stats.primary",
+        "signal": "explicit-request",
+        "owner_repo": "aoa-stats",
+        "object_kind": "runtime_surface",
+        "target_surface": "aoa-stats.summary_surface_catalog.min",
+        "inspect_surface": "aoa-stats.summary_surface_catalog.min",
+        "hint_reason": "explicit derived-observability requests should inspect aoa-stats summary surfaces directly",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.seed.primary",
+        "signal": "explicit-request",
+        "owner_repo": "Dionysus",
+        "object_kind": "seed",
+        "target_surface": "Dionysus.seed_registry",
+        "inspect_surface": "Dionysus.seed_registry",
+        "hint_reason": "explicit seed or staging requests should inspect the Dionysus seed registry before crossing into owner repos",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.runtime.primary",
+        "signal": "explicit-request",
+        "owner_repo": "abyss-stack",
+        "object_kind": "runtime_surface",
+        "target_surface": "abyss-stack.diagnostic_spine",
+        "inspect_surface": "abyss-stack.diagnostic_spine",
+        "hint_reason": "explicit runtime-body requests should inspect the abyss-stack diagnostic spine instead of inferring runtime authority from routing",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
+        "shortlist_id": "explicit-request.profile.primary",
+        "signal": "explicit-request",
+        "owner_repo": "8Dionysus",
+        "object_kind": "orientation_surface",
+        "target_surface": "8Dionysus.public_route_map",
+        "inspect_surface": "8Dionysus.public_route_map",
+        "hint_reason": "explicit profile-orientation requests should inspect the public route map before treating the profile as an authority layer",
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
         "shortlist_id": "proof-need.evals.primary",
         "signal": "proof-need",
         "owner_repo": "aoa-evals",
@@ -289,6 +344,30 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=REPO_ROOT.parent / "Tree-of-Sophia",
         help="Path to the Tree-of-Sophia repository root for federation root entry surfaces.",
+    )
+    parser.add_argument(
+        "--sdk-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-sdk",
+        help="Path to the aoa-sdk repository root for runtime control-plane federation entries.",
+    )
+    parser.add_argument(
+        "--seed-root",
+        type=Path,
+        default=REPO_ROOT.parent / "Dionysus",
+        help="Path to the Dionysus repository root for seed federation entries.",
+    )
+    parser.add_argument(
+        "--profile-root",
+        type=Path,
+        default=REPO_ROOT.parent / "8Dionysus",
+        help="Path to the 8Dionysus repository root for public orientation federation entries.",
+    )
+    parser.add_argument(
+        "--abyss-stack-root",
+        type=Path,
+        default=Path.home() / "src" / "abyss-stack",
+        help="Path to the abyss-stack source checkout for runtime federation entries.",
     )
     parser.add_argument(
         "--generated-dir",
@@ -890,7 +969,15 @@ def build_outputs(
     playbooks_root: Path,
     kag_root: Path,
     tos_root: Path,
+    sdk_root: Path | None = None,
+    seed_root: Path | None = None,
+    profile_root: Path | None = None,
+    abyss_stack_root: Path | None = None,
 ) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
+    sdk_root = sdk_root or (REPO_ROOT.parent / "aoa-sdk")
+    seed_root = seed_root or (REPO_ROOT.parent / "Dionysus")
+    profile_root = profile_root or (REPO_ROOT.parent / "8Dionysus")
+    abyss_stack_root = abyss_stack_root or (Path.home() / "src" / "abyss-stack")
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
         techniques_root
     )
@@ -927,6 +1014,11 @@ def build_outputs(
         playbooks_root,
         kag_root,
         tos_root,
+        sdk_root,
+        stats_root,
+        seed_root,
+        profile_root,
+        abyss_stack_root,
     )
     return_navigation_payload = build_return_navigation_hints_payload(
         techniques_root,
@@ -938,6 +1030,9 @@ def build_outputs(
         playbooks_root,
         kag_root,
         tos_root,
+        sdk_root,
+        seed_root,
+        profile_root,
         hints_payload,
         federation_entrypoints_payload,
     )
@@ -1005,6 +1100,10 @@ def main() -> int:
         args.playbooks_root.resolve(),
         args.kag_root.resolve(),
         args.tos_root.resolve(),
+        args.sdk_root.resolve(),
+        args.seed_root.resolve(),
+        args.profile_root.resolve(),
+        args.abyss_stack_root.resolve(),
     )
     generated_dir = args.generated_dir.resolve()
     generated_dir.mkdir(parents=True, exist_ok=True)

@@ -66,9 +66,14 @@
         "aoa-skills",
         "aoa-evals",
         "aoa-memo",
+        "aoa-sdk",
+        "aoa-stats",
         "aoa-agents",
         "aoa-playbooks",
         "aoa-kag",
+        "8Dionysus",
+        "Dionysus",
+        "abyss-stack",
         "Agents-of-Abyss",
         "Tree-of-Sophia"
       ]
@@ -76,16 +81,21 @@
     "ownerRepo": {
       "type": "string",
       "enum": [
+        "aoa-sdk",
+        "aoa-stats",
         "aoa-agents",
         "aoa-playbooks",
         "aoa-kag",
+        "8Dionysus",
+        "Dionysus",
+        "abyss-stack",
         "Agents-of-Abyss",
         "Tree-of-Sophia"
       ]
     },
     "surfaceRef": {
       "type": "string",
-      "pattern": "^(aoa-routing|aoa-techniques|aoa-skills|aoa-evals|aoa-memo|aoa-agents|aoa-playbooks|aoa-kag|Agents-of-Abyss|Tree-of-Sophia):.+$"
+      "pattern": "^(aoa-routing|aoa-techniques|aoa-skills|aoa-evals|aoa-memo|aoa-sdk|aoa-stats|aoa-agents|aoa-playbooks|aoa-kag|8Dionysus|Dionysus|abyss-stack|Agents-of-Abyss|Tree-of-Sophia):.+$"
     },
     "activeEntryKind": {
       "type": "string",
@@ -93,15 +103,16 @@
         "agent",
         "tier",
         "playbook",
-        "kag_view"
+        "kag_view",
+        "seed",
+        "runtime_surface",
+        "orientation_surface"
       ]
     },
     "declaredEntryKind": {
       "type": "string",
       "enum": [
-        "seed",
-        "tos_node",
-        "runtime_surface"
+        "tos_node"
       ]
     },
     "nextHop": {

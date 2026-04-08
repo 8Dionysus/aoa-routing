@@ -31,6 +31,10 @@ The authority plane should stay upstream:
 - `aoa-agents` owns agent and tier authority
 - `aoa-playbooks` owns playbook authority
 - `aoa-kag` owns KAG doctrine for the derived readiness view
+- `Dionysus` owns seed lineage for seed-entry orientation
+- `aoa-sdk` owns the control-plane anchor for runtime-surface re-entry
+- `aoa-stats` and `abyss-stack` remain owner repos for their own runtime-facing surfaces
+- `8Dionysus` owns public orientation only, never owner-layer authority
 
 ## Model Criterion
 
@@ -41,7 +45,7 @@ That means:
 - a small model should be able to enter the federation through a stable starter without loading whole repositories raw
 - a stronger model should still see an explicit, reviewable route rather than a hidden router heuristic
 
-## Published v1 Surface
+## Published Surface
 
 `aoa-routing` now publishes:
 
@@ -80,21 +84,22 @@ Each root card must include:
 
 ## Active And Declared Kinds
 
-v1 active entry kinds:
+Current active entry kinds:
 
 - `agent`
 - `tier`
 - `playbook`
 - `kag_view`
-
-v1 declared but inactive kinds:
-
 - `seed`
-- `tos_node`
 - `runtime_surface`
+- `orientation_surface`
 
-Declared kinds are documented as the next wave only.
-They must not appear as active entry cards or tiny-model federation starters in this landing.
+Current declared but inactive kinds:
+
+- `tos_node`
+
+Declared kinds remain documented for later waves only.
+They must not appear as live entry cards or tiny-model federation starters in the current landing.
 
 ## Entry Card Contract
 
@@ -139,7 +144,7 @@ These are hard constraints for the landing:
 This seam is additive.
 Existing consumers of `queries` and `starters` for the thin router path should keep working unchanged.
 
-v1 federation starters are:
+Current federation starters are:
 
 - `federation-root`
 - `aoa-root`
@@ -148,13 +153,16 @@ v1 federation starters are:
 - `tier-root`
 - `playbook-root`
 - `kag-view-root`
+- `seed-root`
+- `runtime-surface-root`
+- `orientation-surface-root`
 
 This wave does not add a separate tiny-entry federation starter.
 Small-model ToS entry still begins at `tos-root`.
 
 A dedicated `return_navigation_hints` surface may coexist with federation entry cards so that small-model recovery stays explicit without widening the authority boundary.
 
-## Current v1 Inputs
+## Current Inputs
 
 This first landing stays `aoa-routing`-only by edited files, but it reads sibling source surfaces:
 
@@ -166,6 +174,11 @@ This first landing stays `aoa-routing`-only by edited files, but it reads siblin
 - `aoa-agents/generated/runtime_seam_bindings.json`
 - `aoa-playbooks/generated/playbook_registry.min.json`
 - `aoa-kag/generated/federation_spine.min.json`
+- `Dionysus/seed-registry.yaml`
+- `aoa-sdk/.aoa/workspace.toml`
+- `aoa-stats/generated/summary_surface_catalog.min.json`
+- `8Dionysus/generated/public_route_map.min.json`
+- `abyss-stack/examples/diagnostic_session.min.example.json`
 
 For the current ToS root card, the first handoff is now:
 
@@ -183,7 +196,7 @@ The current KAG-view layer now publishes two live derived entries:
 - `aoa-techniques` as the default KAG starter for the federation seam
 - `Tree-of-Sophia` as the ToS-specific derived KAG view reached from `tos-root`
 
-This does not widen the active kind list.
+This does not widen the thin router taxonomy.
 It only lets `tos-root` hand off to a ToS-shaped derived readiness card after the source-owned tiny-entry route.
 In the current wave, that ToS-specific `kag_view` may also advertise one bounded
 `aoa-kag/generated/tos_zarathustra_route_retrieval_pack.min.json` adjunct.
@@ -203,3 +216,5 @@ This landing does not:
 - replace KAG doctrine with router-owned summaries
 - fold federation entry routing into the thin router registry
 - change `kag-view-root` away from the current `aoa-techniques` default
+- add `aoa-sdk`, `aoa-stats`, `Dionysus`, `8Dionysus`, or `abyss-stack` to `cross_repo_registry.min.json`
+- activate `tos_node` as a live federation entry kind

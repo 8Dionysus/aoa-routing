@@ -280,6 +280,30 @@ def parse_args() -> argparse.Namespace:
         help="Path to the Tree-of-Sophia repository root for federation root entry validation.",
     )
     parser.add_argument(
+        "--sdk-root",
+        type=Path,
+        default=REPO_ROOT.parent / "aoa-sdk",
+        help="Path to the aoa-sdk repository root for runtime control-plane federation validation.",
+    )
+    parser.add_argument(
+        "--seed-root",
+        type=Path,
+        default=REPO_ROOT.parent / "Dionysus",
+        help="Path to the Dionysus repository root for seed federation validation.",
+    )
+    parser.add_argument(
+        "--profile-root",
+        type=Path,
+        default=REPO_ROOT.parent / "8Dionysus",
+        help="Path to the 8Dionysus repository root for profile federation validation.",
+    )
+    parser.add_argument(
+        "--abyss-stack-root",
+        type=Path,
+        default=Path.home() / "src" / "abyss-stack",
+        help="Path to the abyss-stack source checkout for runtime federation validation.",
+    )
+    parser.add_argument(
         "--generated-dir",
         type=Path,
         default=REPO_ROOT / "generated",
@@ -1156,6 +1180,10 @@ def validate_rebuild_parity(
     playbooks_root: Path,
     kag_root: Path,
     tos_root: Path,
+    sdk_root: Path,
+    seed_root: Path,
+    profile_root: Path,
+    abyss_stack_root: Path,
     issues: list[ValidationIssue],
 ) -> None:
     try:
@@ -1170,6 +1198,10 @@ def validate_rebuild_parity(
             playbooks_root.resolve(),
             kag_root.resolve(),
             tos_root.resolve(),
+            sdk_root.resolve(),
+            seed_root.resolve(),
+            profile_root.resolve(),
+            abyss_stack_root.resolve(),
         )
     except RouterError as exc:
         issues.append(
@@ -1827,6 +1859,11 @@ def validate_federation_entrypoints(
     federation_payload: dict[str, Any],
     generated_dir: Path,
     techniques_root: Path,
+    stats_root: Path,
+    sdk_root: Path,
+    seed_root: Path,
+    profile_root: Path,
+    abyss_stack_root: Path,
     agents_root: Path,
     playbooks_root: Path,
     kag_root: Path,
@@ -1837,6 +1874,11 @@ def validate_federation_entrypoints(
     roots = {
         "aoa-routing": generated_dir.resolve(),
         "aoa-techniques": techniques_root.resolve(),
+        "aoa-stats": stats_root.resolve(),
+        "aoa-sdk": sdk_root.resolve(),
+        "Dionysus": seed_root.resolve(),
+        "8Dionysus": profile_root.resolve(),
+        "abyss-stack": abyss_stack_root.resolve(),
         AGENTS_REPO: agents_root.resolve(),
         PLAYBOOKS_REPO: playbooks_root.resolve(),
         KAG_REPO: kag_root.resolve(),
@@ -1873,14 +1915,14 @@ def validate_federation_entrypoints(
         issues.append(
             ValidationIssue(
                 "federation_entrypoints.min.json",
-                "active_entry_kinds must match the published v1 active federation entry kinds",
+                "active_entry_kinds must match the published active federation entry kinds",
             )
         )
     if declared_entry_kinds != list(FEDERATION_DECLARED_ENTRY_KINDS):
         issues.append(
             ValidationIssue(
                 "federation_entrypoints.min.json",
-                "declared_entry_kinds must match the published v1 declared federation entry kinds",
+                "declared_entry_kinds must match the published declared federation entry kinds",
             )
         )
 
@@ -2062,7 +2104,7 @@ def validate_federation_entrypoints(
         issues.append(
             ValidationIssue(
                 "federation_entrypoints.min.json",
-                "root_entries must publish exactly aoa-root and tos-root in v1",
+                "root_entries must publish exactly aoa-root and tos-root",
             )
         )
 
@@ -2375,6 +2417,9 @@ def validate_return_navigation_hints(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    sdk_root: Path,
+    seed_root: Path,
+    profile_root: Path,
     agents_root: Path,
     aoa_root: Path,
     playbooks_root: Path,
@@ -2389,6 +2434,9 @@ def validate_return_navigation_hints(
         "aoa-skills": skills_root.resolve(),
         "aoa-evals": evals_root.resolve(),
         "aoa-memo": memo_root.resolve(),
+        "aoa-sdk": sdk_root.resolve(),
+        "Dionysus": seed_root.resolve(),
+        "8Dionysus": profile_root.resolve(),
         AGENTS_REPO: agents_root.resolve(),
         AOA_ROOT_REPO: aoa_root.resolve(),
         PLAYBOOKS_REPO: playbooks_root.resolve(),
@@ -2404,6 +2452,9 @@ def validate_return_navigation_hints(
         "tier": AGENTS_REPO,
         "playbook": PLAYBOOKS_REPO,
         "kag_view": KAG_REPO,
+        "seed": "Dionysus",
+        "runtime_surface": "aoa-sdk",
+        "orientation_surface": "8Dionysus",
     }
     payload_cache: dict[tuple[str, str], dict[str, Any]] = {}
 
@@ -4565,9 +4616,17 @@ def validate_generated_outputs(
     playbooks_root: Path,
     kag_root: Path,
     tos_root: Path,
+    sdk_root: Path | None = None,
+    seed_root: Path | None = None,
+    profile_root: Path | None = None,
+    abyss_stack_root: Path | None = None,
 ) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     generated_dir = generated_dir.resolve()
+    sdk_root = (sdk_root or (REPO_ROOT.parent / "aoa-sdk")).resolve()
+    seed_root = (seed_root or (REPO_ROOT.parent / "Dionysus")).resolve()
+    profile_root = (profile_root or (REPO_ROOT.parent / "8Dionysus")).resolve()
+    abyss_stack_root = (abyss_stack_root or (Path.home() / "src" / "abyss-stack")).resolve()
     validate_local_questbook_surfaces(REPO_ROOT, issues)
 
     registry_path = generated_dir / "cross_repo_registry.min.json"
@@ -4659,6 +4718,10 @@ def validate_generated_outputs(
         playbooks_root,
         kag_root,
         tos_root,
+        sdk_root,
+        seed_root,
+        profile_root,
+        abyss_stack_root,
         issues,
     )
 
@@ -4820,6 +4883,11 @@ def validate_generated_outputs(
             playbooks_root,
             kag_root,
             tos_root,
+            sdk_root,
+            stats_root,
+            seed_root,
+            profile_root,
+            abyss_stack_root,
         )
     except RouterError as exc:
         issues.append(
@@ -4843,6 +4911,11 @@ def validate_generated_outputs(
         federation_entrypoints_payload,
         generated_dir,
         techniques_root,
+        stats_root,
+        sdk_root,
+        seed_root,
+        profile_root,
+        abyss_stack_root,
         agents_root,
         playbooks_root,
         kag_root,
@@ -4870,6 +4943,9 @@ def validate_generated_outputs(
             playbooks_root,
             kag_root,
             tos_root,
+            sdk_root,
+            seed_root,
+            profile_root,
             hints_payload,
             canonical_federation_entrypoints_payload,
         )
@@ -4888,18 +4964,21 @@ def validate_generated_outputs(
                     f"{return_navigation_path.name} does not match the expected recurrence re-entry surface",
                 )
             )
-    validate_return_navigation_hints(
-        return_navigation_payload,
-        generated_dir,
-        techniques_root,
-        skills_root,
-        evals_root,
-        memo_root,
-        agents_root,
-        aoa_root,
-        playbooks_root,
-        kag_root,
-        tos_root,
+        validate_return_navigation_hints(
+            return_navigation_payload,
+            generated_dir,
+            techniques_root,
+            skills_root,
+            evals_root,
+            memo_root,
+            sdk_root,
+            seed_root,
+            profile_root,
+            agents_root,
+            aoa_root,
+            playbooks_root,
+            kag_root,
+            tos_root,
         issues,
     )
     validate_inspect_targets(
@@ -5075,6 +5154,10 @@ def validate_generated_outputs(
 def main() -> int:
     args = parse_args()
     stats_root = getattr(args, "stats_root", REPO_ROOT.parent / "aoa-stats")
+    sdk_root = getattr(args, "sdk_root", REPO_ROOT.parent / "aoa-sdk")
+    seed_root = getattr(args, "seed_root", REPO_ROOT.parent / "Dionysus")
+    profile_root = getattr(args, "profile_root", REPO_ROOT.parent / "8Dionysus")
+    abyss_stack_root = getattr(args, "abyss_stack_root", Path.home() / "src" / "abyss-stack")
     issues = [
         ValidationIssue(location, message)
         for location, message in validate_nested_agents.run_validation(REPO_ROOT)
@@ -5092,6 +5175,10 @@ def main() -> int:
             args.playbooks_root,
             args.kag_root,
             args.tos_root,
+            sdk_root,
+            seed_root,
+            profile_root,
+            abyss_stack_root,
         )
     )
     if issues:

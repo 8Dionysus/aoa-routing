@@ -58,8 +58,13 @@
             "aoa-skills",
             "aoa-evals",
             "aoa-memo",
+            "aoa-sdk",
+            "aoa-stats",
             "aoa-playbooks",
-            "aoa-agents"
+            "aoa-agents",
+            "8Dionysus",
+            "Dionysus",
+            "abyss-stack"
           ]
         },
         "object_kind": {
@@ -69,7 +74,10 @@
             "eval",
             "memo",
             "playbook",
-            "agent"
+            "agent",
+            "seed",
+            "runtime_surface",
+            "orientation_surface"
           ]
         },
         "target_surface": {

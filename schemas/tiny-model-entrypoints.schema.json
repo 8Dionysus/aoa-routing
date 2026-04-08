@@ -189,7 +189,10 @@
         "agent",
         "tier",
         "playbook",
-        "kag_view"
+        "kag_view",
+        "seed",
+        "runtime_surface",
+        "orientation_surface"
       ]
     },
     "rootId": {

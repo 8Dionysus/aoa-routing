@@ -31,7 +31,7 @@
     },
     "federation_kind_returns": {
       "type": "array",
-      "minItems": 4,
+      "minItems": 7,
       "items": {
         "$ref": "#/$defs/federationKindReturn"
       }
@@ -50,9 +50,14 @@
         "aoa-skills",
         "aoa-evals",
         "aoa-memo",
+        "aoa-sdk",
+        "aoa-stats",
         "aoa-agents",
         "aoa-playbooks",
         "aoa-kag",
+        "8Dionysus",
+        "Dionysus",
+        "abyss-stack",
         "Agents-of-Abyss",
         "Tree-of-Sophia"
       ]
@@ -216,15 +221,23 @@
             "agent",
             "tier",
             "playbook",
-            "kag_view"
+            "kag_view",
+            "seed",
+            "runtime_surface",
+            "orientation_surface"
           ]
         },
         "owner_repo": {
           "type": "string",
           "enum": [
+            "aoa-sdk",
+            "aoa-stats",
             "aoa-agents",
             "aoa-playbooks",
-            "aoa-kag"
+            "aoa-kag",
+            "8Dionysus",
+            "Dionysus",
+            "abyss-stack"
           ]
         },
         "supported_return_reasons": {

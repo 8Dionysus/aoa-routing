@@ -15,11 +15,15 @@ FIXTURE_REPO_NAMES = (
     "aoa-evals",
     "aoa-memo",
     "aoa-stats",
+    "aoa-sdk",
     "aoa-agents",
     "Agents-of-Abyss",
     "aoa-playbooks",
     "aoa-kag",
     "Tree-of-Sophia",
+    "Dionysus",
+    "8Dionysus",
+    "abyss-stack",
 )
 
 
@@ -73,6 +77,10 @@ def build_outputs_from_roots(roots: dict[str, Path]) -> dict[str, dict[str, obje
         roots["aoa-playbooks"],
         roots["aoa-kag"],
         roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
     )
 
 
@@ -102,6 +110,10 @@ def validate_fixture_generated(generated_dir: Path, roots: dict[str, Path]) -> l
         roots["aoa-playbooks"],
         roots["aoa-kag"],
         roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
     )
 
 
@@ -1715,12 +1727,12 @@ def test_validate_generated_outputs_rejects_declared_kind_in_federation_entrypoi
     generated_dir, roots = build_fixture_generated(tmp_path)
     federation_path = generated_dir / "federation_entrypoints.min.json"
     payload = json.loads(federation_path.read_text(encoding="utf-8"))
-    payload["entrypoints"][0]["kind"] = "seed"
+    payload["entrypoints"][0]["kind"] = "tos_node"
     write_json(federation_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "schema violation" in issue.message and "seed" in issue.message
+        "schema violation" in issue.message and "tos_node" in issue.message
         for issue in issues
     )
 
@@ -1733,7 +1745,7 @@ def test_validate_generated_outputs_rejects_declared_kind_in_federation_starters
     payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
     for starter in payload["federation_starters"]:
         if starter["name"] == "agent-root":
-            starter["entry_kind"] = "seed"
+            starter["entry_kind"] = "tos_node"
             break
     write_json(tiny_model_path, payload)
 
@@ -1882,7 +1894,7 @@ def test_validate_generated_outputs_rejects_memo_return_contract_without_capsule
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "aoa-memo/examples/recall_contract.object.working.return.json.capsule_surface must be a non-empty string"
+        "aoa-memo/examples/recall_contract.object.working.return.json is missing required keys: capsule_surface"
         in issue.message
         for issue in issues
     )
