@@ -118,14 +118,17 @@ FEDERATION_DEFAULT_SEED_ENTRY_ID = "dionysus-seed-garden"
 FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID = "aoa-sdk-control-plane"
 FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID = "8dionysus-public-route-map"
 DIONYSUS_SEED_REGISTRY_PATH = "seed-registry.yaml"
+DIONYSUS_SEED_ROUTE_MAP_PATH = "generated/seed_route_map.min.json"
 DIONYSUS_PLANTING_PROTOCOL_PATH = "docs/codex/planting-protocol.md"
 AOA_SDK_WORKSPACE_TOML_PATH = ".aoa/workspace.toml"
+AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH = "generated/workspace_control_plane.min.json"
 AOA_SDK_BOUNDARIES_PATH = "docs/boundaries.md"
 AOA_STATS_SUMMARY_SURFACE_CATALOG_PATH = "generated/summary_surface_catalog.min.json"
 AOA_STATS_ARCHITECTURE_PATH = "docs/ARCHITECTURE.md"
 PROFILE_PUBLIC_ROUTE_MAP_PATH = "generated/public_route_map.min.json"
 PROFILE_PUBLIC_ENTRY_POSTURE_PATH = "docs/PUBLIC_ENTRY_POSTURE.md"
 ABYSS_STACK_DIAGNOSTIC_SESSION_PATH = "examples/diagnostic_session.min.example.json"
+ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH = "generated/diagnostic_surface_catalog.min.json"
 ABYSS_STACK_DIAGNOSTIC_SPINE_PATH = "docs/DIAGNOSTIC_SPINE.md"
 TOS_TINY_ENTRY_ROUTE_PATH = "examples/tos_tiny_entry_route.example.json"
 TOS_TINY_ENTRY_ROUTE_ID = "tos-tiny-entry.zarathustra-prologue"
@@ -1368,6 +1371,10 @@ def build_federation_entrypoints_payload(
         f"{KAG_REPO}/docs/FEDERATION_SPINE.md",
     )
     ensure_text_file(seed_root / DIONYSUS_SEED_REGISTRY_PATH, f"{SEED_REPO}/{DIONYSUS_SEED_REGISTRY_PATH}")
+    ensure_mapping(
+        load_json_file(seed_root / DIONYSUS_SEED_ROUTE_MAP_PATH),
+        f"{SEED_REPO}/{DIONYSUS_SEED_ROUTE_MAP_PATH}",
+    )
     ensure_markdown_file(
         seed_root / DIONYSUS_PLANTING_PROTOCOL_PATH,
         f"{SEED_REPO}/{DIONYSUS_PLANTING_PROTOCOL_PATH}",
@@ -1375,6 +1382,10 @@ def build_federation_entrypoints_payload(
     ensure_text_file(
         sdk_root / AOA_SDK_WORKSPACE_TOML_PATH,
         f"{SDK_REPO}/{AOA_SDK_WORKSPACE_TOML_PATH}",
+    )
+    ensure_mapping(
+        load_json_file(sdk_root / AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH),
+        f"{SDK_REPO}/{AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH}",
     )
     ensure_markdown_file(
         sdk_root / AOA_SDK_BOUNDARIES_PATH,
@@ -1399,6 +1410,10 @@ def build_federation_entrypoints_payload(
     ensure_mapping(
         load_json_file(abyss_stack_root / ABYSS_STACK_DIAGNOSTIC_SESSION_PATH),
         f"{ABYSS_STACK_REPO}/{ABYSS_STACK_DIAGNOSTIC_SESSION_PATH}",
+    )
+    ensure_mapping(
+        load_json_file(abyss_stack_root / ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH),
+        f"{ABYSS_STACK_REPO}/{ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH}",
     )
     ensure_markdown_file(
         abyss_stack_root / ABYSS_STACK_DIAGNOSTIC_SPINE_PATH,
@@ -1905,7 +1920,7 @@ def build_federation_entrypoints_payload(
         entry_id=FEDERATION_DEFAULT_SEED_ENTRY_ID,
         owner_repo=SEED_REPO,
         title="Dionysus Seed Garden",
-        capsule_surface=make_repo_qualified_ref(SEED_REPO, DIONYSUS_SEED_REGISTRY_PATH),
+        capsule_surface=make_repo_qualified_ref(SEED_REPO, DIONYSUS_SEED_ROUTE_MAP_PATH),
         authority_surface=make_repo_qualified_ref(SEED_REPO, DIONYSUS_PLANTING_PROTOCOL_PATH),
         next_entries=[
             ("orientation_surface", FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID),
@@ -1922,7 +1937,7 @@ def build_federation_entrypoints_payload(
         entry_id=FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID,
         owner_repo=SDK_REPO,
         title="aoa-sdk Control Plane",
-        capsule_surface=make_repo_qualified_ref(SDK_REPO, AOA_SDK_WORKSPACE_TOML_PATH),
+        capsule_surface=make_repo_qualified_ref(SDK_REPO, AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH),
         authority_surface=make_repo_qualified_ref(SDK_REPO, AOA_SDK_BOUNDARIES_PATH),
         next_entries=[
             ("runtime_surface", "aoa-stats-summary-catalog"),
@@ -1955,7 +1970,7 @@ def build_federation_entrypoints_payload(
         owner_repo=ABYSS_STACK_REPO,
         title="abyss-stack Diagnostic Spine",
         capsule_surface=make_repo_qualified_ref(
-            ABYSS_STACK_REPO, ABYSS_STACK_DIAGNOSTIC_SESSION_PATH
+            ABYSS_STACK_REPO, ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH
         ),
         authority_surface=make_repo_qualified_ref(
             ABYSS_STACK_REPO, ABYSS_STACK_DIAGNOSTIC_SPINE_PATH
@@ -2041,21 +2056,33 @@ def build_federation_entrypoints_payload(
                 "ref": federation_spine_path,
             },
             {
+                "name": "dionysus_seed_route_map",
+                "repo": SEED_REPO,
+                "role": "seed_capsule",
+                "ref": DIONYSUS_SEED_ROUTE_MAP_PATH,
+            },
+            {
                 "name": "dionysus_seed_registry",
                 "repo": SEED_REPO,
-                "role": "seed_entry",
+                "role": "seed_anchor",
                 "ref": DIONYSUS_SEED_REGISTRY_PATH,
+            },
+            {
+                "name": "aoa_sdk_workspace_control_plane",
+                "repo": SDK_REPO,
+                "role": "runtime_capsule",
+                "ref": AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH,
             },
             {
                 "name": "aoa_sdk_workspace",
                 "repo": SDK_REPO,
-                "role": "runtime_surface",
+                "role": "runtime_anchor",
                 "ref": AOA_SDK_WORKSPACE_TOML_PATH,
             },
             {
                 "name": "aoa_stats_summary_surface_catalog",
                 "repo": STATS_REPO,
-                "role": "runtime_surface",
+                "role": "runtime_capsule",
                 "ref": AOA_STATS_SUMMARY_SURFACE_CATALOG_PATH,
             },
             {
@@ -2065,9 +2092,15 @@ def build_federation_entrypoints_payload(
                 "ref": PROFILE_PUBLIC_ROUTE_MAP_PATH,
             },
             {
+                "name": "abyss_stack_diagnostic_surface_catalog",
+                "repo": ABYSS_STACK_REPO,
+                "role": "runtime_capsule",
+                "ref": ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
+            },
+            {
                 "name": "abyss_stack_diagnostic_session",
                 "repo": ABYSS_STACK_REPO,
-                "role": "runtime_surface",
+                "role": "runtime_anchor",
                 "ref": ABYSS_STACK_DIAGNOSTIC_SESSION_PATH,
             },
         ],
@@ -2179,6 +2212,7 @@ def build_return_navigation_hints_payload(
     evals_root: Path,
     memo_root: Path,
     aoa_root: Path,
+    stats_root: Path,
     agents_root: Path,
     playbooks_root: Path,
     kag_root: Path,
@@ -2186,6 +2220,7 @@ def build_return_navigation_hints_payload(
     sdk_root: Path,
     seed_root: Path,
     profile_root: Path,
+    abyss_stack_root: Path,
     hints_payload: dict[str, Any],
     federation_payload: dict[str, Any],
 ) -> dict[str, Any]:
@@ -2215,8 +2250,10 @@ def build_return_navigation_hints_payload(
         PLAYBOOKS_REPO: playbooks_root,
         KAG_REPO: kag_root,
         SDK_REPO: sdk_root,
+        STATS_REPO: stats_root,
         SEED_REPO: seed_root,
         PROFILE_REPO: profile_root,
+        ABYSS_STACK_REPO: abyss_stack_root,
     }
 
     hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
@@ -2468,12 +2505,15 @@ def build_return_navigation_hints_payload(
     entries_by_kind: dict[str, list[dict[str, Any]]] = {
         kind: [] for kind in FEDERATION_ACTIVE_ENTRY_KINDS
     }
+    entries_by_id: dict[str, dict[str, Any]] = {}
     for index, raw_entry in enumerate(federation_entries):
         location = f"federation_entrypoints.min.json.entrypoints[{index}]"
         entry = ensure_mapping(raw_entry, location)
         entry_kind = ensure_string(entry.get("kind"), f"{location}.kind")
         if entry_kind in entries_by_kind:
             entries_by_kind[entry_kind].append(entry)
+        entry_id = ensure_string(entry.get("id"), f"{location}.id")
+        entries_by_id[entry_id] = entry
 
     federation_kind_return_specs = {
         "agent": {
@@ -2510,19 +2550,19 @@ def build_return_navigation_hints_payload(
         },
         "seed": {
             "owner_repo": SEED_REPO,
-            "primary_surface": DIONYSUS_SEED_REGISTRY_PATH,
+            "primary_surface": DIONYSUS_SEED_ROUTE_MAP_PATH,
             "ownership_note": (
-                "Seed lineage stays in Dionysus; routing only restores the source-owned "
-                "seed registry and leaves planting authority in the seed protocol and "
+                "Seed lineage stays in Dionysus; routing restores the compact owner-owned "
+                "seed capsule first and leaves planting authority in the seed protocol and "
                 "target owner repo."
             ),
         },
         "runtime_surface": {
             "owner_repo": SDK_REPO,
-            "primary_surface": AOA_SDK_WORKSPACE_TOML_PATH,
+            "primary_surface": AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH,
             "ownership_note": (
-                "Runtime surface re-entry uses aoa-sdk as the control-plane anchor only; "
-                "it does not replace runtime authority in aoa-stats or abyss-stack."
+                "Runtime surface re-entry uses the compact aoa-sdk control-plane capsule "
+                "first; it does not replace runtime authority in aoa-stats or abyss-stack."
             ),
         },
         "orientation_surface": {
@@ -2568,11 +2608,96 @@ def build_return_navigation_hints_payload(
             }
         )
 
+    federation_entry_return_specs = {
+        FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID: {
+            "entry_kind": "runtime_surface",
+            "owner_repo": SDK_REPO,
+            "ownership_note": (
+                "aoa-sdk owns the control-plane capsule for workspace discovery and "
+                "compatibility posture; the capsule does not replace sibling runtime authority."
+            ),
+        },
+        "aoa-stats-summary-catalog": {
+            "entry_kind": "runtime_surface",
+            "owner_repo": STATS_REPO,
+            "ownership_note": (
+                "aoa-stats owns the summary surface catalog as its compact runtime-entry capsule; "
+                "routing must return there without copying stats payloads into its own registry."
+            ),
+        },
+        "abyss-stack-diagnostic-spine": {
+            "entry_kind": "runtime_surface",
+            "owner_repo": ABYSS_STACK_REPO,
+            "ownership_note": (
+                "abyss-stack owns the diagnostic surface catalog in the source checkout; "
+                "routing must return there without confusing /srv mirrors for source truth."
+            ),
+        },
+        FEDERATION_DEFAULT_SEED_ENTRY_ID: {
+            "entry_kind": "seed",
+            "owner_repo": SEED_REPO,
+            "ownership_note": (
+                "Dionysus owns the compact seed route map; routing returns there before any "
+                "seed-ledger or planting-protocol deepening."
+            ),
+        },
+        FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID: {
+            "entry_kind": "orientation_surface",
+            "owner_repo": PROFILE_REPO,
+            "ownership_note": (
+                "8Dionysus owns the public route map as an orientation-only capsule; it must "
+                "not become an authority replacement for owner repos."
+            ),
+        },
+    }
+    federation_entry_returns: dict[str, dict[str, Any]] = {}
+    for entry_id, spec in federation_entry_return_specs.items():
+        location = f"{Path(RETURN_NAVIGATION_HINTS_FILE).name}.federation_entry_returns.{entry_id}"
+        entry = entries_by_id.get(entry_id)
+        if entry is None:
+            raise RouterError(f"{location} requires federation entry '{entry_id}'")
+        entry_kind = spec["entry_kind"]
+        owner_repo = spec["owner_repo"]
+        if ensure_string(entry.get("kind"), f"{location}.entry_kind") != entry_kind:
+            raise RouterError(f"{location} must stay aligned with entry kind '{entry_kind}'")
+        if ensure_string(entry.get("owner_repo"), f"{location}.owner_repo") != owner_repo:
+            raise RouterError(f"{location} must stay aligned with owner repo '{owner_repo}'")
+        capsule_repo, capsule_surface = ensure_repo_qualified_ref(
+            entry.get("capsule_surface"),
+            f"{location}.primary_action",
+        )
+        if capsule_repo != owner_repo:
+            raise RouterError(f"{location}.primary_action must stay inside owner repo '{owner_repo}'")
+        ensure_source_surface_exists(
+            federation_owner_roots[owner_repo],
+            capsule_surface,
+            f"{location}.primary_action",
+        )
+        federation_entry_returns[entry_id] = {
+            "entry_kind": entry_kind,
+            "owner_repo": owner_repo,
+            "supported_return_reasons": list(RETURN_REASONS_BY_FEDERATION_KIND[entry_kind]),
+            "primary_action": build_return_navigation_action(
+                verb="inspect",
+                target_repo=owner_repo,
+                target_surface=capsule_surface,
+            ),
+            "fallback_action": build_return_navigation_action(
+                verb="inspect",
+                target_repo=PAIRING_SURFACE_REPO,
+                target_surface=FEDERATION_ENTRYPOINTS_FILE,
+                match_field="id",
+                target_value=entry_id,
+            ),
+            "ownership_note": spec["ownership_note"],
+        }
+
     return {
         "version": 1,
         "thin_router_returns": thin_router_returns,
         "federation_root_returns": federation_root_returns,
         "federation_kind_returns": federation_kind_returns,
+        "federation_entry_returns": federation_entry_returns,
     }
 
 

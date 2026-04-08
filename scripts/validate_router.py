@@ -25,17 +25,24 @@ from validate_two_stage_skill_router import validate_outputs as validate_two_sta
 from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
+    ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
     AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS,
+    AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH,
+    AOA_STATS_SUMMARY_SURFACE_CATALOG_PATH,
     AGENT_REGISTRY_PATH,
     AGENTS_REPO,
     ALL_KINDS,
     AOA_ROOT_REPO,
     CANONICAL_REPO_BY_KIND,
     DIRECT_RELATION_TYPES_SET,
+    DIONYSUS_SEED_ROUTE_MAP_PATH,
     FEDERATION_ACTIVE_ENTRY_KINDS,
     FEDERATION_DECLARED_ENTRY_KINDS,
     FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+    FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID,
     FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID,
+    FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID,
+    FEDERATION_DEFAULT_SEED_ENTRY_ID,
     FEDERATION_DEFAULT_TIER_ENTRY_ID,
     FEDERATION_ENTRYPOINTS_FILE,
     FEDERATION_ROOT_IDS,
@@ -60,6 +67,7 @@ from router_core import (
     QUEST_ROUTING_EXPAND_DOC_BY_REPO,
     QUEST_ROUTING_SOURCE_REPOS,
     QUEST_ROUTING_WAVE_SCOPE,
+    PROFILE_PUBLIC_ROUTE_MAP_PATH,
     RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
     RESERVED_KINDS,
@@ -2417,14 +2425,17 @@ def validate_return_navigation_hints(
     skills_root: Path,
     evals_root: Path,
     memo_root: Path,
+    stats_root: Path,
     sdk_root: Path,
     seed_root: Path,
     profile_root: Path,
+    abyss_stack_root: Path,
     agents_root: Path,
     aoa_root: Path,
     playbooks_root: Path,
     kag_root: Path,
     tos_root: Path,
+    federation_payload: dict[str, Any],
     issues: list[ValidationIssue],
 ) -> None:
     location_prefix = Path(RETURN_NAVIGATION_HINTS_FILE).name
@@ -2434,9 +2445,11 @@ def validate_return_navigation_hints(
         "aoa-skills": skills_root.resolve(),
         "aoa-evals": evals_root.resolve(),
         "aoa-memo": memo_root.resolve(),
+        "aoa-stats": stats_root.resolve(),
         "aoa-sdk": sdk_root.resolve(),
         "Dionysus": seed_root.resolve(),
         "8Dionysus": profile_root.resolve(),
+        "abyss-stack": abyss_stack_root.resolve(),
         AGENTS_REPO: agents_root.resolve(),
         AOA_ROOT_REPO: aoa_root.resolve(),
         PLAYBOOKS_REPO: playbooks_root.resolve(),
@@ -2455,6 +2468,15 @@ def validate_return_navigation_hints(
         "seed": "Dionysus",
         "runtime_surface": "aoa-sdk",
         "orientation_surface": "8Dionysus",
+    }
+    expected_kind_primary_surface = {
+        "agent": AGENT_REGISTRY_PATH,
+        "tier": MODEL_TIER_REGISTRY_PATH,
+        "playbook": "generated/playbook_registry.min.json",
+        "kag_view": "generated/federation_spine.min.json",
+        "seed": DIONYSUS_SEED_ROUTE_MAP_PATH,
+        "runtime_surface": AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH,
+        "orientation_surface": PROFILE_PUBLIC_ROUTE_MAP_PATH,
     }
     payload_cache: dict[tuple[str, str], dict[str, Any]] = {}
 
@@ -2635,9 +2657,32 @@ def validate_return_navigation_hints(
             return_payload.get("federation_kind_returns"),
             f"{location_prefix}.federation_kind_returns",
         )
+        federation_entry_returns = ensure_mapping(
+            return_payload.get("federation_entry_returns"),
+            f"{location_prefix}.federation_entry_returns",
+        )
     except RouterError as exc:
         issues.append(ValidationIssue(location_prefix, str(exc)))
         return
+
+    try:
+        federation_entries = ensure_list(
+            federation_payload.get("entrypoints"),
+            "federation_entrypoints.min.json.entrypoints",
+        )
+    except RouterError as exc:
+        issues.append(ValidationIssue(location_prefix, str(exc)))
+        return
+    entry_payload_by_id: dict[str, dict[str, Any]] = {}
+    for index, raw_entry in enumerate(federation_entries):
+        entry_location = f"federation_entrypoints.min.json.entrypoints[{index}]"
+        try:
+            entry = ensure_mapping(raw_entry, entry_location)
+            entry_id = ensure_string(entry.get("id"), f"{entry_location}.id")
+        except RouterError as exc:
+            issues.append(ValidationIssue(location_prefix, str(exc)))
+            continue
+        entry_payload_by_id[entry_id] = entry
 
     seen_thin_kinds: set[str] = set()
     for index, raw_record in enumerate(thin_router_returns):
@@ -2918,12 +2963,135 @@ def validate_return_navigation_hints(
                     f"{location}.fallback_action.target_repo must stay 'aoa-routing'",
                 )
             )
+        expected_primary_surface = expected_kind_primary_surface.get(entry_kind)
+        if (
+            expected_primary_surface is not None
+            and primary_action is not None
+            and primary_action["target_surface"] != expected_primary_surface
+        ):
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.primary_action.target_surface must stay '{expected_primary_surface}'",
+                )
+            )
     missing_entry_kinds = sorted(set(FEDERATION_ACTIVE_ENTRY_KINDS) - seen_entry_kinds)
     for missing_kind in missing_entry_kinds:
         issues.append(
             ValidationIssue(
                 location_prefix,
                 f"{location_prefix}.federation_kind_returns must include entry_kind '{missing_kind}'",
+            )
+        )
+
+    expected_entry_ids = {
+        FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID,
+        "aoa-stats-summary-catalog",
+        "abyss-stack-diagnostic-spine",
+        FEDERATION_DEFAULT_SEED_ENTRY_ID,
+        FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID,
+    }
+    seen_entry_ids: set[str] = set()
+    for entry_id, raw_record in federation_entry_returns.items():
+        location = f"{location_prefix}.federation_entry_returns.{entry_id}"
+        try:
+            record = ensure_mapping(raw_record, location)
+            entry_kind = ensure_string(record.get("entry_kind"), f"{location}.entry_kind")
+            owner_repo = ensure_string(record.get("owner_repo"), f"{location}.owner_repo")
+        except RouterError as exc:
+            issues.append(ValidationIssue(location_prefix, str(exc)))
+            continue
+        seen_entry_ids.add(entry_id)
+        source_entry = entry_payload_by_id.get(entry_id)
+        if source_entry is None:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location} must reference a published federation entry id",
+                )
+            )
+            continue
+        try:
+            expected_entry_kind = ensure_string(source_entry.get("kind"), f"{location}.entry.kind")
+            expected_owner_repo = ensure_string(
+                source_entry.get("owner_repo"),
+                f"{location}.entry.owner_repo",
+            )
+            capsule_repo, capsule_surface = ensure_repo_qualified_ref(
+                source_entry.get("capsule_surface"),
+                f"{location}.entry.capsule_surface",
+            )
+        except RouterError as exc:
+            issues.append(ValidationIssue(location_prefix, str(exc)))
+            continue
+        if entry_kind != expected_entry_kind:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.entry_kind must stay aligned with federation entry kind '{expected_entry_kind}'",
+                )
+            )
+        if owner_repo != expected_owner_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.owner_repo must stay aligned with federation entry owner '{expected_owner_repo}'",
+                )
+            )
+        if capsule_repo != owner_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location} federation capsule must stay inside owner repo '{owner_repo}'",
+                )
+            )
+        primary_action = validate_action(
+            record.get("primary_action"),
+            f"{location}.primary_action",
+            router_owned_allowed=False,
+        )
+        fallback_action = validate_action(
+            record.get("fallback_action"),
+            f"{location}.fallback_action",
+            router_owned_allowed=True,
+        )
+        if primary_action is not None and primary_action["target_repo"] != owner_repo:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.primary_action.target_repo must equal owner_repo '{owner_repo}'",
+                )
+            )
+        if primary_action is not None and primary_action["target_surface"] != capsule_surface:
+            issues.append(
+                ValidationIssue(
+                    location_prefix,
+                    f"{location}.primary_action.target_surface must stay '{capsule_surface}'",
+                )
+            )
+        expected_fallback = {
+            "verb": "inspect",
+            "target_repo": "aoa-routing",
+            "target_surface": FEDERATION_ENTRYPOINTS_FILE,
+            "match_field": "id",
+            "target_value": entry_id,
+        }
+        if fallback_action is None:
+            continue
+        for key, expected_value in expected_fallback.items():
+            if fallback_action.get(key) != expected_value:
+                issues.append(
+                    ValidationIssue(
+                        location_prefix,
+                        f"{location}.fallback_action.{key} must stay '{expected_value}'",
+                    )
+                )
+    missing_entry_ids = sorted(expected_entry_ids - seen_entry_ids)
+    for missing_entry_id in missing_entry_ids:
+        issues.append(
+            ValidationIssue(
+                location_prefix,
+                f"{location_prefix}.federation_entry_returns must include entry id '{missing_entry_id}'",
             )
         )
 
@@ -4939,6 +5107,7 @@ def validate_generated_outputs(
             evals_root,
             memo_root,
             aoa_root,
+            stats_root,
             agents_root,
             playbooks_root,
             kag_root,
@@ -4946,6 +5115,7 @@ def validate_generated_outputs(
             sdk_root,
             seed_root,
             profile_root,
+            abyss_stack_root,
             hints_payload,
             canonical_federation_entrypoints_payload,
         )
@@ -4971,16 +5141,19 @@ def validate_generated_outputs(
             skills_root,
             evals_root,
             memo_root,
+            stats_root,
             sdk_root,
             seed_root,
             profile_root,
+            abyss_stack_root,
             agents_root,
             aoa_root,
             playbooks_root,
             kag_root,
             tos_root,
-        issues,
-    )
+            canonical_federation_entrypoints_payload,
+            issues,
+        )
     validate_inspect_targets(
         projection_safe_registry_entries,
         hints_payload,

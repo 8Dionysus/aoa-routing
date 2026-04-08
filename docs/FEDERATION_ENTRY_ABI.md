@@ -122,6 +122,20 @@ Conventions:
 - `next_actions` use bounded action objects with `verb`, `target_repo`, `target_surface`, `match_key`, and optional `target_value`
 - `next_hops` stay bounded and typed
 
+Capsule-grade rules for federation entries:
+
+- the capsule must stay compact enough for low-context inspection
+- the capsule must be owner-owned, not router-owned
+- the capsule must be validator-backed in its home repo
+- the capsule must stay language-neutral on the wire, so future Go readers can consume it without a Python-only semantic fork
+- the capsule and the authority surface must stay explicitly separate
+- `aoa-routing` may point to capsule surfaces, but it must not copy their payload into a router-owned capsule registry
+
+Current capsule-grade surfaces already accepted without wrappers:
+
+- `aoa-stats/generated/summary_surface_catalog.min.json`
+- `8Dionysus/generated/public_route_map.min.json`
+
 ## Anti-Confusion Rules
 
 These are hard constraints for the landing:
@@ -164,7 +178,7 @@ A dedicated `return_navigation_hints` surface may coexist with federation entry 
 
 ## Current Inputs
 
-This first landing stays `aoa-routing`-only by edited files, but it reads sibling source surfaces:
+This landing reads sibling source and capsule surfaces:
 
 - `Agents-of-Abyss/README.md`
 - `Tree-of-Sophia/README.md`
@@ -174,11 +188,17 @@ This first landing stays `aoa-routing`-only by edited files, but it reads siblin
 - `aoa-agents/generated/runtime_seam_bindings.json`
 - `aoa-playbooks/generated/playbook_registry.min.json`
 - `aoa-kag/generated/federation_spine.min.json`
+- `Dionysus/generated/seed_route_map.min.json`
 - `Dionysus/seed-registry.yaml`
+- `aoa-sdk/generated/workspace_control_plane.min.json`
 - `aoa-sdk/.aoa/workspace.toml`
 - `aoa-stats/generated/summary_surface_catalog.min.json`
 - `8Dionysus/generated/public_route_map.min.json`
+- `abyss-stack/generated/diagnostic_surface_catalog.min.json`
 - `abyss-stack/examples/diagnostic_session.min.example.json`
+
+The compact capsule is the first inspect surface for seed, runtime-surface, and profile-entry re-entry.
+The heavier raw anchor remains visible only as a source anchor or verification target in the owner repo.
 
 For the current ToS root card, the first handoff is now:
 

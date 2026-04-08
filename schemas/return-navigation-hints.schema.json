@@ -8,7 +8,8 @@
     "version",
     "thin_router_returns",
     "federation_root_returns",
-    "federation_kind_returns"
+    "federation_kind_returns",
+    "federation_entry_returns"
   ],
   "properties": {
     "version": {
@@ -34,6 +35,34 @@
       "minItems": 7,
       "items": {
         "$ref": "#/$defs/federationKindReturn"
+      }
+    },
+    "federation_entry_returns": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "aoa-sdk-control-plane",
+        "aoa-stats-summary-catalog",
+        "abyss-stack-diagnostic-spine",
+        "dionysus-seed-garden",
+        "8dionysus-public-route-map"
+      ],
+      "properties": {
+        "aoa-sdk-control-plane": {
+          "$ref": "#/$defs/federationEntryReturn"
+        },
+        "aoa-stats-summary-catalog": {
+          "$ref": "#/$defs/federationEntryReturn"
+        },
+        "abyss-stack-diagnostic-spine": {
+          "$ref": "#/$defs/federationEntryReturn"
+        },
+        "dionysus-seed-garden": {
+          "$ref": "#/$defs/federationEntryReturn"
+        },
+        "8dionysus-public-route-map": {
+          "$ref": "#/$defs/federationEntryReturn"
+        }
       }
     }
   },
@@ -235,6 +264,50 @@
             "aoa-agents",
             "aoa-playbooks",
             "aoa-kag",
+            "8Dionysus",
+            "Dionysus",
+            "abyss-stack"
+          ]
+        },
+        "supported_return_reasons": {
+          "$ref": "#/$defs/supportedReturnReasons"
+        },
+        "primary_action": {
+          "$ref": "#/$defs/routeAction"
+        },
+        "fallback_action": {
+          "$ref": "#/$defs/routeAction"
+        },
+        "ownership_note": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      }
+    },
+    "federationEntryReturn": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "entry_kind",
+        "owner_repo",
+        "supported_return_reasons",
+        "primary_action",
+        "fallback_action",
+        "ownership_note"
+      ],
+      "properties": {
+        "entry_kind": {
+          "type": "string",
+          "enum": [
+            "seed",
+            "runtime_surface",
+            "orientation_surface"
+          ]
+        },
+        "owner_repo": {
+          "type": "string",
+          "enum": [
+            "aoa-sdk",
+            "aoa-stats",
             "8Dionysus",
             "Dionysus",
             "abyss-stack"
