@@ -7,7 +7,12 @@ import argparse
 import json
 from pathlib import Path
 
-from _wave9_router_lib import build_decision_packet, load_json, preselect
+from _wave9_router_lib import (
+    build_decision_packet,
+    load_json,
+    preselect,
+    resolve_stage_2_shortlist_limit,
+)
 
 
 def print_json(data: object) -> None:
@@ -31,12 +36,17 @@ def main() -> int:
     policy = load_json(routing_root / "config" / "two_stage_router_policy.json")
     signals = load_json(skills_root / "generated" / "tiny_router_skill_signals.json")
     bands = load_json(skills_root / "generated" / "tiny_router_candidate_bands.json")
+    max_shortlist = resolve_stage_2_shortlist_limit(policy)
 
     if args.command == "preselect":
         print_json(preselect(args.task, signals, bands, policy, top_k=args.top_k, repo_family=args.repo_family))
         return 0
 
     if args.command == "decision-packet":
+        if len(args.shortlist) > max_shortlist:
+            raise SystemExit(
+                f"decision-packet shortlist exceeds configured max_stage_2_shortlist={max_shortlist}"
+            )
         preselect_payload = {
             "task": args.task,
             "repo_family": args.repo_family,
@@ -47,11 +57,11 @@ def main() -> int:
             "lead_gap": None,
             "fallback_candidates": [],
         }
-        print_json(build_decision_packet(args.task, preselect_payload, skills_root))
+        print_json(build_decision_packet(args.task, preselect_payload, skills_root, max_shortlist=max_shortlist))
         return 0
 
     preselected = preselect(args.task, signals, bands, policy, top_k=args.top_k, repo_family=args.repo_family)
-    packet = build_decision_packet(args.task, preselected, skills_root)
+    packet = build_decision_packet(args.task, preselected, skills_root, max_shortlist=max_shortlist)
     print_json({"preselect": preselected, "decision_packet": packet})
     return 0
 

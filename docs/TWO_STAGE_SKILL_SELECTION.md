@@ -11,6 +11,19 @@ The flow is:
 
 `stage 1 preselect -> stage 2 decision`
 
+The current public contract is schema-backed and normalized as a routing-owned
+v2 family. The two-stage surfaces expose a bounded stage-1 token budget, a
+declared inherited starter from `tiny_model_entrypoints.json`, and an enforced
+stage-2 shortlist limit so small-model consumers do not guess the budget.
+`generated/tiny_model_entrypoints.json` now publishes one explicit additive
+handoff on `skill-root`, and `generated/two_stage_skill_entrypoints.json`
+publishes the symmetric back-reference. That keeps the adjacent seam
+discoverable without replacing flat skill routing.
+`generated/two_stage_router_prompt_blocks.json` and
+`generated/two_stage_router_tool_schemas.json` now also publish one explicit
+`low_context_boundary` contract so prompt prose and tool descriptions stay
+routing-owned and do not silently copy source-owned capsule fields.
+
 ## Stage 1
 
 Stage 1 is a tiny-model preselector.
@@ -29,6 +42,8 @@ It may:
 - emit a precision-first confidence reading for the current shortlist
 - keep fallback candidates visible out of band when the live shortlist is empty or weak
 - mark explicit-only skills as manual
+- inherit the declared `skill-root` starter and stay within the published
+  stage-1 token budget
 
 It must not:
 
@@ -51,6 +66,25 @@ It may return only:
 - `activate-candidate`
 - `manual-invocation-required`
 - `no-skill`
+
+The shortlisted packet must stay at or below the published stage-2 shortlist
+limit. Consumers should treat that limit as contract, not as a hint.
+
+`generated/two_stage_router_examples.json` is a routing-owned redacted
+projection of stage-2 behavior. It may show shortlist mechanics, scores,
+decision modes, and activation posture, but it must not copy source-owned skill
+wording, verification text, local adapter allowlists, or rehydration hints into
+`aoa-routing`.
+
+The same anti-canon rule now applies to prompt and tool surfaces:
+
+- source surface refs live only in structured boundary fields
+- prompt prose stays routing-owned and low-context
+- tool schemas expose only routing inputs such as `task`, `repo_family`, `top_k`,
+  and `shortlist_names`
+- prompt or tool text must not mention source-owned payload fields like
+  `summary`, `trigger_boundary_short`, `verification_short`,
+  `allowlist_paths`, `rehydration_hint`, or `companions`
 
 Explicit-only skills may rank highly in stage 1, but stage 2 must still require an explicit handle.
 Weak or empty shortlists must stay `no-skill`.

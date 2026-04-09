@@ -1,7 +1,22 @@
 {
-  "schema_version": 1,
+  "schema_version": "aoa_routing_two_stage_skill_entrypoints_v2",
+  "schema_ref": "schemas/two-stage-skill-entrypoints.schema.json",
+  "owner_repo": "aoa-routing",
+  "surface_kind": "two_stage_skill_entrypoints",
   "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "validation_refs": [
+    "scripts/build_two_stage_skill_router.py",
+    "scripts/validate_two_stage_skill_router.py",
+    "tests/test_two_stage_skill_router.py"
+  ],
   "inherits_from": "generated/tiny_model_entrypoints.json",
+  "tiny_model_handoff": {
+    "starter_ref": "skill-root",
+    "entry_surface": "generated/tiny_model_entrypoints.json",
+    "handoff_name": "two-stage-skill-selection",
+    "handoff_mode": "optional-adjacent",
+    "activation_authority": "source-owned"
+  },
   "stage_1": {
     "name": "tiny-skill-preselector",
     "source_repo": "aoa-skills",
@@ -9,6 +24,8 @@
     "bands_surface": "generated/tiny_router_candidate_bands.json",
     "signals_surface": "generated/tiny_router_skill_signals.json",
     "top_k_default": 3,
+    "starter_ref": "skill-root",
+    "max_stage_1_tokens": 1200,
     "activation_policy": "never-activate",
     "manual_policy": "include-but-mark-manual",
     "policy_ref": "config/two_stage_router_policy.json"
@@ -19,6 +36,7 @@
     "shortlist_surface": "generated/skill_capsules.json",
     "activation_manifest": "generated/local_adapter_manifest.json",
     "context_manifest": "generated/context_retention_manifest.json",
+    "max_shortlist": 3,
     "decision_modes": [
       "activate-candidate",
       "manual-invocation-required",

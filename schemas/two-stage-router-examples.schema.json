@@ -6,12 +6,27 @@
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "profile",
+    "policy_ref",
+    "validation_refs",
     "examples"
   ],
   "properties": {
-    "schema_version": { "const": 1 },
+    "schema_version": { "const": "aoa_routing_two_stage_router_examples_v2" },
+    "schema_ref": { "const": "schemas/two-stage-router-examples.schema.json" },
+    "owner_repo": { "const": "aoa-routing" },
+    "surface_kind": { "const": "two_stage_router_examples" },
     "profile": { "const": "aoa-routing-wave-9-two-stage-skill-router" },
+    "policy_ref": { "type": "string", "minLength": 1 },
+    "validation_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
     "examples": {
       "type": "array",
       "items": {
@@ -27,7 +42,117 @@
           "case_id": { "type": "string", "minLength": 1 },
           "prompt": { "type": "string", "minLength": 1 },
           "preselect_result": { "type": "object" },
-          "decision_packet": { "type": "object" }
+          "decision_packet": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "confidence",
+              "lead_score",
+              "lead_gap",
+              "candidate_count",
+              "fallback_candidates",
+              "candidates",
+              "decision_reason",
+              "suggested_decision",
+              "stage_2_checklist"
+            ],
+            "properties": {
+              "confidence": { "type": "string", "minLength": 1 },
+              "lead_score": {
+                "anyOf": [
+                  { "type": "integer" },
+                  { "type": "null" }
+                ]
+              },
+              "lead_gap": {
+                "anyOf": [
+                  { "type": "integer" },
+                  { "type": "null" }
+                ]
+              },
+              "candidate_count": { "type": "integer", "minimum": 0 },
+              "fallback_candidates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "band",
+                    "manual_invocation_required",
+                    "project_overlay",
+                    "score",
+                    "reasons"
+                  ],
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "band": { "type": "string", "minLength": 1 },
+                    "manual_invocation_required": { "type": "boolean" },
+                    "project_overlay": { "type": "boolean" },
+                    "score": { "type": "integer" },
+                    "reasons": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 }
+                    }
+                  }
+                }
+              },
+              "candidates": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "name",
+                    "band",
+                    "score",
+                    "preselect_reasons",
+                    "invocation_mode",
+                    "manual_invocation_required",
+                    "activation_hint"
+                  ],
+                  "properties": {
+                    "name": { "type": "string", "minLength": 1 },
+                    "band": { "type": "string", "minLength": 1 },
+                    "score": {
+                      "anyOf": [
+                        { "type": "integer" },
+                        { "type": "null" }
+                      ]
+                    },
+                    "preselect_reasons": {
+                      "type": "array",
+                      "items": { "type": "string", "minLength": 1 }
+                    },
+                    "invocation_mode": { "type": "string", "minLength": 1 },
+                    "manual_invocation_required": { "type": "boolean" },
+                    "activation_hint": { "type": "string", "minLength": 1 }
+                  }
+                }
+              },
+              "decision_reason": { "type": "string", "minLength": 1 },
+              "suggested_decision": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["decision_mode", "skill", "next_step"],
+                "properties": {
+                  "decision_mode": { "type": "string", "minLength": 1 },
+                  "skill": {
+                    "anyOf": [
+                      { "type": "string", "minLength": 1 },
+                      { "type": "null" }
+                    ]
+                  },
+                  "next_step": { "type": "string", "minLength": 1 }
+                }
+              },
+              "stage_2_checklist": {
+                "type": "array",
+                "items": { "type": "string", "minLength": 1 },
+                "minItems": 1
+              }
+            }
+          }
         }
       }
     }

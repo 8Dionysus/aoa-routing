@@ -6,8 +6,13 @@
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "profile",
+    "validation_refs",
     "inherits_from",
+    "tiny_model_handoff",
     "stage_1",
     "stage_2",
     "starters",
@@ -15,14 +20,47 @@
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": "aoa_routing_two_stage_skill_entrypoints_v2"
+    },
+    "schema_ref": {
+      "const": "schemas/two-stage-skill-entrypoints.schema.json"
+    },
+    "owner_repo": {
+      "const": "aoa-routing"
+    },
+    "surface_kind": {
+      "const": "two_stage_skill_entrypoints"
     },
     "profile": {
       "const": "aoa-routing-wave-9-two-stage-skill-router"
     },
+    "validation_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
     "inherits_from": {
       "type": "string",
       "minLength": 1
+    },
+    "tiny_model_handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "starter_ref",
+        "entry_surface",
+        "handoff_name",
+        "handoff_mode",
+        "activation_authority"
+      ],
+      "properties": {
+        "starter_ref": { "type": "string", "minLength": 1 },
+        "entry_surface": { "type": "string", "minLength": 1 },
+        "handoff_name": { "type": "string", "minLength": 1 },
+        "handoff_mode": { "type": "string", "minLength": 1 },
+        "activation_authority": { "type": "string", "minLength": 1 }
+      }
     },
     "stage_1": {
       "type": "object",
@@ -34,6 +72,8 @@
         "bands_surface",
         "signals_surface",
         "top_k_default",
+        "starter_ref",
+        "max_stage_1_tokens",
         "activation_policy",
         "manual_policy",
         "policy_ref"
@@ -45,6 +85,8 @@
         "bands_surface": { "type": "string", "minLength": 1 },
         "signals_surface": { "type": "string", "minLength": 1 },
         "top_k_default": { "type": "integer", "minimum": 1 },
+        "starter_ref": { "type": "string", "minLength": 1 },
+        "max_stage_1_tokens": { "type": "integer", "minimum": 1 },
         "activation_policy": { "const": "never-activate" },
         "manual_policy": { "type": "string", "minLength": 1 },
         "policy_ref": { "type": "string", "minLength": 1 }
@@ -59,6 +101,7 @@
         "shortlist_surface",
         "activation_manifest",
         "context_manifest",
+        "max_shortlist",
         "decision_modes"
       ],
       "properties": {
@@ -67,6 +110,7 @@
         "shortlist_surface": { "type": "string", "minLength": 1 },
         "activation_manifest": { "type": "string", "minLength": 1 },
         "context_manifest": { "type": "string", "minLength": 1 },
+        "max_shortlist": { "type": "integer", "minimum": 1 },
         "decision_modes": {
           "type": "array",
           "items": { "type": "string", "minLength": 1 },

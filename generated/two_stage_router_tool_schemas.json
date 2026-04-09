@@ -1,6 +1,40 @@
 {
-  "schema_version": 1,
+  "schema_version": "aoa_routing_two_stage_router_tool_schemas_v2",
+  "schema_ref": "schemas/two-stage-router-tool-schemas.schema.json",
+  "owner_repo": "aoa-routing",
+  "surface_kind": "two_stage_router_tool_schemas",
   "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "policy_ref": "config/two_stage_router_policy.json",
+  "validation_refs": [
+    "scripts/build_two_stage_skill_router.py",
+    "scripts/validate_two_stage_skill_router.py",
+    "tests/test_two_stage_skill_router.py"
+  ],
+  "low_context_boundary": {
+    "wording_scope": "routing-owned",
+    "source_payload_copying": "forbidden",
+    "stage_1_source_refs": [
+      "aoa-skills:generated/tiny_router_capsules.min.json",
+      "aoa-skills:generated/tiny_router_candidate_bands.json",
+      "aoa-skills:generated/tiny_router_skill_signals.json"
+    ],
+    "stage_2_source_refs": [
+      "aoa-skills:generated/skill_capsules.json",
+      "aoa-skills:generated/local_adapter_manifest.json",
+      "aoa-skills:generated/context_retention_manifest.json"
+    ],
+    "forbidden_source_payload_fields": [
+      "summary",
+      "trigger_boundary_short",
+      "verification_short",
+      "skill_path",
+      "allowlist_paths",
+      "rehydration_hint",
+      "context_rehydration_hint",
+      "companions"
+    ]
+  },
+  "stage_2_shortlist_limit": 3,
   "tools": [
     {
       "name": "preselect_skills",
@@ -17,7 +51,7 @@
           "top_k": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 5
+            "maximum": 3
           }
         },
         "required": [
@@ -40,7 +74,7 @@
             "items": {
               "type": "string"
             },
-            "maxItems": 5
+            "maxItems": 3
           }
         },
         "required": [
@@ -65,7 +99,7 @@
           "top_k": {
             "type": "integer",
             "minimum": 1,
-            "maximum": 5
+            "maximum": 3
           }
         },
         "required": [

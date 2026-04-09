@@ -1,6 +1,15 @@
 {
-  "schema_version": 1,
+  "schema_version": "aoa_routing_two_stage_router_examples_v2",
+  "schema_ref": "schemas/two-stage-router-examples.schema.json",
+  "owner_repo": "aoa-routing",
+  "surface_kind": "two_stage_router_examples",
   "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "policy_ref": "config/two_stage_router_policy.json",
+  "validation_refs": [
+    "scripts/build_two_stage_skill_router.py",
+    "scripts/validate_two_stage_skill_router.py",
+    "tests/test_two_stage_skill_router.py"
+  ],
   "examples": [
     {
       "case_id": "tiny-positive-abyss-safe-infra-change",
@@ -103,7 +112,6 @@
         ]
       },
       "decision_packet": {
-        "task": "Use $abyss-safe-infra-change to apply the base infra-change workflow with repo-relative abyss paths, explicit local authority, and local verification notes.",
         "confidence": "strong",
         "lead_score": 53,
         "lead_gap": 33,
@@ -143,20 +151,9 @@
               "token:abyss",
               "token:authority"
             ],
-            "summary": "Thin abyss overlay for bounded infrastructure or configuration changes with repo-relative operational surfaces, explicit local authority, and reviewable risk notes.",
-            "trigger_boundary_short": "Use when the base aoa-safe-infra-change workflow is already correct, but an abyss- repo needs repo-relative operational surfaces, commands, or approval notes; the task is a bounded infrastructure, service,...",
-            "verification_short": "Checks: confirm the base skill is still the correct workflow; confirm repo-relative paths and commands are named explicitly; confirm local authority, rollback posture, and verification remain explicit; confirm the...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$abyss-safe-infra-change",
-            "allowlist_paths": [
-              ".agents/skills/abyss-safe-infra-change"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-safe-infra-change",
-              "abyss-sanitized-share"
-            ]
+            "activation_hint": "$abyss-safe-infra-change"
           },
           {
             "name": "abyss-sanitized-share",
@@ -170,20 +167,9 @@
               "token:infra",
               "positive-prompt:abyss"
             ],
-            "summary": "Thin abyss overlay for turning raw repo-local technical material into a shareable public-safe surface with explicit local thresholds and canonical placement notes.",
-            "trigger_boundary_short": "Use when the base aoa-sanitized-share workflow is already correct, but an abyss- repo needs local sharing surfaces, repo-relative paths, or explicit sanitization thresholds; raw logs, diagnostics, config snippets,...",
-            "verification_short": "Checks: confirm the base skill is still the correct workflow; confirm the repo-relative sharing surface is named explicitly; confirm local thresholds and review posture are visible rather than implied; confirm the...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$abyss-sanitized-share",
-            "allowlist_paths": [
-              ".agents/skills/abyss-sanitized-share"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-sanitized-share",
-              "abyss-safe-infra-change"
-            ]
+            "activation_hint": "$abyss-sanitized-share"
           },
           {
             "name": "aoa-safe-infra-change",
@@ -197,21 +183,9 @@
               "positive-prompt:change",
               "positive-prompt:explicit"
             ],
-            "summary": "Make bounded infrastructure or configuration changes with explicit risk framing, verification, and reversible execution discipline.",
-            "trigger_boundary_short": "Use when the task changes infrastructure, services, configuration, orchestration, or operational surfaces; the change has runtime, safety, or deployment implications; Avoid when the task is a purely local code...",
-            "verification_short": "Checks: confirm the operational surface was named clearly; confirm the change stayed bounded; confirm verification was explicit and proportional to the risk; confirm rollback or recovery thinking was present before...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-safe-infra-change",
-            "allowlist_paths": [
-              ".agents/skills/aoa-safe-infra-change"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-dry-run-first",
-              "aoa-approval-gate-check",
-              "aoa-local-stack-bringup"
-            ]
+            "activation_hint": "$aoa-safe-infra-change"
           }
         ],
         "decision_reason": "lead candidate is explicit-only even though the shortlist is strong",
@@ -284,7 +258,6 @@
         ]
       },
       "decision_packet": {
-        "task": "This repository is not an abyss-* repo and the base infra-change workflow already names the needed operational surface without any project-specific overlay.",
         "confidence": "weak",
         "lead_score": 4,
         "lead_gap": 4,
@@ -320,20 +293,9 @@
               "positive-prompt:change",
               "positive-prompt:without"
             ],
-            "summary": "Refactor code toward clearer ports and adapters so reusable logic is less entangled with infrastructure details.",
-            "trigger_boundary_short": "Use when business or domain logic is tightly coupled to a concrete dependency; tests are hard to write because external concerns leak into the core logic; Avoid when the task is a tiny local fix with no...",
-            "verification_short": "Checks: confirm the concrete dependency pressure was real; confirm the new boundary is narrower and clearer than before; confirm behavior did not drift silently; confirm the refactor stayed inside the declared scope.",
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
-            "activation_hint": "implicit-ok",
-            "allowlist_paths": [
-              ".agents/skills/aoa-port-adapter-refactor"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-core-logic-boundary",
-              "aoa-bounded-context-map"
-            ]
+            "activation_hint": "implicit-ok"
           }
         ],
         "decision_reason": "shortlist stayed below the precision-first activation thresholds",
@@ -444,7 +406,6 @@
         ]
       },
       "decision_packet": {
-        "task": "Use $abyss-sanitized-share to place sanitized abyss artifacts in repo-relative sharing surfaces with explicit local thresholds and review posture.",
         "confidence": "strong",
         "lead_score": 54,
         "lead_gap": 39,
@@ -484,20 +445,9 @@
               "token:relative",
               "token:sanitized"
             ],
-            "summary": "Thin abyss overlay for turning raw repo-local technical material into a shareable public-safe surface with explicit local thresholds and canonical placement notes.",
-            "trigger_boundary_short": "Use when the base aoa-sanitized-share workflow is already correct, but an abyss- repo needs local sharing surfaces, repo-relative paths, or explicit sanitization thresholds; raw logs, diagnostics, config snippets,...",
-            "verification_short": "Checks: confirm the base skill is still the correct workflow; confirm the repo-relative sharing surface is named explicitly; confirm local thresholds and review posture are visible rather than implied; confirm the...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$abyss-sanitized-share",
-            "allowlist_paths": [
-              ".agents/skills/abyss-sanitized-share"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-sanitized-share",
-              "abyss-safe-infra-change"
-            ]
+            "activation_hint": "$abyss-sanitized-share"
           },
           {
             "name": "abyss-safe-infra-change",
@@ -511,20 +461,9 @@
               "positive-prompt:explicit",
               "positive-prompt:relative"
             ],
-            "summary": "Thin abyss overlay for bounded infrastructure or configuration changes with repo-relative operational surfaces, explicit local authority, and reviewable risk notes.",
-            "trigger_boundary_short": "Use when the base aoa-safe-infra-change workflow is already correct, but an abyss- repo needs repo-relative operational surfaces, commands, or approval notes; the task is a bounded infrastructure, service,...",
-            "verification_short": "Checks: confirm the base skill is still the correct workflow; confirm repo-relative paths and commands are named explicitly; confirm local authority, rollback posture, and verification remain explicit; confirm the...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$abyss-safe-infra-change",
-            "allowlist_paths": [
-              ".agents/skills/abyss-safe-infra-change"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-safe-infra-change",
-              "abyss-sanitized-share"
-            ]
+            "activation_hint": "$abyss-safe-infra-change"
           },
           {
             "name": "atm10-source-of-truth-check",
@@ -535,20 +474,9 @@
               "positive-prompt:posture",
               "positive-prompt:relative"
             ],
-            "summary": "Thin atm10 overlay for clarifying repo-local document authority, canonical files, review checklists, and review posture without changing the base workflow.",
-            "trigger_boundary_short": "Use when the base aoa-source-of-truth-check workflow is already correct, but an atm10- repo needs local canonical-file patterns, repo-relative docs, or doc review rules; contributors need a thin overlay that maps...",
-            "verification_short": "Checks: confirm the base skill is still the right workflow; confirm authoritative repo-relative files are named explicitly; confirm local review posture is visible rather than implied; confirm the adaptation reduces...",
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
-            "activation_hint": "implicit-ok",
-            "allowlist_paths": [
-              ".agents/skills/atm10-source-of-truth-check"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-source-of-truth-check",
-              "aoa-adr-write"
-            ]
+            "activation_hint": "implicit-ok"
           }
         ],
         "decision_reason": "lead candidate is explicit-only even though the shortlist is strong",
@@ -641,7 +569,6 @@
         ]
       },
       "decision_packet": {
-        "task": "This artifact is already public-safe and no abyss-specific local sharing surface or threshold needs to be named.",
         "confidence": "weak",
         "lead_score": 3,
         "lead_gap": 0,
@@ -676,20 +603,9 @@
             "preselect_reasons": [
               "band:risk-ops-safety"
             ],
-            "summary": "Classify whether a requested action should proceed, wait for explicit approval, or be refused at the current authority level.",
-            "trigger_boundary_short": "Use when a task may be destructive, operationally sensitive, or security-relevant; the current authority level is unclear; Avoid when the task is clearly low-risk and already bounded by an ordinary workflow; no...",
-            "verification_short": "Checks: confirm the touched surfaces were identified; confirm the approval need was classified explicitly rather than as a vague warning; confirm the next step fits the stated authority level; confirm uncertainty...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-approval-gate-check",
-            "allowlist_paths": [
-              ".agents/skills/aoa-approval-gate-check"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-dry-run-first",
-              "aoa-safe-infra-change"
-            ]
+            "activation_hint": "$aoa-approval-gate-check"
           },
           {
             "name": "aoa-dry-run-first",
@@ -698,20 +614,9 @@
             "preselect_reasons": [
               "band:risk-ops-safety"
             ],
-            "summary": "Prefer simulation, inspection, or preview paths before real execution, and require one explicit confirmation seam before any mutating step runs.",
-            "trigger_boundary_short": "Use when the task can be simulated, previewed, or inspected before real execution; the action may delete, restore, migrate, reconfigure, or otherwise alter a live surface; Avoid when no meaningful dry-run or preview...",
-            "verification_short": "Checks: confirm a preview or dry-run path was considered first; confirm the preview scope was named honestly; confirm unresolved risk after preview was not hidden; confirm the preview step did not silently perform...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-dry-run-first",
-            "allowlist_paths": [
-              ".agents/skills/aoa-dry-run-first"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-safe-infra-change",
-              "aoa-approval-gate-check"
-            ]
+            "activation_hint": "$aoa-dry-run-first"
           },
           {
             "name": "aoa-local-stack-bringup",
@@ -720,20 +625,9 @@
             "preselect_reasons": [
               "band:risk-ops-safety"
             ],
-            "summary": "Bring up a bounded local multi-service stack by reviewing rendered runtime truth, checking host readiness, and launching through one explicit lifecycle entrypoint.",
-            "trigger_boundary_short": "Use when a local stack has more than one meaningful service or runtime layer; the selected profile, preset, or overlay can change what will actually start; Avoid when the main task is remote deployment, continuous...",
-            "verification_short": "Checks: confirm the rendered output answered what would actually start before launch; confirm the readiness verdict was selector-aware and itemized with visible severity; confirm blockers stopped the launch path or...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-local-stack-bringup",
-            "allowlist_paths": [
-              ".agents/skills/aoa-local-stack-bringup"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-safe-infra-change",
-              "aoa-dry-run-first"
-            ]
+            "activation_hint": "$aoa-local-stack-bringup"
           }
         ],
         "decision_reason": "shortlist stayed below the precision-first activation thresholds",
@@ -844,7 +738,6 @@
         ]
       },
       "decision_packet": {
-        "task": "Use $abyss-self-diagnostic-spine to turn repo-relative runtime evidence plus optional reviewed session refs into one bounded diagnostic session artifact with an honest exit class and no silent repair authority.",
         "confidence": "strong",
         "lead_score": 81,
         "lead_gap": 62,
@@ -884,22 +777,9 @@
               "token:abyss",
               "token:artifact"
             ],
-            "summary": "Thin abyss overlay for turning runtime-body evidence plus optional reviewed session references into one bounded diagnostic session artifact and an honest next-move class without granting silent self-mutation.",
-            "trigger_boundary_short": "Use when the base aoa-session-self-diagnose workflow is already correct, but an abyss- repo needs one runtime-owned diagnostic session artifact with repo-relative evidence refs; a concrete runtime path must be...",
-            "verification_short": "Checks: confirm the base skill is still the correct workflow; confirm a concrete target exists; confirm the produced artifact stays runtime-owned and citation-friendly; confirm drift classes are named explicitly.",
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
-            "activation_hint": "implicit-ok",
-            "allowlist_paths": [
-              ".agents/skills/abyss-self-diagnostic-spine"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-session-self-diagnose",
-              "aoa-session-self-repair",
-              "aoa-session-progression-lift",
-              "aoa-quest-harvest"
-            ]
+            "activation_hint": "implicit-ok"
           },
           {
             "name": "aoa-session-donor-harvest",
@@ -913,24 +793,9 @@
               "positive-prompt:artifact",
               "positive-prompt:bounded"
             ],
-            "summary": "Harvest reusable donor units from a reviewed session into a bounded HARVEST_PACKET, route each unit to the right AoA owner layer, and hand off to the next honest post-session skill when needed.",
-            "trigger_boundary_short": "Use when a session transcript, compaction note, review packet, or bounded recap exists and must be distilled into reusable donor units; the work is post-session and reviewable rather than live execution; Avoid when...",
-            "verification_short": "Checks: confirm the source artifact is reviewed and bounded; confirm each kept candidate names one reusable unit rather than a topic; confirm each accepted candidate has one primary owner layer; confirm the nearest...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-session-donor-harvest",
-            "allowlist_paths": [
-              ".agents/skills/aoa-session-donor-harvest"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-quest-harvest",
-              "aoa-automation-opportunity-scan",
-              "aoa-session-route-forks",
-              "aoa-session-self-diagnose",
-              "aoa-session-progression-lift",
-              "aoa-source-of-truth-check"
-            ]
+            "activation_hint": "$aoa-session-donor-harvest"
           },
           {
             "name": "aoa-session-progression-lift",
@@ -944,21 +809,9 @@
               "positive-prompt:bounded",
               "positive-prompt:evidence"
             ],
-            "summary": "Lift reviewed session evidence into a multi-axis progression delta with bounded unlock hints, quest reflection cues, and no fake single-score authority.",
-            "trigger_boundary_short": "Use when a reviewed session generated meaningful mastery evidence; the route needs progression legibility without mutating source role profiles; Avoid when there is no reviewed evidence; the request wants one global...",
-            "verification_short": "Checks: confirm all meaningful axis claims cite reviewed evidence; confirm the verdict matches the evidence; confirm zero or negative movement remains allowed; confirm unlock hints are small and explicit.",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-session-progression-lift",
-            "allowlist_paths": [
-              ".agents/skills/aoa-session-progression-lift"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-session-donor-harvest",
-              "aoa-quest-harvest",
-              "aoa-session-self-diagnose"
-            ]
+            "activation_hint": "$aoa-session-progression-lift"
           }
         ],
         "decision_reason": "lead candidate cleared the precision-first activation thresholds",
@@ -1061,7 +914,6 @@
         ]
       },
       "decision_packet": {
-        "task": "The material is still a live unreviewed session and there is no concrete runtime target or repo-relative evidence surface to normalize yet, so a diagnostic spine artifact would be premature.",
         "confidence": "weak",
         "lead_score": 5,
         "lead_gap": 2,
@@ -1101,24 +953,9 @@
               "positive-prompt:session",
               "negative-token:live"
             ],
-            "summary": "Harvest reusable donor units from a reviewed session into a bounded HARVEST_PACKET, route each unit to the right AoA owner layer, and hand off to the next honest post-session skill when needed.",
-            "trigger_boundary_short": "Use when a session transcript, compaction note, review packet, or bounded recap exists and must be distilled into reusable donor units; the work is post-session and reviewable rather than live execution; Avoid when...",
-            "verification_short": "Checks: confirm the source artifact is reviewed and bounded; confirm each kept candidate names one reusable unit rather than a topic; confirm each accepted candidate has one primary owner layer; confirm the nearest...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-session-donor-harvest",
-            "allowlist_paths": [
-              ".agents/skills/aoa-session-donor-harvest"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-quest-harvest",
-              "aoa-automation-opportunity-scan",
-              "aoa-session-route-forks",
-              "aoa-session-self-diagnose",
-              "aoa-session-progression-lift",
-              "aoa-source-of-truth-check"
-            ]
+            "activation_hint": "$aoa-session-donor-harvest"
           },
           {
             "name": "aoa-session-progression-lift",
@@ -1127,21 +964,9 @@
             "preselect_reasons": [
               "band:quest-harvest-governance"
             ],
-            "summary": "Lift reviewed session evidence into a multi-axis progression delta with bounded unlock hints, quest reflection cues, and no fake single-score authority.",
-            "trigger_boundary_short": "Use when a reviewed session generated meaningful mastery evidence; the route needs progression legibility without mutating source role profiles; Avoid when there is no reviewed evidence; the request wants one global...",
-            "verification_short": "Checks: confirm all meaningful axis claims cite reviewed evidence; confirm the verdict matches the evidence; confirm zero or negative movement remains allowed; confirm unlock hints are small and explicit.",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-session-progression-lift",
-            "allowlist_paths": [
-              ".agents/skills/aoa-session-progression-lift"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-session-donor-harvest",
-              "aoa-quest-harvest",
-              "aoa-session-self-diagnose"
-            ]
+            "activation_hint": "$aoa-session-progression-lift"
           },
           {
             "name": "aoa-sanitized-share",
@@ -1154,20 +979,9 @@
               "negative-prompt:material",
               "negative-prompt:there"
             ],
-            "summary": "Separate raw technical material from a shareable public-safe surface, place the sanitized output in the canonical sharing location, and verify that the lesson survives the redaction.",
-            "trigger_boundary_short": "Use when logs, configs, diagnostics, reports, or examples may contain sensitive details; a result needs to be shared publicly or with a broader audience; Avoid when the material is already clearly public-safe and...",
-            "verification_short": "Checks: confirm obvious sensitive surfaces were checked; confirm the resulting artifact is still understandable; confirm the sanitization level matches the intended audience; confirm raw sensitive detail was not...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-sanitized-share",
-            "allowlist_paths": [
-              ".agents/skills/aoa-sanitized-share"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-safe-infra-change",
-              "aoa-source-of-truth-check"
-            ]
+            "activation_hint": "$aoa-sanitized-share"
           }
         ],
         "decision_reason": "shortlist stayed below the precision-first activation thresholds",
@@ -1272,7 +1086,6 @@
         ]
       },
       "decision_packet": {
-        "task": "This abyss repo now has a diagnostic spine note, runbook fragments, and overlay guidance that disagree about which file is authoritative. Map the canonical docs and shorten the entrypoints instead of producing a runtime artifact.",
         "confidence": "weak",
         "lead_score": 7,
         "lead_gap": 4,
@@ -1309,24 +1122,9 @@
               "token:artifact",
               "token:note"
             ],
-            "summary": "Harvest reusable donor units from a reviewed session into a bounded HARVEST_PACKET, route each unit to the right AoA owner layer, and hand off to the next honest post-session skill when needed.",
-            "trigger_boundary_short": "Use when a session transcript, compaction note, review packet, or bounded recap exists and must be distilled into reusable donor units; the work is post-session and reviewable rather than live execution; Avoid when...",
-            "verification_short": "Checks: confirm the source artifact is reviewed and bounded; confirm each kept candidate names one reusable unit rather than a topic; confirm each accepted candidate has one primary owner layer; confirm the nearest...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-session-donor-harvest",
-            "allowlist_paths": [
-              ".agents/skills/aoa-session-donor-harvest"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-quest-harvest",
-              "aoa-automation-opportunity-scan",
-              "aoa-session-route-forks",
-              "aoa-session-self-diagnose",
-              "aoa-session-progression-lift",
-              "aoa-source-of-truth-check"
-            ]
+            "activation_hint": "$aoa-session-donor-harvest"
           },
           {
             "name": "aoa-automation-opportunity-scan",
@@ -1335,23 +1133,9 @@
             "preselect_reasons": [
               "band:quest-harvest-governance"
             ],
-            "summary": "Detect reviewed or repeated project processes that are candidates for automation, classify whether they are seed-ready, and route them to the right owner layer without granting schedule or mutation authority.",
-            "trigger_boundary_short": "Use when a reviewed session or repeated project slice reveals a recurring manual route; the same audit, report, hygiene pass, or triage loop keeps coming back; Avoid when the work happened only once and still looks...",
-            "verification_short": "Checks: confirm each candidate names the current manual route; confirm evidence refs justify the repeat signal; confirm stable input and output posture is assessed explicitly; confirm seedready or notnow is explicit...",
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-automation-opportunity-scan",
-            "allowlist_paths": [
-              ".agents/skills/aoa-automation-opportunity-scan"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-session-donor-harvest",
-              "aoa-session-route-forks",
-              "aoa-session-self-diagnose",
-              "aoa-session-self-repair",
-              "aoa-quest-harvest"
-            ]
+            "activation_hint": "$aoa-automation-opportunity-scan"
           },
           {
             "name": "aoa-checkpoint-closeout-bridge",
@@ -1360,17 +1144,9 @@
             "preselect_reasons": [
               "band:quest-harvest-governance"
             ],
-            "summary": "Bridge local checkpoint evidence into one reviewed closeout execution chain without turning provisional notes into final harvest, progression, or quest authority.",
-            "trigger_boundary_short": "Use when checkpoint notes already carry harvest, progression, or upgrade candidates; reviewed closeout must use those candidates as focus hints without treating them as final authority; Avoid when the session is...",
-            "verification_short": "Checks: confirm checkpoint-collect only updates local ledger surfaces; confirm the bridge never emits final verdicts during mid-session capture; confirm reviewed closeout refuses to run without a reviewed artifact;...",
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
-            "activation_hint": "implicit-ok",
-            "allowlist_paths": [
-              ".agents/skills/aoa-checkpoint-closeout-bridge"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": []
+            "activation_hint": "implicit-ok"
           }
         ],
         "decision_reason": "shortlist stayed below the precision-first activation thresholds",
@@ -1455,7 +1231,6 @@
         "fallback_candidates": []
       },
       "decision_packet": {
-        "task": "Use $aoa-adr-write to record a meaningful architectural or workflow decision, place it in the canonical decision surface, and verify the rationale is easy to find.",
         "confidence": "strong",
         "lead_score": 59,
         "lead_gap": 41,
@@ -1474,19 +1249,9 @@
               "token:adr",
               "token:architectural"
             ],
-            "summary": "Record a meaningful architectural or workflow decision, place it in the canonical note surface, and verify that future readers can find the rationale rather than only the outcome.",
-            "trigger_boundary_short": "Use when a decision changes structure, boundaries, tooling, or workflow expectations; future contributors will need to know why a path was chosen; Avoid when the change is tiny and self-evident; the note would only...",
-            "verification_short": "Checks: confirm the decision was meaningful enough to record; confirm the rationale is explicit; confirm consequences or tradeoffs are named; confirm the note aligns with the real change surface.",
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
-            "activation_hint": "implicit-ok",
-            "allowlist_paths": [
-              ".agents/skills/aoa-adr-write"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-source-of-truth-check"
-            ]
+            "activation_hint": "implicit-ok"
           },
           {
             "name": "aoa-source-of-truth-check",
@@ -1500,20 +1265,9 @@
               "token:canonical",
               "positive-prompt:aoa"
             ],
-            "summary": "Check whether repository guidance, canonical docs, and operational instructions have clear ownership, and keep top-level status surfaces short and link-driven once canonical homes already exist.",
-            "trigger_boundary_short": "Use when a repository has several docs that may overlap or conflict; contributors may not know which file to trust first; Avoid when the repository is tiny and has no meaningful source-of-truth ambiguity; the task...",
-            "verification_short": "Checks: confirm the main source-of-truth ambiguity was reduced; confirm authoritative files are named explicitly; confirm overlaps or conflicts were surfaced rather than hidden; confirm summary docs stay short and...",
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
-            "activation_hint": "implicit-ok",
-            "allowlist_paths": [
-              ".agents/skills/aoa-source-of-truth-check"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-adr-write",
-              "atm10-source-of-truth-check"
-            ]
+            "activation_hint": "implicit-ok"
           },
           {
             "name": "aoa-change-protocol",
@@ -1523,21 +1277,9 @@
               "positive-prompt:aoa",
               "positive-prompt:verify"
             ],
-            "summary": "Bounded workflow for Codex to plan a change, keep it scoped, verify it explicitly, and report it clearly.",
-            "trigger_boundary_short": "Use when the change affects code, config, docs, or operational surfaces in a meaningful way; the task benefits from an explicit plan and verification path; Avoid when the edit is tiny and has no meaningful review or...",
-            "verification_short": "Checks: confirm a plan existed before apply; confirm the change stayed scoped; confirm at least one explicit verification step was run or intentionally skipped with explanation; confirm the report includes outcome...",
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
-            "activation_hint": "implicit-ok",
-            "allowlist_paths": [
-              ".agents/skills/aoa-change-protocol"
-            ],
-            "context_rehydration_hint": "Reload the full SKILL.md and keep policy, procedure, and verification in active context before resuming.",
-            "companions": [
-              "aoa-contract-test",
-              "aoa-tdd-slice",
-              "aoa-safe-infra-change"
-            ]
+            "activation_hint": "implicit-ok"
           }
         ],
         "decision_reason": "lead candidate cleared the precision-first activation thresholds",

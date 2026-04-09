@@ -6,9 +6,16 @@
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "profile",
     "policy_ref",
+    "validation_refs",
     "integration_mode",
+    "stage_1_token_budget",
+    "stage_2_shortlist_limit",
+    "skill_root_starter",
     "source_inputs",
     "skill_count",
     "band_count",
@@ -20,10 +27,22 @@
     "task_hint_kinds"
   ],
   "properties": {
-    "schema_version": { "const": 1 },
+    "schema_version": { "const": "aoa_routing_two_stage_router_manifest_v2" },
+    "schema_ref": { "const": "schemas/two-stage-router-manifest.schema.json" },
+    "owner_repo": { "const": "aoa-routing" },
+    "surface_kind": { "const": "two_stage_router_manifest" },
     "profile": { "const": "aoa-routing-wave-9-two-stage-skill-router" },
     "policy_ref": { "type": "string", "minLength": 1 },
+    "validation_refs": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1,
+      "uniqueItems": true
+    },
     "integration_mode": { "const": "adjacent-seam" },
+    "stage_1_token_budget": { "type": "integer", "minimum": 1 },
+    "stage_2_shortlist_limit": { "type": "integer", "minimum": 1 },
+    "skill_root_starter": { "type": "string", "minLength": 1 },
     "source_inputs": {
       "type": "array",
       "items": { "type": "string", "minLength": 1 },

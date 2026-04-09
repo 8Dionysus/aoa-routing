@@ -53,16 +53,123 @@ def test_build_outputs_include_two_stage_router_surfaces() -> None:
     assert "two_stage_router_examples.json" in outputs
     assert "two_stage_router_manifest.json" in outputs
     assert "two_stage_router_eval_cases.jsonl" in outputs
+    assert outputs["two_stage_skill_entrypoints.json"]["schema_version"] == "aoa_routing_two_stage_skill_entrypoints_v2"
+    assert outputs["two_stage_skill_entrypoints.json"]["schema_ref"] == "schemas/two-stage-skill-entrypoints.schema.json"
+    assert outputs["two_stage_skill_entrypoints.json"]["owner_repo"] == "aoa-routing"
+    assert outputs["two_stage_skill_entrypoints.json"]["surface_kind"] == "two_stage_skill_entrypoints"
     assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["activation_policy"] == "never-activate"
+    assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["starter_ref"] == "skill-root"
+    assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["max_stage_1_tokens"] == 1200
+    assert outputs["two_stage_skill_entrypoints.json"]["stage_2"]["max_shortlist"] == 3
+    assert outputs["two_stage_skill_entrypoints.json"]["tiny_model_handoff"] == {
+        "starter_ref": "skill-root",
+        "entry_surface": "generated/tiny_model_entrypoints.json",
+        "handoff_name": "two-stage-skill-selection",
+        "handoff_mode": "optional-adjacent",
+        "activation_authority": "source-owned",
+    }
     build_packet_tool = next(
         tool
         for tool in outputs["two_stage_router_tool_schemas.json"]["tools"]
         if tool["name"] == "build_skill_decision_packet"
     )
     assert build_packet_tool["input_schema"]["properties"]["shortlist_names"].get("minItems", 0) == 0
+    assert build_packet_tool["input_schema"]["properties"]["shortlist_names"]["maxItems"] == 3
+    preselect_tool = next(
+        tool
+        for tool in outputs["two_stage_router_tool_schemas.json"]["tools"]
+        if tool["name"] == "preselect_skills"
+    )
+    assert preselect_tool["input_schema"]["properties"]["top_k"]["maximum"] == 3
     example = outputs["two_stage_router_examples.json"]["examples"][0]
     assert "confidence" in example["preselect_result"]
     assert "decision_reason" in example["decision_packet"]
+    assert set(example["decision_packet"]["candidates"][0]) == {
+        "name",
+        "band",
+        "score",
+        "preselect_reasons",
+        "invocation_mode",
+        "manual_invocation_required",
+        "activation_hint",
+    }
+
+
+def test_example_projection_keeps_runtime_decision_packet_rich_but_examples_redacted(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    generated_dir = skills_root / "generated"
+    write_json(
+        generated_dir / "tiny_router_skill_signals.json",
+        {
+            "skills": [
+                {
+                    "name": "aoa-source-of-truth-check",
+                    "band": "decision-doc-authority",
+                    "invocation_mode": "explicit-preferred",
+                    "manual_invocation_required": False,
+                    "project_overlay": False,
+                    "companions": ["aoa-change-protocol"],
+                }
+            ]
+        },
+    )
+    write_json(
+        generated_dir / "skill_capsules.json",
+        {
+            "skills": [
+                {
+                    "name": "aoa-source-of-truth-check",
+                    "summary": "Clarify which files are authoritative.",
+                    "trigger_boundary_short": "Use when repository guidance overlaps or conflicts.",
+                    "verification_short": "Report the authoritative files and entrypoints.",
+                }
+            ]
+        },
+    )
+    write_json(
+        generated_dir / "local_adapter_manifest.json",
+        {"skills": [{"name": "aoa-source-of-truth-check", "allowlist_paths": ["docs"]}]},
+    )
+    write_json(
+        generated_dir / "context_retention_manifest.json",
+        {"skills": [{"name": "aoa-source-of-truth-check", "rehydration_hint": "re-open the canonical docs"}]},
+    )
+
+    packet = build_decision_packet(
+        "Clarify the canonical docs and authority boundaries.",
+        {
+            "task": "Clarify the canonical docs and authority boundaries.",
+            "shortlist": [
+                {
+                    "name": "aoa-source-of-truth-check",
+                    "score": 12,
+                    "reasons": ["positive:authority"],
+                }
+            ],
+            "confidence": "strong",
+            "lead_score": 12,
+            "lead_gap": 12,
+            "fallback_candidates": [],
+        },
+        skills_root,
+    )
+
+    projected = build_two_stage_skill_router.project_example_decision_packet(packet)
+
+    assert "summary" in packet["candidates"][0]
+    assert "allowlist_paths" in packet["candidates"][0]
+    assert "summary" not in projected["candidates"][0]
+    assert "allowlist_paths" not in projected["candidates"][0]
+    assert "context_rehydration_hint" not in projected["candidates"][0]
+    assert set(projected["candidates"][0]) == {
+        "name",
+        "band",
+        "score",
+        "preselect_reasons",
+        "invocation_mode",
+        "manual_invocation_required",
+        "activation_hint",
+    }
 
 
 def test_build_outputs_anchor_eval_expectations_to_source_contracts() -> None:
@@ -117,6 +224,40 @@ def test_validate_two_stage_outputs_accepts_fixture_build(tmp_path: Path) -> Non
     assert issues == []
 
 
+def test_validate_two_stage_outputs_rejects_missing_stage_2_activation_surface(tmp_path: Path) -> None:
+    routing_root = tmp_path / "aoa-routing"
+    shutil.copytree(FIXTURES_ROOT / "aoa-routing", routing_root)
+    skills_root = tmp_path / "aoa-skills"
+    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
+    generated_dir = routing_root / "generated"
+    outputs = build_fixture_outputs()
+    for filename, payload in outputs.items():
+        path = generated_dir / filename
+        if filename.endswith(".jsonl"):
+            path.write_text(
+                "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in payload),
+                encoding="utf-8",
+            )
+        else:
+            write_json(path, payload)
+
+    adapter_manifest_path = skills_root / "generated" / "local_adapter_manifest.json"
+    adapter_manifest = load_fixture_json(adapter_manifest_path)
+    adapter_manifest["skills"] = [
+        entry
+        for entry in adapter_manifest["skills"]
+        if entry["name"] != "aoa-change-protocol"
+    ]
+    write_json(adapter_manifest_path, adapter_manifest)
+
+    issues = validate_two_stage_skill_router.validate_outputs(routing_root, skills_root)
+
+    assert (
+        "local_adapter_manifest.json",
+        "stage-2 surface coverage mismatch: missing ['aoa-change-protocol']",
+    ) in issues
+
+
 def test_preselect_keeps_fallback_candidates_out_of_shortlist_for_empty_signal() -> None:
     policy = load_fixture_json(FIXTURES_ROOT / "aoa-routing" / "config" / "two_stage_router_policy.json")
     signals = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_skill_signals.json")
@@ -141,6 +282,20 @@ def test_preselect_keeps_fallback_candidates_out_of_shortlist_for_empty_signal()
             "reasons": ["fallback"],
         }
     ]
+
+
+def test_preselect_caps_top_k_to_declared_stage_2_shortlist_limit() -> None:
+    policy = load_fixture_json(FIXTURES_ROOT / "aoa-routing" / "config" / "two_stage_router_policy.json")
+    signals = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_skill_signals.json")
+    bands = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_candidate_bands.json")
+    prompt = (
+        "Use explicit verification, a bounded change workflow, a contract check, "
+        "and a test-first slice while keeping the repo guidance authoritative."
+    )
+
+    preselected = preselect(prompt, signals, bands, policy, top_k=7)
+
+    assert len(preselected["shortlist"]) <= 3
 
 
 def test_preselect_marks_close_scores_as_weak_and_stage_2_stays_no_skill() -> None:
@@ -487,6 +642,93 @@ def test_build_decision_packet_requires_manual_handle_for_strong_explicit_only_l
     assert packet["suggested_decision"]["skill"] == "aoa-approval-gate-check"
 
 
+def test_build_decision_packet_rejects_shortlist_beyond_declared_limit(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    generated_dir = skills_root / "generated"
+    signals = {
+        "skills": [
+            {
+                "name": "skill-one",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+            {
+                "name": "skill-two",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+            {
+                "name": "skill-three",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+            {
+                "name": "skill-four",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+        ]
+    }
+    capsules = {
+        "skills": [
+            {
+                "name": name,
+                "summary": f"{name} summary",
+                "trigger_boundary_short": f"{name} trigger",
+                "verification_short": f"{name} verification",
+            }
+            for name in ["skill-one", "skill-two", "skill-three", "skill-four"]
+        ]
+    }
+    adapters = {
+        "skills": [
+            {"name": name, "allowlist_paths": [".agents/skills"]}
+            for name in ["skill-one", "skill-two", "skill-three", "skill-four"]
+        ]
+    }
+    retention = {
+        "skills": [
+            {"name": name, "rehydration_hint": f"reload {name}"}
+            for name in ["skill-one", "skill-two", "skill-three", "skill-four"]
+        ]
+    }
+    write_json(generated_dir / "tiny_router_skill_signals.json", signals)
+    write_json(generated_dir / "skill_capsules.json", capsules)
+    write_json(generated_dir / "local_adapter_manifest.json", adapters)
+    write_json(generated_dir / "context_retention_manifest.json", retention)
+
+    try:
+        build_decision_packet(
+            "Route a bounded change",
+            {
+                "task": "Route a bounded change",
+                "shortlist": [{"name": name} for name in ["skill-one", "skill-two", "skill-three", "skill-four"]],
+                "confidence": "strong",
+                "lead_score": 12,
+                "lead_gap": 6,
+                "fallback_candidates": [],
+            },
+            skills_root,
+            max_shortlist=3,
+        )
+    except ValueError as exc:
+        assert "max_shortlist=3" in str(exc)
+    else:
+        raise AssertionError("expected build_decision_packet to reject an oversized shortlist")
+
+
 def test_validate_two_stage_outputs_reports_behavioral_mismatch(tmp_path: Path) -> None:
     routing_root = tmp_path / "aoa-routing"
     shutil.copytree(FIXTURES_ROOT / "aoa-routing", routing_root)
@@ -555,3 +797,82 @@ def test_two_stage_skill_router_cli_routes_fixture_task(tmp_path: Path) -> None:
     assert payload["decision_packet"]["suggested_decision"]["decision_mode"] == "activate-candidate"
     assert "fallback_candidates" in payload["decision_packet"]
     assert payload["decision_packet"]["decision_reason"] == "lead candidate cleared the precision-first activation thresholds"
+
+
+def test_live_workspace_two_stage_outputs_are_normalized_v2() -> None:
+    generated_root = Path(__file__).resolve().parents[1] / "generated"
+    entrypoints = load_fixture_json(generated_root / "two_stage_skill_entrypoints.json")
+    prompt_blocks = load_fixture_json(generated_root / "two_stage_router_prompt_blocks.json")
+    tool_schemas = load_fixture_json(generated_root / "two_stage_router_tool_schemas.json")
+    examples = load_fixture_json(generated_root / "two_stage_router_examples.json")
+    manifest = load_fixture_json(generated_root / "two_stage_router_manifest.json")
+
+    assert entrypoints["schema_version"] == "aoa_routing_two_stage_skill_entrypoints_v2"
+    assert entrypoints["schema_ref"] == "schemas/two-stage-skill-entrypoints.schema.json"
+    assert entrypoints["owner_repo"] == "aoa-routing"
+    assert entrypoints["surface_kind"] == "two_stage_skill_entrypoints"
+    assert entrypoints["tiny_model_handoff"]["starter_ref"] == "skill-root"
+    assert entrypoints["tiny_model_handoff"]["entry_surface"] == "generated/tiny_model_entrypoints.json"
+    assert entrypoints["tiny_model_handoff"]["handoff_name"] == "two-stage-skill-selection"
+    assert entrypoints["tiny_model_handoff"]["handoff_mode"] == "optional-adjacent"
+    assert entrypoints["tiny_model_handoff"]["activation_authority"] == "source-owned"
+    assert prompt_blocks["schema_version"] == "aoa_routing_two_stage_router_prompt_blocks_v2"
+    assert prompt_blocks["schema_ref"] == "schemas/two-stage-router-prompt-blocks.schema.json"
+    assert prompt_blocks["owner_repo"] == "aoa-routing"
+    assert prompt_blocks["surface_kind"] == "two_stage_router_prompt_blocks"
+    assert prompt_blocks["low_context_boundary"] == {
+        "wording_scope": "routing-owned",
+        "source_payload_copying": "forbidden",
+        "stage_1_source_refs": [
+            "aoa-skills:generated/tiny_router_capsules.min.json",
+            "aoa-skills:generated/tiny_router_candidate_bands.json",
+            "aoa-skills:generated/tiny_router_skill_signals.json",
+        ],
+        "stage_2_source_refs": [
+            "aoa-skills:generated/skill_capsules.json",
+            "aoa-skills:generated/local_adapter_manifest.json",
+            "aoa-skills:generated/context_retention_manifest.json",
+        ],
+        "forbidden_source_payload_fields": [
+            "summary",
+            "trigger_boundary_short",
+            "verification_short",
+            "skill_path",
+            "allowlist_paths",
+            "rehydration_hint",
+            "context_rehydration_hint",
+            "companions",
+        ],
+    }
+    for field_name in prompt_blocks["low_context_boundary"]["forbidden_source_payload_fields"]:
+        assert field_name not in prompt_blocks["tiny_preselector_system"]
+        assert field_name not in prompt_blocks["main_model_decision_system"]
+    assert tool_schemas["schema_version"] == "aoa_routing_two_stage_router_tool_schemas_v2"
+    assert tool_schemas["schema_ref"] == "schemas/two-stage-router-tool-schemas.schema.json"
+    assert tool_schemas["owner_repo"] == "aoa-routing"
+    assert tool_schemas["surface_kind"] == "two_stage_router_tool_schemas"
+    assert tool_schemas["low_context_boundary"] == prompt_blocks["low_context_boundary"]
+    expected_tool_properties = {
+        "preselect_skills": {"task", "repo_family", "top_k"},
+        "build_skill_decision_packet": {"task", "shortlist_names"},
+        "route_skill_task": {"task", "repo_family", "top_k"},
+    }
+    for tool in tool_schemas["tools"]:
+        for field_name in tool_schemas["low_context_boundary"]["forbidden_source_payload_fields"]:
+            assert field_name not in tool["description"]
+        assert set(tool["input_schema"]["properties"]) == expected_tool_properties[tool["name"]]
+    assert examples["schema_version"] == "aoa_routing_two_stage_router_examples_v2"
+    assert examples["schema_ref"] == "schemas/two-stage-router-examples.schema.json"
+    assert examples["owner_repo"] == "aoa-routing"
+    assert examples["surface_kind"] == "two_stage_router_examples"
+    example_candidate = examples["examples"][0]["decision_packet"]["candidates"][0]
+    assert "summary" not in example_candidate
+    assert "trigger_boundary_short" not in example_candidate
+    assert "verification_short" not in example_candidate
+    assert "allowlist_paths" not in example_candidate
+    assert "context_rehydration_hint" not in example_candidate
+    assert "companions" not in example_candidate
+    assert manifest["schema_version"] == "aoa_routing_two_stage_router_manifest_v2"
+    assert manifest["schema_ref"] == "schemas/two-stage-router-manifest.schema.json"
+    assert manifest["owner_repo"] == "aoa-routing"
+    assert manifest["surface_kind"] == "two_stage_router_manifest"

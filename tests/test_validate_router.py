@@ -1014,6 +1014,40 @@ def test_validate_generated_outputs_rejects_two_stage_schema_drift_via_schema(tm
     )
 
 
+def test_validate_generated_outputs_rejects_source_owned_field_leak_in_two_stage_prompt_blocks(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    prompt_blocks_path = generated_dir / "two_stage_router_prompt_blocks.json"
+    payload = json.loads(prompt_blocks_path.read_text(encoding="utf-8"))
+    payload["tiny_preselector_system"] += " Never copy summary fields."
+    write_json(prompt_blocks_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "two_stage_router_prompt_blocks.json"
+        and "source-owned payload field" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_source_owned_field_in_two_stage_tool_schema(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    tool_schemas_path = generated_dir / "two_stage_router_tool_schemas.json"
+    payload = json.loads(tool_schemas_path.read_text(encoding="utf-8"))
+    payload["tools"][0]["input_schema"]["properties"]["summary"] = {"type": "string"}
+    write_json(tool_schemas_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "two_stage_router_tool_schemas.json"
+        and "must not expose source-owned payload fields" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_stale_two_stage_manifest_against_rebuild(
     tmp_path: Path,
 ) -> None:
