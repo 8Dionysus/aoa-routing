@@ -35,7 +35,14 @@ LIVE_REQUIRED_INPUTS = {
         Path("generated/agent_registry.min.json"),
         Path("generated/model_tier_registry.json"),
     ],
+    "aoa-evals": [Path("generated/eval_capsules.json")],
     "aoa-kag": [Path("generated/federation_spine.min.json")],
+    "aoa-memo": [
+        Path("generated/memory_catalog.min.json"),
+        Path("generated/memory_capsules.json"),
+        Path("generated/memory_object_catalog.min.json"),
+        Path("generated/memory_object_capsules.json"),
+    ],
     "aoa-playbooks": [Path("generated/playbook_registry.min.json")],
     "aoa-skills": [
         Path("generated/tiny_router_candidate_bands.json"),
@@ -568,6 +575,158 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertTrue(
             all(resolve_repo_ref(ref).exists() for ref in workspace_bootstrap["verification_refs"])
         )
+
+    def test_live_workspace_flat_tiny_starters_reach_owner_owned_source_surfaces(self) -> None:
+        tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
+        router = load_json(REPO_ROOT / "generated" / "aoa_router.min.json")
+        hints = load_json(REPO_ROOT / "generated" / "task_to_surface_hints.json")
+        pairing = load_json(REPO_ROOT / "generated" / "pairing_hints.min.json")
+
+        starters = {starter["name"]: starter for starter in tiny["starters"]}
+        router_entries = router["entries"]
+        router_entries_by_kind = {
+            kind: [entry for entry in router_entries if entry["kind"] == kind]
+            for kind in {"technique", "skill", "eval", "memo"}
+        }
+        self.assertEqual(
+            {entry["kind"] for entry in router_entries},
+            {"technique", "skill", "eval", "memo"},
+        )
+        self.assertEqual(
+            set(starters["router-root"]["allowed_kinds"]),
+            {"technique", "skill", "eval", "memo"},
+        )
+
+        technique_hint = next(hint for hint in hints["hints"] if hint["kind"] == "technique")
+        technique_entry = router_entries_by_kind["technique"][0]
+        technique_capsules = load_json(LIVE_ROOTS["aoa-techniques"] / "generated" / "technique_capsules.json")
+        technique_ids = {entry["id"] for entry in technique_capsules["techniques"]}
+        self.assertEqual(starters["technique-root"]["target_value"], "technique")
+        self.assertIn(technique_entry["id"], technique_ids)
+        self.assertTrue((LIVE_ROOTS["aoa-techniques"] / technique_entry["path"]).exists())
+        self.assertTrue(
+            (LIVE_ROOTS["aoa-techniques"] / technique_hint["actions"]["inspect"]["surface_file"]).exists()
+        )
+        self.assertTrue(
+            (REPO_ROOT / technique_hint["actions"]["pair"]["surface_file"]).exists()
+        )
+        self.assertTrue(
+            (LIVE_ROOTS["aoa-techniques"] / technique_hint["actions"]["second_cut"]["surface_file"]).exists()
+        )
+        self.assertIn(
+            technique_entry["id"],
+            {
+                entry["id"]
+                for entry in pairing["entries"]
+                if entry["kind"] == "technique"
+            },
+        )
+
+        eval_hint = next(hint for hint in hints["hints"] if hint["kind"] == "eval")
+        eval_entry = router_entries_by_kind["eval"][0]
+        eval_capsules = load_json(LIVE_ROOTS["aoa-evals"] / "generated" / "eval_capsules.json")
+        eval_names = {entry["name"] for entry in eval_capsules["evals"]}
+        self.assertEqual(starters["eval-root"]["target_value"], "eval")
+        self.assertIn(eval_entry["name"], eval_names)
+        self.assertTrue((LIVE_ROOTS["aoa-evals"] / eval_entry["path"]).exists())
+        self.assertTrue(
+            (LIVE_ROOTS["aoa-evals"] / eval_hint["actions"]["inspect"]["surface_file"]).exists()
+        )
+        self.assertTrue(
+            (REPO_ROOT / eval_hint["actions"]["pair"]["surface_file"]).exists()
+        )
+        self.assertIn(
+            eval_entry["id"],
+            {
+                entry["id"]
+                for entry in pairing["entries"]
+                if entry["kind"] == "eval"
+            },
+        )
+
+        memo_hint = next(hint for hint in hints["hints"] if hint["kind"] == "memo")
+        memo_entry = router_entries_by_kind["memo"][0]
+        memo_catalog = load_json(LIVE_ROOTS["aoa-memo"] / "generated" / "memory_catalog.min.json")
+        memo_capsules = load_json(LIVE_ROOTS["aoa-memo"] / "generated" / "memory_capsules.json")
+        memo_ids = {entry["id"] for entry in memo_catalog["memo_surfaces"]}
+        memo_capsule_ids = {entry["id"] for entry in memo_capsules["memo_surfaces"]}
+        self.assertEqual(starters["memo-root"]["target_value"], "memo")
+        self.assertIn(memo_entry["id"], memo_ids)
+        self.assertIn(memo_entry["id"], memo_capsule_ids)
+        self.assertTrue((LIVE_ROOTS["aoa-memo"] / memo_entry["path"]).exists())
+        self.assertTrue(
+            (LIVE_ROOTS["aoa-memo"] / memo_hint["actions"]["inspect"]["surface_file"]).exists()
+        )
+        self.assertTrue(
+            (LIVE_ROOTS["aoa-memo"] / memo_hint["actions"]["expand"]["surface_file"]).exists()
+        )
+        recall_actions = memo_hint["actions"]["recall"]
+        self.assertEqual(recall_actions["supported_modes"], ["semantic", "lineage"])
+        self.assertEqual(starters["memo-recall-semantic"]["recall_mode"], "semantic")
+        self.assertEqual(starters["memo-recall-lineage"]["recall_mode"], "lineage")
+        self.assertTrue(
+            all(
+                (LIVE_ROOTS["aoa-memo"] / path).exists()
+                for path in recall_actions["contracts_by_mode"].values()
+            )
+        )
+        self.assertTrue(
+            all(
+                (LIVE_ROOTS["aoa-memo"] / path).exists()
+                for path in recall_actions["capsule_surfaces_by_mode"].values()
+            )
+        )
+
+        object_family = recall_actions["parallel_families"]["memory_objects"]
+        object_catalog = load_json(LIVE_ROOTS["aoa-memo"] / object_family["inspect_surface"])
+        object_capsules = load_json(
+            LIVE_ROOTS["aoa-memo"] / object_family["capsule_surfaces_by_mode"]["semantic"]
+        )
+        object_ids = {entry["id"] for entry in object_catalog["memory_objects"]}
+        object_capsule_ids = {entry["id"] for entry in object_capsules["memory_objects"]}
+        self.assertEqual(object_family["default_mode"], "working")
+        self.assertEqual(
+            object_family["supported_modes"],
+            ["working", "semantic", "lineage"],
+        )
+        self.assertEqual(starters["memo-object-recall-working"]["recall_mode"], "working")
+        self.assertEqual(starters["memo-object-recall-semantic"]["recall_mode"], "semantic")
+        self.assertEqual(starters["memo-object-recall-lineage"]["recall_mode"], "lineage")
+        self.assertEqual(
+            {
+                starters["memo-object-recall-working"]["recall_family"],
+                starters["memo-object-recall-semantic"]["recall_family"],
+                starters["memo-object-recall-lineage"]["recall_family"],
+            },
+            {"memory_objects"},
+        )
+        self.assertTrue(object_ids)
+        self.assertTrue(object_ids.issubset(object_capsule_ids))
+        self.assertTrue(
+            all(
+                (LIVE_ROOTS["aoa-memo"] / path).exists()
+                for path in object_family["contracts_by_mode"].values()
+            )
+        )
+        self.assertTrue(
+            all(
+                (LIVE_ROOTS["aoa-memo"] / path).exists()
+                for path in object_family["capsule_surfaces_by_mode"].values()
+            )
+        )
+
+        kag_default = starters["kag-source-lift-default"]
+        kag_companions = starters["kag-source-lift-companions"]
+        technique_capsule_by_id = {
+            entry["id"]: entry for entry in technique_capsules["techniques"]
+        }
+        pairing_by_id = {entry["id"]: entry for entry in pairing["entries"]}
+        kag_target = technique_capsule_by_id[kag_default["target_value"]]
+        self.assertEqual(kag_default["target_value"], "AOA-T-0019")
+        self.assertTrue((LIVE_ROOTS["aoa-techniques"] / kag_target["technique_path"]).exists())
+        self.assertEqual(kag_companions["target_value"], kag_default["target_value"])
+        self.assertIn("pairs", pairing_by_id[kag_companions["target_value"]])
+        self.assertTrue(pairing_by_id[kag_companions["target_value"]]["pairs"])
 
     def test_live_workspace_routing_federation_envelopes_are_normalized_v2(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
