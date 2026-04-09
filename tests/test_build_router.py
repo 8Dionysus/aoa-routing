@@ -750,18 +750,56 @@ def test_build_outputs_from_fixtures() -> None:
         "target_repo": "8Dionysus",
         "target_surface": "generated/public_route_map.min.json",
     }
-    assert federation["source_inputs"][1:3] == [
+    assert federation["source_inputs"][0:4] == [
         {
-            "name": "tos_root_readme",
-            "repo": "Tree-of-Sophia",
-            "role": "root_entry",
+            "name": "aoa_root_readme",
+            "repo": "Agents-of-Abyss",
+            "role": "public_root",
             "ref": "README.md",
         },
         {
-            "name": "tos_tiny_entry_route",
+            "name": "aoa_center_entry_map",
+            "repo": "Agents-of-Abyss",
+            "role": "root_capsule",
+            "ref": "generated/center_entry_map.min.json",
+        },
+        {
+            "name": "tos_root_readme",
             "repo": "Tree-of-Sophia",
-            "role": "tiny_entry_handoff",
-            "ref": "examples/tos_tiny_entry_route.example.json",
+            "role": "public_root",
+            "ref": "README.md",
+        },
+        {
+            "name": "tos_root_entry_map",
+            "repo": "Tree-of-Sophia",
+            "role": "root_capsule",
+            "ref": "generated/root_entry_map.min.json",
+        },
+    ]
+    assert federation["source_inputs"][4] == {
+        "name": "tos_tiny_entry_route",
+        "repo": "Tree-of-Sophia",
+        "role": "tiny_entry_handoff",
+        "ref": "examples/tos_tiny_entry_route.example.json",
+    }
+    assert federation["source_inputs"][5] == {
+        "name": "agent_registry",
+        "repo": "aoa-agents",
+        "role": "agent_entries",
+        "ref": "generated/agent_registry.min.json",
+    }
+    assert federation["source_inputs"][6:8] == [
+        {
+            "name": "model_tier_registry",
+            "repo": "aoa-agents",
+            "role": "tier_entries",
+            "ref": "generated/model_tier_registry.json",
+        },
+        {
+            "name": "runtime_seam_bindings",
+            "repo": "aoa-agents",
+            "role": "tier_role_bindings",
+            "ref": "generated/runtime_seam_bindings.json",
         },
     ]
     assert {
@@ -1096,8 +1134,31 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     }
 
     aoa_root = root_by_id["aoa-root"]
-    assert aoa_root["capsule_surface"] == "Agents-of-Abyss:README.md"
+    assert aoa_root["capsule_surface"] == "Agents-of-Abyss:generated/center_entry_map.min.json"
     assert aoa_root["authority_surface"] == "Agents-of-Abyss:CHARTER.md"
+    assert aoa_root["next_actions"] == [
+        {
+            "verb": "inspect",
+            "target_repo": "Agents-of-Abyss",
+            "target_surface": "generated/center_entry_map.min.json",
+            "match_key": "route_id",
+            "target_value": "center-overview",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "Agents-of-Abyss",
+            "target_surface": "generated/center_entry_map.min.json",
+            "match_key": "route_id",
+            "target_value": "public-contour",
+        },
+        {
+            "verb": "inspect",
+            "target_repo": "Agents-of-Abyss",
+            "target_surface": "generated/center_entry_map.min.json",
+            "match_key": "route_id",
+            "target_value": "source-of-truth-rules",
+        },
+    ]
     assert aoa_root["fallback"] == {
         "verb": "pick",
         "target_repo": "aoa-routing",
@@ -1112,29 +1173,29 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     ]
 
     tos_root = root_by_id["tos-root"]
-    assert tos_root["capsule_surface"] == "Tree-of-Sophia:README.md"
+    assert tos_root["capsule_surface"] == "Tree-of-Sophia:generated/root_entry_map.min.json"
     assert tos_root["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
     assert tos_root["next_actions"] == [
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "target_surface": "generated/root_entry_map.min.json",
             "match_key": "route_id",
-            "target_value": "tos-tiny-entry.zarathustra-prologue",
+            "target_value": "current-tiny-entry",
         },
         {
             "verb": "inspect",
-            "target_repo": "aoa-routing",
-            "target_surface": "generated/federation_entrypoints.min.json",
-            "match_key": "id",
-            "target_value": "Tree-of-Sophia",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "generated/root_entry_map.min.json",
+            "match_key": "route_id",
+            "target_value": "tree-first-model",
         },
         {
             "verb": "inspect",
-            "target_repo": "aoa-routing",
-            "target_surface": "generated/federation_entrypoints.min.json",
-            "match_key": "id",
-            "target_value": "AOA-P-0009",
+            "target_repo": "Tree-of-Sophia",
+            "target_surface": "generated/root_entry_map.min.json",
+            "match_key": "route_id",
+            "target_value": "bounded-export",
         },
     ]
     assert tos_root["fallback"] == {

@@ -76,6 +76,7 @@ PLAYBOOK_REGISTRY_PATH = "generated/playbook_registry.min.json"
 PLAYBOOK_PORTFOLIO_PATH = "docs/PLAYBOOK_PORTFOLIO.md"
 FEDERATION_SPINE_PATH = "generated/federation_spine.min.json"
 AOA_ECOSYSTEM_REGISTRY_PATH = "generated/ecosystem_registry.min.json"
+AOA_CENTER_ENTRY_MAP_PATH = "generated/center_entry_map.min.json"
 PAIRING_SURFACE_REPO = "aoa-routing"
 PAIRING_SURFACE_FILE = "generated/pairing_hints.min.json"
 TINY_MODEL_ENTRYPOINTS_FILE = "generated/tiny_model_entrypoints.json"
@@ -131,6 +132,7 @@ ABYSS_STACK_DIAGNOSTIC_SESSION_PATH = "examples/diagnostic_session.min.example.j
 ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH = "generated/diagnostic_surface_catalog.min.json"
 ABYSS_STACK_DIAGNOSTIC_SPINE_PATH = "docs/DIAGNOSTIC_SPINE.md"
 TOS_TINY_ENTRY_ROUTE_PATH = "examples/tos_tiny_entry_route.example.json"
+TOS_ROOT_ENTRY_MAP_PATH = "generated/root_entry_map.min.json"
 TOS_TINY_ENTRY_ROUTE_ID = "tos-tiny-entry.zarathustra-prologue"
 TOS_TINY_ENTRY_PRIMARY_HOP_FIELD = "bounded_hop"
 TOS_TINY_ENTRY_LEGACY_HOP_FIELD = "lineage_or_context_hop"
@@ -167,6 +169,16 @@ EXPECTED_TOS_KAG_VIEW_ADJUNCT = {
     "target_value": TOS_ROUTE_RETRIEVAL_ID,
     "route_id": TOS_ROUTE_RETRIEVAL_ROUTE_ID,
 }
+AOA_CENTER_ROUTE_IDS = (
+    "center-overview",
+    "public-contour",
+    "source-of-truth-rules",
+)
+TOS_ROOT_ROUTE_IDS = (
+    "current-tiny-entry",
+    "tree-first-model",
+    "bounded-export",
+)
 FALLBACK_ROUTER_KIND = "technique"
 RETURN_REASONS_BY_THIN_KIND = {
     "technique": ("artifact_contract_lost", "source_boundary_lost", "reroute_required"),
@@ -1359,8 +1371,16 @@ def build_federation_entrypoints_payload(
     load_ecosystem_registry_entries(aoa_root)
     ensure_markdown_file(aoa_root / "README.md", f"{AOA_ROOT_REPO}/README.md")
     ensure_markdown_file(aoa_root / "CHARTER.md", f"{AOA_ROOT_REPO}/CHARTER.md")
+    ensure_mapping(
+        load_json_file(aoa_root / AOA_CENTER_ENTRY_MAP_PATH),
+        f"{AOA_ROOT_REPO}/{AOA_CENTER_ENTRY_MAP_PATH}",
+    )
     ensure_markdown_file(tos_root / "README.md", f"{TOS_REPO}/README.md")
     ensure_markdown_file(tos_root / "CHARTER.md", f"{TOS_REPO}/CHARTER.md")
+    ensure_mapping(
+        load_json_file(tos_root / TOS_ROOT_ENTRY_MAP_PATH),
+        f"{TOS_REPO}/{TOS_ROOT_ENTRY_MAP_PATH}",
+    )
     tos_tiny_entry_route_path, tos_tiny_entry_route = load_tos_tiny_entry_route(tos_root)
     ensure_markdown_file(
         tos_root / TOS_TINY_ENTRY_DOCTRINE_PATH,
@@ -2013,14 +2033,26 @@ def build_federation_entrypoints_payload(
             {
                 "name": "aoa_root_readme",
                 "repo": AOA_ROOT_REPO,
-                "role": "root_entry",
+                "role": "public_root",
                 "ref": "README.md",
+            },
+            {
+                "name": "aoa_center_entry_map",
+                "repo": AOA_ROOT_REPO,
+                "role": "root_capsule",
+                "ref": AOA_CENTER_ENTRY_MAP_PATH,
             },
             {
                 "name": "tos_root_readme",
                 "repo": TOS_REPO,
-                "role": "root_entry",
+                "role": "public_root",
                 "ref": "README.md",
+            },
+            {
+                "name": "tos_root_entry_map",
+                "repo": TOS_REPO,
+                "role": "root_capsule",
+                "ref": TOS_ROOT_ENTRY_MAP_PATH,
             },
             {
                 "name": "tos_tiny_entry_route",
@@ -2112,29 +2144,29 @@ def build_federation_entrypoints_payload(
                 "id": "aoa-root",
                 "owner_repo": AOA_ROOT_REPO,
                 "title": "AoA Federation Root",
-                "capsule_surface": make_repo_qualified_ref(AOA_ROOT_REPO, "README.md"),
+                "capsule_surface": make_repo_qualified_ref(AOA_ROOT_REPO, AOA_CENTER_ENTRY_MAP_PATH),
                 "authority_surface": make_repo_qualified_ref(AOA_ROOT_REPO, "CHARTER.md"),
                 "next_actions": [
                     build_entry_action(
                         verb="inspect",
-                        target_repo=PAIRING_SURFACE_REPO,
-                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
-                        match_key="id",
-                        target_value=FEDERATION_DEFAULT_TIER_ENTRY_ID,
+                        target_repo=AOA_ROOT_REPO,
+                        target_surface=AOA_CENTER_ENTRY_MAP_PATH,
+                        match_key="route_id",
+                        target_value=AOA_CENTER_ROUTE_IDS[0],
                     ),
                     build_entry_action(
                         verb="inspect",
-                        target_repo=PAIRING_SURFACE_REPO,
-                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
-                        match_key="id",
-                        target_value=FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID,
+                        target_repo=AOA_ROOT_REPO,
+                        target_surface=AOA_CENTER_ENTRY_MAP_PATH,
+                        match_key="route_id",
+                        target_value=AOA_CENTER_ROUTE_IDS[1],
                     ),
                     build_entry_action(
                         verb="inspect",
-                        target_repo=PAIRING_SURFACE_REPO,
-                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
-                        match_key="id",
-                        target_value=FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
+                        target_repo=AOA_ROOT_REPO,
+                        target_surface=AOA_CENTER_ENTRY_MAP_PATH,
+                        match_key="route_id",
+                        target_value=AOA_CENTER_ROUTE_IDS[2],
                     ),
                 ],
                 "fallback": build_entry_action(
@@ -2155,32 +2187,29 @@ def build_federation_entrypoints_payload(
                 "id": "tos-root",
                 "owner_repo": TOS_REPO,
                 "title": "ToS Federation Root",
-                "capsule_surface": make_repo_qualified_ref(TOS_REPO, "README.md"),
+                "capsule_surface": make_repo_qualified_ref(TOS_REPO, TOS_ROOT_ENTRY_MAP_PATH),
                 "authority_surface": make_repo_qualified_ref(TOS_REPO, "CHARTER.md"),
                 "next_actions": [
                     build_entry_action(
                         verb="inspect",
                         target_repo=TOS_REPO,
-                        target_surface=tos_tiny_entry_route_path,
+                        target_surface=TOS_ROOT_ENTRY_MAP_PATH,
                         match_key="route_id",
-                        target_value=ensure_string(
-                            tos_tiny_entry_route["route_id"],
-                            f"{TOS_REPO}/{tos_tiny_entry_route_path}.route_id",
-                        ),
+                        target_value=TOS_ROOT_ROUTE_IDS[0],
                     ),
                     build_entry_action(
                         verb="inspect",
-                        target_repo=PAIRING_SURFACE_REPO,
-                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
-                        match_key="id",
-                        target_value=TOS_KAG_VIEW_ENTRY_ID,
+                        target_repo=TOS_REPO,
+                        target_surface=TOS_ROOT_ENTRY_MAP_PATH,
+                        match_key="route_id",
+                        target_value=TOS_ROOT_ROUTE_IDS[1],
                     ),
                     build_entry_action(
                         verb="inspect",
-                        target_repo=PAIRING_SURFACE_REPO,
-                        target_surface=FEDERATION_ENTRYPOINTS_FILE,
-                        match_key="id",
-                        target_value="AOA-P-0009",
+                        target_repo=TOS_REPO,
+                        target_surface=TOS_ROOT_ENTRY_MAP_PATH,
+                        match_key="route_id",
+                        target_value=TOS_ROOT_ROUTE_IDS[2],
                     ),
                 ],
                 "fallback": build_entry_action(

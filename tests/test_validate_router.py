@@ -145,6 +145,8 @@ def hydrate_catalog_fixture(roots: dict[str, Path], repo_name: str, relative_pat
 
 
 def hydrate_capsule_fixture_roots(roots: dict[str, Path]) -> None:
+    hydrate_route_map_fixture(roots, "Agents-of-Abyss", "generated/center_entry_map.min.json")
+    hydrate_route_map_fixture(roots, "Tree-of-Sophia", "generated/root_entry_map.min.json")
     hydrate_route_map_fixture(roots, "aoa-sdk", "generated/workspace_control_plane.min.json")
     hydrate_route_map_fixture(roots, "Dionysus", "generated/seed_route_map.min.json")
     hydrate_route_map_fixture(roots, "8Dionysus", "generated/public_route_map.min.json")

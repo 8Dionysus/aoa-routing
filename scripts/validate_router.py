@@ -26,6 +26,8 @@ from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
     ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
+    AOA_CENTER_ENTRY_MAP_PATH,
+    AOA_CENTER_ROUTE_IDS,
     AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS,
     AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH,
     AOA_STATS_SUMMARY_SURFACE_CATALOG_PATH,
@@ -82,6 +84,8 @@ from router_core import (
     TOS_REPO,
     TOS_KAG_VIEW_ENTRY_ID,
     TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID,
+    TOS_ROOT_ENTRY_MAP_PATH,
+    TOS_ROOT_ROUTE_IDS,
     TOS_ROUTE_RETRIEVAL_ID,
     TOS_ROUTE_RETRIEVAL_SURFACE_REF,
     TOS_TINY_ENTRY_DOCTRINE_PATH,
@@ -176,6 +180,18 @@ EXPECTED_KAG_VIEW_IDS = {
 }
 LOW_CONTEXT_IMPLEMENTATION_PREFIXES = ("src/", "scripts/")
 ROUTE_MAP_CAPSULE_EXPECTATIONS = {
+    (AOA_ROOT_REPO, AOA_CENTER_ENTRY_MAP_PATH): {
+        "schema_version": "aoa_center_entry_map_v1",
+        "schema_ref": "schemas/center-entry-map.schema.json",
+        "surface_kind": "center_entry_map",
+        "route_mode": "repo_local",
+    },
+    (TOS_REPO, TOS_ROOT_ENTRY_MAP_PATH): {
+        "schema_version": "tos_root_entry_map_v1",
+        "schema_ref": "schemas/root-entry-map.schema.json",
+        "surface_kind": "root_entry_map",
+        "route_mode": "repo_local",
+    },
     ("aoa-sdk", AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH): {
         "schema_version": "aoa_sdk_workspace_control_plane_v2",
         "schema_ref": "schemas/workspace-control-plane.schema.json",
@@ -1875,6 +1891,11 @@ def load_surface_entries_for_validation(
         "aoa_router.min.json": "entries",
         "task_to_surface_hints.json": "hints",
         "pairing_hints.min.json": "entries",
+        Path(AOA_CENTER_ENTRY_MAP_PATH).name: "routes",
+        Path(TOS_ROOT_ENTRY_MAP_PATH).name: "routes",
+        Path(AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH).name: "routes",
+        Path(DIONYSUS_SEED_ROUTE_MAP_PATH).name: "routes",
+        Path(PROFILE_PUBLIC_ROUTE_MAP_PATH).name: "routes",
         Path(TOS_ROUTE_RETRIEVAL_SURFACE_REF).name: "routes",
         "repo_doc_surface_manifest.min.json": "docs",
         "technique_capsules.json": "techniques",
@@ -2123,7 +2144,12 @@ def validate_federation_entrypoints(
                 message = f"{location} schema violation: {error.message}"
             issues.append(ValidationIssue("federation_entrypoints.min.json", message))
 
-    def validate_route_map_capsule(repo_name: str, relative_path: str, location: str, entry_kind: str) -> None:
+    def validate_route_map_capsule(
+        repo_name: str,
+        relative_path: str,
+        location: str,
+        entry_kind: str | None,
+    ) -> None:
         expected = ROUTE_MAP_CAPSULE_EXPECTATIONS[(repo_name, relative_path)]
         payload = load_target_payload(repo_name, relative_path)
         if payload is None:
@@ -2213,7 +2239,7 @@ def validate_federation_entrypoints(
                         validate_low_context_repo_ref(ref, f"{route_location}.verification_refs")
             if schema_ref is not None:
                 validate_owner_schema(repo_name, schema_ref, payload, location)
-            if entry_kind != expected["surface_kind"]:
+            if entry_kind is not None and entry_kind != expected["surface_kind"]:
                 issues.append(
                     ValidationIssue(
                         "federation_entrypoints.min.json",
@@ -2363,6 +2389,20 @@ def validate_federation_entrypoints(
         all_entry_ids.add(root_id)
         validate_repo_ref(root_entry.get("capsule_surface"), f"{location}.capsule_surface", allow_route_generated=True)
         validate_repo_ref(root_entry.get("authority_surface"), f"{location}.authority_surface", allow_route_generated=False)
+        try:
+            capsule_repo_name, capsule_relative_path = ensure_repo_qualified_ref(
+                root_entry.get("capsule_surface"),
+                f"{location}.capsule_surface",
+            )
+        except RouterError:
+            capsule_repo_name = None
+            capsule_relative_path = None
+        if (
+            capsule_repo_name is not None
+            and capsule_relative_path is not None
+            and (capsule_repo_name, capsule_relative_path) in ROUTE_MAP_CAPSULE_EXPECTATIONS
+        ):
+            validate_route_map_capsule(capsule_repo_name, capsule_relative_path, location, None)
         next_actions = root_entry.get("next_actions")
         if isinstance(next_actions, list):
             for action_index, action in enumerate(next_actions):
@@ -2394,6 +2434,73 @@ def validate_federation_entrypoints(
             )
         )
 
+    aoa_root_entry = next(
+        (
+            raw_root_entry
+            for raw_root_entry in root_entries
+            if isinstance(raw_root_entry, dict) and raw_root_entry.get("id") == "aoa-root"
+        ),
+        None,
+    )
+    if isinstance(aoa_root_entry, dict):
+        if aoa_root_entry.get("capsule_surface") != f"{AOA_ROOT_REPO}:{AOA_CENTER_ENTRY_MAP_PATH}":
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"aoa-root.capsule_surface must stay '{AOA_ROOT_REPO}:{AOA_CENTER_ENTRY_MAP_PATH}'",
+                )
+            )
+        expected_actions = [
+            {
+                "verb": "inspect",
+                "target_repo": AOA_ROOT_REPO,
+                "target_surface": AOA_CENTER_ENTRY_MAP_PATH,
+                "match_key": "route_id",
+                "target_value": AOA_CENTER_ROUTE_IDS[0],
+            },
+            {
+                "verb": "inspect",
+                "target_repo": AOA_ROOT_REPO,
+                "target_surface": AOA_CENTER_ENTRY_MAP_PATH,
+                "match_key": "route_id",
+                "target_value": AOA_CENTER_ROUTE_IDS[1],
+            },
+            {
+                "verb": "inspect",
+                "target_repo": AOA_ROOT_REPO,
+                "target_surface": AOA_CENTER_ENTRY_MAP_PATH,
+                "match_key": "route_id",
+                "target_value": AOA_CENTER_ROUTE_IDS[2],
+            },
+        ]
+        next_actions = aoa_root_entry.get("next_actions")
+        if not isinstance(next_actions, list) or len(next_actions) != len(expected_actions):
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    "aoa-root must publish exactly three center-entry route actions in the current routing wave",
+                )
+            )
+        else:
+            for action_index, expected_action in enumerate(expected_actions):
+                action = next_actions[action_index]
+                if not isinstance(action, dict):
+                    issues.append(
+                        ValidationIssue(
+                            "federation_entrypoints.min.json",
+                            f"aoa-root next_actions[{action_index}] must be an action object",
+                        )
+                    )
+                    continue
+                for key, expected_value in expected_action.items():
+                    if action.get(key) != expected_value:
+                        issues.append(
+                            ValidationIssue(
+                                "federation_entrypoints.min.json",
+                                f"aoa-root next_actions[{action_index}].{key} must stay '{expected_value}'",
+                            )
+                        )
+
     tos_root_entry = next(
         (
             raw_root_entry
@@ -2403,12 +2510,19 @@ def validate_federation_entrypoints(
         None,
     )
     if isinstance(tos_root_entry, dict):
+        if tos_root_entry.get("capsule_surface") != f"{TOS_REPO}:{TOS_ROOT_ENTRY_MAP_PATH}":
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"tos-root.capsule_surface must stay '{TOS_REPO}:{TOS_ROOT_ENTRY_MAP_PATH}'",
+                )
+            )
         next_actions = tos_root_entry.get("next_actions")
         if not isinstance(next_actions, list) or not next_actions:
             issues.append(
                 ValidationIssue(
                     "federation_entrypoints.min.json",
-                    "tos-root must publish the current ToS tiny-entry handoff as its first next_action",
+                    "tos-root must publish the current ToS root-entry routes as its first next_actions",
                 )
             )
         else:
@@ -2416,23 +2530,23 @@ def validate_federation_entrypoints(
                 {
                     "verb": "inspect",
                     "target_repo": TOS_REPO,
-                    "target_surface": TOS_TINY_ENTRY_ROUTE_PATH,
+                    "target_surface": TOS_ROOT_ENTRY_MAP_PATH,
                     "match_key": "route_id",
-                    "target_value": TOS_TINY_ENTRY_ROUTE_ID,
+                    "target_value": TOS_ROOT_ROUTE_IDS[0],
                 },
                 {
                     "verb": "inspect",
-                    "target_repo": PAIRING_SURFACE_REPO,
-                    "target_surface": FEDERATION_ENTRYPOINTS_FILE,
-                    "match_key": "id",
-                    "target_value": TOS_KAG_VIEW_ENTRY_ID,
+                    "target_repo": TOS_REPO,
+                    "target_surface": TOS_ROOT_ENTRY_MAP_PATH,
+                    "match_key": "route_id",
+                    "target_value": TOS_ROOT_ROUTE_IDS[1],
                 },
                 {
                     "verb": "inspect",
-                    "target_repo": PAIRING_SURFACE_REPO,
-                    "target_surface": FEDERATION_ENTRYPOINTS_FILE,
-                    "match_key": "id",
-                    "target_value": "AOA-P-0009",
+                    "target_repo": TOS_REPO,
+                    "target_surface": TOS_ROOT_ENTRY_MAP_PATH,
+                    "match_key": "route_id",
+                    "target_value": TOS_ROOT_ROUTE_IDS[2],
                 },
             ]
             if any(

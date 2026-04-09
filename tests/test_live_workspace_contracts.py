@@ -29,7 +29,9 @@ MISSING_LIVE_ROOTS = sorted(
     repo_name for repo_name, repo_root in LIVE_ROOTS.items() if not repo_root.exists()
 )
 LIVE_REQUIRED_INPUTS = {
+    "Agents-of-Abyss": [Path("generated/center_entry_map.min.json")],
     "aoa-stats": [Path("generated/stress_recovery_window_summary.min.json")],
+    "Tree-of-Sophia": [Path("generated/root_entry_map.min.json")],
     "8Dionysus": [Path("generated/public_route_map.min.json")],
 }
 MISSING_LIVE_INPUTS = sorted(
@@ -181,6 +183,94 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 for route in profile_payload["routes"]
                 for ref in [route["capsule_ref"], route["authority_ref"], *route["verification_refs"]]
             )
+        )
+
+    def test_live_workspace_root_capsules_are_owner_owned_zero_entry_surfaces(self) -> None:
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        root_by_id = {entry["id"]: entry for entry in federation["root_entries"]}
+
+        aoa_payload = load_json(LIVE_ROOTS["Agents-of-Abyss"] / "generated" / "center_entry_map.min.json")
+        self.assertEqual(
+            root_by_id["aoa-root"]["capsule_surface"],
+            "Agents-of-Abyss:generated/center_entry_map.min.json",
+        )
+        self.assertEqual(aoa_payload["schema_version"], "aoa_center_entry_map_v1")
+        self.assertEqual(aoa_payload["schema_ref"], "schemas/center-entry-map.schema.json")
+        self.assertEqual(aoa_payload["owner_repo"], "Agents-of-Abyss")
+        self.assertEqual(aoa_payload["surface_kind"], "center_entry_map")
+        self.assertEqual(aoa_payload["authority_ref"], "CHARTER.md")
+        self.assertEqual(aoa_payload["public_root_ref"], "README.md")
+        self.assertEqual(
+            [route["route_id"] for route in aoa_payload["routes"]],
+            ["center-overview", "constitutional-boundary", "public-contour", "source-of-truth-rules"],
+        )
+        self.assertEqual(
+            root_by_id["aoa-root"]["next_actions"],
+            [
+                {
+                    "verb": "inspect",
+                    "target_repo": "Agents-of-Abyss",
+                    "target_surface": "generated/center_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "center-overview",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Agents-of-Abyss",
+                    "target_surface": "generated/center_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "public-contour",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Agents-of-Abyss",
+                    "target_surface": "generated/center_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "source-of-truth-rules",
+                },
+            ],
+        )
+
+        tos_payload = load_json(LIVE_ROOTS["Tree-of-Sophia"] / "generated" / "root_entry_map.min.json")
+        self.assertEqual(
+            root_by_id["tos-root"]["capsule_surface"],
+            "Tree-of-Sophia:generated/root_entry_map.min.json",
+        )
+        self.assertEqual(tos_payload["schema_version"], "tos_root_entry_map_v1")
+        self.assertEqual(tos_payload["schema_ref"], "schemas/root-entry-map.schema.json")
+        self.assertEqual(tos_payload["owner_repo"], "Tree-of-Sophia")
+        self.assertEqual(tos_payload["surface_kind"], "root_entry_map")
+        self.assertEqual(tos_payload["authority_ref"], "CHARTER.md")
+        self.assertEqual(tos_payload["public_root_ref"], "README.md")
+        self.assertEqual(
+            [route["route_id"] for route in tos_payload["routes"]],
+            ["current-tiny-entry", "tree-first-model", "bounded-export"],
+        )
+        self.assertEqual(
+            root_by_id["tos-root"]["next_actions"],
+            [
+                {
+                    "verb": "inspect",
+                    "target_repo": "Tree-of-Sophia",
+                    "target_surface": "generated/root_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "current-tiny-entry",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Tree-of-Sophia",
+                    "target_surface": "generated/root_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "tree-first-model",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Tree-of-Sophia",
+                    "target_surface": "generated/root_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "bounded-export",
+                },
+            ],
         )
 
     def test_live_workspace_routing_federation_envelopes_are_normalized_v2(self) -> None:

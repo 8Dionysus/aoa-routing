@@ -147,6 +147,11 @@ Current route-map capsules published in the owner repos are now schema-backed v2
 - `Dionysus/generated/seed_route_map.min.json`
 - `8Dionysus/generated/public_route_map.min.json`
 
+Current center-first zero-entry capsules are owner-owned v1 surfaces:
+
+- `Agents-of-Abyss/generated/center_entry_map.min.json`
+- `Tree-of-Sophia/generated/root_entry_map.min.json`
+
 ## Anti-Confusion Rules
 
 These are hard constraints for the landing:
@@ -205,7 +210,9 @@ entry kinds, or copy owner-owned capsule payloads into routing.
 This landing reads sibling source and capsule surfaces:
 
 - `Agents-of-Abyss/README.md`
+- `Agents-of-Abyss/generated/center_entry_map.min.json`
 - `Tree-of-Sophia/README.md`
+- `Tree-of-Sophia/generated/root_entry_map.min.json`
 - `Tree-of-Sophia/examples/tos_tiny_entry_route.example.json`
 - `aoa-agents/generated/agent_registry.min.json`
 - `aoa-agents/generated/model_tier_registry.json`
@@ -224,9 +231,17 @@ This landing reads sibling source and capsule surfaces:
 The compact capsule is the first inspect surface for seed, runtime-surface, and profile-entry re-entry.
 The heavier raw anchor remains visible only as a source anchor or verification target in the owner repo.
 
+For the current root cards, the first inspect path is now:
+
+- `aoa-root -> Agents-of-Abyss/generated/center_entry_map.min.json`
+- `tos-root -> Tree-of-Sophia/generated/root_entry_map.min.json`
+
+Those root capsules stay additive.
+`README.md` remains the public human root and `CHARTER.md` remains the owner authority surface.
+
 For the current ToS root card, the first handoff is now:
 
-`tos-root -> Tree-of-Sophia/examples/tos_tiny_entry_route.example.json -> ToS-authored route surfaces`
+`tos-root -> Tree-of-Sophia/generated/root_entry_map.min.json -> Tree-of-Sophia/examples/tos_tiny_entry_route.example.json -> ToS-authored route surfaces`
 
 That handoff is source-owned and bounded.
 The current ToS input should treat `bounded_hop` as the primary hop field and
