@@ -174,6 +174,42 @@ EXPECTED_KAG_VIEW_IDS = {
     FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
     TOS_KAG_VIEW_ENTRY_ID,
 }
+LOW_CONTEXT_IMPLEMENTATION_PREFIXES = ("src/", "scripts/")
+ROUTE_MAP_CAPSULE_EXPECTATIONS = {
+    ("aoa-sdk", AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH): {
+        "schema_version": "aoa_sdk_workspace_control_plane_v2",
+        "schema_ref": "schemas/workspace-control-plane.schema.json",
+        "surface_kind": "runtime_surface",
+        "route_mode": "repo_local",
+    },
+    ("Dionysus", DIONYSUS_SEED_ROUTE_MAP_PATH): {
+        "schema_version": "dionysus_seed_route_map_v2",
+        "schema_ref": "schemas/seed-route-map.schema.json",
+        "surface_kind": "seed",
+        "route_mode": "repo_local",
+    },
+    ("8Dionysus", PROFILE_PUBLIC_ROUTE_MAP_PATH): {
+        "schema_version": "8dionysus_public_route_map_v2",
+        "schema_ref": "schemas/public-route-map.schema.json",
+        "surface_kind": "orientation_surface",
+        "route_mode": "repo_qualified",
+    },
+}
+CATALOG_CAPSULE_EXPECTATIONS = {
+    ("aoa-stats", AOA_STATS_SUMMARY_SURFACE_CATALOG_PATH): {
+        "entry_key": "surfaces",
+        "required_entry_refs": ("schema_ref", "path"),
+    },
+    ("abyss-stack", ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH): {
+        "entry_key": "surfaces",
+        "required_entry_refs": ("schema_ref", "example_ref"),
+        "required_top_level": {
+            "owner_repo": "abyss-stack",
+            "surface_kind": "runtime_surface",
+            "authority_ref": "docs/DIAGNOSTIC_SPINE.md",
+        },
+    },
+}
 FOUNDATION_ROUTING_QUEST_IDS = ("AOA-RT-Q-0001", "AOA-RT-Q-0002")
 REQUIRED_ROUTING_QUEST_IDS = FOUNDATION_ROUTING_QUEST_IDS
 REQUIRED_ROUTING_SEAM_SNIPPETS = (
@@ -1937,6 +1973,7 @@ def validate_federation_entrypoints(
     payload_cache: dict[tuple[str, str], dict[str, Any]] = {}
 
     def validate_source_path(repo_name: str, relative_path: str, location: str) -> None:
+        path_text, _, _ = relative_path.partition("#")
         repo_root = roots.get(repo_name)
         if repo_root is None:
             issues.append(
@@ -1947,9 +1984,9 @@ def validate_federation_entrypoints(
             )
             return
         if repo_name == "aoa-routing":
-            target_path = resolve_routing_surface_path(relative_path, generated_dir)
+            target_path = resolve_routing_surface_path(path_text, generated_dir)
         else:
-            target_path = repo_root / relative_path
+            target_path = repo_root / path_text
         if not target_path.exists():
             issues.append(
                 ValidationIssue(
@@ -1998,6 +2035,231 @@ def validate_federation_entrypoints(
                 )
             )
         validate_source_path(repo_name, relative_path, location)
+
+    def validate_local_low_context_path(repo_name: str, raw_ref: Any, location: str) -> str | None:
+        try:
+            relative_path = ensure_repo_relative_path(raw_ref, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            return None
+        path_text, _, _ = relative_path.partition("#")
+        if path_text.startswith(LOW_CONTEXT_IMPLEMENTATION_PREFIXES):
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} must not point to implementation path '{repo_name}:{relative_path}'",
+                )
+            )
+            return None
+        validate_source_path(repo_name, relative_path, location)
+        return relative_path
+
+    def validate_low_context_repo_ref(raw_ref: Any, location: str) -> tuple[str, str] | None:
+        try:
+            repo_name, relative_path = ensure_repo_qualified_ref(raw_ref, location)
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            return None
+        path_text, _, _ = relative_path.partition("#")
+        if path_text.startswith(LOW_CONTEXT_IMPLEMENTATION_PREFIXES):
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} must not point to implementation path '{repo_name}:{relative_path}'",
+                )
+            )
+            return None
+        validate_source_path(repo_name, relative_path, location)
+        return repo_name, relative_path
+
+    def validate_owner_schema(
+        repo_name: str,
+        schema_ref: str,
+        payload: dict[str, Any],
+        location: str,
+    ) -> None:
+        repo_root = roots.get(repo_name)
+        if repo_root is None:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} references unknown repo '{repo_name}'",
+                )
+            )
+            return
+        schema_path = repo_root / schema_ref
+        try:
+            schema_payload = ensure_mapping(load_json_file(schema_path), f"{repo_name}/{schema_ref}")
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+            return
+        try:
+            Draft202012Validator.check_schema(schema_payload)
+        except SchemaError as exc:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"{location} schema '{repo_name}:{schema_ref}' is invalid: {exc.message}",
+                )
+            )
+            return
+        validator = Draft202012Validator(schema_payload)
+        schema_errors = sorted(
+            validator.iter_errors(payload),
+            key=lambda error: (list(error.absolute_path), error.message),
+        )
+        for error in schema_errors:
+            error_path = format_schema_path(error.absolute_path)
+            if error_path:
+                message = f"{location} schema violation at '{error_path}': {error.message}"
+            else:
+                message = f"{location} schema violation: {error.message}"
+            issues.append(ValidationIssue("federation_entrypoints.min.json", message))
+
+    def validate_route_map_capsule(repo_name: str, relative_path: str, location: str, entry_kind: str) -> None:
+        expected = ROUTE_MAP_CAPSULE_EXPECTATIONS[(repo_name, relative_path)]
+        payload = load_target_payload(repo_name, relative_path)
+        if payload is None:
+            return
+        try:
+            expected_fields = {
+                "schema_version": expected["schema_version"],
+                "schema_ref": expected["schema_ref"],
+                "owner_repo": repo_name,
+                "surface_kind": expected["surface_kind"],
+            }
+            for key, expected_value in expected_fields.items():
+                actual_value = payload.get(key)
+                if actual_value != expected_value:
+                    issues.append(
+                        ValidationIssue(
+                            "federation_entrypoints.min.json",
+                            f"{location}.capsule_surface payload must keep {key}={expected_value!r}",
+                        )
+                    )
+            schema_ref = validate_local_low_context_path(repo_name, payload.get("schema_ref"), f"{location}.capsule_payload.schema_ref")
+            authority_ref = validate_local_low_context_path(
+                repo_name,
+                payload.get("authority_ref"),
+                f"{location}.capsule_payload.authority_ref",
+            )
+            if repo_name == "aoa-sdk":
+                validate_local_low_context_path(
+                    repo_name,
+                    payload.get("workspace_manifest_ref"),
+                    f"{location}.capsule_payload.workspace_manifest_ref",
+                )
+            if repo_name == "Dionysus":
+                validate_local_low_context_path(
+                    repo_name,
+                    payload.get("next_live_seed_ref"),
+                    f"{location}.capsule_payload.next_live_seed_ref",
+                )
+            if repo_name == "8Dionysus" and payload.get("posture") != "route-map-only":
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location}.capsule_payload.posture must stay 'route-map-only'",
+                    )
+                )
+            if authority_ref == relative_path:
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location}.capsule_payload.authority_ref must stay distinct from the capsule surface itself",
+                    )
+                )
+            validation_refs = ensure_string_list(
+                payload.get("validation_refs"),
+                f"{location}.capsule_payload.validation_refs",
+            )
+            for ref in validation_refs:
+                validate_source_path(repo_name, ref, f"{location}.capsule_payload.validation_refs")
+            routes = ensure_list(payload.get("routes"), f"{location}.capsule_payload.routes")
+            for route_index, raw_route in enumerate(routes):
+                route_location = f"{location}.capsule_payload.routes[{route_index}]"
+                route = ensure_mapping(raw_route, route_location)
+                if expected["route_mode"] == "repo_local":
+                    validate_local_low_context_path(
+                        repo_name,
+                        route.get("surface_ref"),
+                        f"{route_location}.surface_ref",
+                    )
+                    verification_refs = ensure_string_list(
+                        route.get("verification_refs"),
+                        f"{route_location}.verification_refs",
+                    )
+                    for ref in verification_refs:
+                        validate_local_low_context_path(
+                            repo_name,
+                            ref,
+                            f"{route_location}.verification_refs",
+                        )
+                else:
+                    validate_low_context_repo_ref(route.get("capsule_ref"), f"{route_location}.capsule_ref")
+                    validate_low_context_repo_ref(route.get("authority_ref"), f"{route_location}.authority_ref")
+                    verification_refs = ensure_string_list(
+                        route.get("verification_refs"),
+                        f"{route_location}.verification_refs",
+                    )
+                    for ref in verification_refs:
+                        validate_low_context_repo_ref(ref, f"{route_location}.verification_refs")
+            if schema_ref is not None:
+                validate_owner_schema(repo_name, schema_ref, payload, location)
+            if entry_kind != expected["surface_kind"]:
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location}.kind must stay aligned with capsule surface_kind '{expected['surface_kind']}'",
+                    )
+                )
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
+
+    def validate_catalog_capsule(repo_name: str, relative_path: str, location: str) -> None:
+        expected = CATALOG_CAPSULE_EXPECTATIONS[(repo_name, relative_path)]
+        payload = load_target_payload(repo_name, relative_path)
+        if payload is None:
+            return
+        try:
+            schema_version = payload.get("schema_version")
+            if not isinstance(schema_version, str) or not schema_version.strip():
+                issues.append(
+                    ValidationIssue(
+                        "federation_entrypoints.min.json",
+                        f"{location}.capsule_surface payload must publish a non-empty schema_version",
+                    )
+                )
+            for key, expected_value in expected.get("required_top_level", {}).items():
+                if payload.get(key) != expected_value:
+                    issues.append(
+                        ValidationIssue(
+                            "federation_entrypoints.min.json",
+                            f"{location}.capsule_surface payload must keep {key}={expected_value!r}",
+                        )
+                    )
+            if "required_top_level" in expected and "authority_ref" in expected["required_top_level"]:
+                validate_local_low_context_path(
+                    repo_name,
+                    payload.get("authority_ref"),
+                    f"{location}.capsule_payload.authority_ref",
+                )
+            entries = ensure_list(payload.get(expected["entry_key"]), f"{location}.capsule_payload.{expected['entry_key']}")
+            for entry_index, raw_entry in enumerate(entries):
+                entry_location = f"{location}.capsule_payload.{expected['entry_key']}[{entry_index}]"
+                entry = ensure_mapping(raw_entry, entry_location)
+                for ref_key in expected["required_entry_refs"]:
+                    validate_local_low_context_path(
+                        repo_name,
+                        entry.get(ref_key),
+                        f"{entry_location}.{ref_key}",
+                    )
+            validation_refs = payload.get("validation_refs")
+            if validation_refs is not None:
+                for ref in ensure_string_list(validation_refs, f"{location}.capsule_payload.validation_refs"):
+                    validate_source_path(repo_name, ref, f"{location}.capsule_payload.validation_refs")
+        except RouterError as exc:
+            issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
 
     def validate_action(raw_action: Any, location: str) -> None:
         try:
@@ -2242,6 +2504,26 @@ def validate_federation_entrypoints(
         all_entry_ids.add(entry_id)
         validate_repo_ref(entry.get("capsule_surface"), f"{location}.capsule_surface", allow_route_generated=True)
         validate_repo_ref(entry.get("authority_surface"), f"{location}.authority_surface", allow_route_generated=False)
+        try:
+            capsule_repo_name, capsule_relative_path = ensure_repo_qualified_ref(
+                entry.get("capsule_surface"),
+                f"{location}.capsule_surface",
+            )
+        except RouterError:
+            capsule_repo_name = None
+            capsule_relative_path = None
+        if (
+            capsule_repo_name is not None
+            and capsule_relative_path is not None
+            and (capsule_repo_name, capsule_relative_path) in ROUTE_MAP_CAPSULE_EXPECTATIONS
+        ):
+            validate_route_map_capsule(capsule_repo_name, capsule_relative_path, location, entry_kind)
+        if (
+            capsule_repo_name is not None
+            and capsule_relative_path is not None
+            and (capsule_repo_name, capsule_relative_path) in CATALOG_CAPSULE_EXPECTATIONS
+        ):
+            validate_catalog_capsule(capsule_repo_name, capsule_relative_path, location)
         next_actions = entry.get("next_actions")
         if isinstance(next_actions, list):
             for action_index, action in enumerate(next_actions):

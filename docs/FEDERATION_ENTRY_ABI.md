@@ -130,10 +130,18 @@ Capsule-grade rules for federation entries:
 - the capsule must stay language-neutral on the wire, so future Go readers can consume it without a Python-only semantic fork
 - the capsule and the authority surface must stay explicitly separate
 - `aoa-routing` may point to capsule surfaces, but it must not copy their payload into a router-owned capsule registry
+- low-context route fields inside the capsule must stay on docs, manifests, schemas, or generated JSON rather than `src/*` or `scripts/*`
+- owner-local build and validator paths may stay visible only under top-level `validation_refs`
 
 Current capsule-grade surfaces already accepted without wrappers:
 
 - `aoa-stats/generated/summary_surface_catalog.min.json`
+- `8Dionysus/generated/public_route_map.min.json`
+
+Current route-map capsules published in the owner repos are now schema-backed v2 surfaces:
+
+- `aoa-sdk/generated/workspace_control_plane.min.json`
+- `Dionysus/generated/seed_route_map.min.json`
 - `8Dionysus/generated/public_route_map.min.json`
 
 ## Anti-Confusion Rules

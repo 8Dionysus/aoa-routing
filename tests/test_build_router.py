@@ -1687,10 +1687,16 @@ def test_owner_layer_shortlist_includes_explicit_and_ambiguous_family_hints() ->
         for entry in shortlist["hints"]
         if entry["signal"] == "explicit-request" and entry["owner_repo"] == "abyss-stack"
     )
+    explicit_profile = next(
+        entry
+        for entry in shortlist["hints"]
+        if entry["signal"] == "explicit-request" and entry["owner_repo"] == "8Dionysus"
+    )
 
     assert explicit_skill["target_surface"] == "aoa-skills.runtime_discovery_index"
     assert explicit_seed["target_surface"] == "Dionysus.seed_route_map.min"
     assert explicit_runtime["target_surface"] == "abyss-stack.diagnostic_surface_catalog.min"
+    assert explicit_profile["target_surface"] == "8Dionysus.public_route_map.min"
     assert explicit_skill["confidence"] == "high"
     assert {entry["owner_repo"] for entry in recurring_entries} == {
         "aoa-playbooks",

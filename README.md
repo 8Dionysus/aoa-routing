@@ -12,6 +12,11 @@ The current public paths are:
 - additive federation-entry path: `federation root -> entry card -> source authority -> bounded next hop`
 - optional wave-9 path: `tiny preselect -> stage-2 skill decision`
 
+For the current language-neutral ABI hardening wave, owner-owned federation
+capsules must keep low-context route fields on docs, manifests, schemas, or
+generated JSON. Repo-local build and validator files remain visible only as
+owner-local validation support.
+
 ## Start here
 
 Use the shortest route by need:
