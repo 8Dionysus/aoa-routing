@@ -15,6 +15,10 @@ The current public contract is schema-backed and normalized as a routing-owned
 v2 family. The two-stage surfaces expose a bounded stage-1 token budget, a
 declared inherited starter from `tiny_model_entrypoints.json`, and an enforced
 stage-2 shortlist limit so small-model consumers do not guess the budget.
+`generated/tiny_model_entrypoints.json` now publishes one explicit additive
+handoff on `skill-root`, and `generated/two_stage_skill_entrypoints.json`
+publishes the symmetric back-reference. That keeps the adjacent seam
+discoverable without replacing flat skill routing.
 
 ## Stage 1
 

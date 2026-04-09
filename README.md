@@ -62,6 +62,7 @@ This repository is the source of truth for:
 - advisory owner-layer shortlist hints
 - bounded pairing and return-navigation hints
 - optional two-stage routing policy and tool/prompt surfaces
+- an explicit additive handoff from `skill-root` into the optional two-stage skill seam
 - local schemas, builders, validators, and routing integrity checks
 
 ## What it reads

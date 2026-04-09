@@ -12,6 +12,7 @@
     "profile",
     "validation_refs",
     "inherits_from",
+    "tiny_model_handoff",
     "stage_1",
     "stage_2",
     "starters",
@@ -42,6 +43,24 @@
     "inherits_from": {
       "type": "string",
       "minLength": 1
+    },
+    "tiny_model_handoff": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "starter_ref",
+        "entry_surface",
+        "handoff_name",
+        "handoff_mode",
+        "activation_authority"
+      ],
+      "properties": {
+        "starter_ref": { "type": "string", "minLength": 1 },
+        "entry_surface": { "type": "string", "minLength": 1 },
+        "handoff_name": { "type": "string", "minLength": 1 },
+        "handoff_mode": { "type": "string", "minLength": 1 },
+        "activation_authority": { "type": "string", "minLength": 1 }
+      }
     },
     "stage_1": {
       "type": "object",

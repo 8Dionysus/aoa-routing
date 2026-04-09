@@ -10,6 +10,13 @@
     "tests/test_two_stage_skill_router.py"
   ],
   "inherits_from": "generated/tiny_model_entrypoints.json",
+  "tiny_model_handoff": {
+    "starter_ref": "skill-root",
+    "entry_surface": "generated/tiny_model_entrypoints.json",
+    "handoff_name": "two-stage-skill-selection",
+    "handoff_mode": "optional-adjacent",
+    "activation_authority": "source-owned"
+  },
   "stage_1": {
     "name": "tiny-skill-preselector",
     "source_repo": "aoa-skills",

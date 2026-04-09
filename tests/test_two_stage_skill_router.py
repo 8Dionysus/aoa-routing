@@ -61,6 +61,13 @@ def test_build_outputs_include_two_stage_router_surfaces() -> None:
     assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["starter_ref"] == "skill-root"
     assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["max_stage_1_tokens"] == 1200
     assert outputs["two_stage_skill_entrypoints.json"]["stage_2"]["max_shortlist"] == 3
+    assert outputs["two_stage_skill_entrypoints.json"]["tiny_model_handoff"] == {
+        "starter_ref": "skill-root",
+        "entry_surface": "generated/tiny_model_entrypoints.json",
+        "handoff_name": "two-stage-skill-selection",
+        "handoff_mode": "optional-adjacent",
+        "activation_authority": "source-owned",
+    }
     build_packet_tool = next(
         tool
         for tool in outputs["two_stage_router_tool_schemas.json"]["tools"]
@@ -804,6 +811,11 @@ def test_live_workspace_two_stage_outputs_are_normalized_v2() -> None:
     assert entrypoints["schema_ref"] == "schemas/two-stage-skill-entrypoints.schema.json"
     assert entrypoints["owner_repo"] == "aoa-routing"
     assert entrypoints["surface_kind"] == "two_stage_skill_entrypoints"
+    assert entrypoints["tiny_model_handoff"]["starter_ref"] == "skill-root"
+    assert entrypoints["tiny_model_handoff"]["entry_surface"] == "generated/tiny_model_entrypoints.json"
+    assert entrypoints["tiny_model_handoff"]["handoff_name"] == "two-stage-skill-selection"
+    assert entrypoints["tiny_model_handoff"]["handoff_mode"] == "optional-adjacent"
+    assert entrypoints["tiny_model_handoff"]["activation_authority"] == "source-owned"
     assert prompt_blocks["schema_version"] == "aoa_routing_two_stage_router_prompt_blocks_v2"
     assert prompt_blocks["schema_ref"] == "schemas/two-stage-router-prompt-blocks.schema.json"
     assert prompt_blocks["owner_repo"] == "aoa-routing"

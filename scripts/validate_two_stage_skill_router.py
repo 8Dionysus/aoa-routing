@@ -315,6 +315,43 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         issues.append(("two_stage_skill_entrypoints.json", "stage_1 source_repo must stay aoa-skills"))
     if entrypoints.get("stage_2", {}).get("source_repo") != "aoa-skills":
         issues.append(("two_stage_skill_entrypoints.json", "stage_2 source_repo must stay aoa-skills"))
+    tiny_model_handoff = entrypoints.get("tiny_model_handoff", {})
+    if not isinstance(tiny_model_handoff, dict):
+        issues.append(("two_stage_skill_entrypoints.json", "tiny_model_handoff must be a mapping"))
+        tiny_model_handoff = {}
+    if tiny_model_handoff.get("starter_ref") != skill_root_starter:
+        issues.append(("two_stage_skill_entrypoints.json", "tiny_model_handoff starter_ref mismatch"))
+    if tiny_model_handoff.get("entry_surface") != policy["defaults"]["existing_tiny_entrypoints_ref"]:
+        issues.append(("two_stage_skill_entrypoints.json", "tiny_model_handoff entry_surface mismatch"))
+    if tiny_model_handoff.get("handoff_name") != "two-stage-skill-selection":
+        issues.append(("two_stage_skill_entrypoints.json", "tiny_model_handoff handoff_name mismatch"))
+    if tiny_model_handoff.get("handoff_mode") != "optional-adjacent":
+        issues.append(("two_stage_skill_entrypoints.json", "tiny_model_handoff handoff_mode mismatch"))
+    if tiny_model_handoff.get("activation_authority") != "source-owned":
+        issues.append(("two_stage_skill_entrypoints.json", "tiny_model_handoff activation_authority mismatch"))
+    skill_root_handoff = {}
+    if isinstance(skill_root_entry, dict):
+        raw_skill_root_handoff = skill_root_entry.get("adjacent_handoff", {})
+        if not isinstance(raw_skill_root_handoff, dict):
+            issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff must be a mapping"))
+        else:
+            skill_root_handoff = raw_skill_root_handoff
+    if skill_root_entry is not None and not skill_root_handoff:
+        issues.append(("tiny_model_entrypoints.json", "skill-root must publish an explicit adjacent_handoff into the two-stage seam"))
+    if skill_root_handoff.get("name") != "two-stage-skill-selection":
+        issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff name mismatch"))
+    if skill_root_handoff.get("target_repo") != "aoa-routing":
+        issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff target_repo mismatch"))
+    if skill_root_handoff.get("target_surface") != "generated/two_stage_skill_entrypoints.json":
+        issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff target_surface mismatch"))
+    if skill_root_handoff.get("surface_kind") != "two_stage_skill_entrypoints":
+        issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff surface_kind mismatch"))
+    if skill_root_handoff.get("handoff_mode") != "optional-adjacent":
+        issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff handoff_mode mismatch"))
+    if skill_root_handoff.get("activation_authority") != "source-owned":
+        issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff activation_authority mismatch"))
+    if not isinstance(skill_root_handoff.get("when"), str) or not skill_root_handoff.get("when", "").strip():
+        issues.append(("tiny_model_entrypoints.json", "skill-root adjacent_handoff when must stay non-empty"))
     if entrypoints.get("stage_2", {}).get("activation_manifest") != "generated/local_adapter_manifest.json":
         issues.append(("two_stage_skill_entrypoints.json", "stage_2 activation_manifest mismatch"))
     if entrypoints.get("stage_2", {}).get("context_manifest") != "generated/context_retention_manifest.json":

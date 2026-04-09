@@ -448,6 +448,25 @@ def test_two_stage_skill_root_walkthrough_reaches_source_owned_activation_seams(
         "allowed_kinds": ["skill"],
         "target_kind": "skill",
         "target_value": "skill",
+        "adjacent_handoff": {
+            "name": "two-stage-skill-selection",
+            "target_repo": "aoa-routing",
+            "target_surface": "generated/two_stage_skill_entrypoints.json",
+            "surface_kind": "two_stage_skill_entrypoints",
+            "handoff_mode": "optional-adjacent",
+            "activation_authority": "source-owned",
+            "when": (
+                "Use when precision-first skill routing is preferred before loading "
+                "source-owned activation seams."
+            ),
+        },
+    }
+    assert two_stage["tiny_model_handoff"] == {
+        "starter_ref": "skill-root",
+        "entry_surface": "generated/tiny_model_entrypoints.json",
+        "handoff_name": "two-stage-skill-selection",
+        "handoff_mode": "optional-adjacent",
+        "activation_authority": "source-owned",
     }
     assert two_stage["stage_1"]["source_repo"] == "aoa-skills"
     assert two_stage["stage_2"]["source_repo"] == "aoa-skills"

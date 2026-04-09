@@ -868,6 +868,18 @@ def test_build_outputs_from_fixtures() -> None:
             "allowed_kinds": ["skill"],
             "target_kind": "skill",
             "target_value": "skill",
+            "adjacent_handoff": {
+                "name": "two-stage-skill-selection",
+                "target_repo": "aoa-routing",
+                "target_surface": "generated/two_stage_skill_entrypoints.json",
+                "surface_kind": "two_stage_skill_entrypoints",
+                "handoff_mode": "optional-adjacent",
+                "activation_authority": "source-owned",
+                "when": (
+                    "Use when precision-first skill routing is preferred before loading "
+                    "source-owned activation seams."
+                ),
+            },
         },
         {
             "name": "eval-root",

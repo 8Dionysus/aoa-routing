@@ -124,6 +124,13 @@ def build_outputs(
         "profile": PROFILE,
         "validation_refs": VALIDATION_REFS,
         "inherits_from": policy["defaults"]["existing_tiny_entrypoints_ref"],
+        "tiny_model_handoff": {
+            "starter_ref": skill_root_starter,
+            "entry_surface": policy["defaults"]["existing_tiny_entrypoints_ref"],
+            "handoff_name": "two-stage-skill-selection",
+            "handoff_mode": "optional-adjacent",
+            "activation_authority": "source-owned",
+        },
         "stage_1": {
             "name": "tiny-skill-preselector",
             "source_repo": "aoa-skills",

@@ -4332,6 +4332,7 @@ def validate_tiny_model_entrypoints(
         verb = starter.get("verb")
         match_key = starter.get("match_key")
         target_value = starter.get("target_value")
+        adjacent_handoff = starter.get("adjacent_handoff")
         recall_family = starter.get("recall_family")
         recall_mode = starter.get("recall_mode")
         if not isinstance(source_repo, str) or not isinstance(surface_file, str):
@@ -4376,6 +4377,118 @@ def validate_tiny_model_entrypoints(
                 ValidationIssue(
                     "tiny_model_entrypoints.json",
                     f"non-recall starter '{starter.get('name', index)}' must not define recall_family",
+                )
+            )
+        if adjacent_handoff is None:
+            continue
+        if not isinstance(adjacent_handoff, dict):
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"starter '{starter.get('name', index)}' adjacent_handoff must be a mapping",
+                )
+            )
+            continue
+        if starter.get("name") != "skill-root":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    f"only starter 'skill-root' may publish an adjacent_handoff; found one on '{starter.get('name', index)}'",
+                )
+            )
+            continue
+        try:
+            handoff_target_repo = ensure_string(
+                adjacent_handoff.get("target_repo"),
+                f"{location}.adjacent_handoff.target_repo",
+            )
+            handoff_target_surface = ensure_string(
+                adjacent_handoff.get("target_surface"),
+                f"{location}.adjacent_handoff.target_surface",
+            )
+            handoff_surface_kind = ensure_string(
+                adjacent_handoff.get("surface_kind"),
+                f"{location}.adjacent_handoff.surface_kind",
+            )
+            handoff_mode = ensure_string(
+                adjacent_handoff.get("handoff_mode"),
+                f"{location}.adjacent_handoff.handoff_mode",
+            )
+            activation_authority = ensure_string(
+                adjacent_handoff.get("activation_authority"),
+                f"{location}.adjacent_handoff.activation_authority",
+            )
+            ensure_string(adjacent_handoff.get("name"), f"{location}.adjacent_handoff.name")
+            ensure_string(adjacent_handoff.get("when"), f"{location}.adjacent_handoff.when")
+        except RouterError as exc:
+            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
+            continue
+        if handoff_target_repo != "aoa-routing":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "skill-root adjacent_handoff must stay on aoa-routing",
+                )
+            )
+        if handoff_target_surface != "generated/two_stage_skill_entrypoints.json":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "skill-root adjacent_handoff must target generated/two_stage_skill_entrypoints.json",
+                )
+            )
+        if handoff_surface_kind != "two_stage_skill_entrypoints":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "skill-root adjacent_handoff must target surface_kind 'two_stage_skill_entrypoints'",
+                )
+            )
+        if handoff_mode != "optional-adjacent":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "skill-root adjacent_handoff handoff_mode must stay 'optional-adjacent'",
+                )
+            )
+        if activation_authority != "source-owned":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "skill-root adjacent_handoff activation_authority must stay 'source-owned'",
+                )
+            )
+        handoff_payload = load_target_payload(handoff_target_repo, handoff_target_surface)
+        if handoff_payload is None:
+            continue
+        if handoff_payload.get("surface_kind") != "two_stage_skill_entrypoints":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "skill-root adjacent_handoff target must publish surface_kind 'two_stage_skill_entrypoints'",
+                )
+            )
+        tiny_model_handoff = handoff_payload.get("tiny_model_handoff")
+        if not isinstance(tiny_model_handoff, dict):
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "two_stage_skill_entrypoints.json must publish a tiny_model_handoff back-reference",
+                )
+            )
+            continue
+        if tiny_model_handoff.get("starter_ref") != "skill-root":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "two_stage_skill_entrypoints.json tiny_model_handoff must point back to starter 'skill-root'",
+                )
+            )
+        if tiny_model_handoff.get("entry_surface") != "generated/tiny_model_entrypoints.json":
+            issues.append(
+                ValidationIssue(
+                    "tiny_model_entrypoints.json",
+                    "two_stage_skill_entrypoints.json tiny_model_handoff must point back to generated/tiny_model_entrypoints.json",
                 )
             )
 

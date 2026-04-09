@@ -3130,6 +3130,7 @@ def build_tiny_model_entrypoints_payload(
     hints_payload: dict[str, Any],
     federation_payload: dict[str, Any],
 ) -> dict[str, Any]:
+    two_stage_skill_surface = "generated/two_stage_skill_entrypoints.json"
     registry_index = {(entry["kind"], entry["id"]): entry for entry in registry_entries}
     available_kinds = {entry["kind"] for entry in registry_entries}
     hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
@@ -3284,18 +3285,30 @@ def build_tiny_model_entrypoints_payload(
     for kind in ACTIVE_KINDS:
         if kind not in available_kinds:
             continue
-        starters.append(
-            {
-                "name": f"{kind}-root",
-                "verb": "pick",
-                "source_repo": PAIRING_SURFACE_REPO,
-                "target_surface": "generated/aoa_router.min.json",
-                "match_key": "kind",
-                "allowed_kinds": [kind],
-                "target_kind": kind,
-                "target_value": kind,
+        starter = {
+            "name": f"{kind}-root",
+            "verb": "pick",
+            "source_repo": PAIRING_SURFACE_REPO,
+            "target_surface": "generated/aoa_router.min.json",
+            "match_key": "kind",
+            "allowed_kinds": [kind],
+            "target_kind": kind,
+            "target_value": kind,
+        }
+        if kind == "skill":
+            starter["adjacent_handoff"] = {
+                "name": "two-stage-skill-selection",
+                "target_repo": PAIRING_SURFACE_REPO,
+                "target_surface": two_stage_skill_surface,
+                "surface_kind": "two_stage_skill_entrypoints",
+                "handoff_mode": "optional-adjacent",
+                "activation_authority": "source-owned",
+                "when": (
+                    "Use when precision-first skill routing is preferred before loading "
+                    "source-owned activation seams."
+                ),
             }
-        )
+        starters.append(starter)
     for mode in memo_recall_supported_modes:
         starters.append(
             {
