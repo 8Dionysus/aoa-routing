@@ -6,6 +6,7 @@ from pathlib import Path
 
 import build_router
 import validate_router
+from _wave9_router_lib import build_decision_packet, preselect
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -30,6 +31,13 @@ MISSING_LIVE_ROOTS = sorted(
 )
 LIVE_REQUIRED_INPUTS = {
     "Agents-of-Abyss": [Path("generated/center_entry_map.min.json")],
+    "aoa-skills": [
+        Path("generated/tiny_router_candidate_bands.json"),
+        Path("generated/tiny_router_skill_signals.json"),
+        Path("generated/skill_capsules.json"),
+        Path("generated/local_adapter_manifest.json"),
+        Path("generated/context_retention_manifest.json"),
+    ],
     "aoa-stats": [Path("generated/stress_recovery_window_summary.min.json")],
     "Tree-of-Sophia": [Path("generated/root_entry_map.min.json")],
     "8Dionysus": [Path("generated/public_route_map.min.json")],
@@ -44,6 +52,14 @@ MISSING_LIVE_INPUTS = sorted(
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+def load_jsonl(path: Path) -> list[dict[str, object]]:
+    return [
+        json.loads(line)
+        for line in path.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
 
 
 @unittest.skipUnless(
@@ -272,6 +288,104 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 },
             ],
         )
+
+    def test_live_workspace_tiny_root_starters_reach_owner_owned_zero_entry_routes(self) -> None:
+        tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        root_by_id = {entry["id"]: entry for entry in federation["root_entries"]}
+        federation_starters = {
+            starter["name"]: starter for starter in tiny["federation_starters"]
+        }
+
+        aoa_root = root_by_id[federation_starters["aoa-root"]["target_value"]]
+        aoa_first_action = aoa_root["next_actions"][0]
+        self.assertEqual(aoa_first_action["target_repo"], "Agents-of-Abyss")
+        aoa_capsule = load_json(LIVE_ROOTS["Agents-of-Abyss"] / "generated" / "center_entry_map.min.json")
+        aoa_route_by_id = {route["route_id"]: route for route in aoa_capsule["routes"]}
+        aoa_route = aoa_route_by_id[aoa_first_action["target_value"]]
+        self.assertEqual(aoa_route["surface_ref"], "README.md")
+        self.assertTrue((LIVE_ROOTS["Agents-of-Abyss"] / aoa_route["surface_ref"]).exists())
+        self.assertTrue(
+            all((LIVE_ROOTS["Agents-of-Abyss"] / ref).exists() for ref in aoa_route["verification_refs"])
+        )
+
+        tos_root = root_by_id[federation_starters["tos-root"]["target_value"]]
+        tos_first_action = tos_root["next_actions"][0]
+        self.assertEqual(tos_first_action["target_repo"], "Tree-of-Sophia")
+        tos_capsule = load_json(LIVE_ROOTS["Tree-of-Sophia"] / "generated" / "root_entry_map.min.json")
+        tos_route_by_id = {route["route_id"]: route for route in tos_capsule["routes"]}
+        tos_route = tos_route_by_id[tos_first_action["target_value"]]
+        self.assertEqual(tos_route["surface_ref"], "examples/tos_tiny_entry_route.example.json")
+        self.assertTrue((LIVE_ROOTS["Tree-of-Sophia"] / tos_route["surface_ref"]).exists())
+        self.assertTrue(
+            all((LIVE_ROOTS["Tree-of-Sophia"] / ref).exists() for ref in tos_route["verification_refs"])
+        )
+
+    def test_live_workspace_skill_root_handoff_reaches_source_owned_activation_seams(self) -> None:
+        tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
+        two_stage = load_json(REPO_ROOT / "generated" / "two_stage_skill_entrypoints.json")
+        policy = load_json(REPO_ROOT / "config" / "two_stage_router_policy.json")
+        eval_cases = {
+            entry["case_id"]: entry
+            for entry in load_jsonl(REPO_ROOT / "generated" / "two_stage_router_eval_cases.jsonl")
+        }
+        skill_root = next(starter for starter in tiny["starters"] if starter["name"] == "skill-root")
+        self.assertEqual(skill_root["adjacent_handoff"]["target_surface"], "generated/two_stage_skill_entrypoints.json")
+        self.assertEqual(two_stage["tiny_model_handoff"]["starter_ref"], "skill-root")
+
+        skills_root = LIVE_ROOTS["aoa-skills"]
+        signals_doc = load_json(skills_root / two_stage["stage_1"]["signals_surface"])
+        bands_doc = load_json(skills_root / two_stage["stage_1"]["bands_surface"])
+        capsules = {
+            entry["name"]: entry
+            for entry in load_json(skills_root / two_stage["stage_2"]["shortlist_surface"])["skills"]
+        }
+        adapters = {
+            entry["name"]: entry
+            for entry in load_json(skills_root / two_stage["stage_2"]["activation_manifest"])["skills"]
+        }
+        contexts = {
+            entry["name"]: entry
+            for entry in load_json(skills_root / two_stage["stage_2"]["context_manifest"])["skills"]
+        }
+
+        for case_id, expected_mode in [
+            ("tiny-positive-aoa-adr-write", "activate-candidate"),
+            ("tiny-positive-abyss-safe-infra-change", "manual-invocation-required"),
+        ]:
+            with self.subTest(case_id=case_id):
+                case = eval_cases[case_id]
+                preselected = preselect(
+                    task=case["prompt"],
+                    signals_doc=signals_doc,
+                    bands_doc=bands_doc,
+                    policy=policy,
+                    top_k=two_stage["stage_1"]["top_k_default"],
+                    repo_family=case.get("repo_family_hint"),
+                )
+                packet = build_decision_packet(
+                    case["prompt"],
+                    preselected,
+                    skills_root,
+                    max_shortlist=two_stage["stage_2"]["max_shortlist"],
+                )
+                self.assertEqual(packet["suggested_decision"]["decision_mode"], expected_mode)
+                self.assertEqual(packet["suggested_decision"]["skill"], case["expected_top1"])
+                candidate = packet["candidates"][0]
+                self.assertEqual(candidate["name"], case["expected_top1"])
+                self.assertIn(candidate["name"], capsules)
+                self.assertIn(candidate["name"], adapters)
+                self.assertIn(candidate["name"], contexts)
+                self.assertTrue((skills_root / capsules[candidate["name"]]["skill_path"]).exists())
+                self.assertEqual(
+                    adapters[candidate["name"]]["invocation_mode"],
+                    candidate["invocation_mode"],
+                )
+                self.assertEqual(
+                    candidate["manual_invocation_required"],
+                    expected_mode == "manual-invocation-required",
+                )
+                self.assertTrue(contexts[candidate["name"]]["rehydration_hint"])
 
     def test_live_workspace_routing_federation_envelopes_are_normalized_v2(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
