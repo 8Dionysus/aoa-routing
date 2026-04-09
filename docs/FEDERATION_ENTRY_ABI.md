@@ -53,6 +53,9 @@ That means:
 
 That surface is schema-backed and additive.
 It sits beside the thin router outputs instead of replacing them.
+The emitted federation-facing routing family now uses normalized v2 envelopes
+with `schema_version`, `schema_ref`, `owner_repo`, and `surface_kind` at the
+top level.
 
 The thin router core remains the same:
 
@@ -186,6 +189,16 @@ A dedicated checkpoint starter reuses the existing `aoa-sdk-control-plane`
 runtime entry instead of creating a new federation kind.
 
 A dedicated `return_navigation_hints` surface may coexist with federation entry cards so that small-model recovery stays explicit without widening the authority boundary.
+
+The routing-owned federation family now stays envelope-aligned across:
+
+- `generated/federation_entrypoints.min.json`
+- `generated/tiny_model_entrypoints.json`
+- `generated/owner_layer_shortlist.min.json`
+- `generated/return_navigation_hints.min.json`
+
+That alignment is shape-only. It does not widen thin-router taxonomy, add live
+entry kinds, or copy owner-owned capsule payloads into routing.
 
 ## Current Inputs
 

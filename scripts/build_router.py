@@ -953,7 +953,10 @@ def dump_jsonl(rows: list[dict[str, Any]]) -> str:
 
 def build_owner_layer_shortlist_payload() -> dict[str, Any]:
     return {
-        "schema_version": 1,
+        "schema_version": "aoa_routing_owner_layer_shortlist_v2",
+        "schema_ref": "schemas/owner-layer-shortlist.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "owner_layer_shortlist",
         "hints": [dict(spec) for spec in OWNER_LAYER_SHORTLIST_SPECS],
     }
 

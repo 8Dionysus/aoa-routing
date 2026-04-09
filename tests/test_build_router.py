@@ -380,7 +380,10 @@ def test_build_outputs_from_fixtures() -> None:
     assert quest_dispatch_hints["version"] == 1
     assert quest_dispatch_hints["wave_scope"] == "source-only"
     assert quest_dispatch_hints["actions_enabled"] == ["inspect", "expand", "handoff"]
-    assert shortlist["schema_version"] == 1
+    assert shortlist["schema_version"] == "aoa_routing_owner_layer_shortlist_v2"
+    assert shortlist["schema_ref"] == "schemas/owner-layer-shortlist.schema.json"
+    assert shortlist["owner_repo"] == "aoa-routing"
+    assert shortlist["surface_kind"] == "owner_layer_shortlist"
     assert {
         (entry["signal"], entry["owner_repo"], entry["ambiguity"])
         for entry in shortlist["hints"]
@@ -607,7 +610,10 @@ def test_build_outputs_from_fixtures() -> None:
             {"kind": "eval", "id": "aoa-context-scan-quality", "relation": "required_by"},
         ],
     }
-    assert federation["version"] == 1
+    assert federation["schema_version"] == "aoa_routing_federation_entrypoints_v2"
+    assert federation["schema_ref"] == "schemas/federation-entrypoints.schema.json"
+    assert federation["owner_repo"] == "aoa-routing"
+    assert federation["surface_kind"] == "federation_entrypoints"
     assert federation["active_entry_kinds"] == [
         "agent",
         "tier",
@@ -618,7 +624,10 @@ def test_build_outputs_from_fixtures() -> None:
         "orientation_surface",
     ]
     assert federation["declared_entry_kinds"] == ["tos_node"]
-    assert return_navigation["version"] == 1
+    assert return_navigation["schema_version"] == "aoa_routing_return_navigation_hints_v2"
+    assert return_navigation["schema_ref"] == "schemas/return-navigation-hints.schema.json"
+    assert return_navigation["owner_repo"] == "aoa-routing"
+    assert return_navigation["surface_kind"] == "return_navigation_hints"
     memo_return = next(
         record for record in return_navigation["thin_router_returns"] if record["context_kind"] == "memo"
     )
@@ -771,7 +780,10 @@ def test_build_outputs_from_fixtures() -> None:
         "match_key": "kind",
         "allowed_kinds": ["technique", "skill", "eval", "memo"],
     }
-    assert tiny_model["version"] == 2
+    assert tiny_model["schema_version"] == "aoa_routing_tiny_model_entrypoints_v2"
+    assert tiny_model["schema_ref"] == "schemas/tiny-model-entrypoints.schema.json"
+    assert tiny_model["owner_repo"] == "aoa-routing"
+    assert tiny_model["surface_kind"] == "tiny_model_entrypoints"
     assert tiny_model["queries"][-2:] == [
         {
             "verb": "recall",

@@ -2005,7 +2005,10 @@ def build_federation_entrypoints_payload(
     )
 
     return {
-        "version": 1,
+        "schema_version": "aoa_routing_federation_entrypoints_v2",
+        "schema_ref": "schemas/federation-entrypoints.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "federation_entrypoints",
         "source_inputs": [
             {
                 "name": "aoa_root_readme",
@@ -2693,7 +2696,10 @@ def build_return_navigation_hints_payload(
         }
 
     return {
-        "version": 1,
+        "schema_version": "aoa_routing_return_navigation_hints_v2",
+        "schema_ref": "schemas/return-navigation-hints.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "return_navigation_hints",
         "thin_router_returns": thin_router_returns,
         "federation_root_returns": federation_root_returns,
         "federation_kind_returns": federation_kind_returns,
@@ -3494,7 +3500,10 @@ def build_tiny_model_entrypoints_payload(
     ]
 
     return {
-        "version": 2,
+        "schema_version": "aoa_routing_tiny_model_entrypoints_v2",
+        "schema_ref": "schemas/tiny-model-entrypoints.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "tiny_model_entrypoints",
         "queries": queries,
         "starters": starters,
         "federation_queries": federation_queries,

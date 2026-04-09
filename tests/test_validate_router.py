@@ -129,13 +129,16 @@ def hydrate_catalog_fixture(roots: dict[str, Path], repo_name: str, relative_pat
     if repo_name != "abyss-stack":
         copy_live_repo_text(roots, repo_name, relative_path)
     payload = json.loads((roots[repo_name] / relative_path).read_text(encoding="utf-8"))
+    schema_ref = payload.get("schema_ref")
+    if repo_name != "abyss-stack" and isinstance(schema_ref, str):
+        copy_live_repo_text(roots, repo_name, schema_ref)
     authority_ref = payload.get("authority_ref")
     if isinstance(authority_ref, str):
         ensure_local_ref_placeholder(roots[repo_name], authority_ref)
     for ref in payload.get("validation_refs", []):
         ensure_local_ref_placeholder(roots[repo_name], ref)
     for entry in payload.get("surfaces", []):
-        for key in ("schema_ref", "path", "example_ref"):
+        for key in ("schema_ref", "surface_ref", "path", "example_ref"):
             ref = entry.get(key)
             if isinstance(ref, str):
                 ensure_local_ref_placeholder(roots[repo_name], ref)

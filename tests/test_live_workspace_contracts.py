@@ -145,7 +145,21 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             entry_by_id["aoa-stats-summary-catalog"]["capsule_surface"],
             "aoa-stats:generated/summary_surface_catalog.min.json",
         )
-        self.assertTrue(all("schema_ref" in entry for entry in stats_payload["surfaces"]))
+        self.assertEqual(stats_payload["schema_version"], "aoa_stats_summary_surface_catalog_v2")
+        self.assertEqual(stats_payload["schema_ref"], "schemas/summary-surface-catalog.schema.json")
+        self.assertEqual(stats_payload["owner_repo"], "aoa-stats")
+        self.assertEqual(stats_payload["surface_kind"], "runtime_surface")
+        self.assertEqual(stats_payload["authority_ref"], "docs/ARCHITECTURE.md")
+        self.assertEqual(
+            stats_payload["validation_refs"],
+            [
+                "scripts/build_views.py",
+                "scripts/validate_repo.py",
+                "tests/test_summary_surface_catalog.py",
+            ],
+        )
+        self.assertTrue(all("schema_ref" in entry and "surface_ref" in entry for entry in stats_payload["surfaces"]))
+        self.assertTrue(all("path" not in entry for entry in stats_payload["surfaces"]))
 
         abyss_payload = load_json(LIVE_ROOTS["abyss-stack"] / "generated" / "diagnostic_surface_catalog.min.json")
         self.assertEqual(
@@ -168,6 +182,29 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 for ref in [route["capsule_ref"], route["authority_ref"], *route["verification_refs"]]
             )
         )
+
+    def test_live_workspace_routing_federation_envelopes_are_normalized_v2(self) -> None:
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
+        shortlist = load_json(REPO_ROOT / "generated" / "owner_layer_shortlist.min.json")
+        returns = load_json(REPO_ROOT / "generated" / "return_navigation_hints.min.json")
+
+        self.assertEqual(federation["schema_version"], "aoa_routing_federation_entrypoints_v2")
+        self.assertEqual(federation["schema_ref"], "schemas/federation-entrypoints.schema.json")
+        self.assertEqual(federation["owner_repo"], "aoa-routing")
+        self.assertEqual(federation["surface_kind"], "federation_entrypoints")
+        self.assertEqual(tiny["schema_version"], "aoa_routing_tiny_model_entrypoints_v2")
+        self.assertEqual(tiny["schema_ref"], "schemas/tiny-model-entrypoints.schema.json")
+        self.assertEqual(tiny["owner_repo"], "aoa-routing")
+        self.assertEqual(tiny["surface_kind"], "tiny_model_entrypoints")
+        self.assertEqual(shortlist["schema_version"], "aoa_routing_owner_layer_shortlist_v2")
+        self.assertEqual(shortlist["schema_ref"], "schemas/owner-layer-shortlist.schema.json")
+        self.assertEqual(shortlist["owner_repo"], "aoa-routing")
+        self.assertEqual(shortlist["surface_kind"], "owner_layer_shortlist")
+        self.assertEqual(returns["schema_version"], "aoa_routing_return_navigation_hints_v2")
+        self.assertEqual(returns["schema_ref"], "schemas/return-navigation-hints.schema.json")
+        self.assertEqual(returns["owner_repo"], "aoa-routing")
+        self.assertEqual(returns["surface_kind"], "return_navigation_hints")
 
     def test_live_workspace_playbook_routes_resolve_to_registry_activation_federation_review_status_packet_contracts_and_intake(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")

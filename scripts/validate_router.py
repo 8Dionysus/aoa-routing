@@ -198,7 +198,14 @@ ROUTE_MAP_CAPSULE_EXPECTATIONS = {
 CATALOG_CAPSULE_EXPECTATIONS = {
     ("aoa-stats", AOA_STATS_SUMMARY_SURFACE_CATALOG_PATH): {
         "entry_key": "surfaces",
-        "required_entry_refs": ("schema_ref", "path"),
+        "required_entry_refs": ("surface_ref", "schema_ref"),
+        "required_top_level": {
+            "schema_version": "aoa_stats_summary_surface_catalog_v2",
+            "schema_ref": "schemas/summary-surface-catalog.schema.json",
+            "owner_repo": "aoa-stats",
+            "surface_kind": "runtime_surface",
+            "authority_ref": "docs/ARCHITECTURE.md",
+        },
     },
     ("abyss-stack", ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH): {
         "entry_key": "surfaces",
@@ -2244,6 +2251,15 @@ def validate_federation_entrypoints(
                     payload.get("authority_ref"),
                     f"{location}.capsule_payload.authority_ref",
                 )
+            schema_ref = payload.get("schema_ref")
+            if isinstance(schema_ref, str):
+                normalized_schema_ref = validate_local_low_context_path(
+                    repo_name,
+                    schema_ref,
+                    f"{location}.capsule_payload.schema_ref",
+                )
+                if normalized_schema_ref is not None:
+                    validate_owner_schema(repo_name, normalized_schema_ref, payload, location)
             entries = ensure_list(payload.get(expected["entry_key"]), f"{location}.capsule_payload.{expected['entry_key']}")
             for entry_index, raw_entry in enumerate(entries):
                 entry_location = f"{location}.capsule_payload.{expected['entry_key']}[{entry_index}]"

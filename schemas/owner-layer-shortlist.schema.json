@@ -6,11 +6,23 @@
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "hints"
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": "aoa_routing_owner_layer_shortlist_v2"
+    },
+    "schema_ref": {
+      "const": "schemas/owner-layer-shortlist.schema.json"
+    },
+    "owner_repo": {
+      "const": "aoa-routing"
+    },
+    "surface_kind": {
+      "const": "owner_layer_shortlist"
     },
     "hints": {
       "type": "array",

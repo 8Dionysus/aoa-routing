@@ -5,16 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "version",
+    "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "thin_router_returns",
     "federation_root_returns",
     "federation_kind_returns",
     "federation_entry_returns"
   ],
   "properties": {
-    "version": {
-      "type": "integer",
-      "const": 1
+    "schema_version": {
+      "const": "aoa_routing_return_navigation_hints_v2"
+    },
+    "schema_ref": {
+      "const": "schemas/return-navigation-hints.schema.json"
+    },
+    "owner_repo": {
+      "const": "aoa-routing"
+    },
+    "surface_kind": {
+      "const": "return_navigation_hints"
     },
     "thin_router_returns": {
       "type": "array",

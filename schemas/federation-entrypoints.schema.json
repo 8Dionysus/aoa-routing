@@ -5,7 +5,10 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "version",
+    "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "source_inputs",
     "root_entries",
     "active_entry_kinds",
@@ -13,8 +16,17 @@
     "entrypoints"
   ],
   "properties": {
-    "version": {
-      "const": 1
+    "schema_version": {
+      "const": "aoa_routing_federation_entrypoints_v2"
+    },
+    "schema_ref": {
+      "const": "schemas/federation-entrypoints.schema.json"
+    },
+    "owner_repo": {
+      "const": "aoa-routing"
+    },
+    "surface_kind": {
+      "const": "federation_entrypoints"
     },
     "source_inputs": {
       "type": "array",
