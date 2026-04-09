@@ -11,6 +11,11 @@ The flow is:
 
 `stage 1 preselect -> stage 2 decision`
 
+The current public contract is schema-backed and normalized as a routing-owned
+v2 family. The two-stage surfaces expose a bounded stage-1 token budget, a
+declared inherited starter from `tiny_model_entrypoints.json`, and an enforced
+stage-2 shortlist limit so small-model consumers do not guess the budget.
+
 ## Stage 1
 
 Stage 1 is a tiny-model preselector.
@@ -29,6 +34,8 @@ It may:
 - emit a precision-first confidence reading for the current shortlist
 - keep fallback candidates visible out of band when the live shortlist is empty or weak
 - mark explicit-only skills as manual
+- inherit the declared `skill-root` starter and stay within the published
+  stage-1 token budget
 
 It must not:
 
@@ -51,6 +58,9 @@ It may return only:
 - `activate-candidate`
 - `manual-invocation-required`
 - `no-skill`
+
+The shortlisted packet must stay at or below the published stage-2 shortlist
+limit. Consumers should treat that limit as contract, not as a hint.
 
 Explicit-only skills may rank highly in stage 1, but stage 2 must still require an explicit handle.
 Weak or empty shortlists must stay `no-skill`.

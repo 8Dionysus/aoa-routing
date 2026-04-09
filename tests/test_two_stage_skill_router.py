@@ -53,13 +53,27 @@ def test_build_outputs_include_two_stage_router_surfaces() -> None:
     assert "two_stage_router_examples.json" in outputs
     assert "two_stage_router_manifest.json" in outputs
     assert "two_stage_router_eval_cases.jsonl" in outputs
+    assert outputs["two_stage_skill_entrypoints.json"]["schema_version"] == "aoa_routing_two_stage_skill_entrypoints_v2"
+    assert outputs["two_stage_skill_entrypoints.json"]["schema_ref"] == "schemas/two-stage-skill-entrypoints.schema.json"
+    assert outputs["two_stage_skill_entrypoints.json"]["owner_repo"] == "aoa-routing"
+    assert outputs["two_stage_skill_entrypoints.json"]["surface_kind"] == "two_stage_skill_entrypoints"
     assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["activation_policy"] == "never-activate"
+    assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["starter_ref"] == "skill-root"
+    assert outputs["two_stage_skill_entrypoints.json"]["stage_1"]["max_stage_1_tokens"] == 1200
+    assert outputs["two_stage_skill_entrypoints.json"]["stage_2"]["max_shortlist"] == 3
     build_packet_tool = next(
         tool
         for tool in outputs["two_stage_router_tool_schemas.json"]["tools"]
         if tool["name"] == "build_skill_decision_packet"
     )
     assert build_packet_tool["input_schema"]["properties"]["shortlist_names"].get("minItems", 0) == 0
+    assert build_packet_tool["input_schema"]["properties"]["shortlist_names"]["maxItems"] == 3
+    preselect_tool = next(
+        tool
+        for tool in outputs["two_stage_router_tool_schemas.json"]["tools"]
+        if tool["name"] == "preselect_skills"
+    )
+    assert preselect_tool["input_schema"]["properties"]["top_k"]["maximum"] == 3
     example = outputs["two_stage_router_examples.json"]["examples"][0]
     assert "confidence" in example["preselect_result"]
     assert "decision_reason" in example["decision_packet"]
@@ -141,6 +155,20 @@ def test_preselect_keeps_fallback_candidates_out_of_shortlist_for_empty_signal()
             "reasons": ["fallback"],
         }
     ]
+
+
+def test_preselect_caps_top_k_to_declared_stage_2_shortlist_limit() -> None:
+    policy = load_fixture_json(FIXTURES_ROOT / "aoa-routing" / "config" / "two_stage_router_policy.json")
+    signals = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_skill_signals.json")
+    bands = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_candidate_bands.json")
+    prompt = (
+        "Use explicit verification, a bounded change workflow, a contract check, "
+        "and a test-first slice while keeping the repo guidance authoritative."
+    )
+
+    preselected = preselect(prompt, signals, bands, policy, top_k=7)
+
+    assert len(preselected["shortlist"]) <= 3
 
 
 def test_preselect_marks_close_scores_as_weak_and_stage_2_stays_no_skill() -> None:
@@ -487,6 +515,93 @@ def test_build_decision_packet_requires_manual_handle_for_strong_explicit_only_l
     assert packet["suggested_decision"]["skill"] == "aoa-approval-gate-check"
 
 
+def test_build_decision_packet_rejects_shortlist_beyond_declared_limit(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    generated_dir = skills_root / "generated"
+    signals = {
+        "skills": [
+            {
+                "name": "skill-one",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+            {
+                "name": "skill-two",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+            {
+                "name": "skill-three",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+            {
+                "name": "skill-four",
+                "band": "change-validation",
+                "invocation_mode": "explicit-preferred",
+                "manual_invocation_required": False,
+                "project_overlay": False,
+                "companions": [],
+            },
+        ]
+    }
+    capsules = {
+        "skills": [
+            {
+                "name": name,
+                "summary": f"{name} summary",
+                "trigger_boundary_short": f"{name} trigger",
+                "verification_short": f"{name} verification",
+            }
+            for name in ["skill-one", "skill-two", "skill-three", "skill-four"]
+        ]
+    }
+    adapters = {
+        "skills": [
+            {"name": name, "allowlist_paths": [".agents/skills"]}
+            for name in ["skill-one", "skill-two", "skill-three", "skill-four"]
+        ]
+    }
+    retention = {
+        "skills": [
+            {"name": name, "rehydration_hint": f"reload {name}"}
+            for name in ["skill-one", "skill-two", "skill-three", "skill-four"]
+        ]
+    }
+    write_json(generated_dir / "tiny_router_skill_signals.json", signals)
+    write_json(generated_dir / "skill_capsules.json", capsules)
+    write_json(generated_dir / "local_adapter_manifest.json", adapters)
+    write_json(generated_dir / "context_retention_manifest.json", retention)
+
+    try:
+        build_decision_packet(
+            "Route a bounded change",
+            {
+                "task": "Route a bounded change",
+                "shortlist": [{"name": name} for name in ["skill-one", "skill-two", "skill-three", "skill-four"]],
+                "confidence": "strong",
+                "lead_score": 12,
+                "lead_gap": 6,
+                "fallback_candidates": [],
+            },
+            skills_root,
+            max_shortlist=3,
+        )
+    except ValueError as exc:
+        assert "max_shortlist=3" in str(exc)
+    else:
+        raise AssertionError("expected build_decision_packet to reject an oversized shortlist")
+
+
 def test_validate_two_stage_outputs_reports_behavioral_mismatch(tmp_path: Path) -> None:
     routing_root = tmp_path / "aoa-routing"
     shutil.copytree(FIXTURES_ROOT / "aoa-routing", routing_root)
@@ -555,3 +670,33 @@ def test_two_stage_skill_router_cli_routes_fixture_task(tmp_path: Path) -> None:
     assert payload["decision_packet"]["suggested_decision"]["decision_mode"] == "activate-candidate"
     assert "fallback_candidates" in payload["decision_packet"]
     assert payload["decision_packet"]["decision_reason"] == "lead candidate cleared the precision-first activation thresholds"
+
+
+def test_live_workspace_two_stage_outputs_are_normalized_v2() -> None:
+    generated_root = Path(__file__).resolve().parents[1] / "generated"
+    entrypoints = load_fixture_json(generated_root / "two_stage_skill_entrypoints.json")
+    prompt_blocks = load_fixture_json(generated_root / "two_stage_router_prompt_blocks.json")
+    tool_schemas = load_fixture_json(generated_root / "two_stage_router_tool_schemas.json")
+    examples = load_fixture_json(generated_root / "two_stage_router_examples.json")
+    manifest = load_fixture_json(generated_root / "two_stage_router_manifest.json")
+
+    assert entrypoints["schema_version"] == "aoa_routing_two_stage_skill_entrypoints_v2"
+    assert entrypoints["schema_ref"] == "schemas/two-stage-skill-entrypoints.schema.json"
+    assert entrypoints["owner_repo"] == "aoa-routing"
+    assert entrypoints["surface_kind"] == "two_stage_skill_entrypoints"
+    assert prompt_blocks["schema_version"] == "aoa_routing_two_stage_router_prompt_blocks_v2"
+    assert prompt_blocks["schema_ref"] == "schemas/two-stage-router-prompt-blocks.schema.json"
+    assert prompt_blocks["owner_repo"] == "aoa-routing"
+    assert prompt_blocks["surface_kind"] == "two_stage_router_prompt_blocks"
+    assert tool_schemas["schema_version"] == "aoa_routing_two_stage_router_tool_schemas_v2"
+    assert tool_schemas["schema_ref"] == "schemas/two-stage-router-tool-schemas.schema.json"
+    assert tool_schemas["owner_repo"] == "aoa-routing"
+    assert tool_schemas["surface_kind"] == "two_stage_router_tool_schemas"
+    assert examples["schema_version"] == "aoa_routing_two_stage_router_examples_v2"
+    assert examples["schema_ref"] == "schemas/two-stage-router-examples.schema.json"
+    assert examples["owner_repo"] == "aoa-routing"
+    assert examples["surface_kind"] == "two_stage_router_examples"
+    assert manifest["schema_version"] == "aoa_routing_two_stage_router_manifest_v2"
+    assert manifest["schema_ref"] == "schemas/two-stage-router-manifest.schema.json"
+    assert manifest["owner_repo"] == "aoa-routing"
+    assert manifest["surface_kind"] == "two_stage_router_manifest"

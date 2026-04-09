@@ -1,6 +1,15 @@
 {
-  "schema_version": 1,
+  "schema_version": "aoa_routing_two_stage_router_examples_v2",
+  "schema_ref": "schemas/two-stage-router-examples.schema.json",
+  "owner_repo": "aoa-routing",
+  "surface_kind": "two_stage_router_examples",
   "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "policy_ref": "config/two_stage_router_policy.json",
+  "validation_refs": [
+    "scripts/build_two_stage_skill_router.py",
+    "scripts/validate_two_stage_skill_router.py",
+    "tests/test_two_stage_skill_router.py"
+  ],
   "examples": [
     {
       "case_id": "tiny-positive-abyss-safe-infra-change",

@@ -150,6 +150,11 @@ def resolve_repo_family(task_normalized: str, repo_family: str | None, policy: d
     return None
 
 
+def resolve_stage_2_shortlist_limit(policy: dict[str, Any]) -> int:
+    defaults = policy.get("defaults", {})
+    return int(defaults.get("max_stage_2_shortlist", defaults.get("top_k", 3)))
+
+
 def score_band(
     task_normalized: str,
     task_tokens: set[str],
@@ -360,7 +365,7 @@ def preselect(
     task_normalized = normalize(task)
     task_tokens = set(tokenize(task))
     scoring = policy["scoring"]
-    top_k = top_k or policy["defaults"]["top_k"]
+    top_k = min(top_k or policy["defaults"]["top_k"], resolve_stage_2_shortlist_limit(policy))
     resolved_repo_family = resolve_repo_family(task_normalized, repo_family, policy)
 
     scored_bands: list[dict[str, Any]] = []
@@ -455,6 +460,8 @@ def build_decision_packet(
     task: str,
     preselect_result: dict[str, Any] | list[str],
     skills_root: Path,
+    *,
+    max_shortlist: int | None = None,
 ) -> dict[str, Any]:
     generated_dir = skills_root / "generated"
     signals = load_json(generated_dir / "tiny_router_skill_signals.json")
@@ -467,8 +474,13 @@ def build_decision_packet(
     adapter_by_name = {entry["name"]: entry for entry in local_adapter.get("skills", [])}
     retention_by_name = {entry["name"]: entry for entry in context_retention.get("skills", [])}
     preselect_payload = coerce_preselect_result(task, preselect_result)
+    shortlist_entries = preselect_payload.get("shortlist", [])
+    if max_shortlist is not None and len(shortlist_entries) > max_shortlist:
+        raise ValueError(
+            f"stage-2 shortlist exceeds configured max_shortlist={max_shortlist}: got {len(shortlist_entries)} entries"
+        )
     shortlist_by_name = {
-        entry.get("name"): entry for entry in preselect_payload.get("shortlist", []) if entry.get("name")
+        entry.get("name"): entry for entry in shortlist_entries if entry.get("name")
     }
 
     candidates: list[dict[str, Any]] = []

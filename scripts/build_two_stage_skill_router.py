@@ -8,11 +8,22 @@ import json
 from pathlib import Path
 from typing import Any
 
-from _wave9_router_lib import build_decision_packet, load_json, load_jsonl, preselect
+from _wave9_router_lib import (
+    build_decision_packet,
+    load_json,
+    load_jsonl,
+    preselect,
+    resolve_stage_2_shortlist_limit,
+)
 
 
 PROFILE = "aoa-routing-wave-9-two-stage-skill-router"
 JSON_INDENT = 2
+VALIDATION_REFS = [
+    "scripts/build_two_stage_skill_router.py",
+    "scripts/validate_two_stage_skill_router.py",
+    "tests/test_two_stage_skill_router.py",
+]
 
 
 def dump_json(data: Any) -> str:
@@ -70,10 +81,18 @@ def build_outputs(
     tiny_bands = load_json(generated_dir / "tiny_router_candidate_bands.json")
     tiny_signals = load_json(generated_dir / "tiny_router_skill_signals.json")
     tiny_eval_cases = load_jsonl(generated_dir / "tiny_router_eval_cases.jsonl")
+    top_k_default = min(int(policy["defaults"]["top_k"]), resolve_stage_2_shortlist_limit(policy))
+    stage_2_shortlist_limit = resolve_stage_2_shortlist_limit(policy)
+    stage_1_token_budget = int(policy["defaults"]["max_stage_1_tokens"])
+    skill_root_starter = policy["defaults"]["skill_root_starter"]
 
     entrypoints = {
-        "schema_version": 1,
+        "schema_version": "aoa_routing_two_stage_skill_entrypoints_v2",
+        "schema_ref": "schemas/two-stage-skill-entrypoints.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "two_stage_skill_entrypoints",
         "profile": PROFILE,
+        "validation_refs": VALIDATION_REFS,
         "inherits_from": policy["defaults"]["existing_tiny_entrypoints_ref"],
         "stage_1": {
             "name": "tiny-skill-preselector",
@@ -81,7 +100,9 @@ def build_outputs(
             "target_surface": "generated/tiny_router_capsules.min.json",
             "bands_surface": "generated/tiny_router_candidate_bands.json",
             "signals_surface": "generated/tiny_router_skill_signals.json",
-            "top_k_default": policy["defaults"]["top_k"],
+            "top_k_default": top_k_default,
+            "starter_ref": skill_root_starter,
+            "max_stage_1_tokens": stage_1_token_budget,
             "activation_policy": "never-activate",
             "manual_policy": "include-but-mark-manual",
             "policy_ref": "config/two_stage_router_policy.json",
@@ -92,6 +113,7 @@ def build_outputs(
             "shortlist_surface": "generated/skill_capsules.json",
             "activation_manifest": "generated/local_adapter_manifest.json",
             "context_manifest": "generated/context_retention_manifest.json",
+            "max_shortlist": stage_2_shortlist_limit,
             "decision_modes": policy["defaults"]["decision_modes"],
         },
         "starters": [
@@ -100,7 +122,7 @@ def build_outputs(
                 "verb": "preselect",
                 "source_repo": "aoa-skills",
                 "target_surface": "generated/tiny_router_capsules.min.json",
-                "top_k": policy["defaults"]["top_k"],
+                "top_k": top_k_default,
             },
             {
                 "name": "skill-preselect-risk",
@@ -108,7 +130,7 @@ def build_outputs(
                 "source_repo": "aoa-skills",
                 "target_surface": "generated/tiny_router_capsules.min.json",
                 "band_hint": "risk-ops-safety",
-                "top_k": policy["defaults"]["top_k"],
+                "top_k": top_k_default,
             },
             {
                 "name": "skill-preselect-overlay",
@@ -116,7 +138,7 @@ def build_outputs(
                 "source_repo": "aoa-skills",
                 "target_surface": "generated/tiny_router_capsules.min.json",
                 "repo_family": "atm10",
-                "top_k": policy["defaults"]["top_k"],
+                "top_k": top_k_default,
             },
             {
                 "name": "skill-decision-packet",
@@ -135,17 +157,25 @@ def build_outputs(
     }
 
     prompt_blocks = {
-        "schema_version": 1,
+        "schema_version": "aoa_routing_two_stage_router_prompt_blocks_v2",
+        "schema_ref": "schemas/two-stage-router-prompt-blocks.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "two_stage_router_prompt_blocks",
         "profile": PROFILE,
+        "policy_ref": "config/two_stage_router_policy.json",
+        "validation_refs": VALIDATION_REFS,
+        "stage_1_token_budget": stage_1_token_budget,
+        "stage_2_shortlist_limit": stage_2_shortlist_limit,
         "tiny_preselector_system": (
             "You are a tiny skill preselector. Read only compressed skill cards, "
             "candidate bands, and their cues. Never activate a skill. Return at most "
-            "three positive-signal candidate names, confidence metadata, and any "
+            f"{top_k_default} positive-signal candidate names, confidence metadata, and any "
             "out-of-band fallback visibility. Never treat fallback candidates as the live shortlist."
         ),
         "main_model_decision_system": (
             "You are the stage-2 skill decider. Read only the shortlist packet and "
-            "the full capsules for shortlisted skills. Choose at most one skill or no "
+            "the full capsules for shortlisted skills. The shortlist must stay at or below "
+            f"{stage_2_shortlist_limit} candidates. Choose at most one skill or no "
             "skill. Weak or empty shortlists must stay no-skill. Explicit-only skills must stay manual."
         ),
         "handoff_contract": [
@@ -159,8 +189,14 @@ def build_outputs(
     }
 
     tool_schemas = {
-        "schema_version": 1,
+        "schema_version": "aoa_routing_two_stage_router_tool_schemas_v2",
+        "schema_ref": "schemas/two-stage-router-tool-schemas.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "two_stage_router_tool_schemas",
         "profile": PROFILE,
+        "policy_ref": "config/two_stage_router_policy.json",
+        "validation_refs": VALIDATION_REFS,
+        "stage_2_shortlist_limit": stage_2_shortlist_limit,
         "tools": [
             {
                 "name": "preselect_skills",
@@ -170,7 +206,7 @@ def build_outputs(
                     "properties": {
                         "task": {"type": "string"},
                         "repo_family": {"type": "string"},
-                        "top_k": {"type": "integer", "minimum": 1, "maximum": 5},
+                        "top_k": {"type": "integer", "minimum": 1, "maximum": stage_2_shortlist_limit},
                     },
                     "required": ["task"],
                     "additionalProperties": False,
@@ -186,7 +222,7 @@ def build_outputs(
                         "shortlist_names": {
                             "type": "array",
                             "items": {"type": "string"},
-                            "maxItems": 5,
+                            "maxItems": stage_2_shortlist_limit,
                         },
                     },
                     "required": ["task", "shortlist_names"],
@@ -201,7 +237,7 @@ def build_outputs(
                     "properties": {
                         "task": {"type": "string"},
                         "repo_family": {"type": "string"},
-                        "top_k": {"type": "integer", "minimum": 1, "maximum": 5},
+                        "top_k": {"type": "integer", "minimum": 1, "maximum": stage_2_shortlist_limit},
                     },
                     "required": ["task"],
                     "additionalProperties": False,
@@ -219,10 +255,15 @@ def build_outputs(
             signals_doc=tiny_signals,
             bands_doc=tiny_bands,
             policy=policy,
-            top_k=policy["defaults"]["top_k"],
+            top_k=top_k_default,
             repo_family=case.get("repo_family_hint"),
         )
-        packet = build_decision_packet(case["prompt"], preselected, skills_root)
+        packet = build_decision_packet(
+            case["prompt"],
+            preselected,
+            skills_root,
+            max_shortlist=stage_2_shortlist_limit,
+        )
         if len(examples) < 8:
             examples.append(
                 {
@@ -253,10 +294,17 @@ def build_outputs(
         )
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": "aoa_routing_two_stage_router_manifest_v2",
+        "schema_ref": "schemas/two-stage-router-manifest.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "two_stage_router_manifest",
         "profile": PROFILE,
         "policy_ref": "config/two_stage_router_policy.json",
+        "validation_refs": VALIDATION_REFS,
         "integration_mode": "adjacent-seam",
+        "stage_1_token_budget": stage_1_token_budget,
+        "stage_2_shortlist_limit": stage_2_shortlist_limit,
+        "skill_root_starter": skill_root_starter,
         "source_inputs": [
             "generated/tiny_model_entrypoints.json",
             "generated/aoa_router.min.json",
@@ -284,8 +332,13 @@ def build_outputs(
         "two_stage_router_prompt_blocks.json": prompt_blocks,
         "two_stage_router_tool_schemas.json": tool_schemas,
         "two_stage_router_examples.json": {
-            "schema_version": 1,
+            "schema_version": "aoa_routing_two_stage_router_examples_v2",
+            "schema_ref": "schemas/two-stage-router-examples.schema.json",
+            "owner_repo": "aoa-routing",
+            "surface_kind": "two_stage_router_examples",
             "profile": PROFILE,
+            "policy_ref": "config/two_stage_router_policy.json",
+            "validation_refs": VALIDATION_REFS,
             "examples": examples,
         },
         "two_stage_router_manifest.json": manifest,
