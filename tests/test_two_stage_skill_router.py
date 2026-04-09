@@ -217,6 +217,40 @@ def test_validate_two_stage_outputs_accepts_fixture_build(tmp_path: Path) -> Non
     assert issues == []
 
 
+def test_validate_two_stage_outputs_rejects_missing_stage_2_activation_surface(tmp_path: Path) -> None:
+    routing_root = tmp_path / "aoa-routing"
+    shutil.copytree(FIXTURES_ROOT / "aoa-routing", routing_root)
+    skills_root = tmp_path / "aoa-skills"
+    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
+    generated_dir = routing_root / "generated"
+    outputs = build_fixture_outputs()
+    for filename, payload in outputs.items():
+        path = generated_dir / filename
+        if filename.endswith(".jsonl"):
+            path.write_text(
+                "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in payload),
+                encoding="utf-8",
+            )
+        else:
+            write_json(path, payload)
+
+    adapter_manifest_path = skills_root / "generated" / "local_adapter_manifest.json"
+    adapter_manifest = load_fixture_json(adapter_manifest_path)
+    adapter_manifest["skills"] = [
+        entry
+        for entry in adapter_manifest["skills"]
+        if entry["name"] != "aoa-change-protocol"
+    ]
+    write_json(adapter_manifest_path, adapter_manifest)
+
+    issues = validate_two_stage_skill_router.validate_outputs(routing_root, skills_root)
+
+    assert (
+        "local_adapter_manifest.json",
+        "stage-2 surface coverage mismatch: missing ['aoa-change-protocol']",
+    ) in issues
+
+
 def test_preselect_keeps_fallback_candidates_out_of_shortlist_for_empty_signal() -> None:
     policy = load_fixture_json(FIXTURES_ROOT / "aoa-routing" / "config" / "two_stage_router_policy.json")
     signals = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_skill_signals.json")

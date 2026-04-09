@@ -187,6 +187,9 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
     policy = load_json(routing_root / "config" / "two_stage_router_policy.json")
     signals = load_json(skills_root / "generated" / "tiny_router_skill_signals.json")
     bands = load_json(skills_root / "generated" / "tiny_router_candidate_bands.json")
+    skill_capsules = load_json(skills_root / "generated" / "skill_capsules.json")
+    local_adapter_manifest = load_json(skills_root / "generated" / "local_adapter_manifest.json")
+    context_retention_manifest = load_json(skills_root / "generated" / "context_retention_manifest.json")
     stage_2_shortlist_limit = resolve_stage_2_shortlist_limit(policy)
     top_k_default = min(int(policy["defaults"]["top_k"]), stage_2_shortlist_limit)
     stage_1_token_budget = int(policy["defaults"]["max_stage_1_tokens"])
@@ -270,9 +273,75 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         issues.append(("two_stage_skill_entrypoints.json", "stage_1 max_stage_1_tokens mismatch"))
     if entrypoints.get("stage_2", {}).get("max_shortlist") != stage_2_shortlist_limit:
         issues.append(("two_stage_skill_entrypoints.json", "stage_2 max_shortlist mismatch"))
-    starter_names = {entry.get("name") for entry in tiny_model_entrypoints.get("starters", [])}
+    starters = tiny_model_entrypoints.get("starters", [])
+    starter_names = {entry.get("name") for entry in starters}
     if skill_root_starter not in starter_names:
         issues.append(("tiny_model_entrypoints.json", f"missing starter {skill_root_starter!r} required by wave-9 policy"))
+    skill_root_entry = next(
+        (
+            entry
+            for entry in starters
+            if entry.get("name") == skill_root_starter
+        ),
+        None,
+    )
+    if skill_root_entry is not None:
+        if skill_root_entry.get("verb") != "pick":
+            issues.append(("tiny_model_entrypoints.json", f"starter {skill_root_starter!r} must stay a pick starter"))
+        if skill_root_entry.get("source_repo") != "aoa-routing":
+            issues.append(("tiny_model_entrypoints.json", f"starter {skill_root_starter!r} must stay on aoa-routing"))
+        if skill_root_entry.get("target_surface") != "generated/aoa_router.min.json":
+            issues.append(
+                (
+                    "tiny_model_entrypoints.json",
+                    f"starter {skill_root_starter!r} must target generated/aoa_router.min.json",
+                )
+            )
+        if skill_root_entry.get("allowed_kinds") != ["skill"]:
+            issues.append(
+                (
+                    "tiny_model_entrypoints.json",
+                    f"starter {skill_root_starter!r} must stay skill-only",
+                )
+            )
+        if skill_root_entry.get("target_kind") != "skill" or skill_root_entry.get("target_value") != "skill":
+            issues.append(
+                (
+                    "tiny_model_entrypoints.json",
+                    f"starter {skill_root_starter!r} must keep target_kind/target_value pinned to 'skill'",
+                )
+            )
+    if entrypoints.get("stage_1", {}).get("source_repo") != "aoa-skills":
+        issues.append(("two_stage_skill_entrypoints.json", "stage_1 source_repo must stay aoa-skills"))
+    if entrypoints.get("stage_2", {}).get("source_repo") != "aoa-skills":
+        issues.append(("two_stage_skill_entrypoints.json", "stage_2 source_repo must stay aoa-skills"))
+    if entrypoints.get("stage_2", {}).get("activation_manifest") != "generated/local_adapter_manifest.json":
+        issues.append(("two_stage_skill_entrypoints.json", "stage_2 activation_manifest mismatch"))
+    if entrypoints.get("stage_2", {}).get("context_manifest") != "generated/context_retention_manifest.json":
+        issues.append(("two_stage_skill_entrypoints.json", "stage_2 context_manifest mismatch"))
+    stage_2_surface_sets = {
+        "skill_capsules.json": {entry["name"] for entry in skill_capsules.get("skills", [])},
+        "local_adapter_manifest.json": {entry["name"] for entry in local_adapter_manifest.get("skills", [])},
+        "context_retention_manifest.json": {entry["name"] for entry in context_retention_manifest.get("skills", [])},
+    }
+    for label, surface_names in stage_2_surface_sets.items():
+        if surface_names != skill_names:
+            missing = sorted(skill_names - surface_names)
+            extra = sorted(surface_names - skill_names)
+            parts: list[str] = []
+            if missing:
+                parts.append(f"missing {missing!r}")
+            if extra:
+                parts.append(f"unexpected {extra!r}")
+            issues.append((label, f"stage-2 surface coverage mismatch: {'; '.join(parts)}"))
+    for entry in local_adapter_manifest.get("skills", []):
+        allowlist_paths = entry.get("allowlist_paths")
+        if not isinstance(allowlist_paths, list) or not allowlist_paths:
+            issues.append(("local_adapter_manifest.json", f"skill {entry.get('name')!r} must keep a non-empty allowlist_paths"))
+    for entry in skill_capsules.get("skills", []):
+        skill_path = entry.get("skill_path")
+        if not isinstance(skill_path, str) or not skill_path:
+            issues.append(("skill_capsules.json", f"skill {entry.get('name')!r} must keep a source-owned skill_path"))
 
     preselect_tool = next((tool for tool in tool_schemas.get("tools", []) if tool.get("name") == "preselect_skills"), None)
     decision_packet_tool = next(
