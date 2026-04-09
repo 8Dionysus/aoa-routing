@@ -31,6 +31,12 @@ MISSING_LIVE_ROOTS = sorted(
 )
 LIVE_REQUIRED_INPUTS = {
     "Agents-of-Abyss": [Path("generated/center_entry_map.min.json")],
+    "aoa-agents": [
+        Path("generated/agent_registry.min.json"),
+        Path("generated/model_tier_registry.json"),
+    ],
+    "aoa-kag": [Path("generated/federation_spine.min.json")],
+    "aoa-playbooks": [Path("generated/playbook_registry.min.json")],
     "aoa-skills": [
         Path("generated/tiny_router_candidate_bands.json"),
         Path("generated/tiny_router_skill_signals.json"),
@@ -39,6 +45,10 @@ LIVE_REQUIRED_INPUTS = {
         Path("generated/context_retention_manifest.json"),
     ],
     "aoa-stats": [Path("generated/stress_recovery_window_summary.min.json")],
+    "aoa-techniques": [
+        Path("generated/repo_doc_surface_manifest.min.json"),
+        Path("generated/technique_catalog.min.json"),
+    ],
     "Tree-of-Sophia": [Path("generated/root_entry_map.min.json")],
     "8Dionysus": [Path("generated/public_route_map.min.json")],
 }
@@ -60,6 +70,19 @@ def load_jsonl(path: Path) -> list[dict[str, object]]:
         for line in path.read_text(encoding="utf-8").splitlines()
         if line.strip()
     ]
+
+
+def strip_anchor(ref: str) -> str:
+    return ref.partition("#")[0]
+
+
+def resolve_repo_ref(ref: str, *, default_repo: str | None = None) -> Path:
+    repo_name, separator, repo_path = ref.partition(":")
+    if separator:
+        return LIVE_ROOTS[repo_name] / strip_anchor(repo_path)
+    if default_repo is None:
+        raise AssertionError(f"repo-qualified ref required, got {ref!r}")
+    return LIVE_ROOTS[default_repo] / strip_anchor(ref)
 
 
 @unittest.skipUnless(
@@ -386,6 +409,165 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                     expected_mode == "manual-invocation-required",
                 )
                 self.assertTrue(contexts[candidate["name"]]["rehydration_hint"])
+
+    def test_live_workspace_remaining_federation_starters_reach_owner_owned_capsule_paths(self) -> None:
+        tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        federation_starters = {
+            starter["name"]: starter for starter in tiny["federation_starters"]
+        }
+        entry_by_id = {entry["id"]: entry for entry in federation["entrypoints"]}
+
+        agent_entry = entry_by_id[federation_starters["agent-root"]["target_value"]]
+        self.assertEqual(agent_entry["kind"], "agent")
+        self.assertTrue(resolve_repo_ref(agent_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(agent_entry["authority_surface"]).exists())
+        agent_registry = load_json(resolve_repo_ref(agent_entry["capsule_surface"]))
+        self.assertIn(
+            agent_entry["id"],
+            {entry["id"] for entry in agent_registry["agents"]},
+        )
+        self.assertTrue(all(hop["id"] in entry_by_id for hop in agent_entry["next_hops"]))
+
+        tier_entry = entry_by_id[federation_starters["tier-root"]["target_value"]]
+        self.assertEqual(tier_entry["kind"], "tier")
+        self.assertTrue(resolve_repo_ref(tier_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(tier_entry["authority_surface"]).exists())
+        tier_registry = load_json(resolve_repo_ref(tier_entry["capsule_surface"]))
+        self.assertIn(
+            tier_entry["id"],
+            {entry["id"] for entry in tier_registry["model_tiers"]},
+        )
+        self.assertEqual(tier_entry["next_hops"], [{"kind": "agent", "id": "AOA-A-0001"}])
+
+        playbook_entry = entry_by_id[federation_starters["playbook-root"]["target_value"]]
+        self.assertEqual(playbook_entry["kind"], "playbook")
+        self.assertTrue(resolve_repo_ref(playbook_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(playbook_entry["authority_surface"]).exists())
+        playbook_registry = load_json(resolve_repo_ref(playbook_entry["capsule_surface"]))
+        self.assertIn(
+            playbook_entry["id"],
+            {entry["id"] for entry in playbook_registry["playbooks"]},
+        )
+        self.assertTrue(all(hop["id"] in entry_by_id for hop in playbook_entry["next_hops"]))
+
+        kag_entry = entry_by_id[federation_starters["kag-view-root"]["target_value"]]
+        self.assertEqual(kag_entry["kind"], "kag_view")
+        self.assertTrue(resolve_repo_ref(kag_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(kag_entry["authority_surface"]).exists())
+        kag_spine = load_json(resolve_repo_ref(kag_entry["capsule_surface"]))
+        repo_exports = {entry["repo"] for entry in kag_spine["repos"]}
+        self.assertIn("aoa-techniques", repo_exports)
+        technique_doc_manifest = load_json(
+            LIVE_ROOTS["aoa-techniques"] / "generated" / "repo_doc_surface_manifest.min.json"
+        )
+        technique_catalog = load_json(
+            LIVE_ROOTS["aoa-techniques"] / "generated" / "technique_catalog.min.json"
+        )
+        doc_ids = {entry["doc_id"] for entry in technique_doc_manifest["docs"]}
+        technique_ids = {entry["id"] for entry in technique_catalog["techniques"]}
+        kag_targets = {
+            ("generated/repo_doc_surface_manifest.min.json", "readme"): doc_ids,
+            ("generated/technique_catalog.min.json", "AOA-T-0001"): technique_ids,
+        }
+        for action in kag_entry["next_actions"]:
+            self.assertEqual(action["target_repo"], "aoa-techniques")
+            target_path = LIVE_ROOTS["aoa-techniques"] / action["target_surface"]
+            self.assertTrue(target_path.exists())
+            self.assertIn(
+                action["target_value"],
+                kag_targets[(action["target_surface"], action["target_value"])],
+            )
+
+        seed_entry = entry_by_id[federation_starters["seed-root"]["target_value"]]
+        self.assertEqual(seed_entry["kind"], "seed")
+        self.assertTrue(resolve_repo_ref(seed_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(seed_entry["authority_surface"]).exists())
+        seed_payload = load_json(resolve_repo_ref(seed_entry["capsule_surface"]))
+        seed_routes = {route["route_id"]: route for route in seed_payload["routes"]}
+        self.assertEqual(
+            list(seed_routes),
+            ["next-live-seed", "registry-validation", "questbook-follow-through"],
+        )
+        for route in seed_routes.values():
+            self.assertTrue(resolve_repo_ref(route["surface_ref"], default_repo="Dionysus").exists())
+            self.assertTrue(
+                all(
+                    resolve_repo_ref(ref, default_repo="Dionysus").exists()
+                    for ref in route["verification_refs"]
+                )
+            )
+        self.assertEqual(
+            [hop["id"] for hop in seed_entry["next_hops"]],
+            ["8dionysus-public-route-map", "aoa-sdk-control-plane"],
+        )
+
+    def test_live_workspace_runtime_checkpoint_and_orientation_starters_stay_bounded(self) -> None:
+        tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        federation_starters = {
+            starter["name"]: starter for starter in tiny["federation_starters"]
+        }
+        entry_by_id = {entry["id"]: entry for entry in federation["entrypoints"]}
+
+        runtime_entry = entry_by_id[federation_starters["runtime-surface-root"]["target_value"]]
+        checkpoint_entry = entry_by_id[federation_starters["checkpoint-root"]["target_value"]]
+        self.assertEqual(runtime_entry["id"], "aoa-sdk-control-plane")
+        self.assertEqual(checkpoint_entry["id"], runtime_entry["id"])
+        self.assertEqual(runtime_entry["kind"], "runtime_surface")
+        self.assertTrue(resolve_repo_ref(runtime_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(runtime_entry["authority_surface"]).exists())
+        runtime_payload = load_json(resolve_repo_ref(runtime_entry["capsule_surface"]))
+        runtime_routes = {route["route_id"]: route for route in runtime_payload["routes"]}
+        self.assertEqual(
+            list(runtime_routes),
+            [
+                "workspace-topology",
+                "compatibility-posture",
+                "surface-detection",
+                "checkpoint-growth",
+            ],
+        )
+        checkpoint_route = runtime_routes["checkpoint-growth"]
+        self.assertEqual(
+            checkpoint_route["surface_ref"],
+            "docs/session-growth-checkpoints.md",
+        )
+        self.assertTrue(
+            all(
+                resolve_repo_ref(ref, default_repo="aoa-sdk").exists()
+                for ref in [checkpoint_route["surface_ref"], *checkpoint_route["verification_refs"]]
+            )
+        )
+        self.assertEqual(
+            [hop["id"] for hop in runtime_entry["next_hops"]],
+            ["aoa-stats-summary-catalog", "abyss-stack-diagnostic-spine"],
+        )
+
+        orientation_entry = entry_by_id[federation_starters["orientation-surface-root"]["target_value"]]
+        self.assertEqual(orientation_entry["kind"], "orientation_surface")
+        self.assertTrue(resolve_repo_ref(orientation_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(orientation_entry["authority_surface"]).exists())
+        orientation_payload = load_json(resolve_repo_ref(orientation_entry["capsule_surface"]))
+        orientation_routes = {route["route_id"]: route for route in orientation_payload["routes"]}
+        self.assertEqual(
+            list(orientation_routes),
+            ["ecosystem-understanding", "workspace-bootstrap", "profile-correction"],
+        )
+        workspace_bootstrap = orientation_routes["workspace-bootstrap"]
+        self.assertEqual(
+            workspace_bootstrap["capsule_ref"],
+            "aoa-sdk:generated/workspace_control_plane.min.json",
+        )
+        self.assertEqual(
+            workspace_bootstrap["authority_ref"],
+            "aoa-sdk:docs/boundaries.md",
+        )
+        self.assertTrue(resolve_repo_ref(workspace_bootstrap["capsule_ref"]).exists())
+        self.assertTrue(resolve_repo_ref(workspace_bootstrap["authority_ref"]).exists())
+        self.assertTrue(
+            all(resolve_repo_ref(ref).exists() for ref in workspace_bootstrap["verification_refs"])
+        )
 
     def test_live_workspace_routing_federation_envelopes_are_normalized_v2(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
