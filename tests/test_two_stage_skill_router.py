@@ -820,10 +820,47 @@ def test_live_workspace_two_stage_outputs_are_normalized_v2() -> None:
     assert prompt_blocks["schema_ref"] == "schemas/two-stage-router-prompt-blocks.schema.json"
     assert prompt_blocks["owner_repo"] == "aoa-routing"
     assert prompt_blocks["surface_kind"] == "two_stage_router_prompt_blocks"
+    assert prompt_blocks["low_context_boundary"] == {
+        "wording_scope": "routing-owned",
+        "source_payload_copying": "forbidden",
+        "stage_1_source_refs": [
+            "aoa-skills:generated/tiny_router_capsules.min.json",
+            "aoa-skills:generated/tiny_router_candidate_bands.json",
+            "aoa-skills:generated/tiny_router_skill_signals.json",
+        ],
+        "stage_2_source_refs": [
+            "aoa-skills:generated/skill_capsules.json",
+            "aoa-skills:generated/local_adapter_manifest.json",
+            "aoa-skills:generated/context_retention_manifest.json",
+        ],
+        "forbidden_source_payload_fields": [
+            "summary",
+            "trigger_boundary_short",
+            "verification_short",
+            "skill_path",
+            "allowlist_paths",
+            "rehydration_hint",
+            "context_rehydration_hint",
+            "companions",
+        ],
+    }
+    for field_name in prompt_blocks["low_context_boundary"]["forbidden_source_payload_fields"]:
+        assert field_name not in prompt_blocks["tiny_preselector_system"]
+        assert field_name not in prompt_blocks["main_model_decision_system"]
     assert tool_schemas["schema_version"] == "aoa_routing_two_stage_router_tool_schemas_v2"
     assert tool_schemas["schema_ref"] == "schemas/two-stage-router-tool-schemas.schema.json"
     assert tool_schemas["owner_repo"] == "aoa-routing"
     assert tool_schemas["surface_kind"] == "two_stage_router_tool_schemas"
+    assert tool_schemas["low_context_boundary"] == prompt_blocks["low_context_boundary"]
+    expected_tool_properties = {
+        "preselect_skills": {"task", "repo_family", "top_k"},
+        "build_skill_decision_packet": {"task", "shortlist_names"},
+        "route_skill_task": {"task", "repo_family", "top_k"},
+    }
+    for tool in tool_schemas["tools"]:
+        for field_name in tool_schemas["low_context_boundary"]["forbidden_source_payload_fields"]:
+            assert field_name not in tool["description"]
+        assert set(tool["input_schema"]["properties"]) == expected_tool_properties[tool["name"]]
     assert examples["schema_version"] == "aoa_routing_two_stage_router_examples_v2"
     assert examples["schema_ref"] == "schemas/two-stage-router-examples.schema.json"
     assert examples["owner_repo"] == "aoa-routing"

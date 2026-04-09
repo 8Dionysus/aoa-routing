@@ -16,6 +16,10 @@ For the current language-neutral ABI hardening wave, owner-owned federation
 capsules must keep low-context route fields on docs, manifests, schemas, or
 generated JSON. Repo-local build and validator files remain visible only as
 owner-local validation support.
+The same low-context posture now applies to the two-stage prompt and tool
+surfaces: they may point to bounded source refs through explicit routing-owned
+boundary fields, but their prompt prose and tool descriptions must not copy
+source-owned capsule payload fields.
 
 ## Start here
 

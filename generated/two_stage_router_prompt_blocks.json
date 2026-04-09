@@ -10,6 +10,30 @@
     "scripts/validate_two_stage_skill_router.py",
     "tests/test_two_stage_skill_router.py"
   ],
+  "low_context_boundary": {
+    "wording_scope": "routing-owned",
+    "source_payload_copying": "forbidden",
+    "stage_1_source_refs": [
+      "aoa-skills:generated/tiny_router_capsules.min.json",
+      "aoa-skills:generated/tiny_router_candidate_bands.json",
+      "aoa-skills:generated/tiny_router_skill_signals.json"
+    ],
+    "stage_2_source_refs": [
+      "aoa-skills:generated/skill_capsules.json",
+      "aoa-skills:generated/local_adapter_manifest.json",
+      "aoa-skills:generated/context_retention_manifest.json"
+    ],
+    "forbidden_source_payload_fields": [
+      "summary",
+      "trigger_boundary_short",
+      "verification_short",
+      "skill_path",
+      "allowlist_paths",
+      "rehydration_hint",
+      "context_rehydration_hint",
+      "companions"
+    ]
+  },
   "stage_1_token_budget": 1200,
   "stage_2_shortlist_limit": 3,
   "tiny_preselector_system": "You are a tiny skill preselector. Read only compressed skill cards, candidate bands, and their cues. Never activate a skill. Return at most 3 positive-signal candidate names, confidence metadata, and any out-of-band fallback visibility. Never treat fallback candidates as the live shortlist.",

@@ -24,6 +24,26 @@ VALIDATION_REFS = [
     "scripts/validate_two_stage_skill_router.py",
     "tests/test_two_stage_skill_router.py",
 ]
+STAGE_1_SOURCE_REFS = [
+    "aoa-skills:generated/tiny_router_capsules.min.json",
+    "aoa-skills:generated/tiny_router_candidate_bands.json",
+    "aoa-skills:generated/tiny_router_skill_signals.json",
+]
+STAGE_2_SOURCE_REFS = [
+    "aoa-skills:generated/skill_capsules.json",
+    "aoa-skills:generated/local_adapter_manifest.json",
+    "aoa-skills:generated/context_retention_manifest.json",
+]
+FORBIDDEN_SOURCE_PAYLOAD_FIELDS = [
+    "summary",
+    "trigger_boundary_short",
+    "verification_short",
+    "skill_path",
+    "allowlist_paths",
+    "rehydration_hint",
+    "context_rehydration_hint",
+    "companions",
+]
 EXAMPLE_CANDIDATE_FIELDS = (
     "name",
     "band",
@@ -93,6 +113,16 @@ def project_example_decision_packet(packet: dict[str, Any]) -> dict[str, Any]:
         "decision_reason": packet.get("decision_reason"),
         "suggested_decision": packet.get("suggested_decision"),
         "stage_2_checklist": packet.get("stage_2_checklist", []),
+    }
+
+
+def build_low_context_boundary() -> dict[str, Any]:
+    return {
+        "wording_scope": "routing-owned",
+        "source_payload_copying": "forbidden",
+        "stage_1_source_refs": STAGE_1_SOURCE_REFS,
+        "stage_2_source_refs": STAGE_2_SOURCE_REFS,
+        "forbidden_source_payload_fields": FORBIDDEN_SOURCE_PAYLOAD_FIELDS,
     }
 
 
@@ -201,6 +231,7 @@ def build_outputs(
         "profile": PROFILE,
         "policy_ref": "config/two_stage_router_policy.json",
         "validation_refs": VALIDATION_REFS,
+        "low_context_boundary": build_low_context_boundary(),
         "stage_1_token_budget": stage_1_token_budget,
         "stage_2_shortlist_limit": stage_2_shortlist_limit,
         "tiny_preselector_system": (
@@ -233,11 +264,15 @@ def build_outputs(
         "profile": PROFILE,
         "policy_ref": "config/two_stage_router_policy.json",
         "validation_refs": VALIDATION_REFS,
+        "low_context_boundary": build_low_context_boundary(),
         "stage_2_shortlist_limit": stage_2_shortlist_limit,
         "tools": [
             {
                 "name": "preselect_skills",
-                "description": "Return a top-3 positive-signal skill shortlist plus confidence metadata from compressed tiny-router cards.",
+                "description": (
+                    f"Return a top-{stage_2_shortlist_limit} positive-signal skill shortlist "
+                    "plus confidence metadata from compressed tiny-router cards."
+                ),
                 "input_schema": {
                     "type": "object",
                     "properties": {

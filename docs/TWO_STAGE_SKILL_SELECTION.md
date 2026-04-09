@@ -19,6 +19,10 @@ stage-2 shortlist limit so small-model consumers do not guess the budget.
 handoff on `skill-root`, and `generated/two_stage_skill_entrypoints.json`
 publishes the symmetric back-reference. That keeps the adjacent seam
 discoverable without replacing flat skill routing.
+`generated/two_stage_router_prompt_blocks.json` and
+`generated/two_stage_router_tool_schemas.json` now also publish one explicit
+`low_context_boundary` contract so prompt prose and tool descriptions stay
+routing-owned and do not silently copy source-owned capsule fields.
 
 ## Stage 1
 
@@ -71,6 +75,16 @@ projection of stage-2 behavior. It may show shortlist mechanics, scores,
 decision modes, and activation posture, but it must not copy source-owned skill
 wording, verification text, local adapter allowlists, or rehydration hints into
 `aoa-routing`.
+
+The same anti-canon rule now applies to prompt and tool surfaces:
+
+- source surface refs live only in structured boundary fields
+- prompt prose stays routing-owned and low-context
+- tool schemas expose only routing inputs such as `task`, `repo_family`, `top_k`,
+  and `shortlist_names`
+- prompt or tool text must not mention source-owned payload fields like
+  `summary`, `trigger_boundary_short`, `verification_short`,
+  `allowlist_paths`, `rehydration_hint`, or `companions`
 
 Explicit-only skills may rank highly in stage 1, but stage 2 must still require an explicit handle.
 Weak or empty shortlists must stay `no-skill`.

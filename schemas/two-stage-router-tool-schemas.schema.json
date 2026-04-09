@@ -12,6 +12,7 @@
     "profile",
     "policy_ref",
     "validation_refs",
+    "low_context_boundary",
     "stage_2_shortlist_limit",
     "tools"
   ],
@@ -27,6 +28,39 @@
       "items": { "type": "string", "minLength": 1 },
       "minItems": 1,
       "uniqueItems": true
+    },
+    "low_context_boundary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "wording_scope",
+        "source_payload_copying",
+        "stage_1_source_refs",
+        "stage_2_source_refs",
+        "forbidden_source_payload_fields"
+      ],
+      "properties": {
+        "wording_scope": { "const": "routing-owned" },
+        "source_payload_copying": { "const": "forbidden" },
+        "stage_1_source_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "stage_2_source_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "forbidden_source_payload_fields": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
     },
     "stage_2_shortlist_limit": { "type": "integer", "minimum": 1 },
     "tools": {

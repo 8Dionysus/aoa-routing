@@ -24,6 +24,33 @@ VALIDATION_REFS = [
     "scripts/validate_two_stage_skill_router.py",
     "tests/test_two_stage_skill_router.py",
 ]
+STAGE_1_SOURCE_REFS = [
+    "aoa-skills:generated/tiny_router_capsules.min.json",
+    "aoa-skills:generated/tiny_router_candidate_bands.json",
+    "aoa-skills:generated/tiny_router_skill_signals.json",
+]
+STAGE_2_SOURCE_REFS = [
+    "aoa-skills:generated/skill_capsules.json",
+    "aoa-skills:generated/local_adapter_manifest.json",
+    "aoa-skills:generated/context_retention_manifest.json",
+]
+FORBIDDEN_LOW_CONTEXT_FIELD_NAMES = [
+    "summary",
+    "trigger_boundary_short",
+    "verification_short",
+    "skill_path",
+    "allowlist_paths",
+    "rehydration_hint",
+    "context_rehydration_hint",
+    "companions",
+]
+EXPECTED_LOW_CONTEXT_BOUNDARY = {
+    "wording_scope": "routing-owned",
+    "source_payload_copying": "forbidden",
+    "stage_1_source_refs": STAGE_1_SOURCE_REFS,
+    "stage_2_source_refs": STAGE_2_SOURCE_REFS,
+    "forbidden_source_payload_fields": FORBIDDEN_LOW_CONTEXT_FIELD_NAMES,
+}
 FORBIDDEN_EXAMPLE_CANDIDATE_FIELDS = {
     "summary",
     "trigger_boundary_short",
@@ -66,6 +93,49 @@ def add_behavior_issue(
     message: str,
 ) -> None:
     issues.append((f"{source_label}:{case_id}:{field}", message))
+
+
+def validate_low_context_boundary(
+    *,
+    doc: dict[str, Any],
+    label: str,
+    issues: list[tuple[str, str]],
+) -> None:
+    boundary = doc.get("low_context_boundary")
+    if not isinstance(boundary, dict):
+        issues.append((label, "low_context_boundary must be a mapping"))
+        return
+    if boundary != EXPECTED_LOW_CONTEXT_BOUNDARY:
+        issues.append((label, "low_context_boundary mismatch"))
+
+
+def scan_low_context_text(
+    *,
+    label: str,
+    field: str,
+    text: Any,
+    issues: list[tuple[str, str]],
+) -> None:
+    if not isinstance(text, str):
+        issues.append((label, f"{field} must stay a string"))
+        return
+    for forbidden_field in FORBIDDEN_LOW_CONTEXT_FIELD_NAMES:
+        if forbidden_field in text:
+            issues.append(
+                (
+                    label,
+                    f"{field} must not mention source-owned payload field {forbidden_field!r}",
+                )
+            )
+    for source_ref in STAGE_1_SOURCE_REFS + STAGE_2_SOURCE_REFS:
+        source_path = source_ref.split(":", 1)[1]
+        if source_path in text or Path(source_path).name in text:
+            issues.append(
+                (
+                    label,
+                    f"{field} must not inline source surface ref {source_ref!r}",
+                )
+            )
 
 
 def validate_behavior_case(
@@ -249,6 +319,17 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         if doc.get("validation_refs") != VALIDATION_REFS:
             issues.append((label, "validation_refs mismatch"))
 
+    validate_low_context_boundary(
+        doc=prompt_blocks,
+        label="two_stage_router_prompt_blocks.json",
+        issues=issues,
+    )
+    validate_low_context_boundary(
+        doc=tool_schemas,
+        label="two_stage_router_tool_schemas.json",
+        issues=issues,
+    )
+
     skill_names = {entry["name"] for entry in tiny_capsules.get("skills", [])}
     top_k_default_payload = entrypoints.get("stage_1", {}).get("top_k_default")
     if entrypoints.get("stage_1", {}).get("activation_policy") != "never-activate":
@@ -391,6 +472,29 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         issues.append(("two_stage_router_tool_schemas.json", "expected exactly 3 tool schemas"))
     if "tiny_preselector_system" not in prompt_blocks or "main_model_decision_system" not in prompt_blocks:
         issues.append(("two_stage_router_prompt_blocks.json", "missing required prompt blocks"))
+    scan_low_context_text(
+        label="two_stage_router_prompt_blocks.json",
+        field="tiny_preselector_system",
+        text=prompt_blocks.get("tiny_preselector_system"),
+        issues=issues,
+    )
+    scan_low_context_text(
+        label="two_stage_router_prompt_blocks.json",
+        field="main_model_decision_system",
+        text=prompt_blocks.get("main_model_decision_system"),
+        issues=issues,
+    )
+    handoff_contract = prompt_blocks.get("handoff_contract")
+    if not isinstance(handoff_contract, list) or not handoff_contract:
+        issues.append(("two_stage_router_prompt_blocks.json", "handoff_contract must stay a non-empty list"))
+    else:
+        for index, item in enumerate(handoff_contract):
+            scan_low_context_text(
+                label="two_stage_router_prompt_blocks.json",
+                field=f"handoff_contract[{index}]",
+                text=item,
+                issues=issues,
+            )
     if prompt_blocks.get("policy_ref") != "config/two_stage_router_policy.json":
         issues.append(("two_stage_router_prompt_blocks.json", "policy_ref mismatch"))
     if prompt_blocks.get("stage_1_token_budget") != stage_1_token_budget:
@@ -428,6 +532,40 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         )
         if shortlist_max != stage_2_shortlist_limit:
             issues.append(("two_stage_router_tool_schemas.json", "decision-packet shortlist limit mismatch"))
+    expected_tool_properties = {
+        "preselect_skills": {"task", "repo_family", "top_k"},
+        "build_skill_decision_packet": {"task", "shortlist_names"},
+        "route_skill_task": {"task", "repo_family", "top_k"},
+    }
+    for tool in tool_schemas.get("tools", []):
+        tool_name = tool.get("name")
+        scan_low_context_text(
+            label="two_stage_router_tool_schemas.json",
+            field=f"{tool_name}.description",
+            text=tool.get("description"),
+            issues=issues,
+        )
+        properties = tool.get("input_schema", {}).get("properties", {})
+        property_names = set(properties)
+        expected_properties = expected_tool_properties.get(tool_name)
+        if expected_properties is None:
+            issues.append(("two_stage_router_tool_schemas.json", f"unexpected tool {tool_name!r}"))
+            continue
+        if property_names != expected_properties:
+            issues.append(
+                (
+                    "two_stage_router_tool_schemas.json",
+                    f"{tool_name} input properties mismatch: expected {sorted(expected_properties)!r}, got {sorted(property_names)!r}",
+                )
+            )
+        forbidden_properties = sorted(property_names.intersection(FORBIDDEN_LOW_CONTEXT_FIELD_NAMES))
+        if forbidden_properties:
+            issues.append(
+                (
+                    "two_stage_router_tool_schemas.json",
+                    f"{tool_name} input schema must not expose source-owned payload fields: {', '.join(forbidden_properties)}",
+                )
+            )
 
     for example in examples.get("examples", []):
         shortlist = example.get("preselect_result", {}).get("shortlist", [])
