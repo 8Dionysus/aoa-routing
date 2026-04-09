@@ -31,6 +31,10 @@ The authority plane should stay upstream:
 - `aoa-agents` owns agent and tier authority
 - `aoa-playbooks` owns playbook authority
 - `aoa-kag` owns KAG doctrine for the derived readiness view
+- `Dionysus` owns seed lineage for seed-entry orientation
+- `aoa-sdk` owns the control-plane anchor for runtime-surface re-entry
+- `aoa-stats` and `abyss-stack` remain owner repos for their own runtime-facing surfaces
+- `8Dionysus` owns public orientation only, never owner-layer authority
 
 ## Model Criterion
 
@@ -41,7 +45,7 @@ That means:
 - a small model should be able to enter the federation through a stable starter without loading whole repositories raw
 - a stronger model should still see an explicit, reviewable route rather than a hidden router heuristic
 
-## Published v1 Surface
+## Published Surface
 
 `aoa-routing` now publishes:
 
@@ -49,6 +53,9 @@ That means:
 
 That surface is schema-backed and additive.
 It sits beside the thin router outputs instead of replacing them.
+The emitted federation-facing routing family now uses normalized v2 envelopes
+with `schema_version`, `schema_ref`, `owner_repo`, and `surface_kind` at the
+top level.
 
 The thin router core remains the same:
 
@@ -80,21 +87,22 @@ Each root card must include:
 
 ## Active And Declared Kinds
 
-v1 active entry kinds:
+Current active entry kinds:
 
 - `agent`
 - `tier`
 - `playbook`
 - `kag_view`
-
-v1 declared but inactive kinds:
-
 - `seed`
-- `tos_node`
 - `runtime_surface`
+- `orientation_surface`
 
-Declared kinds are documented as the next wave only.
-They must not appear as active entry cards or tiny-model federation starters in this landing.
+Current declared but inactive kinds:
+
+- `tos_node`
+
+Declared kinds remain documented for later waves only.
+They must not appear as live entry cards or tiny-model federation starters in the current landing.
 
 ## Entry Card Contract
 
@@ -116,6 +124,33 @@ Conventions:
 - `capsule_surface` and `authority_surface` use repo-qualified refs: `repo:path`
 - `next_actions` use bounded action objects with `verb`, `target_repo`, `target_surface`, `match_key`, and optional `target_value`
 - `next_hops` stay bounded and typed
+
+Capsule-grade rules for federation entries:
+
+- the capsule must stay compact enough for low-context inspection
+- the capsule must be owner-owned, not router-owned
+- the capsule must be validator-backed in its home repo
+- the capsule must stay language-neutral on the wire, so future Go readers can consume it without a Python-only semantic fork
+- the capsule and the authority surface must stay explicitly separate
+- `aoa-routing` may point to capsule surfaces, but it must not copy their payload into a router-owned capsule registry
+- low-context route fields inside the capsule must stay on docs, manifests, schemas, or generated JSON rather than `src/*` or `scripts/*`
+- owner-local build and validator paths may stay visible only under top-level `validation_refs`
+
+Current capsule-grade surfaces already accepted without wrappers:
+
+- `aoa-stats/generated/summary_surface_catalog.min.json`
+- `8Dionysus/generated/public_route_map.min.json`
+
+Current route-map capsules published in the owner repos are now schema-backed v2 surfaces:
+
+- `aoa-sdk/generated/workspace_control_plane.min.json`
+- `Dionysus/generated/seed_route_map.min.json`
+- `8Dionysus/generated/public_route_map.min.json`
+
+Current center-first zero-entry capsules are owner-owned v1 surfaces:
+
+- `Agents-of-Abyss/generated/center_entry_map.min.json`
+- `Tree-of-Sophia/generated/root_entry_map.min.json`
 
 ## Anti-Confusion Rules
 
@@ -139,7 +174,7 @@ These are hard constraints for the landing:
 This seam is additive.
 Existing consumers of `queries` and `starters` for the thin router path should keep working unchanged.
 
-v1 federation starters are:
+Current federation starters are:
 
 - `federation-root`
 - `aoa-root`
@@ -148,28 +183,65 @@ v1 federation starters are:
 - `tier-root`
 - `playbook-root`
 - `kag-view-root`
+- `seed-root`
+- `runtime-surface-root`
+- `checkpoint-root`
+- `orientation-surface-root`
 
 This wave does not add a separate tiny-entry federation starter.
 Small-model ToS entry still begins at `tos-root`.
+A dedicated checkpoint starter reuses the existing `aoa-sdk-control-plane`
+runtime entry instead of creating a new federation kind.
 
 A dedicated `return_navigation_hints` surface may coexist with federation entry cards so that small-model recovery stays explicit without widening the authority boundary.
 
-## Current v1 Inputs
+The routing-owned federation family now stays envelope-aligned across:
 
-This first landing stays `aoa-routing`-only by edited files, but it reads sibling source surfaces:
+- `generated/federation_entrypoints.min.json`
+- `generated/tiny_model_entrypoints.json`
+- `generated/owner_layer_shortlist.min.json`
+- `generated/return_navigation_hints.min.json`
+
+That alignment is shape-only. It does not widen thin-router taxonomy, add live
+entry kinds, or copy owner-owned capsule payloads into routing.
+
+## Current Inputs
+
+This landing reads sibling source and capsule surfaces:
 
 - `Agents-of-Abyss/README.md`
+- `Agents-of-Abyss/generated/center_entry_map.min.json`
 - `Tree-of-Sophia/README.md`
+- `Tree-of-Sophia/generated/root_entry_map.min.json`
 - `Tree-of-Sophia/examples/tos_tiny_entry_route.example.json`
 - `aoa-agents/generated/agent_registry.min.json`
 - `aoa-agents/generated/model_tier_registry.json`
 - `aoa-agents/generated/runtime_seam_bindings.json`
 - `aoa-playbooks/generated/playbook_registry.min.json`
 - `aoa-kag/generated/federation_spine.min.json`
+- `Dionysus/generated/seed_route_map.min.json`
+- `Dionysus/seed-registry.yaml`
+- `aoa-sdk/generated/workspace_control_plane.min.json`
+- `aoa-sdk/.aoa/workspace.toml`
+- `aoa-stats/generated/summary_surface_catalog.min.json`
+- `8Dionysus/generated/public_route_map.min.json`
+- `abyss-stack/generated/diagnostic_surface_catalog.min.json`
+- `abyss-stack/examples/diagnostic_session.min.example.json`
+
+The compact capsule is the first inspect surface for seed, runtime-surface, and profile-entry re-entry.
+The heavier raw anchor remains visible only as a source anchor or verification target in the owner repo.
+
+For the current root cards, the first inspect path is now:
+
+- `aoa-root -> Agents-of-Abyss/generated/center_entry_map.min.json`
+- `tos-root -> Tree-of-Sophia/generated/root_entry_map.min.json`
+
+Those root capsules stay additive.
+`README.md` remains the public human root and `CHARTER.md` remains the owner authority surface.
 
 For the current ToS root card, the first handoff is now:
 
-`tos-root -> Tree-of-Sophia/examples/tos_tiny_entry_route.example.json -> ToS-authored route surfaces`
+`tos-root -> Tree-of-Sophia/generated/root_entry_map.min.json -> Tree-of-Sophia/examples/tos_tiny_entry_route.example.json -> ToS-authored route surfaces`
 
 That handoff is source-owned and bounded.
 The current ToS input should treat `bounded_hop` as the primary hop field and
@@ -183,7 +255,7 @@ The current KAG-view layer now publishes two live derived entries:
 - `aoa-techniques` as the default KAG starter for the federation seam
 - `Tree-of-Sophia` as the ToS-specific derived KAG view reached from `tos-root`
 
-This does not widen the active kind list.
+This does not widen the thin router taxonomy.
 It only lets `tos-root` hand off to a ToS-shaped derived readiness card after the source-owned tiny-entry route.
 In the current wave, that ToS-specific `kag_view` may also advertise one bounded
 `aoa-kag/generated/tos_zarathustra_route_retrieval_pack.min.json` adjunct.
@@ -203,3 +275,5 @@ This landing does not:
 - replace KAG doctrine with router-owned summaries
 - fold federation entry routing into the thin router registry
 - change `kag-view-root` away from the current `aoa-techniques` default
+- add `aoa-sdk`, `aoa-stats`, `Dionysus`, `8Dionysus`, or `abyss-stack` to `cross_repo_registry.min.json`
+- activate `tos_node` as a live federation entry kind

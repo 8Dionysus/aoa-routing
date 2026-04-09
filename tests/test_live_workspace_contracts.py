@@ -15,17 +15,24 @@ LIVE_ROOTS = {
     "aoa-evals": Path("/srv/aoa-evals"),
     "aoa-memo": Path("/srv/aoa-memo"),
     "aoa-stats": Path("/srv/aoa-stats"),
+    "aoa-sdk": Path("/srv/aoa-sdk"),
     "aoa-agents": Path("/srv/aoa-agents"),
     "Agents-of-Abyss": Path("/srv/Agents-of-Abyss"),
     "aoa-playbooks": Path("/srv/aoa-playbooks"),
     "aoa-kag": Path("/srv/aoa-kag"),
     "Tree-of-Sophia": Path("/srv/Tree-of-Sophia"),
+    "Dionysus": Path("/srv/Dionysus"),
+    "8Dionysus": Path("/srv/8Dionysus"),
+    "abyss-stack": Path("/home/dionysus/src/abyss-stack"),
 }
 MISSING_LIVE_ROOTS = sorted(
     repo_name for repo_name, repo_root in LIVE_ROOTS.items() if not repo_root.exists()
 )
 LIVE_REQUIRED_INPUTS = {
+    "Agents-of-Abyss": [Path("generated/center_entry_map.min.json")],
     "aoa-stats": [Path("generated/stress_recovery_window_summary.min.json")],
+    "Tree-of-Sophia": [Path("generated/root_entry_map.min.json")],
+    "8Dionysus": [Path("generated/public_route_map.min.json")],
 }
 MISSING_LIVE_INPUTS = sorted(
     f"{repo_name}/{relative_path.as_posix()}"
@@ -57,6 +64,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-playbooks"],
             LIVE_ROOTS["aoa-kag"],
             LIVE_ROOTS["Tree-of-Sophia"],
+            LIVE_ROOTS["aoa-sdk"],
+            LIVE_ROOTS["Dionysus"],
+            LIVE_ROOTS["8Dionysus"],
+            LIVE_ROOTS["abyss-stack"],
         )
 
         mismatches = build_router.validate_generated_dir_matches_outputs(
@@ -79,9 +90,211 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-playbooks"],
             LIVE_ROOTS["aoa-kag"],
             LIVE_ROOTS["Tree-of-Sophia"],
+            LIVE_ROOTS["aoa-sdk"],
+            LIVE_ROOTS["Dionysus"],
+            LIVE_ROOTS["8Dionysus"],
+            LIVE_ROOTS["abyss-stack"],
         )
 
         self.assertEqual(issues, [])
+
+    def test_live_workspace_runtime_seed_and_profile_capsules_stay_language_neutral(self) -> None:
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        entry_by_id = {
+            entry["id"]: entry
+            for entry in federation["entrypoints"]
+            if entry["id"] in {
+                "aoa-sdk-control-plane",
+                "dionysus-seed-garden",
+                "aoa-stats-summary-catalog",
+                "abyss-stack-diagnostic-spine",
+                "8dionysus-public-route-map",
+            }
+        }
+
+        sdk_payload = load_json(LIVE_ROOTS["aoa-sdk"] / "generated" / "workspace_control_plane.min.json")
+        self.assertEqual(
+            entry_by_id["aoa-sdk-control-plane"]["capsule_surface"],
+            "aoa-sdk:generated/workspace_control_plane.min.json",
+        )
+        self.assertEqual(sdk_payload["schema_version"], "aoa_sdk_workspace_control_plane_v2")
+        self.assertEqual(sdk_payload["schema_ref"], "schemas/workspace-control-plane.schema.json")
+        self.assertTrue(
+            all(
+                not ref.startswith(("src/", "scripts/"))
+                for route in sdk_payload["routes"]
+                for ref in [route["surface_ref"], *route["verification_refs"]]
+            )
+        )
+
+        seed_payload = load_json(LIVE_ROOTS["Dionysus"] / "generated" / "seed_route_map.min.json")
+        self.assertEqual(
+            entry_by_id["dionysus-seed-garden"]["capsule_surface"],
+            "Dionysus:generated/seed_route_map.min.json",
+        )
+        self.assertEqual(seed_payload["schema_version"], "dionysus_seed_route_map_v2")
+        self.assertEqual(seed_payload["schema_ref"], "schemas/seed-route-map.schema.json")
+        self.assertTrue(
+            all(
+                not ref.partition("#")[0].startswith(("src/", "scripts/"))
+                for route in seed_payload["routes"]
+                for ref in [route["surface_ref"], *route["verification_refs"]]
+            )
+        )
+
+        stats_payload = load_json(LIVE_ROOTS["aoa-stats"] / "generated" / "summary_surface_catalog.min.json")
+        self.assertEqual(
+            entry_by_id["aoa-stats-summary-catalog"]["capsule_surface"],
+            "aoa-stats:generated/summary_surface_catalog.min.json",
+        )
+        self.assertEqual(stats_payload["schema_version"], "aoa_stats_summary_surface_catalog_v2")
+        self.assertEqual(stats_payload["schema_ref"], "schemas/summary-surface-catalog.schema.json")
+        self.assertEqual(stats_payload["owner_repo"], "aoa-stats")
+        self.assertEqual(stats_payload["surface_kind"], "runtime_surface")
+        self.assertEqual(stats_payload["authority_ref"], "docs/ARCHITECTURE.md")
+        self.assertEqual(
+            stats_payload["validation_refs"],
+            [
+                "scripts/build_views.py",
+                "scripts/validate_repo.py",
+                "tests/test_summary_surface_catalog.py",
+            ],
+        )
+        self.assertTrue(all("schema_ref" in entry and "surface_ref" in entry for entry in stats_payload["surfaces"]))
+        self.assertTrue(all("path" not in entry for entry in stats_payload["surfaces"]))
+
+        abyss_payload = load_json(LIVE_ROOTS["abyss-stack"] / "generated" / "diagnostic_surface_catalog.min.json")
+        self.assertEqual(
+            entry_by_id["abyss-stack-diagnostic-spine"]["capsule_surface"],
+            "abyss-stack:generated/diagnostic_surface_catalog.min.json",
+        )
+        self.assertTrue(all("schema_ref" in entry and "example_ref" in entry for entry in abyss_payload["surfaces"]))
+
+        profile_payload = load_json(LIVE_ROOTS["8Dionysus"] / "generated" / "public_route_map.min.json")
+        self.assertEqual(
+            entry_by_id["8dionysus-public-route-map"]["capsule_surface"],
+            "8Dionysus:generated/public_route_map.min.json",
+        )
+        self.assertEqual(profile_payload["schema_version"], "8dionysus_public_route_map_v2")
+        self.assertEqual(profile_payload["schema_ref"], "schemas/public-route-map.schema.json")
+        self.assertTrue(
+            all(
+                ":src/" not in ref and ":scripts/" not in ref
+                for route in profile_payload["routes"]
+                for ref in [route["capsule_ref"], route["authority_ref"], *route["verification_refs"]]
+            )
+        )
+
+    def test_live_workspace_root_capsules_are_owner_owned_zero_entry_surfaces(self) -> None:
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        root_by_id = {entry["id"]: entry for entry in federation["root_entries"]}
+
+        aoa_payload = load_json(LIVE_ROOTS["Agents-of-Abyss"] / "generated" / "center_entry_map.min.json")
+        self.assertEqual(
+            root_by_id["aoa-root"]["capsule_surface"],
+            "Agents-of-Abyss:generated/center_entry_map.min.json",
+        )
+        self.assertEqual(aoa_payload["schema_version"], "aoa_center_entry_map_v1")
+        self.assertEqual(aoa_payload["schema_ref"], "schemas/center-entry-map.schema.json")
+        self.assertEqual(aoa_payload["owner_repo"], "Agents-of-Abyss")
+        self.assertEqual(aoa_payload["surface_kind"], "center_entry_map")
+        self.assertEqual(aoa_payload["authority_ref"], "CHARTER.md")
+        self.assertEqual(aoa_payload["public_root_ref"], "README.md")
+        self.assertEqual(
+            [route["route_id"] for route in aoa_payload["routes"]],
+            ["center-overview", "constitutional-boundary", "public-contour", "source-of-truth-rules"],
+        )
+        self.assertEqual(
+            root_by_id["aoa-root"]["next_actions"],
+            [
+                {
+                    "verb": "inspect",
+                    "target_repo": "Agents-of-Abyss",
+                    "target_surface": "generated/center_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "center-overview",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Agents-of-Abyss",
+                    "target_surface": "generated/center_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "public-contour",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Agents-of-Abyss",
+                    "target_surface": "generated/center_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "source-of-truth-rules",
+                },
+            ],
+        )
+
+        tos_payload = load_json(LIVE_ROOTS["Tree-of-Sophia"] / "generated" / "root_entry_map.min.json")
+        self.assertEqual(
+            root_by_id["tos-root"]["capsule_surface"],
+            "Tree-of-Sophia:generated/root_entry_map.min.json",
+        )
+        self.assertEqual(tos_payload["schema_version"], "tos_root_entry_map_v1")
+        self.assertEqual(tos_payload["schema_ref"], "schemas/root-entry-map.schema.json")
+        self.assertEqual(tos_payload["owner_repo"], "Tree-of-Sophia")
+        self.assertEqual(tos_payload["surface_kind"], "root_entry_map")
+        self.assertEqual(tos_payload["authority_ref"], "CHARTER.md")
+        self.assertEqual(tos_payload["public_root_ref"], "README.md")
+        self.assertEqual(
+            [route["route_id"] for route in tos_payload["routes"]],
+            ["current-tiny-entry", "tree-first-model", "bounded-export"],
+        )
+        self.assertEqual(
+            root_by_id["tos-root"]["next_actions"],
+            [
+                {
+                    "verb": "inspect",
+                    "target_repo": "Tree-of-Sophia",
+                    "target_surface": "generated/root_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "current-tiny-entry",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Tree-of-Sophia",
+                    "target_surface": "generated/root_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "tree-first-model",
+                },
+                {
+                    "verb": "inspect",
+                    "target_repo": "Tree-of-Sophia",
+                    "target_surface": "generated/root_entry_map.min.json",
+                    "match_key": "route_id",
+                    "target_value": "bounded-export",
+                },
+            ],
+        )
+
+    def test_live_workspace_routing_federation_envelopes_are_normalized_v2(self) -> None:
+        federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
+        tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
+        shortlist = load_json(REPO_ROOT / "generated" / "owner_layer_shortlist.min.json")
+        returns = load_json(REPO_ROOT / "generated" / "return_navigation_hints.min.json")
+
+        self.assertEqual(federation["schema_version"], "aoa_routing_federation_entrypoints_v2")
+        self.assertEqual(federation["schema_ref"], "schemas/federation-entrypoints.schema.json")
+        self.assertEqual(federation["owner_repo"], "aoa-routing")
+        self.assertEqual(federation["surface_kind"], "federation_entrypoints")
+        self.assertEqual(tiny["schema_version"], "aoa_routing_tiny_model_entrypoints_v2")
+        self.assertEqual(tiny["schema_ref"], "schemas/tiny-model-entrypoints.schema.json")
+        self.assertEqual(tiny["owner_repo"], "aoa-routing")
+        self.assertEqual(tiny["surface_kind"], "tiny_model_entrypoints")
+        self.assertEqual(shortlist["schema_version"], "aoa_routing_owner_layer_shortlist_v2")
+        self.assertEqual(shortlist["schema_ref"], "schemas/owner-layer-shortlist.schema.json")
+        self.assertEqual(shortlist["owner_repo"], "aoa-routing")
+        self.assertEqual(shortlist["surface_kind"], "owner_layer_shortlist")
+        self.assertEqual(returns["schema_version"], "aoa_routing_return_navigation_hints_v2")
+        self.assertEqual(returns["schema_ref"], "schemas/return-navigation-hints.schema.json")
+        self.assertEqual(returns["owner_repo"], "aoa-routing")
+        self.assertEqual(returns["surface_kind"], "return_navigation_hints")
 
     def test_live_workspace_playbook_routes_resolve_to_registry_activation_federation_review_status_packet_contracts_and_intake(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
@@ -113,6 +326,16 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         review_ids = [item["playbook_id"] for item in review_status["playbooks"]]
         review_packet_ids = [item["playbook_id"] for item in review_packet_contracts["playbooks"]]
         review_intake_ids = [item["playbook_id"] for item in review_intake["playbooks"]]
+        gated_review_packet_ids = [
+            item["playbook_id"]
+            for item in review_packet_contracts["playbooks"]
+            if item.get("gate_verdict")
+        ]
+        gated_review_intake_ids = [
+            item["playbook_id"]
+            for item in review_intake["playbooks"]
+            if item.get("gate_verdict")
+        ]
 
         self.assertEqual(routed_playbook_ids, registry_ids)
         self.assertTrue(set(activation_ids).issubset(set(routed_playbook_ids)))
@@ -120,10 +343,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertTrue(set(review_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_packet_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_intake_ids).issubset(set(routed_playbook_ids)))
-        self.assertEqual(
-            review_ids,
-            ["AOA-P-0017", "AOA-P-0018", "AOA-P-0019", "AOA-P-0020", "AOA-P-0021", "AOA-P-0024"],
-        )
+        self.assertEqual(review_ids, gated_review_packet_ids)
+        self.assertEqual(review_ids, gated_review_intake_ids)
         self.assertIsInstance(activation, list)
         self.assertIsInstance(federation_surfaces, list)
         self.assertEqual(review_status["schema_version"], 1)
@@ -151,12 +372,15 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         )
         self.assertEqual(packet_by_id["AOA-P-0021"]["gate_verdict"], "composition-landed")
         self.assertEqual(
-            packet_by_id["AOA-P-0021"]["source_review_refs"],
+            packet_by_id["AOA-P-0021"]["source_review_refs"][:2],
             [
                 "playbooks/owner-first-capability-landing/PLAYBOOK.md",
                 "docs/gate-reviews/owner-first-capability-landing.md",
-                "docs/real-runs/2026-04-07.owner-first-capability-landing.md",
             ],
+        )
+        self.assertIn(
+            "docs/real-runs/2026-04-07.owner-first-capability-landing.md",
+            packet_by_id["AOA-P-0021"]["source_review_refs"],
         )
         self.assertEqual(packet_by_id["AOA-P-0024"]["gate_verdict"], "hold")
         self.assertEqual(

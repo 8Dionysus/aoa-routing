@@ -5,15 +5,27 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "version",
+    "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "queries",
     "starters",
     "federation_queries",
     "federation_starters"
   ],
   "properties": {
-    "version": {
-      "const": 2
+    "schema_version": {
+      "const": "aoa_routing_tiny_model_entrypoints_v2"
+    },
+    "schema_ref": {
+      "const": "schemas/tiny-model-entrypoints.schema.json"
+    },
+    "owner_repo": {
+      "const": "aoa-routing"
+    },
+    "surface_kind": {
+      "const": "tiny_model_entrypoints"
     },
     "queries": {
       "type": "array",
@@ -189,7 +201,10 @@
         "agent",
         "tier",
         "playbook",
-        "kag_view"
+        "kag_view",
+        "seed",
+        "runtime_surface",
+        "orientation_surface"
       ]
     },
     "rootId": {

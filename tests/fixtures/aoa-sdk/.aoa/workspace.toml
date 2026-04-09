@@ -1,0 +1,8 @@
+schema_version = 1
+
+[layout]
+workspace_root = "/srv"
+
+[repos.abyss-stack]
+role = "source_checkout"
+preferred = ["~/src/abyss-stack"]

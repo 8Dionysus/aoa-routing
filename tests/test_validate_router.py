@@ -15,12 +15,33 @@ FIXTURE_REPO_NAMES = (
     "aoa-evals",
     "aoa-memo",
     "aoa-stats",
+    "aoa-sdk",
     "aoa-agents",
     "Agents-of-Abyss",
     "aoa-playbooks",
     "aoa-kag",
     "Tree-of-Sophia",
+    "Dionysus",
+    "8Dionysus",
+    "abyss-stack",
 )
+
+
+def discover_workspace_root() -> Path:
+    test_file = Path(__file__).resolve()
+    candidates = (
+        test_file.parents[1],
+        test_file.parents[2],
+        test_file.parents[3],
+    )
+    required_repos = ("Agents-of-Abyss", "Tree-of-Sophia", "Dionysus", "8Dionysus", "aoa-sdk")
+    for candidate in candidates:
+        if all((candidate / repo_name).exists() for repo_name in required_repos):
+            return candidate
+    return test_file.parents[2]
+
+
+WORKSPACE_ROOT = discover_workspace_root()
 
 
 def write_json(path: Path, payload: object) -> None:
@@ -52,12 +73,110 @@ def copy_repo_text(repo_root: Path, relative_path: str) -> None:
     destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
 
+def copy_live_repo_text(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
+    source = WORKSPACE_ROOT / repo_name / relative_path
+    destination = roots[repo_name] / relative_path
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+
+
+def ensure_placeholder_file(path: Path, *, anchor: str | None = None) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        return
+    suffix = path.suffix.lower()
+    if suffix == ".md":
+        text = "# Placeholder\n"
+        if anchor:
+            text = f'<a id="{anchor}"></a>\n\n# Placeholder\n'
+        path.write_text(text, encoding="utf-8")
+        return
+    if suffix in {".yaml", ".yml"}:
+        path.write_text("placeholder: true\n", encoding="utf-8")
+        return
+    if suffix == ".toml":
+        path.write_text("[placeholder]\nenabled = true\n", encoding="utf-8")
+        return
+    if suffix == ".py":
+        path.write_text('"""Placeholder fixture file."""\n', encoding="utf-8")
+        return
+    if suffix == ".json":
+        path.write_text("{}\n", encoding="utf-8")
+        return
+    path.write_text("placeholder\n", encoding="utf-8")
+
+
+def ensure_local_ref_placeholder(repo_root: Path, relative_ref: str) -> None:
+    path_text, _, anchor = relative_ref.partition("#")
+    ensure_placeholder_file(repo_root / path_text, anchor=anchor or None)
+
+
+def ensure_repo_ref_placeholder(roots: dict[str, Path], raw_ref: str) -> None:
+    repo_name, _, relative_ref = raw_ref.partition(":")
+    ensure_local_ref_placeholder(roots[repo_name], relative_ref)
+
+
+def hydrate_route_map_fixture(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
+    copy_live_repo_text(roots, repo_name, relative_path)
+    payload = json.loads((roots[repo_name] / relative_path).read_text(encoding="utf-8"))
+    copy_live_repo_text(roots, repo_name, payload["schema_ref"])
+    ensure_local_ref_placeholder(roots[repo_name], payload["authority_ref"])
+    for ref in payload.get("validation_refs", []):
+        ensure_local_ref_placeholder(roots[repo_name], ref)
+    if "workspace_manifest_ref" in payload:
+        ensure_local_ref_placeholder(roots[repo_name], payload["workspace_manifest_ref"])
+    if "next_live_seed_ref" in payload:
+        ensure_local_ref_placeholder(roots[repo_name], payload["next_live_seed_ref"])
+    for route in payload["routes"]:
+        if "surface_ref" in route:
+            ensure_local_ref_placeholder(roots[repo_name], route["surface_ref"])
+        if "capsule_ref" in route:
+            ensure_repo_ref_placeholder(roots, route["capsule_ref"])
+        if "authority_ref" in route:
+            ensure_repo_ref_placeholder(roots, route["authority_ref"])
+        for ref in route.get("verification_refs", []):
+            if ":" in ref:
+                ensure_repo_ref_placeholder(roots, ref)
+            else:
+                ensure_local_ref_placeholder(roots[repo_name], ref)
+
+
+def hydrate_catalog_fixture(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
+    if repo_name != "abyss-stack":
+        copy_live_repo_text(roots, repo_name, relative_path)
+    payload = json.loads((roots[repo_name] / relative_path).read_text(encoding="utf-8"))
+    schema_ref = payload.get("schema_ref")
+    if repo_name != "abyss-stack" and isinstance(schema_ref, str):
+        copy_live_repo_text(roots, repo_name, schema_ref)
+    authority_ref = payload.get("authority_ref")
+    if isinstance(authority_ref, str):
+        ensure_local_ref_placeholder(roots[repo_name], authority_ref)
+    for ref in payload.get("validation_refs", []):
+        ensure_local_ref_placeholder(roots[repo_name], ref)
+    for entry in payload.get("surfaces", []):
+        for key in ("schema_ref", "surface_ref", "path", "example_ref"):
+            ref = entry.get(key)
+            if isinstance(ref, str):
+                ensure_local_ref_placeholder(roots[repo_name], ref)
+
+
+def hydrate_capsule_fixture_roots(roots: dict[str, Path]) -> None:
+    hydrate_route_map_fixture(roots, "Agents-of-Abyss", "generated/center_entry_map.min.json")
+    hydrate_route_map_fixture(roots, "Tree-of-Sophia", "generated/root_entry_map.min.json")
+    hydrate_route_map_fixture(roots, "aoa-sdk", "generated/workspace_control_plane.min.json")
+    hydrate_route_map_fixture(roots, "Dionysus", "generated/seed_route_map.min.json")
+    hydrate_route_map_fixture(roots, "8Dionysus", "generated/public_route_map.min.json")
+    hydrate_catalog_fixture(roots, "aoa-stats", "generated/summary_surface_catalog.min.json")
+    hydrate_catalog_fixture(roots, "abyss-stack", "generated/diagnostic_surface_catalog.min.json")
+
+
 def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
     roots: dict[str, Path] = {}
     for repo_name in FIXTURE_REPO_NAMES:
         target = tmp_path / repo_name
         shutil.copytree(FIXTURES_ROOT / repo_name, target)
         roots[repo_name] = target
+    hydrate_capsule_fixture_roots(roots)
     return roots
 
 
@@ -73,6 +192,10 @@ def build_outputs_from_roots(roots: dict[str, Path]) -> dict[str, dict[str, obje
         roots["aoa-playbooks"],
         roots["aoa-kag"],
         roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
     )
 
 
@@ -102,6 +225,10 @@ def validate_fixture_generated(generated_dir: Path, roots: dict[str, Path]) -> l
         roots["aoa-playbooks"],
         roots["aoa-kag"],
         roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
     )
 
 
@@ -1715,12 +1842,62 @@ def test_validate_generated_outputs_rejects_declared_kind_in_federation_entrypoi
     generated_dir, roots = build_fixture_generated(tmp_path)
     federation_path = generated_dir / "federation_entrypoints.min.json"
     payload = json.loads(federation_path.read_text(encoding="utf-8"))
-    payload["entrypoints"][0]["kind"] = "seed"
+    payload["entrypoints"][0]["kind"] = "tos_node"
     write_json(federation_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "schema violation" in issue.message and "seed" in issue.message
+        "schema violation" in issue.message and "tos_node" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_route_map_capsule_implementation_ref(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    capsule_path = roots["aoa-sdk"] / "generated" / "workspace_control_plane.min.json"
+    payload = json.loads(capsule_path.read_text(encoding="utf-8"))
+    payload["routes"][0]["verification_refs"][0] = "src/aoa_sdk/workspace/discovery.py"
+    write_json(capsule_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "must not point to implementation path" in issue.message
+        and "src/aoa_sdk/workspace/discovery.py" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_public_route_map_implementation_ref(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    capsule_path = roots["8Dionysus"] / "generated" / "public_route_map.min.json"
+    payload = json.loads(capsule_path.read_text(encoding="utf-8"))
+    payload["routes"][0]["capsule_ref"] = "8Dionysus:scripts/validate_public_route_map.py"
+    write_json(capsule_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "must not point to implementation path" in issue.message
+        and "8Dionysus:scripts/validate_public_route_map.py" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_route_map_schema_version_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    capsule_path = roots["aoa-sdk"] / "generated" / "workspace_control_plane.min.json"
+    payload = json.loads(capsule_path.read_text(encoding="utf-8"))
+    payload["schema_version"] = "aoa_sdk_workspace_control_plane_v1"
+    write_json(capsule_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "schema violation" in issue.message and "aoa_sdk_workspace_control_plane_v2" in issue.message
         for issue in issues
     )
 
@@ -1733,7 +1910,7 @@ def test_validate_generated_outputs_rejects_declared_kind_in_federation_starters
     payload = json.loads(tiny_model_path.read_text(encoding="utf-8"))
     for starter in payload["federation_starters"]:
         if starter["name"] == "agent-root":
-            starter["entry_kind"] = "seed"
+            starter["entry_kind"] = "tos_node"
             break
     write_json(tiny_model_path, payload)
 
@@ -1882,7 +2059,7 @@ def test_validate_generated_outputs_rejects_memo_return_contract_without_capsule
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "aoa-memo/examples/recall_contract.object.working.return.json.capsule_surface must be a non-empty string"
+        "aoa-memo/examples/recall_contract.object.working.return.json is missing required keys: capsule_surface"
         in issue.message
         for issue in issues
     )

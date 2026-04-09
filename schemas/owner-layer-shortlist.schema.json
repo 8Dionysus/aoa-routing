@@ -6,11 +6,23 @@
   "additionalProperties": false,
   "required": [
     "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
     "hints"
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": "aoa_routing_owner_layer_shortlist_v2"
+    },
+    "schema_ref": {
+      "const": "schemas/owner-layer-shortlist.schema.json"
+    },
+    "owner_repo": {
+      "const": "aoa-routing"
+    },
+    "surface_kind": {
+      "const": "owner_layer_shortlist"
     },
     "hints": {
       "type": "array",
@@ -58,8 +70,13 @@
             "aoa-skills",
             "aoa-evals",
             "aoa-memo",
+            "aoa-sdk",
+            "aoa-stats",
             "aoa-playbooks",
-            "aoa-agents"
+            "aoa-agents",
+            "8Dionysus",
+            "Dionysus",
+            "abyss-stack"
           ]
         },
         "object_kind": {
@@ -69,7 +86,10 @@
             "eval",
             "memo",
             "playbook",
-            "agent"
+            "agent",
+            "seed",
+            "runtime_surface",
+            "orientation_surface"
           ]
         },
         "target_surface": {

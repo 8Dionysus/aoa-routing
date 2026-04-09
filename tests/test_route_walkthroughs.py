@@ -16,11 +16,15 @@ FIXTURE_REPO_NAMES = (
     "aoa-evals",
     "aoa-memo",
     "aoa-stats",
+    "aoa-sdk",
     "aoa-agents",
     "Agents-of-Abyss",
     "aoa-playbooks",
     "aoa-kag",
     "Tree-of-Sophia",
+    "Dionysus",
+    "8Dionysus",
+    "abyss-stack",
 )
 WALKTHROUGHS = json.loads((FIXTURES_ROOT / "route_walkthroughs.json").read_text(encoding="utf-8"))[
     "walkthroughs"
@@ -223,6 +227,10 @@ def build_fixture_outputs(roots: dict[str, Path]) -> dict[str, dict[str, object]
         roots["aoa-playbooks"],
         roots["aoa-kag"],
         roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
     )
 
 
@@ -254,6 +262,8 @@ def load_surface_entries(payload: dict[str, object], surface_file: str) -> list[
         "aoa_router.min.json": "entries",
         "pairing_hints.min.json": "entries",
         "task_to_surface_hints.json": "hints",
+        "center_entry_map.min.json": "routes",
+        "root_entry_map.min.json": "routes",
         "technique_capsules.json": "techniques",
         "skill_capsules.json": "skills",
         "eval_capsules.json": "evals",
@@ -401,6 +411,7 @@ def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> Non
     assert starters["tos-root"]["target_value"] in root_by_id
     assert starters["tier-root"]["target_value"] in entry_by_id
     assert starters["kag-view-root"]["target_value"] in entry_by_id
+    assert starters["checkpoint-root"]["target_value"] in entry_by_id
 
     assert entry_by_id["router"]["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
     assert entry_by_id["aoa-techniques"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
@@ -418,16 +429,29 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
     assert first_action == {
         "verb": "inspect",
         "target_repo": "Tree-of-Sophia",
-        "target_surface": "examples/tos_tiny_entry_route.example.json",
+        "target_surface": "generated/root_entry_map.min.json",
         "match_key": "route_id",
-        "target_value": "tos-tiny-entry.zarathustra-prologue",
+        "target_value": "current-tiny-entry",
     }
 
-    route_payload = load_json(roots["Tree-of-Sophia"] / first_action["target_surface"])
-    route_entry = find_entry(
-        load_surface_entries(route_payload, first_action["target_surface"]),
+    root_entry_payload = load_json(roots["Tree-of-Sophia"] / first_action["target_surface"])
+    root_entry = find_entry(
+        load_surface_entries(root_entry_payload, first_action["target_surface"]),
         first_action["match_key"],
         first_action["target_value"],
+    )
+    assert root_entry is not None
+    assert root_entry["surface_ref"] == "examples/tos_tiny_entry_route.example.json"
+    assert root_entry["verification_refs"] == [
+        "docs/TINY_ENTRY_ROUTE.md",
+        "docs/ZARATHUSTRA_TRILINGUAL_ENTRY.md",
+    ]
+
+    route_payload = load_json(roots["Tree-of-Sophia"] / root_entry["surface_ref"])
+    route_entry = find_entry(
+        load_surface_entries(route_payload, root_entry["surface_ref"]),
+        "route_id",
+        "tos-tiny-entry.zarathustra-prologue",
     )
     assert route_entry is not None
     assert route_entry["root_surface"] == "README.md"
@@ -439,10 +463,18 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
     second_action = tos_root["next_actions"][1]
     assert second_action == {
         "verb": "inspect",
-        "target_repo": "aoa-routing",
-        "target_surface": "generated/federation_entrypoints.min.json",
-        "match_key": "id",
-        "target_value": "Tree-of-Sophia",
+        "target_repo": "Tree-of-Sophia",
+        "target_surface": "generated/root_entry_map.min.json",
+        "match_key": "route_id",
+        "target_value": "tree-first-model",
+    }
+    third_action = tos_root["next_actions"][2]
+    assert third_action == {
+        "verb": "inspect",
+        "target_repo": "Tree-of-Sophia",
+        "target_surface": "generated/root_entry_map.min.json",
+        "match_key": "route_id",
+        "target_value": "bounded-export",
     }
     tos_kag_view = next(
         entry
