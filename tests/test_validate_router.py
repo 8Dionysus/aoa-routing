@@ -9,7 +9,6 @@ import validate_router
 
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
-WORKSPACE_ROOT = Path(__file__).resolve().parents[2]
 FIXTURE_REPO_NAMES = (
     "aoa-techniques",
     "aoa-skills",
@@ -26,6 +25,23 @@ FIXTURE_REPO_NAMES = (
     "8Dionysus",
     "abyss-stack",
 )
+
+
+def discover_workspace_root() -> Path:
+    test_file = Path(__file__).resolve()
+    candidates = (
+        test_file.parents[1],
+        test_file.parents[2],
+        test_file.parents[3],
+    )
+    required_repos = ("Agents-of-Abyss", "Tree-of-Sophia", "Dionysus", "8Dionysus", "aoa-sdk")
+    for candidate in candidates:
+        if all((candidate / repo_name).exists() for repo_name in required_repos):
+            return candidate
+    return test_file.parents[2]
+
+
+WORKSPACE_ROOT = discover_workspace_root()
 
 
 def write_json(path: Path, payload: object) -> None:
