@@ -24,6 +24,14 @@ VALIDATION_REFS = [
     "scripts/validate_two_stage_skill_router.py",
     "tests/test_two_stage_skill_router.py",
 ]
+FORBIDDEN_EXAMPLE_CANDIDATE_FIELDS = {
+    "summary",
+    "trigger_boundary_short",
+    "verification_short",
+    "allowlist_paths",
+    "context_rehydration_hint",
+    "companions",
+}
 
 
 def resolve_generated_dir(path: Path) -> Path:
@@ -322,6 +330,21 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         for item in shortlist:
             if item.get("name") not in skill_names:
                 issues.append(("two_stage_router_examples.json", f"unknown skill in shortlist: {item.get('name')!r}"))
+        decision_packet = example.get("decision_packet", {})
+        projected_candidates = decision_packet.get("candidates", [])
+        if decision_packet.get("candidate_count") != len(projected_candidates):
+            issues.append(("two_stage_router_examples.json", "example candidate_count mismatch"))
+        for item in projected_candidates:
+            if item.get("name") not in skill_names:
+                issues.append(("two_stage_router_examples.json", f"unknown skill in decision packet: {item.get('name')!r}"))
+            forbidden_fields = sorted(FORBIDDEN_EXAMPLE_CANDIDATE_FIELDS.intersection(item))
+            if forbidden_fields:
+                issues.append(
+                    (
+                        "two_stage_router_examples.json",
+                        f"example decision packet duplicates source-owned capsule fields: {', '.join(forbidden_fields)}",
+                    )
+                )
 
     for case in eval_cases:
         for name in case.get("expected_shortlist_includes", []):

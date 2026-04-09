@@ -77,6 +77,92 @@ def test_build_outputs_include_two_stage_router_surfaces() -> None:
     example = outputs["two_stage_router_examples.json"]["examples"][0]
     assert "confidence" in example["preselect_result"]
     assert "decision_reason" in example["decision_packet"]
+    assert set(example["decision_packet"]["candidates"][0]) == {
+        "name",
+        "band",
+        "score",
+        "preselect_reasons",
+        "invocation_mode",
+        "manual_invocation_required",
+        "activation_hint",
+    }
+
+
+def test_example_projection_keeps_runtime_decision_packet_rich_but_examples_redacted(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    generated_dir = skills_root / "generated"
+    write_json(
+        generated_dir / "tiny_router_skill_signals.json",
+        {
+            "skills": [
+                {
+                    "name": "aoa-source-of-truth-check",
+                    "band": "decision-doc-authority",
+                    "invocation_mode": "explicit-preferred",
+                    "manual_invocation_required": False,
+                    "project_overlay": False,
+                    "companions": ["aoa-change-protocol"],
+                }
+            ]
+        },
+    )
+    write_json(
+        generated_dir / "skill_capsules.json",
+        {
+            "skills": [
+                {
+                    "name": "aoa-source-of-truth-check",
+                    "summary": "Clarify which files are authoritative.",
+                    "trigger_boundary_short": "Use when repository guidance overlaps or conflicts.",
+                    "verification_short": "Report the authoritative files and entrypoints.",
+                }
+            ]
+        },
+    )
+    write_json(
+        generated_dir / "local_adapter_manifest.json",
+        {"skills": [{"name": "aoa-source-of-truth-check", "allowlist_paths": ["docs"]}]},
+    )
+    write_json(
+        generated_dir / "context_retention_manifest.json",
+        {"skills": [{"name": "aoa-source-of-truth-check", "rehydration_hint": "re-open the canonical docs"}]},
+    )
+
+    packet = build_decision_packet(
+        "Clarify the canonical docs and authority boundaries.",
+        {
+            "task": "Clarify the canonical docs and authority boundaries.",
+            "shortlist": [
+                {
+                    "name": "aoa-source-of-truth-check",
+                    "score": 12,
+                    "reasons": ["positive:authority"],
+                }
+            ],
+            "confidence": "strong",
+            "lead_score": 12,
+            "lead_gap": 12,
+            "fallback_candidates": [],
+        },
+        skills_root,
+    )
+
+    projected = build_two_stage_skill_router.project_example_decision_packet(packet)
+
+    assert "summary" in packet["candidates"][0]
+    assert "allowlist_paths" in packet["candidates"][0]
+    assert "summary" not in projected["candidates"][0]
+    assert "allowlist_paths" not in projected["candidates"][0]
+    assert "context_rehydration_hint" not in projected["candidates"][0]
+    assert set(projected["candidates"][0]) == {
+        "name",
+        "band",
+        "score",
+        "preselect_reasons",
+        "invocation_mode",
+        "manual_invocation_required",
+        "activation_hint",
+    }
 
 
 def test_build_outputs_anchor_eval_expectations_to_source_contracts() -> None:
@@ -696,6 +782,13 @@ def test_live_workspace_two_stage_outputs_are_normalized_v2() -> None:
     assert examples["schema_ref"] == "schemas/two-stage-router-examples.schema.json"
     assert examples["owner_repo"] == "aoa-routing"
     assert examples["surface_kind"] == "two_stage_router_examples"
+    example_candidate = examples["examples"][0]["decision_packet"]["candidates"][0]
+    assert "summary" not in example_candidate
+    assert "trigger_boundary_short" not in example_candidate
+    assert "verification_short" not in example_candidate
+    assert "allowlist_paths" not in example_candidate
+    assert "context_rehydration_hint" not in example_candidate
+    assert "companions" not in example_candidate
     assert manifest["schema_version"] == "aoa_routing_two_stage_router_manifest_v2"
     assert manifest["schema_ref"] == "schemas/two-stage-router-manifest.schema.json"
     assert manifest["owner_repo"] == "aoa-routing"

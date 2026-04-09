@@ -62,6 +62,12 @@ It may return only:
 The shortlisted packet must stay at or below the published stage-2 shortlist
 limit. Consumers should treat that limit as contract, not as a hint.
 
+`generated/two_stage_router_examples.json` is a routing-owned redacted
+projection of stage-2 behavior. It may show shortlist mechanics, scores,
+decision modes, and activation posture, but it must not copy source-owned skill
+wording, verification text, local adapter allowlists, or rehydration hints into
+`aoa-routing`.
+
 Explicit-only skills may rank highly in stage 1, but stage 2 must still require an explicit handle.
 Weak or empty shortlists must stay `no-skill`.
 

@@ -24,6 +24,15 @@ VALIDATION_REFS = [
     "scripts/validate_two_stage_skill_router.py",
     "tests/test_two_stage_skill_router.py",
 ]
+EXAMPLE_CANDIDATE_FIELDS = (
+    "name",
+    "band",
+    "score",
+    "preselect_reasons",
+    "invocation_mode",
+    "manual_invocation_required",
+    "activation_hint",
+)
 
 
 def dump_json(data: Any) -> str:
@@ -64,6 +73,27 @@ def expected_stage_2_mode(
         if lead_signal.get("manual_invocation_required")
         else "activate-candidate"
     )
+
+
+def project_example_candidate(candidate: dict[str, Any]) -> dict[str, Any]:
+    return {field: candidate.get(field) for field in EXAMPLE_CANDIDATE_FIELDS}
+
+
+def project_example_decision_packet(packet: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "confidence": packet.get("confidence"),
+        "lead_score": packet.get("lead_score"),
+        "lead_gap": packet.get("lead_gap"),
+        "candidate_count": packet.get("candidate_count"),
+        "fallback_candidates": packet.get("fallback_candidates", []),
+        "candidates": [
+            project_example_candidate(candidate)
+            for candidate in packet.get("candidates", [])
+        ],
+        "decision_reason": packet.get("decision_reason"),
+        "suggested_decision": packet.get("suggested_decision"),
+        "stage_2_checklist": packet.get("stage_2_checklist", []),
+    }
 
 
 def build_outputs(
@@ -270,7 +300,7 @@ def build_outputs(
                     "case_id": case["case_id"],
                     "prompt": case["prompt"],
                     "preselect_result": preselected,
-                    "decision_packet": packet,
+                    "decision_packet": project_example_decision_packet(packet),
                 }
             )
 
