@@ -1,4 +1,4 @@
-name: Repo Validation
+name: Release Audit
 
 on:
   push:
@@ -7,7 +7,8 @@ on:
   pull_request:
 
 jobs:
-  validate:
+  release_audit:
+    name: Release Audit
     runs-on: ubuntu-latest
     steps:
       - name: Checkout routing repo
@@ -119,52 +120,5 @@ jobs:
       - name: Install dependencies
         run: python -m pip install -r requirements-dev.txt
 
-      - name: Validate routing surfaces
-        run: |
-          python scripts/validate_router.py \
-            --techniques-root ./aoa-techniques \
-            --skills-root ./aoa-skills \
-            --evals-root ./aoa-evals \
-            --stats-root ./aoa-stats \
-            --memo-root ./aoa-memo \
-            --agents-root ./aoa-agents \
-            --aoa-root ./Agents-of-Abyss \
-            --playbooks-root ./aoa-playbooks \
-            --kag-root ./aoa-kag \
-            --tos-root ./Tree-of-Sophia \
-            --sdk-root ./aoa-sdk \
-            --seed-root ./Dionysus \
-            --profile-root ./8Dionysus \
-            --abyss-stack-root ./abyss-stack
-
-      - name: Check rebuild parity
-        run: |
-          python scripts/build_router.py \
-            --techniques-root ./aoa-techniques \
-            --skills-root ./aoa-skills \
-            --evals-root ./aoa-evals \
-            --stats-root ./aoa-stats \
-            --memo-root ./aoa-memo \
-            --agents-root ./aoa-agents \
-            --aoa-root ./Agents-of-Abyss \
-            --playbooks-root ./aoa-playbooks \
-            --kag-root ./aoa-kag \
-            --tos-root ./Tree-of-Sophia \
-            --sdk-root ./aoa-sdk \
-            --seed-root ./Dionysus \
-            --profile-root ./8Dionysus \
-            --abyss-stack-root ./abyss-stack \
-            --check
-
-      - name: Run routing tests
-        run: python -m pytest -q tests
-
-      - name: Check wave-9 routing seam
-        run: |
-          python scripts/build_two_stage_skill_router.py \
-            --routing-root . \
-            --skills-root ./aoa-skills \
-            --check
-          python scripts/validate_two_stage_skill_router.py \
-            --routing-root . \
-            --skills-root ./aoa-skills
+      - name: Run release audit
+        run: python scripts/release_check.py
