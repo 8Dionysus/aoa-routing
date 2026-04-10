@@ -28,6 +28,17 @@ Tracking starts with the community-docs baseline for this repository.
 - regenerated routing and two-stage eval artifacts after the precision-case
   refresh
 
+### Included in this release
+
+- routing-surface expansion across `docs/`, `generated/`, `config/`, `schemas/`,
+  `examples/`, `scripts/`, and `tests/`, including federation-mesh owner
+  capsules, checkpoint starter handoffs, owner-layer shortlist routing, ToS
+  return-navigation tightening, and memo return-capsule cross-validation
+- repo-local operating and follow-through surfaces under `.agents/`, `.github/`,
+  `QUESTBOOK.md`, `quests/`, `AGENTS.md`, `README.md`, and `CONTRIBUTING.md`,
+  including project-foundation rollout, validation-pin refreshes, and
+  thin-router and tiny-starter contract hardening
+
 ## [0.1.0] - 2026-04-01
 
 First public baseline release of `aoa-routing` as the thin navigation and federation-entry layer in the AoA public surface.
