@@ -22,6 +22,9 @@ Tracking starts with the community-docs baseline for this repository.
   envelopes, and tighter thin-router validation contracts
 - aligned wave-9 two-stage artifacts, generated eval cases, and current
   `aoa-skills`-driven precision behavior on `main`
+- refreshed the pinned sibling validation matrix in CI so release verification
+  now checks against the merged owner-repo release heads instead of the
+  pre-release federation state
 - aligned two-stage precision expectations with the current stage-2 router
   policy so contract-boundary prompts now activate `aoa-contract-test` while
   thinner generic bounded-change prompts stay below the activation threshold
