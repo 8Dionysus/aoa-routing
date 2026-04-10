@@ -121,6 +121,7 @@ from router_core import (
     load_playbook_registry_entries,
     load_technique_catalog_entries,
     load_tos_tiny_entry_route,
+    relative_posix,
 )
 
 
@@ -5450,9 +5451,18 @@ def validate_generated_outputs(
         issues.append(ValidationIssue(registry_path.name, str(exc)))
         return issues
 
-    technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
-        techniques_root
-    )
+    technique_catalog_available = True
+    try:
+        technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
+            techniques_root
+        )
+    except RouterError as exc:
+        technique_catalog_available = False
+        technique_catalog_source = relative_posix(
+            techniques_root / "generated" / "technique_catalog.min.json"
+        )
+        technique_catalog_entries = []
+        issues.append(ValidationIssue("generated", str(exc)))
 
     normalized_registry_entries: list[dict[str, Any]] = []
     dependency_safe_registry_entries: list[dict[str, Any]] = []
@@ -5703,13 +5713,14 @@ def validate_generated_outputs(
         generated_dir,
         issues,
     )
-    validate_technique_second_cut_targets(
-        projection_safe_registry_entries,
-        technique_catalog_entries,
-        hints_payload,
-        techniques_root,
-        issues,
-    )
+    if technique_catalog_available:
+        validate_technique_second_cut_targets(
+            projection_safe_registry_entries,
+            technique_catalog_entries,
+            hints_payload,
+            techniques_root,
+            issues,
+        )
     validate_recall_targets(hints_payload, memo_root, issues)
 
     try:
@@ -5753,39 +5764,41 @@ def validate_generated_outputs(
         if recommended_payload != expected_recommended:
             issues.append(ValidationIssue(recommended_path.name, "recommended_paths.min.json does not match registry-derived dependencies"))
 
-    try:
-        expected_pairing = build_pairing_hints_payload(
-            recommended_safe_registry_entries,
-            technique_catalog_source,
-            technique_catalog_entries,
-        )
-    except RouterError as exc:
-        issues.append(ValidationIssue(pairing_path.name, str(exc)))
-    else:
-        if pairing_payload != expected_pairing:
-            issues.append(
-                ValidationIssue(
-                    pairing_path.name,
-                    "pairing_hints.min.json does not match the bounded pairing derivation",
-                )
+    if technique_catalog_available:
+        try:
+            expected_pairing = build_pairing_hints_payload(
+                recommended_safe_registry_entries,
+                technique_catalog_source,
+                technique_catalog_entries,
             )
+        except RouterError as exc:
+            issues.append(ValidationIssue(pairing_path.name, str(exc)))
+        else:
+            if pairing_payload != expected_pairing:
+                issues.append(
+                    ValidationIssue(
+                        pairing_path.name,
+                        "pairing_hints.min.json does not match the bounded pairing derivation",
+                    )
+                )
 
-    try:
-        expected_relation_hints = build_kag_source_lift_relation_hints_payload(
-            normalized_registry_entries,
-            technique_catalog_source,
-            technique_catalog_entries,
-        )
-    except RouterError as exc:
-        issues.append(ValidationIssue(relation_hints_path.name, str(exc)))
-    else:
-        if relation_hints_payload != expected_relation_hints:
-            issues.append(
-                ValidationIssue(
-                    relation_hints_path.name,
-                    "kag_source_lift_relation_hints.min.json does not match the live direct relation surface",
-                )
+    if technique_catalog_available:
+        try:
+            expected_relation_hints = build_kag_source_lift_relation_hints_payload(
+                normalized_registry_entries,
+                technique_catalog_source,
+                technique_catalog_entries,
             )
+        except RouterError as exc:
+            issues.append(ValidationIssue(relation_hints_path.name, str(exc)))
+        else:
+            if relation_hints_payload != expected_relation_hints:
+                issues.append(
+                    ValidationIssue(
+                        relation_hints_path.name,
+                        "kag_source_lift_relation_hints.min.json does not match the live direct relation surface",
+                    )
+                )
 
     try:
         expected_tiny_model_payload = build_tiny_model_entrypoints_payload(

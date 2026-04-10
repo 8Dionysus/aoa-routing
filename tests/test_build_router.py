@@ -1727,6 +1727,75 @@ def test_build_outputs_composite_stress_hints_include_memo_recovery_context(
     }
 
 
+def test_build_outputs_composite_stress_hints_skip_unreviewed_or_unrecallable_patterns(
+    tmp_path: Path,
+) -> None:
+    roots = {}
+    for repo_name in FIXTURE_REPO_NAMES:
+        target = tmp_path / repo_name
+        shutil.copytree(FIXTURES_ROOT / repo_name, target)
+        roots[repo_name] = target
+
+    catalog_path = roots["aoa-memo"] / "generated" / "memory_object_catalog.min.json"
+    catalog_payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    catalog_payload["memory_objects"].extend(
+        [
+            {
+                "id": "memo.pattern.2026-04-07.antifragility-stress-recovery-window-draft",
+                "kind": "pattern",
+                "title": "Draft recovery pattern should stay out of routing",
+                "summary": "Unreviewed recovery pattern.",
+                "scope_classes": ["repo"],
+                "temperature": "warm",
+                "review_state": "captured",
+                "current_recall_status": "preferred",
+                "authority_kind": "human_reviewed",
+                "primary_recall_modes": ["procedural"],
+                "source_path": "examples/pattern.antifragility-stress-recovery-window-draft.example.json",
+                "inspect_key": "memo.pattern.2026-04-07.antifragility-stress-recovery-window-draft",
+                "expand_key": "memo.pattern.2026-04-07.antifragility-stress-recovery-window-draft",
+            },
+            {
+                "id": "memo.pattern.2026-04-07.antifragility-stress-recovery-window-muted",
+                "kind": "pattern",
+                "title": "Muted recovery pattern should stay out of routing",
+                "summary": "Non-recallable recovery pattern.",
+                "scope_classes": ["repo"],
+                "temperature": "warm",
+                "review_state": "confirmed",
+                "current_recall_status": "blocked",
+                "authority_kind": "human_reviewed",
+                "primary_recall_modes": ["procedural"],
+                "source_path": "examples/pattern.antifragility-stress-recovery-window-muted.example.json",
+                "inspect_key": "memo.pattern.2026-04-07.antifragility-stress-recovery-window-muted",
+                "expand_key": "memo.pattern.2026-04-07.antifragility-stress-recovery-window-muted",
+            },
+        ]
+    )
+    write_json(catalog_path, catalog_payload)
+
+    outputs = build_router.build_outputs(
+        roots["aoa-techniques"],
+        roots["aoa-skills"],
+        roots["aoa-evals"],
+        roots["aoa-memo"],
+        roots["aoa-stats"],
+        roots["aoa-agents"],
+        roots["Agents-of-Abyss"],
+        roots["aoa-playbooks"],
+        roots["aoa-kag"],
+        roots["Tree-of-Sophia"],
+        roots["aoa-sdk"],
+        roots["Dionysus"],
+        roots["8Dionysus"],
+        roots["abyss-stack"],
+    )
+
+    hint = outputs["composite_stress_route_hints.min.json"]["hints"][0]
+    assert hint["input_refs"]["memo_pattern_refs"] == []
+    assert hint["memo_context"] == []
+
+
 def test_build_is_deterministic_on_repeated_runs(tmp_path: Path) -> None:
     generated_dir = tmp_path / "generated"
     outputs_a = build_fixture_outputs()

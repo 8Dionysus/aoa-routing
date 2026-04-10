@@ -298,6 +298,20 @@ def test_preselect_caps_top_k_to_declared_stage_2_shortlist_limit() -> None:
     assert len(preselected["shortlist"]) <= 3
 
 
+def test_preselect_clamps_non_positive_top_k_to_one() -> None:
+    policy = load_fixture_json(FIXTURES_ROOT / "aoa-routing" / "config" / "two_stage_router_policy.json")
+    signals = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_skill_signals.json")
+    bands = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_candidate_bands.json")
+    prompt = (
+        "Use explicit verification, a bounded change workflow, a contract check, "
+        "and a test-first slice while keeping the repo guidance authoritative."
+    )
+
+    preselected = preselect(prompt, signals, bands, policy, top_k=-1)
+
+    assert len(preselected["shortlist"]) == 1
+
+
 def test_preselect_marks_close_scores_as_weak_and_stage_2_stays_no_skill() -> None:
     policy = load_fixture_json(FIXTURES_ROOT / "aoa-routing" / "config" / "two_stage_router_policy.json")
     signals = load_fixture_json(FIXTURES_ROOT / "aoa-skills" / "generated" / "tiny_router_skill_signals.json")
@@ -756,6 +770,48 @@ def test_validate_two_stage_outputs_reports_behavioral_mismatch(tmp_path: Path) 
         and "expected top1" in message
         for location, message in issues
     )
+
+
+def test_validate_two_stage_outputs_rejects_activate_candidate_defer_case_without_shortlist_target(
+    tmp_path: Path,
+) -> None:
+    routing_root = tmp_path / "aoa-routing"
+    shutil.copytree(FIXTURES_ROOT / "aoa-routing", routing_root)
+    generated_dir = routing_root / "generated"
+    outputs = build_fixture_outputs()
+    for filename, payload in outputs.items():
+        path = generated_dir / filename
+        if filename.endswith(".jsonl"):
+            path.write_text(
+                "".join(json.dumps(row, ensure_ascii=False) + "\n" for row in payload),
+                encoding="utf-8",
+            )
+        else:
+            write_json(path, payload)
+
+    eval_cases_path = generated_dir / "two_stage_router_eval_cases.jsonl"
+    cases = [json.loads(line) for line in eval_cases_path.read_text(encoding="utf-8").splitlines() if line.strip()]
+    cases.append(
+        {
+            "case_id": "tiny-defer-aoa-context-scan",
+            "prompt": "Make a bounded repository change with a clear verification step and a final report.",
+            "repo_family_hint": None,
+            "expected_shortlist_includes": [],
+            "expected_shortlist_excludes": ["aoa-context-scan"],
+            "expected_top1": None,
+            "expected_top1_not": "aoa-context-scan",
+            "expected_band": "change-validation",
+            "stage_2_expectation": "activate-candidate",
+        }
+    )
+    eval_cases_path.write_text("".join(json.dumps(row) + "\n" for row in cases), encoding="utf-8")
+
+    issues = validate_two_stage_skill_router.validate_outputs(routing_root, FIXTURES_ROOT / "aoa-skills")
+
+    assert (
+        "two_stage_router_eval_cases.jsonl",
+        "activate-candidate defer cases must keep expected_shortlist_includes",
+    ) in issues
 
 
 def test_two_stage_skill_router_cli_routes_fixture_task(tmp_path: Path) -> None:
