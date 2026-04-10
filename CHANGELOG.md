@@ -9,6 +9,20 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [0.2.0] - 2026-04-10
 
+### Summary
+
+- this release adds federation-mesh entry capsules, technique-kind second-cut routing, and stronger tiny-model starter smoke coverage
+- routing is retargeted through owner capsules with tighter thin-router validation, refreshed sibling pinning, and aligned two-stage precision expectations
+- `aoa-routing` remains a navigation and recommendation layer rather than the authority surface for the repositories it reads
+
+### Validation
+
+- `python scripts/release_check.py`
+
+### Notes
+
+- detailed routing, config, generated-artifact, and CI-surface coverage for this release remains enumerated below under `Added`, `Changed`, and `Included in this release`
+
 ### Added
 
 - additive federation-mesh expansion for runtime, profile, and owner-owned
