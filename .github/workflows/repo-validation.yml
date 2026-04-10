@@ -17,84 +17,84 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-techniques
-          ref: 9cd5eecea303403f69a582be071cf2cad74bd1b8
+          ref: 27f6784e0fc450fa2805db27804c60c704e769f3
           path: aoa-techniques
 
       - name: Checkout aoa-skills
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-skills
-          ref: 139820c92658476bf9548ea404478e4b6e0b4798
+          ref: c6a6750a5e6894310fff779628416d890a32def0
           path: aoa-skills
 
       - name: Checkout aoa-evals
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-evals
-          ref: e18b26047919a65319607fa0e3f66a4b06df0761
+          ref: d905b46b40368d0ccfd333376b473ca4a6279839
           path: aoa-evals
 
       - name: Checkout aoa-stats
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-stats
-          ref: 4a1ba30df8dc6cfb510d1f717d69561dde646e82
+          ref: d98f0209b687d427b3585abb4b4efd0e15996044
           path: aoa-stats
 
       - name: Checkout aoa-memo
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-memo
-          ref: e8a761bff4e4ed90c6b1ec6b321993a914b6b7dd
+          ref: 7f06cef43cc876830233ade9365e1eb9cf7c76ea
           path: aoa-memo
 
       - name: Checkout aoa-agents
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-agents
-          ref: 730f74d1b7174112742a2103161401713edacea2
+          ref: c05aab69e86aa2193c21d46029a232fb0a004246
           path: aoa-agents
 
       - name: Checkout Agents-of-Abyss
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Agents-of-Abyss
-          ref: 88dc386a28083ccaa00a4ea4e7f0c78e8d1d244f
+          ref: d30053770bbd9fef2b9fc4f90b69d5a1e3a15ab3
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-playbooks
-          ref: c9207ccc85e8b6d8ecd8e41ef37b351a23a98e59
+          ref: b0d0173087f11162a28ba54a2513a54f5d63df2d
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-kag
-          ref: aaee7cb92c0885cf39c56c7fcb755dccd1c91507
+          ref: 1fa07ce6be4b13b0031faa9d87d838fc38968876
           path: aoa-kag
 
       - name: Checkout Tree-of-Sophia
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Tree-of-Sophia
-          ref: 7eda6210d48f34457c234f15f90434a54f48376d
+          ref: 541e979482386b22b6349c90ff526f2c93253875
           path: Tree-of-Sophia
 
       - name: Checkout aoa-sdk
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-sdk
-          ref: ab4446e031804e2dab532456b43162bcff98cb1c
+          ref: 74aea14f80d9b6986f12b6d0d52fadd8a0a82384
           path: aoa-sdk
 
       - name: Checkout Dionysus
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/Dionysus
-          ref: 189d73e16f3faf821505b181a07e25353f3a6127
+          ref: f209e92729e3a6e6e2bedde5f59a763f6f04ccbb
           path: Dionysus
 
       - name: Checkout 8Dionysus
@@ -108,7 +108,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/abyss-stack
-          ref: 1d51643220da54f6fc1d8390b74326f65c30f6bf
+          ref: 6f1998072e3713402777703ca0c3096f45cc7e09
           path: abyss-stack
 
       - name: Setup Python
