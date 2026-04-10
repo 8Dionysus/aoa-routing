@@ -3720,9 +3720,15 @@ def build_kag_source_lift_relation_hints_payload(
         payload_entries.append(
             {
                 "kind": "technique",
-                "id": registry_entry["id"],
-                "name": registry_entry["name"],
-                "summary": registry_entry["summary"],
+                "id": ensure_string(registry_entry.get("id"), f"registry[technique:{technique_id}].id"),
+                "name": ensure_string(
+                    registry_entry.get("name"),
+                    f"registry[technique:{technique_id}].name",
+                ),
+                "summary": ensure_string(
+                    registry_entry.get("summary"),
+                    f"registry[technique:{technique_id}].summary",
+                ),
                 "relations": direct_relations,
             }
         )

@@ -5,6 +5,8 @@ import shutil
 from pathlib import Path
 
 import build_router
+import pytest
+import router_core
 import validate_router
 
 
@@ -1468,6 +1470,54 @@ def test_validate_generated_outputs_rejects_invalid_kag_relation_hints(tmp_path:
         in issue.message
         for issue in issues
     )
+
+
+def test_validate_generated_outputs_reports_missing_technique_catalog_without_crashing(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    (roots["aoa-techniques"] / "generated" / "technique_catalog.min.json").unlink()
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any("technique_catalog.min.json" in issue.message for issue in issues)
+
+
+def test_kag_relation_hint_builder_reports_missing_registry_summary_without_keyerror() -> None:
+    registry_entries = [
+        {
+            "kind": "technique",
+            "id": "AOA-T-0018",
+            "name": "markdown-technique-section-lift",
+        },
+        {
+            "kind": "technique",
+            "id": "AOA-T-0021",
+            "name": "bounded-relation-lift-for-kag",
+            "summary": "Valid companion relation target.",
+        },
+    ]
+    technique_catalog_entries = [
+        {
+            "id": "AOA-T-0018",
+            "name": "markdown-technique-section-lift",
+            "summary": "Lift stable technique markdown sections into derived section-level units while keeping the bundle markdown authoritative.",
+            "relations": [{"type": "complements", "target": "AOA-T-0021"}],
+        },
+        {
+            "id": "AOA-T-0021",
+            "name": "bounded-relation-lift-for-kag",
+            "summary": "Lift small typed direct relations into bounded edge hints for derived consumers.",
+            "relations": [],
+        },
+    ]
+
+    with pytest.raises(router_core.RouterError, match=r"registry\[technique:AOA-T-0018\]\.summary"):
+        router_core.build_kag_source_lift_relation_hints_payload(
+            registry_entries,
+            "generated/technique_catalog.min.json",
+            technique_catalog_entries,
+        )
 
 
 def test_validate_generated_outputs_rejects_invalid_pairing_hints(tmp_path: Path) -> None:

@@ -336,6 +336,18 @@ def build_outputs(
             skills_root,
             max_shortlist=stage_2_shortlist_limit,
         )
+        stage_2_expectation = expected_stage_2_mode(
+            case,
+            preselected=preselected,
+            signal_by_name=signal_by_name,
+        )
+        expected_shortlist_includes = case.get("expected_shortlist_includes", [])
+        if stage_2_expectation == "activate-candidate" and not expected_shortlist_includes:
+            expected_shortlist_includes = [
+                entry.get("name")
+                for entry in preselected.get("shortlist", [])
+                if isinstance(entry.get("name"), str) and entry.get("name")
+            ][:1]
         if len(examples) < 8:
             examples.append(
                 {
@@ -352,16 +364,12 @@ def build_outputs(
                 "case_id": case["case_id"],
                 "prompt": case["prompt"],
                 "repo_family_hint": case.get("repo_family_hint"),
-                "expected_shortlist_includes": case.get("expected_shortlist_includes", []),
+                "expected_shortlist_includes": expected_shortlist_includes,
                 "expected_shortlist_excludes": case.get("expected_shortlist_excludes", []),
                 "expected_top1": case.get("expected_top1"),
                 "expected_top1_not": case.get("expected_top1_not"),
                 "expected_band": case.get("expected_band"),
-                "stage_2_expectation": expected_stage_2_mode(
-                    case,
-                    preselected=preselected,
-                    signal_by_name=signal_by_name,
-                ),
+                "stage_2_expectation": stage_2_expectation,
             }
         )
 

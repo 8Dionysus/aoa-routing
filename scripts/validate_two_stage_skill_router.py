@@ -600,6 +600,17 @@ def validate_outputs(routing_root: Path, skills_root: Path) -> list[tuple[str, s
         top1_not = case.get("expected_top1_not")
         if top1_not is not None and top1_not not in skill_names:
             issues.append(("two_stage_router_eval_cases.jsonl", f"unknown expected_top1_not {top1_not!r}"))
+        if (
+            str(case.get("case_id", "")).startswith("tiny-defer-")
+            and case.get("stage_2_expectation") == "activate-candidate"
+            and not case.get("expected_shortlist_includes")
+        ):
+            issues.append(
+                (
+                    "two_stage_router_eval_cases.jsonl",
+                    "activate-candidate defer cases must keep expected_shortlist_includes",
+                )
+            )
 
     if manifest.get("skill_count") != len(skill_names):
         issues.append(("two_stage_router_manifest.json", "skill_count mismatch"))

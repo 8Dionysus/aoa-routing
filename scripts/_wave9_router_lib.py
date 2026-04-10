@@ -365,7 +365,8 @@ def preselect(
     task_normalized = normalize(task)
     task_tokens = set(tokenize(task))
     scoring = policy["scoring"]
-    top_k = min(top_k or policy["defaults"]["top_k"], resolve_stage_2_shortlist_limit(policy))
+    requested_top_k = policy["defaults"]["top_k"] if top_k is None else top_k
+    top_k = min(max(int(requested_top_k), 1), resolve_stage_2_shortlist_limit(policy))
     resolved_repo_family = resolve_repo_family(task_normalized, repo_family, policy)
 
     scored_bands: list[dict[str, Any]] = []

@@ -59,6 +59,8 @@ MEMO_RECOVERY_PATTERN_MARKERS = (
     "recovery-pattern",
     "antifragility",
 )
+MEMO_REVIEW_READY_STATES = {"confirmed"}
+MEMO_RECALL_READY_STATES = {"allowed", "preferred"}
 OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
     {
         "shortlist_id": "explicit-request.skills.primary",
@@ -698,22 +700,28 @@ def load_recovery_pattern_contexts(memo_root: Path) -> list[dict[str, Any]]:
             memory_object.get("source_path"),
             f"{location}.source_path",
         )
+        review_state = ensure_string(
+            memory_object.get("review_state"),
+            f"{location}.review_state",
+        )
+        recall_status = ensure_string(
+            memory_object.get("current_recall_status"),
+            f"{location}.current_recall_status",
+        )
         marker_text = f"{memory_id} {source_path}".lower()
         if not any(marker in marker_text for marker in MEMO_RECOVERY_PATTERN_MARKERS):
+            continue
+        if review_state not in MEMO_REVIEW_READY_STATES:
+            continue
+        if recall_status not in MEMO_RECALL_READY_STATES:
             continue
         contexts.append(
             {
                 "memory_id": memory_id,
                 "title": ensure_string(memory_object.get("title"), f"{location}.title"),
                 "source_path": source_path,
-                "review_state": ensure_string(
-                    memory_object.get("review_state"),
-                    f"{location}.review_state",
-                ),
-                "current_recall_status": ensure_string(
-                    memory_object.get("current_recall_status"),
-                    f"{location}.current_recall_status",
-                ),
+                "review_state": review_state,
+                "current_recall_status": recall_status,
             }
         )
     return contexts
