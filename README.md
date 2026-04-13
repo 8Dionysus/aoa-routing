@@ -118,9 +118,10 @@ That board is validator-checked but it is not emitted by `build_router.py`, not 
 Inspect actions point to source-owned capsule surfaces. Expand actions point to source-owned section surfaces. `aoa-routing` tells an agent what to read next; it does not copy the owned payloads into a second canon.
 
 Memo recall also stays bounded. The root recall path remains doctrine-first through `aoa-memo`, while the routing hint surface may expose a parallel object-facing family when upstream object contracts and object surfaces are coherent.
-Pre-Agon memory-pressure routing stays owner-first too. `owner_layer_shortlist.min.json`
-may point scar, delta, retention, or live-ledger pressure to the memo registry
-and `aoa-memo/docs/PRE_AGON_MEMORY_READINESS.md`, but that remains a navigation
+High-pressure memory readiness routing stays owner-first too.
+`owner_layer_shortlist.min.json` may point durable-consequence, delta,
+retention, or live-ledger pressure to the memo registry and
+`aoa-memo/docs/MEMORY_READINESS_BOUNDARY.md`, but that remains a navigation
 hint, not proof, KAG policy, a live memory ledger, or routing-owned authority.
 
 Second-wave surface detection also stays bounded. `owner_layer_shortlist.min.json`
