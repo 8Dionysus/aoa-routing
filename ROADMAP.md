@@ -102,7 +102,7 @@ This wave adds:
 
 - `generated/federation_entrypoints.min.json`
 - explicit `aoa-root` and `tos-root` root cards
-- active entry cards for `agent`, `tier`, `playbook`, and `kag_view`
+- active entry cards for `agent`, `tier`, `playbook`, `kag_view`, `seed`, `runtime_surface`, and `orientation_surface`
 - `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
 - schema-backed validation that orientation never points authority at route-owned generated surfaces
 - router-owned generated-surface refresh stays a parity-maintenance lane for routing-owned outputs and must not transfer source authority from sibling repos
