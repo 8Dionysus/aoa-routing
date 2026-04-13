@@ -1859,6 +1859,27 @@ def test_owner_layer_shortlist_includes_explicit_and_ambiguous_family_hints() ->
     assert {entry["ambiguity"] for entry in recurring_entries} == {"clear", "ambiguous"}
 
 
+def test_owner_layer_shortlist_routes_pre_agon_memory_pressure_to_memo_registry() -> None:
+    outputs = build_fixture_outputs()
+
+    shortlist = outputs["owner_layer_shortlist.min.json"]
+    pre_agon = next(
+        entry
+        for entry in shortlist["hints"]
+        if entry["shortlist_id"] == "recall-need.pre-agon-memory-readiness.primary"
+    )
+
+    assert pre_agon["signal"] == "recall-need"
+    assert pre_agon["owner_repo"] == "aoa-memo"
+    assert pre_agon["object_kind"] == "memo"
+    assert pre_agon["target_surface"] == "aoa-memo.memo_registry.min"
+    assert pre_agon["inspect_surface"] == "aoa-memo.memo_registry.min"
+    assert "docs/PRE_AGON_MEMORY_READINESS.md" in pre_agon["hint_reason"]
+    assert "not proof" in pre_agon["hint_reason"]
+    assert "KAG policy" in pre_agon["hint_reason"]
+    assert "routing authority" in pre_agon["hint_reason"]
+
+
 def test_build_task_to_tier_hints_reads_agents_registry_artifacts(tmp_path: Path) -> None:
     agents_root = tmp_path / "aoa-agents"
     shutil.copytree(FIXTURES_ROOT / "aoa-agents", agents_root)
