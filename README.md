@@ -99,7 +99,7 @@ The fourth-wave stress overlay reads structured adjunct surfaces only:
 
 ## Generated outputs
 
-The tracked outputs under `generated/` are grouped into four families:
+The tracked outputs under `generated/` are grouped into five families:
 
 - core routing: `cross_repo_registry.min.json`, `aoa_router.min.json`, `task_to_surface_hints.json`, `task_to_tier_hints.json`, `recommended_paths.min.json`, and `owner_layer_shortlist.min.json`
 - pairing, recall, and return posture: `pairing_hints.min.json`, `kag_source_lift_relation_hints.min.json`, and `return_navigation_hints.min.json`
