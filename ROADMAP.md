@@ -7,6 +7,36 @@ The governing rule stays unchanged:
 
 **Source repos own meaning. Routing owns navigation.**
 
+## Current Release Contour
+
+The current release contour is `v0.2.0`.
+It already carries:
+
+- federation-mesh entry capsules, owner-capsule routing, and checkpoint-starter
+  handoffs through `generated/federation_entrypoints.min.json` and
+  `docs/FEDERATION_ENTRY_ABI.md`
+- recurrence and return posture through `generated/return_navigation_hints.min.json`
+- technique-kind second-cut routing delegated back to
+  `aoa-techniques/generated/technique_kind_manifest.min.json` rather than
+  reclassified inside `aoa-routing`
+- additive composite stress-route hints through
+  `generated/composite_stress_route_hints.min.json`,
+  `docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md`, and
+  `docs/KAG_QUARANTINE_ROUTE_HINTS.md`
+- stress posture routing contracts through `docs/STRESS_POSTURE_ROUTING.md` and
+  `docs/DEGRADED_ROUTE_HINTS.md`
+- optional low-context and wave-9 two-stage skill routing surfaces through
+  `generated/tiny_model_entrypoints.json`,
+  `generated/two_stage_skill_entrypoints.json`,
+  `generated/two_stage_router_manifest.json`,
+  `generated/two_stage_router_eval_cases.jsonl`, and
+  `docs/TWO_STAGE_SKILL_SELECTION.md`
+
+The near-term risk is roadmap drift: routing has already shipped
+federation-mesh, composite stress, technique-kind second-cut, and two-stage
+low-context surfaces, but those surfaces must stay framed as navigation and
+dispatch support rather than becoming source authority.
+
 ## Current Baseline
 
 Already merged:
