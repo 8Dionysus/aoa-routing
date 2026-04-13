@@ -54,12 +54,13 @@ sovereignty at the routing layer.
 Before making changes, read in this order:
 
 1. `README.md`
-2. `generated/aoa_router.min.json`
-3. `generated/task_to_surface_hints.json`
-4. `generated/owner_layer_shortlist.min.json`
-5. `generated/recommended_paths.min.json`
-6. `generated/federation_entrypoints.min.json` when the task touches federation entry
-7. `docs/TWO_STAGE_SKILL_SELECTION.md` when the task touches the optional wave-9 seam
+2. `ROADMAP.md`
+3. `generated/aoa_router.min.json`
+4. `generated/task_to_surface_hints.json`
+5. `generated/owner_layer_shortlist.min.json`
+6. `generated/recommended_paths.min.json`
+7. `generated/federation_entrypoints.min.json` when the task touches federation entry
+8. `docs/TWO_STAGE_SKILL_SELECTION.md` when the task touches the optional wave-9 seam
 
 Then branch by task:
 
