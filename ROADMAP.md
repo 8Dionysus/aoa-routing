@@ -221,6 +221,9 @@ These boundaries come directly from the seed and should remain hard constraints:
 - same-kind pairing must stay family-scoped and one-hop bounded
 - tiny-model entrypoints must stay route-local and must not become a second tier registry
 - memo recall hints must advertise only router-ready upstream contracts
+- pre-Agon scar, delta, retention, or live-ledger pressure must route first to
+  `aoa-memo` owner-held readiness guidance rather than to router-owned policy,
+  KAG doctrine, eval proof, or live memory state
 - object-facing memo recall must remain a parallel family, not a replacement root kind
 - tiny-model recall-family selection must stay additive and memo-scoped rather than becoming a second root registry
 - federation entry cards must point authority at owning repos rather than `aoa-routing/generated/*`

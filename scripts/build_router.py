@@ -217,6 +217,21 @@ OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
         "ambiguity": "clear",
     },
     {
+        "shortlist_id": "recall-need.pre-agon-memory-readiness.primary",
+        "signal": "recall-need",
+        "owner_repo": "aoa-memo",
+        "object_kind": "memo",
+        "target_surface": "aoa-memo.memo_registry.min",
+        "inspect_surface": "aoa-memo.memo_registry.min",
+        "hint_reason": (
+            "pre-Agon memory pressure around scars, deltas, retention, or live ledgers should inspect "
+            "aoa-memo/docs/PRE_AGON_MEMORY_READINESS.md through the memo registry first; routing only "
+            "points to the owner-held map, and memo readiness is not proof, KAG policy, or routing authority"
+        ),
+        "confidence": "high",
+        "ambiguity": "clear",
+    },
+    {
         "shortlist_id": "scenario-recurring.playbooks.primary",
         "signal": "scenario-recurring",
         "owner_repo": "aoa-playbooks",
