@@ -1,1 +1,42 @@
-{"schema_version":"aoa_routing_two_stage_router_manifest_v2","schema_ref":"schemas/two-stage-router-manifest.schema.json","owner_repo":"aoa-routing","surface_kind":"two_stage_router_manifest","profile":"aoa-routing-wave-9-two-stage-skill-router","policy_ref":"config/two_stage_router_policy.json","validation_refs":["scripts/build_two_stage_skill_router.py","scripts/validate_two_stage_skill_router.py","tests/test_two_stage_skill_router.py"],"integration_mode":"adjacent-seam","stage_1_token_budget":1200,"stage_2_shortlist_limit":3,"skill_root_starter":"skill-root","source_inputs":["generated/tiny_model_entrypoints.json","generated/aoa_router.min.json","generated/pairing_hints.min.json","generated/task_to_surface_hints.json","../aoa-skills/generated/tiny_router_capsules.min.json","../aoa-skills/generated/tiny_router_candidate_bands.json","../aoa-skills/generated/tiny_router_skill_signals.json","../aoa-skills/generated/skill_capsules.json","../aoa-skills/generated/local_adapter_manifest.json","../aoa-skills/generated/context_retention_manifest.json"],"skill_count":30,"band_count":6,"example_count":8,"eval_case_count":81,"base_entrypoint_count":12,"router_skill_entry_count":30,"pairing_entry_count":161,"task_hint_kinds":["technique","skill","eval","memo"]}
+{
+  "schema_version": "aoa_routing_two_stage_router_manifest_v2",
+  "schema_ref": "schemas/two-stage-router-manifest.schema.json",
+  "owner_repo": "aoa-routing",
+  "surface_kind": "two_stage_router_manifest",
+  "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "policy_ref": "config/two_stage_router_policy.json",
+  "validation_refs": [
+    "scripts/build_two_stage_skill_router.py",
+    "scripts/validate_two_stage_skill_router.py",
+    "tests/test_two_stage_skill_router.py"
+  ],
+  "integration_mode": "adjacent-seam",
+  "stage_1_token_budget": 1200,
+  "stage_2_shortlist_limit": 3,
+  "skill_root_starter": "skill-root",
+  "source_inputs": [
+    "generated/tiny_model_entrypoints.json",
+    "generated/aoa_router.min.json",
+    "generated/pairing_hints.min.json",
+    "generated/task_to_surface_hints.json",
+    "../aoa-skills/generated/tiny_router_capsules.min.json",
+    "../aoa-skills/generated/tiny_router_candidate_bands.json",
+    "../aoa-skills/generated/tiny_router_skill_signals.json",
+    "../aoa-skills/generated/skill_capsules.json",
+    "../aoa-skills/generated/local_adapter_manifest.json",
+    "../aoa-skills/generated/context_retention_manifest.json"
+  ],
+  "skill_count": 30,
+  "band_count": 6,
+  "example_count": 8,
+  "eval_case_count": 81,
+  "base_entrypoint_count": 12,
+  "router_skill_entry_count": 30,
+  "pairing_entry_count": 161,
+  "task_hint_kinds": [
+    "technique",
+    "skill",
+    "eval",
+    "memo"
+  ]
+}
