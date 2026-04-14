@@ -56,9 +56,13 @@
         "aoa-stats-summary-catalog",
         "abyss-stack-diagnostic-spine",
         "dionysus-seed-garden",
-        "8dionysus-public-route-map"
+        "8dionysus-public-route-map",
+        "AOA-P-0031"
       ],
       "properties": {
+        "AOA-P-0031": {
+          "$ref": "#/$defs/federationEntryReturn"
+        },
         "aoa-sdk-control-plane": {
           "$ref": "#/$defs/federationEntryReturn"
         },
@@ -111,7 +115,9 @@
         "source_boundary_lost",
         "authority_unclear",
         "checkpoint_continuity_needed",
-        "reroute_required"
+        "reroute_required",
+        "split_route_needed",
+        "human_gate_required"
       ]
     },
     "supportedReturnReasons": {
@@ -309,6 +315,7 @@
         "entry_kind": {
           "type": "string",
           "enum": [
+            "playbook",
             "seed",
             "runtime_surface",
             "orientation_surface"
@@ -319,6 +326,7 @@
           "enum": [
             "aoa-sdk",
             "aoa-stats",
+            "aoa-playbooks",
             "8Dionysus",
             "Dionysus",
             "abyss-stack"

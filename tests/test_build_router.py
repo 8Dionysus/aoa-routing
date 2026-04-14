@@ -718,6 +718,22 @@ def test_build_outputs_from_fixtures() -> None:
         "target_surface": "generated/public_route_map.min.json",
     }
     entry_returns = return_navigation["federation_entry_returns"]
+    assert entry_returns["AOA-P-0031"]["supported_return_reasons"] == [
+        "authority_unclear",
+        "artifact_contract_lost",
+        "checkpoint_continuity_needed",
+        "split_route_needed",
+        "human_gate_required",
+        "reroute_required",
+    ]
+    assert entry_returns["AOA-P-0031"]["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-playbooks",
+        "target_surface": "generated/playbook_registry.min.json",
+        "match_field": "id",
+        "target_value": "AOA-P-0031",
+    }
+    assert "summon child-return checkpoint route" in entry_returns["AOA-P-0031"]["ownership_note"]
     assert entry_returns["aoa-sdk-control-plane"]["primary_action"] == {
         "verb": "inspect",
         "target_repo": "aoa-sdk",

@@ -1903,6 +1903,7 @@ def load_surface_entries_for_validation(
         "technique_catalog.json": "techniques",
         "technique_catalog.min.json": "techniques",
         "technique_kind_manifest.min.json": "kinds",
+        "playbook_registry.min.json": "playbooks",
         "skill_capsules.json": "skills",
         "eval_capsules.json": "evals",
         "memory_catalog.min.json": "memo_surfaces",
@@ -3398,6 +3399,7 @@ def validate_return_navigation_hints(
         )
 
     expected_entry_ids = {
+        "AOA-P-0031",
         FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID,
         "aoa-stats-summary-catalog",
         "abyss-stack-diagnostic-spine",
