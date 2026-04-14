@@ -2657,7 +2657,8 @@ def build_return_navigation_hints_payload(
             "ownership_note": (
                 "AOA-P-0031 owns only the reviewed summon child-return checkpoint route; "
                 "routing returns to the playbook registry entry for split, human-gate, or "
-                "checkpoint-continuity review without absorbing summon, SDK, memo, eval, or runtime authority."
+                "checkpoint-continuity review, including the SDK E2E fixture re-entry, "
+                "without absorbing summon, SDK, memo, eval, or runtime authority."
             ),
         },
         FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID: {
