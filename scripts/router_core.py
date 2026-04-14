@@ -2641,6 +2641,25 @@ def build_return_navigation_hints_payload(
         )
 
     federation_entry_return_specs = {
+        "AOA-P-0031": {
+            "entry_kind": "playbook",
+            "owner_repo": PLAYBOOKS_REPO,
+            "supported_return_reasons": (
+                "authority_unclear",
+                "artifact_contract_lost",
+                "checkpoint_continuity_needed",
+                "split_route_needed",
+                "human_gate_required",
+                "reroute_required",
+            ),
+            "primary_match_field": "id",
+            "primary_target_value": "AOA-P-0031",
+            "ownership_note": (
+                "AOA-P-0031 owns only the reviewed summon child-return checkpoint route; "
+                "routing returns to the playbook registry entry for split, human-gate, or "
+                "checkpoint-continuity review without absorbing summon, SDK, memo, eval, or runtime authority."
+            ),
+        },
         FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID: {
             "entry_kind": "runtime_surface",
             "owner_repo": SDK_REPO,
@@ -2708,11 +2727,15 @@ def build_return_navigation_hints_payload(
         federation_entry_returns[entry_id] = {
             "entry_kind": entry_kind,
             "owner_repo": owner_repo,
-            "supported_return_reasons": list(RETURN_REASONS_BY_FEDERATION_KIND[entry_kind]),
+            "supported_return_reasons": list(
+                spec.get("supported_return_reasons", RETURN_REASONS_BY_FEDERATION_KIND[entry_kind])
+            ),
             "primary_action": build_return_navigation_action(
                 verb="inspect",
                 target_repo=owner_repo,
                 target_surface=capsule_surface,
+                match_field=spec.get("primary_match_field"),
+                target_value=spec.get("primary_target_value"),
             ),
             "fallback_action": build_return_navigation_action(
                 verb="inspect",
