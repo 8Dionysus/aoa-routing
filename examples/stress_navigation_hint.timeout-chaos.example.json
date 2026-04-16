@@ -1,0 +1,46 @@
+{
+  "schema_version": "stress_navigation_hint_v1",
+  "hint_id": "route:stress:abyss-stack:route-api-timeout-chaos",
+  "applies_to": {
+    "repo": "abyss-stack",
+    "surface": "route-api",
+    "stressor_class": "timeout_chaos",
+    "degraded_mode": "mode_after=degraded-manual-review",
+    "severity_at_least": "medium"
+  },
+  "preferred_posture": "human_review_first",
+  "next_hops": [
+    {
+      "kind": "artifact",
+      "target": "abyss-stack:service_degradation_receipt_v1#runtime:degrade:route-api:2026-04-13T12:10:00Z:timeout-chaos",
+      "reason": "Start from the owner-local runtime receipt before wider routing or repair.",
+      "bounded": true
+    },
+    {
+      "kind": "doc",
+      "target": "abyss-stack:docs/ANTIFRAGILITY_RUNTIME.md",
+      "reason": "Review the runtime stress doctrine before any repair claim.",
+      "bounded": true
+    },
+    {
+      "kind": "doc",
+      "target": "aoa-techniques:stress-receipt-reground-closeout",
+      "reason": "Follow the bounded receipt -> route -> closeout workflow instead of improvising.",
+      "bounded": true
+    }
+  ],
+  "evidence_inputs": [
+    "abyss-stack:service_degradation_receipt_v1#runtime:degrade:route-api:2026-04-13T12:10:00Z:timeout-chaos",
+    "abyss-stack:repair_safe_closeout_receipt_v1#runtime:closeout:route-api:2026-04-13T12:40:00Z:timeout-chaos"
+  ],
+  "optional_context": [
+    "aoa-memo:examples/pattern.antifragility-stress-recovery-window.example.json"
+  ],
+  "confidence_band": "medium",
+  "suppression": {
+    "status": "active",
+    "reason": null
+  },
+  "expires_at_utc": null,
+  "notes": "Timeout chaos should route first to the owner receipt and reviewed doctrine, not straight into broader repair or mutation lanes."
+}

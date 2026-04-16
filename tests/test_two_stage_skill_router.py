@@ -183,6 +183,9 @@ def test_build_outputs_anchor_eval_expectations_to_source_contracts() -> None:
     assert eval_cases["fixture-change"]["stage_2_expectation"] == "activate-candidate"
     assert eval_cases["fixture-context"]["expected_band"] == "boundary-architecture"
     assert eval_cases["fixture-context"]["stage_2_expectation"] == "activate-candidate"
+    assert eval_cases["fixture-precision-empty-generic-bounded-change"]["stage_2_expectation"] == "no-skill"
+    assert eval_cases["fixture-precision-empty-generic-bounded-change"]["expected_confidence"] == "empty"
+    assert eval_cases["fixture-precision-weak-change-vs-scan"]["stage_2_expectation"] == "no-skill"
 
 
 def test_expected_stage_2_mode_tracks_strong_manual_only_lead_when_no_explicit_expectation() -> None:

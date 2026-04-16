@@ -70,6 +70,12 @@ It may return only:
 The shortlisted packet must stay at or below the published stage-2 shortlist
 limit. Consumers should treat that limit as contract, not as a hint.
 
+`config/two_stage_router_precision_cases.jsonl` is the routing-owned local
+precision lane for prompts that should stay covered even when the generated
+eval surface is rebuilt from fresh `aoa-skills` tiny-router inputs. The builder
+projects those local precision cases into `generated/two_stage_router_eval_cases.jsonl`
+so one committed readout still exists beside the source-owned config lane.
+
 `generated/two_stage_router_examples.json` is a routing-owned redacted
 projection of stage-2 behavior. It may show shortlist mechanics, scores,
 decision modes, and activation posture, but it must not copy source-owned skill

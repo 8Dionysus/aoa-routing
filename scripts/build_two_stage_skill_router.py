@@ -19,6 +19,7 @@ from _wave9_router_lib import (
 
 PROFILE = "aoa-routing-wave-9-two-stage-skill-router"
 JSON_INDENT = 2
+LOCAL_PRECISION_CASES_PATH = Path("config") / "two_stage_router_precision_cases.jsonl"
 VALIDATION_REFS = [
     "scripts/build_two_stage_skill_router.py",
     "scripts/validate_two_stage_skill_router.py",
@@ -67,6 +68,12 @@ def render_or_check(path: Path, text: str, check: bool, repo_root: Path) -> None
         return
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def load_optional_jsonl(path: Path) -> list[dict[str, Any]]:
+    if not path.exists():
+        return []
+    return load_jsonl(path)
 
 
 def expected_stage_2_mode(
@@ -141,6 +148,7 @@ def build_outputs(
     tiny_bands = load_json(generated_dir / "tiny_router_candidate_bands.json")
     tiny_signals = load_json(generated_dir / "tiny_router_skill_signals.json")
     tiny_eval_cases = load_jsonl(generated_dir / "tiny_router_eval_cases.jsonl")
+    local_precision_cases = load_optional_jsonl(routing_root / LOCAL_PRECISION_CASES_PATH)
     top_k_default = min(int(policy["defaults"]["top_k"]), resolve_stage_2_shortlist_limit(policy))
     stage_2_shortlist_limit = resolve_stage_2_shortlist_limit(policy)
     stage_1_token_budget = int(policy["defaults"]["max_stage_1_tokens"])
@@ -321,7 +329,7 @@ def build_outputs(
     examples: list[dict[str, Any]] = []
     routing_eval_cases: list[dict[str, Any]] = []
     signal_by_name = {entry["name"]: entry for entry in tiny_signals.get("skills", [])}
-    for case in tiny_eval_cases:
+    for case in [*tiny_eval_cases, *local_precision_cases]:
         preselected = preselect(
             task=case["prompt"],
             signals_doc=tiny_signals,
@@ -372,6 +380,9 @@ def build_outputs(
                 "stage_2_expectation": stage_2_expectation,
             }
         )
+        for optional_field in ("expected_confidence", "expect_fallback_candidates"):
+            if optional_field in case:
+                routing_eval_cases[-1][optional_field] = case[optional_field]
 
     manifest = {
         "schema_version": "aoa_routing_two_stage_router_manifest_v2",
@@ -396,6 +407,11 @@ def build_outputs(
             "../aoa-skills/generated/skill_capsules.json",
             "../aoa-skills/generated/local_adapter_manifest.json",
             "../aoa-skills/generated/context_retention_manifest.json",
+            *(
+                [LOCAL_PRECISION_CASES_PATH.as_posix()]
+                if local_precision_cases
+                else []
+            ),
         ],
         "skill_count": len(tiny_capsules.get("skills", [])),
         "band_count": len(tiny_bands.get("bands", [])),

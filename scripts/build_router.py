@@ -1000,9 +1000,15 @@ def build_outputs(
     profile_root: Path | None = None,
     abyss_stack_root: Path | None = None,
 ) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
-    sdk_root = sdk_root or (REPO_ROOT.parent / "aoa-sdk")
-    seed_root = seed_root or (REPO_ROOT.parent / "Dionysus")
-    profile_root = profile_root or (REPO_ROOT.parent / "8Dionysus")
+    routing_root_candidate = techniques_root.parent / "aoa-routing"
+    routing_root = (
+        routing_root_candidate
+        if (routing_root_candidate / "config" / "two_stage_router_policy.json").exists()
+        else REPO_ROOT
+    )
+    sdk_root = sdk_root or (routing_root.parent / "aoa-sdk")
+    seed_root = seed_root or (routing_root.parent / "Dionysus")
+    profile_root = profile_root or (routing_root.parent / "8Dionysus")
     abyss_stack_root = abyss_stack_root or (Path.home() / "src" / "abyss-stack")
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
         techniques_root
@@ -1104,7 +1110,7 @@ def build_outputs(
     }
     outputs.update(
         build_two_stage_outputs(
-            routing_root=REPO_ROOT,
+            routing_root=routing_root,
             skills_root=skills_root,
             tiny_model_entrypoints=tiny_model_entrypoints_payload,
             aoa_router=router_payload,
