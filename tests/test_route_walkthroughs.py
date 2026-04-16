@@ -232,6 +232,7 @@ def build_fixture_outputs(roots: dict[str, Path]) -> dict[str, dict[str, object]
         roots["Dionysus"],
         roots["8Dionysus"],
         roots["abyss-stack"],
+        FIXTURES_ROOT / "aoa-routing",
     )
 
 

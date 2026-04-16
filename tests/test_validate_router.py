@@ -198,6 +198,7 @@ def build_outputs_from_roots(roots: dict[str, Path]) -> dict[str, dict[str, obje
         roots["Dionysus"],
         roots["8Dionysus"],
         roots["abyss-stack"],
+        FIXTURES_ROOT / "aoa-routing",
     )
 
 
@@ -231,6 +232,7 @@ def validate_fixture_generated(generated_dir: Path, roots: dict[str, Path]) -> l
         roots["Dionysus"],
         roots["8Dionysus"],
         roots["abyss-stack"],
+        FIXTURES_ROOT / "aoa-routing",
     )
 
 
