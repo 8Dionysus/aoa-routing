@@ -24,15 +24,16 @@
     "../aoa-skills/generated/tiny_router_skill_signals.json",
     "../aoa-skills/generated/skill_capsules.json",
     "../aoa-skills/generated/local_adapter_manifest.json",
-    "../aoa-skills/generated/context_retention_manifest.json"
+    "../aoa-skills/generated/context_retention_manifest.json",
+    "config/two_stage_router_precision_cases.jsonl"
   ],
   "skill_count": 30,
   "band_count": 6,
   "example_count": 8,
-  "eval_case_count": 81,
+  "eval_case_count": 91,
   "base_entrypoint_count": 12,
   "router_skill_entry_count": 30,
-  "pairing_entry_count": 161,
+  "pairing_entry_count": 162,
   "task_hint_kinds": [
     "technique",
     "skill",

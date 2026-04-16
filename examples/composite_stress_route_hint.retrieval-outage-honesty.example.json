@@ -1,0 +1,105 @@
+{
+  "schema_version": "composite_stress_route_hint_v1",
+  "hint_id": "composite-stress-route:retrieval-outage-honesty",
+  "stressor_family": "retrieval-outage-honesty",
+  "owner_surface": {
+    "repo": "abyss-stack",
+    "surface": "examples/service_degradation_receipt.retrieval-outage-honesty.example.json",
+    "surface_family": "retrieval-regrounding"
+  },
+  "preferred_posture": "source_first_until_pass",
+  "input_refs": {
+    "stats_summary_ref": "aoa-stats:examples/stress_recovery_window_summary.chaos-wave1.example.json",
+    "playbook_lane_ref": "aoa-playbooks:examples/playbook_stress_lane.retrieval-outage-honesty.example.json",
+    "reentry_gate_ref": "aoa-playbooks:examples/playbook_reentry_gate.retrieval-outage-honesty.example.json",
+    "projection_health_ref": "aoa-kag:examples/projection_health_receipt.retrieval-outage-honesty.example.json",
+    "regrounding_ticket_ref": "aoa-kag:examples/regrounding_ticket.retrieval-outage-honesty.example.json",
+    "memo_pattern_refs": [
+      "aoa-memo:examples/pattern.antifragility-stress-recovery-window.example.json"
+    ]
+  },
+  "route_status": {
+    "stats_suppression_status": "none",
+    "projection_health_state": "quarantined",
+    "consumer_posture": "source_first",
+    "reentry_decision": "hold",
+    "regrounding_status": "proposed",
+    "route_discipline": 0.93,
+    "reentry_quality": 0.41,
+    "regrounding_effectiveness": null,
+    "trend_flags": [
+      "derived-surface-held-honestly",
+      "source-first-until-pass",
+      "no-fake-recovery-story"
+    ]
+  },
+  "source_priority": {
+    "owner_receipt_refs": [
+      "abyss-stack:service_degradation_receipt_v1#runtime:degrade:route-api:2026-04-13T12:55:00Z:retrieval-outage-honesty"
+    ],
+    "proof_refs": [
+      "repo:aoa-evals/docs/TRACE_EVAL_BRIDGE.md",
+      "repo:aoa-evals/bundles/aoa-stress-recovery-window/EVAL.md"
+    ],
+    "adjacent_source_refs": [
+      "aoa-playbooks:playbook_stress_lane_v1#playbook:stress-lane:runtime-chaos-recovery:retrieval-outage-honesty",
+      "aoa-playbooks:playbook_reentry_gate_v1#gate:runtime-chaos-recovery:retrieval-outage-honesty",
+      "aoa-kag:projection_health_receipt_v1#kag:health:retrieval-bridge-projection:2026-04-13T13:05:00Z"
+    ],
+    "routing_is_advisory": true
+  },
+  "next_hops": [
+    {
+      "kind": "source_receipt",
+      "target_repo": "abyss-stack",
+      "target_surface": "examples/service_degradation_receipt.retrieval-outage-honesty.example.json",
+      "reason": "Start from the owner-local runtime receipt before trusting any downstream overlay.",
+      "bounded": true
+    },
+    {
+      "kind": "playbook_lane",
+      "target_repo": "aoa-playbooks",
+      "target_surface": "examples/playbook_stress_lane.retrieval-outage-honesty.example.json",
+      "reason": "Use the structured degraded lane instead of reparsing prose.",
+      "bounded": true
+    },
+    {
+      "kind": "reentry_gate",
+      "target_repo": "aoa-playbooks",
+      "target_surface": "examples/playbook_reentry_gate.retrieval-outage-honesty.example.json",
+      "reason": "Re-entry remains source-owned by the explicit gate.",
+      "bounded": true
+    },
+    {
+      "kind": "projection_health",
+      "target_repo": "aoa-kag",
+      "target_surface": "examples/projection_health_receipt.retrieval-outage-honesty.example.json",
+      "reason": "Read the derived-surface outage from the KAG-owned health receipt.",
+      "bounded": true
+    },
+    {
+      "kind": "regrounding_ticket",
+      "target_repo": "aoa-kag",
+      "target_surface": "examples/regrounding_ticket.retrieval-outage-honesty.example.json",
+      "reason": "Reground through the bounded KAG repair plan instead of inventing a repair inside routing.",
+      "bounded": true
+    },
+    {
+      "kind": "memo_pattern",
+      "target_repo": "aoa-memo",
+      "target_surface": "examples/pattern.antifragility-stress-recovery-window.example.json",
+      "reason": "Optional reviewed recovery context may come last, after owner receipts and gates.",
+      "bounded": true
+    }
+  ],
+  "memo_context": [
+    {
+      "memory_id": "memo.pattern.2026-04-13.retrieval-outage-honesty",
+      "title": "Retrieval outage honesty keeps source-first posture until derived surfaces validate again.",
+      "source_path": "examples/pattern.antifragility-stress-recovery-window.example.json",
+      "review_state": "confirmed",
+      "current_recall_status": "preferred"
+    }
+  ],
+  "notes": "Composite hint only. It must not outrank owner receipts, playbook gates, or KAG truth."
+}

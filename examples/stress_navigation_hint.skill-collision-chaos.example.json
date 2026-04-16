@@ -1,0 +1,44 @@
+{
+  "schema_version": "stress_navigation_hint_v1",
+  "hint_id": "route:stress:two-stage-skill-selection:skill-collision-chaos",
+  "applies_to": {
+    "repo": "aoa-routing",
+    "surface": "two-stage-skill-selection",
+    "stressor_class": "ambiguous_shortlist_collision",
+    "degraded_mode": "stage_2=no-skill-or-manual",
+    "severity_at_least": "medium"
+  },
+  "preferred_posture": "human_review_first",
+  "next_hops": [
+    {
+      "kind": "generated_surface",
+      "target": "aoa-routing:generated/two_stage_router_eval_cases.jsonl",
+      "reason": "Inspect the precision-first shortlist expectations before deciding that a collision should activate anything.",
+      "bounded": true
+    },
+    {
+      "kind": "generated_surface",
+      "target": "aoa-skills:generated/description_trigger_eval_cases.jsonl",
+      "reason": "Check whether the neighboring skills are really manual, defer, or no-skill cases.",
+      "bounded": true
+    },
+    {
+      "kind": "doc",
+      "target": "aoa-routing:docs/TWO_STAGE_SKILL_SELECTION.md",
+      "reason": "Re-read the optional seam rules that keep weak shortlists at no-skill and explicit-only skills at manual.",
+      "bounded": true
+    }
+  ],
+  "evidence_inputs": [
+    "aoa-routing:two_stage_router_eval_cases.chaos-wave1",
+    "aoa-skills:description_trigger_eval_cases.chaos-wave1"
+  ],
+  "optional_context": [],
+  "confidence_band": "high",
+  "suppression": {
+    "status": "active",
+    "reason": null
+  },
+  "expires_at_utc": null,
+  "notes": "This hint is about activation discipline under collision, not about inventing a new routing authority."
+}

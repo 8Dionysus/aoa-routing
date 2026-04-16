@@ -18,28 +18,28 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-techniques
-          ref: feb395527897c1829d13fa17b911aa82b66611f7
+          ref: 2acca1012bd35e1230e90af4c727ac223be46fab
           path: aoa-techniques
 
       - name: Checkout aoa-skills
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-skills
-          ref: da85c9aac59edd081e1a3cc8ee921dcb7bf8b800
+          ref: d8ff19402ad5724e406a650f90cfd58d8424d1e8
           path: aoa-skills
 
       - name: Checkout aoa-evals
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-evals
-          ref: 9b7a0ae939bc53fa542f468b2b858cd13bb4e5a9
+          ref: 2b5fda73e31d5c24a5b687c5f5d3d33a6bf9f92c
           path: aoa-evals
 
       - name: Checkout aoa-stats
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-stats
-          ref: 0e283be6d9dd6f5a6b344add7cb8bf4169c8d9a6
+          ref: b7a8b0b33140375250e58cd0dc3f27ae7b7b20ca
           path: aoa-stats
 
       - name: Checkout aoa-memo
@@ -67,14 +67,14 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-playbooks
-          ref: 2b44951197fe1adb5c7310eed7c791feb221cd89
+          ref: 95b910b9cf2b2a2deff9434f3c9a2fc014b20580
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/aoa-kag
-          ref: 5ae3d687147affaba77dba6320184849a86ea173
+          ref: a4f84f53d5f7a671d4b7f3887b928d7c908c3d93
           path: aoa-kag
 
       - name: Checkout Tree-of-Sophia
@@ -109,7 +109,7 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           repository: 8Dionysus/abyss-stack
-          ref: 8ddb76945613012be20de0b5d7f2920393fad107
+          ref: 9136f7145ffb506ed086be10da0aa3d5e4589a9c
           path: abyss-stack
 
       - name: Setup Python

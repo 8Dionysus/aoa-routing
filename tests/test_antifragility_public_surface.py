@@ -20,6 +20,20 @@ def test_stress_navigation_example_validates_against_schema() -> None:
     Draft202012Validator(schema).validate(example)
 
 
+def test_timeout_chaos_stress_navigation_example_validates_against_schema() -> None:
+    schema = load_json("schemas/stress_navigation_hint_v1.json")
+    example = load_json("examples/stress_navigation_hint.timeout-chaos.example.json")
+
+    Draft202012Validator(schema).validate(example)
+
+
+def test_skill_collision_chaos_stress_navigation_example_validates_against_schema() -> None:
+    schema = load_json("schemas/stress_navigation_hint_v1.json")
+    example = load_json("examples/stress_navigation_hint.skill-collision-chaos.example.json")
+
+    Draft202012Validator(schema).validate(example)
+
+
 def test_composite_stress_route_hint_example_validates_against_schema() -> None:
     schema = load_json("schemas/composite_stress_route_hint_v1.json")
     example = load_json("examples/composite_stress_route_hint.example.json")
@@ -27,9 +41,17 @@ def test_composite_stress_route_hint_example_validates_against_schema() -> None:
     Draft202012Validator(schema).validate(example)
 
 
+def test_retrieval_outage_honesty_composite_example_validates_against_schema() -> None:
+    schema = load_json("schemas/composite_stress_route_hint_v1.json")
+    example = load_json("examples/composite_stress_route_hint.retrieval-outage-honesty.example.json")
+
+    Draft202012Validator(schema).validate(example)
+
+
 def test_antifragility_surfaces_are_discoverable_and_keep_routing_thin() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     routing_doc = (REPO_ROOT / "docs" / "STRESS_POSTURE_ROUTING.md").read_text(encoding="utf-8")
+    chaos_doc = (REPO_ROOT / "docs" / "ROUTING_STRESS_CHAOS_WAVE1.md").read_text(encoding="utf-8")
     degraded_doc = (REPO_ROOT / "docs" / "DEGRADED_ROUTE_HINTS.md").read_text(encoding="utf-8")
     playbook_doc = (REPO_ROOT / "docs" / "PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md").read_text(
         encoding="utf-8"
@@ -41,17 +63,24 @@ def test_antifragility_surfaces_are_discoverable_and_keep_routing_thin() -> None
     for fragment in [
         "docs/STRESS_POSTURE_ROUTING.md",
         "docs/DEGRADED_ROUTE_HINTS.md",
+        "docs/ROUTING_STRESS_CHAOS_WAVE1.md",
         "schemas/stress_navigation_hint_v1.json",
         "examples/stress_navigation_hint.example.json",
+        "examples/stress_navigation_hint.timeout-chaos.example.json",
+        "examples/stress_navigation_hint.skill-collision-chaos.example.json",
         "generated/composite_stress_route_hints.min.json",
         "docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md",
         "docs/KAG_QUARANTINE_ROUTE_HINTS.md",
         "schemas/composite_stress_route_hint_v1.json",
         "examples/composite_stress_route_hint.example.json",
+        "examples/composite_stress_route_hint.retrieval-outage-honesty.example.json",
+        "config/two_stage_router_precision_cases.jsonl",
     ]:
         assert fragment in readme
 
     assert "do not make routing the source of stress meaning" in routing_doc
+    assert "Do not turn `aoa-routing` into a health oracle" in chaos_doc
+    assert "weak or empty shortlist -> `no-skill`" in chaos_doc
     assert "They are a stress overlay, not a new sovereign router." in degraded_doc
     assert "Use structured playbook lane and re-entry gate surfaces, not live `PLAYBOOK.md` parsing." in playbook_doc
     assert "Quarantine hints stay additive and never replace KAG authored truth." in kag_doc

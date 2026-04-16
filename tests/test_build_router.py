@@ -68,6 +68,7 @@ def build_fixture_outputs(
     seed_root: Path = FIXTURES_ROOT / "Dionysus",
     profile_root: Path = FIXTURES_ROOT / "8Dionysus",
     abyss_stack_root: Path = FIXTURES_ROOT / "abyss-stack",
+    routing_root: Path = FIXTURES_ROOT / "aoa-routing",
 ) -> dict[str, dict[str, object]]:
     return build_router.build_outputs(
         techniques_root,
@@ -84,6 +85,7 @@ def build_fixture_outputs(
         seed_root,
         profile_root,
         abyss_stack_root,
+        routing_root,
     )
 
 
@@ -1494,6 +1496,23 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
             "target_value": "AOA-T-0019",
         },
     ]
+
+
+def test_build_outputs_keeps_routing_root_pinned_instead_of_inferring_from_techniques_parent(tmp_path: Path) -> None:
+    foreign_workspace = tmp_path / "foreign-workspace"
+    techniques_root = foreign_workspace / "aoa-techniques"
+    foreign_routing_root = foreign_workspace / "aoa-routing"
+    shutil.copytree(FIXTURES_ROOT / "aoa-techniques", techniques_root)
+    shutil.copytree(FIXTURES_ROOT / "aoa-routing", foreign_routing_root)
+
+    foreign_policy_path = foreign_routing_root / "config" / "two_stage_router_policy.json"
+    foreign_policy = json.loads(foreign_policy_path.read_text(encoding="utf-8"))
+    foreign_policy["defaults"]["max_stage_2_shortlist"] = 1
+    write_json(foreign_policy_path, foreign_policy)
+
+    outputs = build_fixture_outputs(techniques_root=techniques_root)
+
+    assert outputs["two_stage_skill_entrypoints.json"]["stage_2"]["max_shortlist"] == 3
 
 
 def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(tmp_path: Path) -> None:

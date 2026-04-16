@@ -1252,6 +1252,7 @@ def validate_rebuild_parity(
     seed_root: Path,
     profile_root: Path,
     abyss_stack_root: Path,
+    routing_root: Path,
     issues: list[ValidationIssue],
 ) -> None:
     try:
@@ -1270,6 +1271,7 @@ def validate_rebuild_parity(
             seed_root.resolve(),
             profile_root.resolve(),
             abyss_stack_root.resolve(),
+            routing_root.resolve(),
         )
     except RouterError as exc:
         issues.append(
@@ -5316,9 +5318,11 @@ def validate_generated_outputs(
     seed_root: Path | None = None,
     profile_root: Path | None = None,
     abyss_stack_root: Path | None = None,
+    routing_root: Path | None = None,
 ) -> list[ValidationIssue]:
     issues: list[ValidationIssue] = []
     generated_dir = generated_dir.resolve()
+    routing_root = (routing_root or REPO_ROOT).resolve()
     sdk_root = (sdk_root or (REPO_ROOT.parent / "aoa-sdk")).resolve()
     seed_root = (seed_root or (REPO_ROOT.parent / "Dionysus")).resolve()
     profile_root = (profile_root or (REPO_ROOT.parent / "8Dionysus")).resolve()
@@ -5418,6 +5422,7 @@ def validate_generated_outputs(
         seed_root,
         profile_root,
         abyss_stack_root,
+        routing_root,
         issues,
     )
 
