@@ -12,108 +12,108 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout routing repo
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
       - name: Checkout aoa-techniques
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-techniques
           ref: 2acca1012bd35e1230e90af4c727ac223be46fab
           path: aoa-techniques
 
       - name: Checkout aoa-skills
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-skills
           ref: d8ff19402ad5724e406a650f90cfd58d8424d1e8
           path: aoa-skills
 
       - name: Checkout aoa-evals
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-evals
           ref: 2b5fda73e31d5c24a5b687c5f5d3d33a6bf9f92c
           path: aoa-evals
 
       - name: Checkout aoa-stats
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-stats
           ref: b7a8b0b33140375250e58cd0dc3f27ae7b7b20ca
           path: aoa-stats
 
       - name: Checkout aoa-memo
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-memo
           ref: 1dd85f6beb66fb8c518c4aac1727dee7c4055b29
           path: aoa-memo
 
       - name: Checkout aoa-agents
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-agents
           ref: 07bca3e91bca485334ae9664eecbf250102008af
           path: aoa-agents
 
       - name: Checkout Agents-of-Abyss
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/Agents-of-Abyss
           ref: b7330640ddbe7df0629ddcec2eaa1d22b8692555
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-playbooks
           ref: 95b910b9cf2b2a2deff9434f3c9a2fc014b20580
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-kag
           ref: a4f84f53d5f7a671d4b7f3887b928d7c908c3d93
           path: aoa-kag
 
       - name: Checkout Tree-of-Sophia
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/Tree-of-Sophia
           ref: 65149c62707af845be931c59b268ca9a5f154075
           path: Tree-of-Sophia
 
       - name: Checkout aoa-sdk
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-sdk
           ref: 9609e776a567140f686c7a52240c845352225148
           path: aoa-sdk
 
       - name: Checkout Dionysus
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/Dionysus
           ref: f945bfee73bed8762971b996374c3330389a2527
           path: Dionysus
 
       - name: Checkout 8Dionysus
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/8Dionysus
           ref: e56d5dc94ac1f5ca7cfb2995e0a51bd2239ea4a5
           path: 8Dionysus
 
       - name: Checkout abyss-stack
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/abyss-stack
           ref: 9136f7145ffb506ed086be10da0aa3d5e4589a9c
           path: abyss-stack
 
       - name: Setup Python
-        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.12"
 
