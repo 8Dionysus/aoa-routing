@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-evals
-          ref: 83e187c6c422818ae46a0b3d35bc6eef85f0b3f9
+          ref: 278a1ce9fc66847246cad33deff91805b2f07845
           path: aoa-evals
 
       - name: Checkout aoa-stats
