@@ -83,12 +83,17 @@ def test_validator_forbids_live_tos_promotion_token():
     assert "promote_to_tos" in validator.FORBIDDEN_ASSISTANT_RIGHTS
 
 
-def test_validator_reads_center_lawful_move_names_when_available():
+def test_validator_reads_center_lawful_move_names_when_available(tmp_path):
     validator = load_validator()
+    center_registry = tmp_path / "agon_lawful_move_registry.min.json"
+    center_registry.write_text(
+        json.dumps({"moves": [{"name": "escalate_to_agon_gate"}]}),
+        encoding="utf-8",
+    )
+    validator.CENTER_LAWFUL_MOVE_REGISTRY_PATH = center_registry
     move_names = validator.load_center_lawful_move_names()
 
-    assert move_names is not None
-    assert "escalate_to_agon_gate" in move_names
+    assert move_names == {"escalate_to_agon_gate"}
 
 
 def test_agon_gate_validator_passes_current_registry():
