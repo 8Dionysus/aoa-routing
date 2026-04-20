@@ -4,12 +4,20 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
+
+from jsonschema import Draft202012Validator
+from referencing import Resource, Registry
 
 ROOT = Path(__file__).resolve().parents[1]
 REGISTRY_PATH = ROOT / "generated" / "agon_gate_routing_registry.min.json"
 CONFIG_PATH = ROOT / "config" / "agon_gate_routing.seed.json"
+SCHEMA_NAME = "agon-gate-routing-registry.schema.json"
+CENTER_LAWFUL_MOVE_REGISTRY_PATH = (
+    ROOT.parent / "Agents-of-Abyss" / "generated" / "agon_lawful_move_registry.min.json"
+)
 
 FORBIDDEN_HINT_FIELDS = {
     "arena_session",
@@ -35,6 +43,63 @@ FORBIDDEN_ASSISTANT_RIGHTS = {
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
+
+
+@lru_cache(maxsize=None)
+def load_schema(schema_name: str) -> dict[str, Any]:
+    return load_json(ROOT / "schemas" / schema_name)
+
+
+@lru_cache(maxsize=None)
+def get_schema_registry() -> Registry:
+    resources: list[tuple[str, Resource]] = []
+    for schema_path in sorted((ROOT / "schemas").glob("*.schema.json")):
+        schema = load_schema(schema_path.name)
+        schema_id = schema.get("$id")
+        if isinstance(schema_id, str) and schema_id.strip():
+            resources.append((schema_id, Resource.from_contents(schema)))
+    return Registry().with_resources(resources)
+
+
+@lru_cache(maxsize=None)
+def get_schema_validator() -> Draft202012Validator:
+    return Draft202012Validator(load_schema(SCHEMA_NAME), registry=get_schema_registry())
+
+
+def format_schema_path(path_parts: list[object]) -> str:
+    rendered: list[str] = []
+    for part in path_parts:
+        if isinstance(part, int):
+            rendered.append(f"[{part}]")
+        elif rendered:
+            rendered.append(f".{part}")
+        else:
+            rendered.append(str(part))
+    return "".join(rendered) or "<root>"
+
+
+def validate_registry_schema(registry: dict[str, Any]) -> None:
+    errors = sorted(
+        get_schema_validator().iter_errors(registry),
+        key=lambda error: list(error.absolute_path),
+    )
+    if errors:
+        first = errors[0]
+        raise AssertionError(
+            f"schema violation at {format_schema_path(list(first.absolute_path))}: {first.message}"
+        )
+
+
+def load_center_lawful_move_names() -> set[str] | None:
+    if not CENTER_LAWFUL_MOVE_REGISTRY_PATH.exists():
+        return None
+    data = load_json(CENTER_LAWFUL_MOVE_REGISTRY_PATH)
+    move_names = {
+        move.get("name")
+        for move in data.get("moves", [])
+        if isinstance(move, dict) and isinstance(move.get("name"), str)
+    }
+    return move_names or None
 
 
 def require(condition: bool, message: str) -> None:
@@ -75,6 +140,7 @@ def main() -> int:
 
     config = load_json(CONFIG_PATH)
     registry = load_json(REGISTRY_PATH)
+    validate_registry_schema(registry)
 
     require(registry["schema_version"] == "agon_gate_routing_registry.v1", "wrong schema version")
     require(registry["owner_repo"] == "aoa-routing", "routing registry must be owned by aoa-routing")
@@ -90,6 +156,14 @@ def main() -> int:
     require(len(hint_ids) == len(set(hint_ids)), "duplicate hint_id")
 
     lawful_moves = set(config["lawful_moves_known"])
+    center_lawful_moves = load_center_lawful_move_names()
+    if center_lawful_moves is not None:
+        drift = sorted(lawful_moves - center_lawful_moves)
+        require(
+            not drift,
+            f"config lawful_moves_known drift from center registry: {drift}",
+        )
+        lawful_moves = center_lawful_moves
     require("escalate_to_agon_gate" in lawful_moves, "missing escalate_to_agon_gate lawful move")
 
     trigger_by_id = {trigger["trigger_id"]: trigger for trigger in registry["triggers"]}

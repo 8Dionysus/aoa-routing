@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -79,3 +81,27 @@ def test_validator_forbids_live_tos_promotion_token():
     validator = load_validator()
 
     assert "promote_to_tos" in validator.FORBIDDEN_ASSISTANT_RIGHTS
+
+
+def test_validator_reads_center_lawful_move_names_when_available(tmp_path):
+    validator = load_validator()
+    center_registry = tmp_path / "agon_lawful_move_registry.min.json"
+    center_registry.write_text(
+        json.dumps({"moves": [{"name": "escalate_to_agon_gate"}]}),
+        encoding="utf-8",
+    )
+    validator.CENTER_LAWFUL_MOVE_REGISTRY_PATH = center_registry
+    move_names = validator.load_center_lawful_move_names()
+
+    assert move_names == {"escalate_to_agon_gate"}
+
+
+def test_agon_gate_validator_passes_current_registry():
+    result = subprocess.run(
+        [sys.executable, str(ROOT / "scripts" / "validate_agon_gate_routing.py")],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert result.returncode == 0, result.stderr + result.stdout

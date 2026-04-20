@@ -9,9 +9,8 @@
         "review_signal"
       ],
       "match_signals": [
-        "gate_trigger_repeated",
-        "agon_gate_candidate_repeated",
-        "missing_context_repeated"
+        "agon_stop_line_repeated",
+        "agon_recurrence_surface_seen"
       ],
       "notes": "Repeated gate candidates are routing pressure, not arena activation.",
       "observation_inputs": [
@@ -48,13 +47,11 @@
         "overclaim_risk"
       ],
       "match_signals": [
-        "routing_claims_verdict",
-        "routing_claims_session_creation",
-        "routing_claims_scar_write"
+        "live_protocol_claim_present"
       ],
       "notes": "Routing must not become arena sovereignty.",
       "observation_inputs": [
-        "agon-gate-routing-docs"
+        "agon-gate-routing-registry"
       ],
       "recommended_actions": [
         "quarantine routing overclaim",
@@ -67,7 +64,6 @@
         "review_ready"
       ],
       "suppress_when": [
-        "live_protocol_claim_present",
         "hidden_authority_detected"
       ],
       "target_repo": "aoa-routing",
@@ -150,7 +146,8 @@
       "kind": "review_note",
       "notes": "Routing stop-lines and assistant escalation docs.",
       "path_globs": [
-        "docs/AGON_GATE_*.md"
+        "docs/AGON_GATE_*.md",
+        "docs/AGON_RECURRENCE_ADAPTER.md"
       ]
     }
   ],
