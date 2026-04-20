@@ -34,9 +34,12 @@
             "mode": "any",
             "notes": "documentation repeats a pre-protocol stop-line",
             "phrases": [
-              "no verdict",
-              "no scar",
-              "no arena"
+              "arena session",
+              "verdict",
+              "scar",
+              "retention schedule",
+              "grant closure",
+              "grant summon authority"
             ],
             "signal": "agon_stop_line_repeated"
           }
@@ -100,9 +103,12 @@
             "mode": "any",
             "notes": "documentation repeats a pre-protocol stop-line",
             "phrases": [
-              "no verdict",
-              "no scar",
-              "no arena"
+              "arena session",
+              "verdict",
+              "scar",
+              "retention schedule",
+              "grant closure",
+              "grant summon authority"
             ],
             "signal": "agon_stop_line_repeated"
           }
@@ -114,7 +120,8 @@
       "notes": "Observation only. This hook binding must not create arena sessions, verdicts, scars, or automatic owner mutations.",
       "owner_repo": "aoa-routing",
       "path_globs": [
-        "docs/AGON_GATE_*.md"
+        "docs/AGON_GATE_*.md",
+        "docs/AGON_RECURRENCE_ADAPTER.md"
       ],
       "producer": "harvest_pattern_watch",
       "signal_rules": [
