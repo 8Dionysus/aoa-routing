@@ -1,0 +1,196 @@
+{
+  "beacon_rules": [
+    {
+      "beacon_ref": "agon.routing.gate_trigger_recurrence",
+      "decision_surface": "docs/AGON_GATE_ROUTING.md",
+      "kind": "automation_seed_candidate",
+      "match_categories": [
+        "repeat_pattern",
+        "review_signal"
+      ],
+      "match_signals": [
+        "gate_trigger_repeated",
+        "agon_gate_candidate_repeated",
+        "missing_context_repeated"
+      ],
+      "notes": "Repeated gate candidates are routing pressure, not arena activation.",
+      "observation_inputs": [
+        "agon-gate-routing-registry"
+      ],
+      "recommended_actions": [
+        "refresh gate routing registry",
+        "handoff candidate pressure to center; do not open arena"
+      ],
+      "status_ladder": [
+        "hint",
+        "watch",
+        "candidate",
+        "review_ready"
+      ],
+      "suppress_when": [
+        "live_protocol_claim_present",
+        "hidden_authority_detected"
+      ],
+      "target_repo": "aoa-routing",
+      "thresholds": {
+        "candidate_observations": 2,
+        "min_unique_evidence_refs": 2,
+        "min_unique_sources": 2,
+        "review_ready_observations": 3,
+        "watch_observations": 1
+      }
+    },
+    {
+      "beacon_ref": "agon.routing.arena_authority_overclaim",
+      "decision_surface": "docs/AGON_GATE_DECISION_BOUNDARY.md",
+      "kind": "overclaim_alarm",
+      "match_categories": [
+        "overclaim_risk"
+      ],
+      "match_signals": [
+        "routing_claims_verdict",
+        "routing_claims_session_creation",
+        "routing_claims_scar_write"
+      ],
+      "notes": "Routing must not become arena sovereignty.",
+      "observation_inputs": [
+        "agon-gate-routing-docs"
+      ],
+      "recommended_actions": [
+        "quarantine routing overclaim",
+        "restore thin gate boundary"
+      ],
+      "status_ladder": [
+        "hint",
+        "watch",
+        "candidate",
+        "review_ready"
+      ],
+      "suppress_when": [
+        "live_protocol_claim_present",
+        "hidden_authority_detected"
+      ],
+      "target_repo": "aoa-routing",
+      "thresholds": {
+        "candidate_observations": 2,
+        "min_unique_evidence_refs": 2,
+        "min_unique_sources": 2,
+        "review_ready_observations": 3,
+        "watch_observations": 1
+      }
+    }
+  ],
+  "candidate_targets": [
+    "generated/agon_gate_routing_registry.min.json"
+  ],
+  "component_ref": "component:agon:gate-routing-surfaces",
+  "consumer_edges": [
+    {
+      "kind": "handoff_home",
+      "notes": "Owner remains the review home for its own Agon recurrence signals.",
+      "required": true,
+      "suggested_action": "observe",
+      "suggested_commands": [],
+      "target": "docs/AGON_RECURRENCE_ADAPTER.md",
+      "target_repo": "aoa-routing"
+    }
+  ],
+  "contract_surfaces": [
+    "docs/AGON_GATE_ROUTING.md",
+    "docs/AGON_GATE_TRIGGER_MODEL.md",
+    "docs/AGON_GATE_DECISION_BOUNDARY.md",
+    "docs/AGON_GATE_ASSISTANT_ESCALATION.md",
+    "docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md",
+    "docs/AGON_RECURRENCE_ADAPTER.md"
+  ],
+  "decision_surfaces": [
+    "docs/AGON_GATE_ROUTING.md",
+    "docs/AGON_GATE_TRIGGER_MODEL.md"
+  ],
+  "description": "Pre-protocol Agon gate routing surfaces that detect when ordinary routing may no longer be honest.",
+  "documentation_surfaces": [
+    "docs/AGON_GATE_ROUTING.md",
+    "docs/AGON_GATE_TRIGGER_MODEL.md",
+    "docs/AGON_GATE_DECISION_BOUNDARY.md",
+    "docs/AGON_GATE_ASSISTANT_ESCALATION.md",
+    "docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md",
+    "docs/AGON_RECURRENCE_ADAPTER.md"
+  ],
+  "drift_signals": [
+    {
+      "recommended_action": "revalidate",
+      "severity": "medium",
+      "signal": "agon_surface_changed_without_recurrence_review"
+    },
+    {
+      "recommended_action": "defer",
+      "severity": "high",
+      "signal": "agon_stop_line_blur_detected"
+    }
+  ],
+  "freshness": {
+    "open_window_days": 7,
+    "repeat_trigger_threshold": 2,
+    "stale_after_days": 14
+  },
+  "generated_surfaces": [
+    "generated/agon_gate_routing_registry.min.json"
+  ],
+  "observation_inputs": [
+    {
+      "input_ref": "agon-gate-routing-registry",
+      "kind": "trigger_eval",
+      "notes": "Gate trigger registry and decision states.",
+      "path_globs": [
+        "generated/agon_gate_routing_registry.min.json"
+      ]
+    },
+    {
+      "input_ref": "agon-gate-routing-docs",
+      "kind": "review_note",
+      "notes": "Routing stop-lines and assistant escalation docs.",
+      "path_globs": [
+        "docs/AGON_GATE_*.md"
+      ]
+    }
+  ],
+  "owner_repo": "aoa-routing",
+  "proof_surfaces": [
+    "python scripts/validate_agon_gate_routing.py"
+  ],
+  "refresh_routes": [
+    {
+      "action": "revalidate",
+      "commands": [
+        "python scripts/validate_agon_gate_routing.py"
+      ],
+      "notes": "Owner-local validation path. Recurrence may suggest this route; it must not run it as hidden authority."
+    }
+  ],
+  "rollback_anchors": [
+    "docs/AGON_GATE_ROUTING.md",
+    "docs/AGON_GATE_TRIGGER_MODEL.md"
+  ],
+  "schema_version": "aoa_recurrence_component_v2",
+  "signal_edges": [
+    {
+      "kind": "summarized_by",
+      "notes": "Center receives gate hints; routing does not activate arena.",
+      "target": "component:agon:center-surfaces",
+      "target_repo": "Agents-of-Abyss"
+    },
+    {
+      "kind": "composed_by_playbook",
+      "notes": "Trials may use gate triggers as scenario inputs.",
+      "target": "component:agon:trial-playbook-surfaces",
+      "target_repo": "aoa-playbooks"
+    }
+  ],
+  "source_inputs": [],
+  "tags": [
+    "agon",
+    "routing",
+    "gate",
+    "recurrence"
+  ]
+}
