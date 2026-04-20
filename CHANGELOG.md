@@ -7,6 +7,40 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-04-19
+
+### Summary
+
+- this patch adds chaos-wave routing stress hints, A2A summon return
+  navigation, and stronger owner-first readiness routes
+- routing release posture, sibling pins, pull request intake, and
+  required-check plus Node24 workflow refs are aligned with the current
+  federation state
+- `aoa-routing` remains a thin navigation and dispatch layer rather than an
+  owner-truth surface
+
+### Added
+
+- chaos wave 1 routing stress hints and A2A summon return plus
+  memory-readiness owner-first navigation surfaces
+- a GitHub pull request template and refreshed quest dispatch hints for the
+  current routing wave
+
+### Changed
+
+- release-audit sibling pins, roadmap/current-direction docs,
+  required-check wiring, and Node24 workflow refs are refreshed around the
+  active routing contour
+
+### Validation
+
+- `python scripts/release_check.py`
+
+### Notes
+
+- this patch refreshes routing hints and release posture without widening
+  router authority into owner semantics
+
 ## [0.2.0] - 2026-04-10
 
 ### Summary

@@ -9,7 +9,7 @@ The governing rule stays unchanged:
 
 ## Current Release Contour
 
-The current release contour is `v0.2.0`.
+The current release contour is `v0.2.1`.
 It already carries:
 
 - federation-mesh entry capsules, owner-capsule routing, and checkpoint-starter
