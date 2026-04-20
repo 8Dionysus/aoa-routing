@@ -20,6 +20,9 @@ Key schemas here include:
 - `pairing-hints.schema.json`
 - `kag-source-lift-relation-hints.schema.json`
 - `federation-entrypoints.schema.json`
+- `agon-gate-routing-registry.schema.json`
+- `agon-gate-trigger.schema.json`
+- `agon-gate-route-hint.schema.json`
 - `tiny-model-entrypoints.schema.json`
 
 ## Editing posture
@@ -43,6 +46,8 @@ If a breaking change is necessary, call it out explicitly in the final report.
 After schema edits, run:
 
 ```bash
+python scripts/build_agon_gate_routing_registry.py --check
+python scripts/validate_agon_gate_routing.py
 python scripts/validate_router.py
 pytest tests
 ```

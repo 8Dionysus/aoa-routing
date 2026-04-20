@@ -19,6 +19,7 @@ The current generated set includes:
 - `kag_source_lift_relation_hints.min.json` as bounded direct relation hints for the KAG/source-lift seam
 - `pairing_hints.min.json` as bounded pair suggestions
 - `federation_entrypoints.min.json` as the federation-entry orientation surface
+- `agon_gate_routing_registry.min.json` as the pre-protocol Wave V gate-routing surface
 - `tiny_model_entrypoints.json` as the compact starter and query seam for low-context routing
 
 ## Editing posture
@@ -43,6 +44,8 @@ After changing generation logic or any upstream routing contract, run:
 python scripts/build_router.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/build_agon_gate_routing_registry.py --check
+python scripts/validate_agon_gate_routing.py
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
 python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests

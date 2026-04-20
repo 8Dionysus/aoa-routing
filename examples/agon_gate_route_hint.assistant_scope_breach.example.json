@@ -1,0 +1,44 @@
+{
+  "assistant_allowed": [
+    "flag_scope_breach",
+    "prepare_receipt",
+    "handoff"
+  ],
+  "assistant_forbidden": [
+    "become_contestant",
+    "issue_verdict",
+    "self_promote"
+  ],
+  "decision_state": "agon_gate_candidate",
+  "hint_id": "agon_gate.assistant_scope_breach.v1",
+  "live_protocol": false,
+  "primary_next_hop": "aoa-agents",
+  "recommended_lawful_moves": [
+    "flag_scope_breach",
+    "request_witness",
+    "escalate_to_agon_gate"
+  ],
+  "routing_action": "route_to_agonic_actor_or_gate_candidate",
+  "routing_must_not_own": [
+    "no_arena_session_creation",
+    "no_sealed_commit",
+    "no_verdict",
+    "no_scar_write",
+    "no_retention_scheduling",
+    "no_rank_mutation",
+    "no_tos_promotion",
+    "no_runtime_dispatch_authority",
+    "no_source_meaning_rewrite"
+  ],
+  "routing_owns": [
+    "thin pre-protocol gate hint",
+    "next-hop orientation"
+  ],
+  "runtime_effect": "none",
+  "secondary_next_hops": [
+    "Agents-of-Abyss",
+    "aoa-routing"
+  ],
+  "trigger_class": "assistant",
+  "trigger_id": "assistant_scope_breach"
+}

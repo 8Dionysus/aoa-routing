@@ -45,3 +45,17 @@ def test_contributor_and_agent_surfaces_use_exact_verify_commands() -> None:
         text = read_text(relative_path)
         for fragment in expected_fragments:
             assert fragment in text, f"{relative_path} missing {fragment}"
+
+
+def test_readme_and_roadmap_expose_agon_gate_routing_surfaces() -> None:
+    readme = read_text("README.md")
+    roadmap = read_text("ROADMAP.md")
+    changelog = read_text("CHANGELOG.md")
+    registry = read_text("generated/agon_gate_routing_registry.min.json")
+
+    assert "generated/agon_gate_routing_registry.min.json" in readme
+    assert "docs/AGON_GATE_ROUTING.md" in readme
+    assert "Agon gate routing" in roadmap
+    assert "Agon gate routing" in changelog
+    assert "\"live_protocol\":false" in registry
+    assert "\"runtime_effect\":\"none\"" in registry

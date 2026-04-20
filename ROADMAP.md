@@ -209,6 +209,48 @@ It must not own:
 - activation authority
 - a second skill canon hidden inside router examples or prompt blocks
 
+### Milestone 10: Agon gate routing
+
+Land as one additive pre-protocol routing family:
+
+- `generated/agon_gate_routing_registry.min.json`
+- `docs/AGON_GATE_ROUTING.md`
+- `docs/AGON_GATE_TRIGGER_MODEL.md`
+- `docs/AGON_GATE_DECISION_BOUNDARY.md`
+- `docs/AGON_GATE_ASSISTANT_ESCALATION.md`
+- `docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md`
+- `schemas/agon-gate-routing-registry.schema.json`
+- `schemas/agon-gate-trigger.schema.json`
+- `schemas/agon-gate-route-hint.schema.json`
+- `config/agon_gate_routing.seed.json`
+- `examples/agon_gate_route_hint.example.json`
+- `scripts/build_agon_gate_routing_registry.py`
+- `scripts/validate_agon_gate_routing.py`
+- `tests/test_agon_gate_routing.py`
+
+This wave should publish trigger classes, decision states, route hints, and
+center-facing stop-lines for when ordinary routing is no longer enough and a
+pre-protocol Agon gate candidate should be emitted.
+
+`aoa-routing` should own:
+
+- thin pre-protocol gate hints
+- next-hop orientation
+- missing-context and owner-review routing hints
+- quarantine hints for boundary breaches
+- assistant escalation posture that stops cleanly instead of hiding drift
+
+It must not own:
+
+- arena activation
+- verdicts
+- scars or delta history
+- retention scheduling
+- rank mutation
+- closure or summon authority
+- ToS promotion
+- center-owned Agon law
+
 ## Boundaries To Preserve
 
 These boundaries come directly from the seed and should remain hard constraints:
@@ -232,6 +274,7 @@ These boundaries come directly from the seed and should remain hard constraints:
 - declared federation kinds must stay documented but inactive until their contracts are narrower and more stable
 - the federation entry ABI must stay additive beside the thin router core instead of replacing it
 - the two-stage skill-selection seam must stay additive beside flat routing rather than replacing `tiny_model_entrypoints.json`
+- the Agon gate-routing seam must stay additive beside the thin router core and must never treat a gate hint as arena activation
 - `aoa-skills` must merge source-owned bridge surfaces before downstream two-stage routing changes can be treated as green on GitHub checks that read sibling repos from `main`
 
 ## Definition Of Success
