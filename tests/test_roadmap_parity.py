@@ -50,3 +50,28 @@ def test_roadmap_matches_current_v0_2_release_surfaces() -> None:
     assert "federation-mesh" in changelog
     assert "technique-kind second-cut" in roadmap
     assert "roadmap drift" in roadmap
+
+
+def test_roadmap_names_agon_gate_routing_surfaces() -> None:
+    roadmap = read_text("ROADMAP.md")
+
+    assert "### Milestone 10: Agon gate routing" in roadmap
+
+    for relative_path in (
+        "generated/agon_gate_routing_registry.min.json",
+        "docs/AGON_GATE_ROUTING.md",
+        "docs/AGON_GATE_TRIGGER_MODEL.md",
+        "docs/AGON_GATE_DECISION_BOUNDARY.md",
+        "docs/AGON_GATE_ASSISTANT_ESCALATION.md",
+        "docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md",
+        "schemas/agon-gate-routing-registry.schema.json",
+        "schemas/agon-gate-trigger.schema.json",
+        "schemas/agon-gate-route-hint.schema.json",
+        "config/agon_gate_routing.seed.json",
+        "examples/agon_gate_route_hint.example.json",
+        "scripts/build_agon_gate_routing_registry.py",
+        "scripts/validate_agon_gate_routing.py",
+        "tests/test_agon_gate_routing.py",
+    ):
+        assert (REPO_ROOT / relative_path).is_file()
+        assert relative_path in roadmap

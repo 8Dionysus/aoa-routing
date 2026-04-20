@@ -75,6 +75,12 @@ Then branch by task:
   `docs/DEGRADED_ROUTE_HINTS.md`,
   `docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md`, and
   `docs/KAG_QUARANTINE_ROUTE_HINTS.md`
+- Agon gate routing:
+  `docs/AGON_GATE_ROUTING.md`,
+  `docs/AGON_GATE_TRIGGER_MODEL.md`,
+  `docs/AGON_GATE_DECISION_BOUNDARY.md`,
+  `docs/AGON_GATE_ASSISTANT_ESCALATION.md`, and
+  `docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md`
 - stage-two skill routing:
   the `two_stage_*` generated family and
   `docs/TWO_STAGE_SKILL_SELECTION.md`
@@ -92,6 +98,8 @@ The most important objects in this repository are:
 - `scripts/build_router.py`
 - `scripts/router_core.py`
 - `scripts/validate_router.py`
+- `scripts/build_agon_gate_routing_registry.py`
+- `scripts/validate_agon_gate_routing.py`
 - `scripts/build_two_stage_skill_router.py`
 - `scripts/validate_two_stage_skill_router.py`
 - `schemas/*`
@@ -122,7 +130,7 @@ State:
 - what routing surface or script is changing
 - which source repositories are affected
 - whether output shape changes
-- whether stage-two, stress, return, or quest-style adjunct surfaces are changing
+- whether stage-two, stress, return, Agon gate, or quest-style adjunct surfaces are changing
 - what boundary risk exists
 
 ### DIFF
@@ -154,6 +162,7 @@ Confirm that:
 - inspect and expand targets still point to source-owned surfaces
 - no output behaves like a second source of truth
 - quest-board, stress, and return surfaces remain advisory
+- Agon gate surfaces remain pre-protocol and center-respecting
 - stage 1 never becomes activation authority
 
 ### REPORT

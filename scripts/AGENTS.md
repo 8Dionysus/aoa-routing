@@ -9,6 +9,8 @@ This file applies to Python tooling under `scripts/`.
 - `build_router.py` writes the derived routing surfaces
 - `router_core.py` holds shared constants, loaders, and derivation helpers
 - `validate_router.py` enforces schema integrity, rebuild parity, and bounded cross-repo routing rules
+- `build_agon_gate_routing_registry.py` writes the additive Wave V gate-routing surface
+- `validate_agon_gate_routing.py` enforces the pre-protocol gate-routing stop-lines
 
 The controlling doctrine still applies here in full:
 
@@ -30,6 +32,7 @@ Use extra care when touching:
 - inspect and expand target derivation
 - pairing logic
 - federation-entry seams
+- Agon gate-routing stop-lines and decision states
 - task-to-tier dispatch logic
 - rebuild parity expectations in `validate_router.py`
 
@@ -44,6 +47,8 @@ After script changes, run the normal build and validation path:
 python scripts/build_router.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/build_agon_gate_routing_registry.py --check
+python scripts/validate_agon_gate_routing.py
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
 python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests

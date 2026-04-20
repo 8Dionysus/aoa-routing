@@ -7,6 +7,22 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [Unreleased]
 
+### Added
+
+- Agon gate routing doctrine, trigger registry seed, and explicit builder /
+  validator / test surfaces for the routing repository
+
+### Changed
+
+- README, roadmap, and local guidance now expose the Wave V pre-protocol gate
+  routing contour without widening routing into arena or center-owned law
+
+### Validation
+
+- `python scripts/build_agon_gate_routing_registry.py --check`
+- `python scripts/validate_agon_gate_routing.py`
+- `python -m pytest -q tests/test_agon_gate_routing.py`
+
 ## [0.2.1] - 2026-04-19
 
 ### Summary
