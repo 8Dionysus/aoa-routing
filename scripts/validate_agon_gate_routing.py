@@ -28,6 +28,7 @@ FORBIDDEN_ASSISTANT_RIGHTS = {
     "initiate_summon",
     "write_scar",
     "mutate_rank",
+    "promote_to_tos",
     "promote_to_tree_of_sophia",
 }
 

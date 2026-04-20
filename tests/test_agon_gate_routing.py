@@ -20,6 +20,15 @@ def load_builder():
     return module
 
 
+def load_validator():
+    path = ROOT / "scripts" / "validate_agon_gate_routing.py"
+    spec = importlib.util.spec_from_file_location("validate_agon_gate_routing", path)
+    assert spec and spec.loader
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def test_agon_gate_registry_is_current():
     builder = load_builder()
     config = load_json(ROOT / "config" / "agon_gate_routing.seed.json")
@@ -53,3 +62,20 @@ def test_agon_gate_registry_keeps_routing_thin():
         assert "open_arena" not in hint["assistant_allowed"]
         assert "become_contestant" not in hint["assistant_allowed"]
         assert "issue_verdict" not in hint["assistant_allowed"]
+
+
+def test_owner_review_gate_actions_keep_owner_review_state():
+    registry = load_json(ROOT / "generated" / "agon_gate_routing_registry.min.json")
+    hints_by_trigger = {hint["trigger_id"]: hint for hint in registry["route_hints"]}
+
+    assert hints_by_trigger["evidence_floor_collapse"]["decision_state"] == "owner_review_required"
+    assert hints_by_trigger["canonical_risk"]["decision_state"] == "owner_review_required"
+    assert (
+        hints_by_trigger["assistant_anti_drift_alarm"]["decision_state"] == "quarantine_hint"
+    )
+
+
+def test_validator_forbids_live_tos_promotion_token():
+    validator = load_validator()
+
+    assert "promote_to_tos" in validator.FORBIDDEN_ASSISTANT_RIGHTS

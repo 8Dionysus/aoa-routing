@@ -10,6 +10,15 @@ ROOT = Path(__file__).resolve().parents[1]
 CONFIG_PATH = ROOT / "config" / "agon_gate_routing.seed.json"
 OUTPUT_PATH = ROOT / "generated" / "agon_gate_routing_registry.min.json"
 
+ROUTING_ACTION_TO_DECISION_STATE = {
+    "block_activation_and_reroute": "owner_review_required",
+    "emit_agon_gate_candidate": "agon_gate_candidate",
+    "emit_owner_review_or_gate_candidate": "owner_review_required",
+    "emit_quarantine_hint_and_owner_review": "quarantine_hint",
+    "emit_summon_intent_review_hint": "owner_review_required",
+    "route_to_agonic_actor_or_gate_candidate": "agon_gate_candidate",
+}
+
 
 def load_json(path: Path) -> Any:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -20,15 +29,10 @@ def dump_min(obj: Any) -> str:
 
 
 def decision_state_for(action: str) -> str:
-    if "quarantine" in action:
-        return "quarantine_hint"
-    if "missing_context" in action:
-        return "agon_gate_candidate_missing_context"
-    if "gate_candidate" in action:
-        return "agon_gate_candidate"
-    if "owner_review" in action:
-        return "owner_review_required"
-    return "owner_review_required"
+    try:
+        return ROUTING_ACTION_TO_DECISION_STATE[action]
+    except KeyError as exc:
+        raise ValueError(f"unknown routing action: {action}") from exc
 
 
 def build_registry(config: dict[str, Any]) -> dict[str, Any]:
