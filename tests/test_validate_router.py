@@ -75,6 +75,15 @@ def copy_repo_text(repo_root: Path, relative_path: str) -> None:
     destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
 
+def copy_owner_dispatch_surface(repo_root: Path) -> None:
+    for relative_path in (
+        "docs/AGON_GATE_DECISION_BOUNDARY.md",
+        "schemas/owner-dispatch-seam.schema.json",
+        "examples/owner_dispatch_seam.example.json",
+    ):
+        copy_repo_text(repo_root, relative_path)
+
+
 def copy_live_repo_text(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
     source = WORKSPACE_ROOT / repo_name / relative_path
     destination = roots[repo_name] / relative_path
@@ -322,6 +331,7 @@ def test_validate_local_questbook_surfaces_accepts_foundation_files(tmp_path: Pa
         )
         + "\n",
     )
+    copy_owner_dispatch_surface(repo_root)
 
     validate_router.validate_local_questbook_surfaces(repo_root, issues)
 
@@ -502,6 +512,7 @@ def test_validate_local_questbook_surfaces_accepts_additive_quest_board_files(tm
         repo_root / "quests" / "AOA-RT-Q-0003.yaml",
         "schema_version: work_quest_v1\nid: AOA-RT-Q-0003\nrepo: aoa-routing\nstate: captured\npublic_safe: true\n",
     )
+    copy_owner_dispatch_surface(repo_root)
 
     validate_router.validate_local_questbook_surfaces(repo_root, issues)
 
@@ -560,6 +571,7 @@ def test_validate_local_questbook_surfaces_accepts_rpg_navigation_bridge_files(t
         "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-routing\nstate: reanchor\nnotes: \"reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist\"\npublic_safe: true\n",
     )
     copy_repo_text(repo_root, "quests/AOA-RT-Q-0004.yaml")
+    copy_owner_dispatch_surface(repo_root)
 
     validate_router.validate_local_questbook_surfaces(repo_root, issues)
 
@@ -624,6 +636,7 @@ def test_validate_local_questbook_surfaces_rejects_legacy_rpg_navigation_input_r
         "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-routing\nstate: reanchor\nnotes: \"reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist\"\npublic_safe: true\n",
     )
     copy_repo_text(repo_root, "quests/AOA-RT-Q-0004.yaml")
+    copy_owner_dispatch_surface(repo_root)
 
     validate_router.validate_local_questbook_surfaces(repo_root, issues)
 
@@ -691,6 +704,7 @@ def test_validate_local_questbook_surfaces_ignores_quest_dispatch_text_outside_i
         "schema_version: work_quest_v1\nid: AOA-RT-Q-0002\nrepo: aoa-routing\nstate: reanchor\nnotes: \"reanchor: no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist\"\npublic_safe: true\n",
     )
     copy_repo_text(repo_root, "quests/AOA-RT-Q-0004.yaml")
+    copy_owner_dispatch_surface(repo_root)
 
     validate_router.validate_local_questbook_surfaces(repo_root, issues)
 

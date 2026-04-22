@@ -617,7 +617,6 @@ def validate_rpg_navigation_bridge_surface(repo_root: Path, issues: list[Validat
         Draft202012Validator.check_schema(schema_object)
     except SchemaError as exc:
         issues.append(ValidationIssue(repo_relative(repo_root, schema_path), f"invalid JSON schema: {exc.message}"))
-
     example_payload = load_output(example_path, issues)
     if example_payload is None:
         return
@@ -688,6 +687,65 @@ def validate_rpg_navigation_bridge_surface(repo_root: Path, issues: list[Validat
                 "example must not pretend aoa-routing owns quest_dispatch source inputs",
             )
         )
+
+
+def validate_owner_dispatch_seam_surface(repo_root: Path, issues: list[ValidationIssue]) -> None:
+    doc_path = repo_root / "docs" / "AGON_GATE_DECISION_BOUNDARY.md"
+    schema_path = repo_root / "schemas" / "owner-dispatch-seam.schema.json"
+    example_path = repo_root / "examples" / "owner_dispatch_seam.example.json"
+
+    try:
+        doc_text = doc_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        issues.append(ValidationIssue(repo_relative(repo_root, doc_path), "missing required file"))
+        return
+
+    for token in ("route_signal", "route_decision", "owner_dispatch", "schemas/owner-dispatch-seam.schema.json"):
+        if token not in doc_text:
+            issues.append(
+                ValidationIssue(
+                    repo_relative(repo_root, doc_path),
+                    f"owner dispatch seam note must mention '{token}'",
+                )
+            )
+
+    try:
+        schema_payload = load_json_file(schema_path)
+        schema_object = ensure_mapping(schema_payload, repo_relative(repo_root, schema_path))
+    except RouterError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, schema_path), str(exc)))
+        return
+
+    try:
+        Draft202012Validator.check_schema(schema_object)
+    except SchemaError as exc:
+        issues.append(ValidationIssue(repo_relative(repo_root, schema_path), f"invalid JSON schema: {exc.message}"))
+        return
+
+    example_payload = load_output(example_path, issues)
+    if example_payload is None:
+        return
+
+    if example_payload.get("contract_id") != "aoa-routing.owner-dispatch-seam.v1":
+        issues.append(
+            ValidationIssue(
+                example_path.name,
+                "contract_id must stay aoa-routing.owner-dispatch-seam.v1",
+            )
+        )
+    if example_payload.get("owner_repo") != "aoa-routing":
+        issues.append(ValidationIssue(example_path.name, "owner_repo must stay aoa-routing"))
+
+    validate_against_schema(example_payload, "owner-dispatch-seam.schema.json", example_path.name, issues)
+    route_signal = example_payload.get("route_signal", {})
+    route_decision = example_payload.get("route_decision", {})
+    owner_dispatch = example_payload.get("owner_dispatch", {})
+    if not isinstance(route_signal, dict) or route_signal.get("owner_truth_ref") != "docs/AGON_GATE_DECISION_BOUNDARY.md#wave-1-owner-dispatch-seam":
+        issues.append(ValidationIssue(example_path.name, "route_signal must point at the wave 1 owner dispatch seam"))
+    if not isinstance(route_decision, dict) or route_decision.get("next_hop") != "aoa-agents":
+        issues.append(ValidationIssue(example_path.name, "route_decision must keep next_hop aoa-agents"))
+    if not isinstance(owner_dispatch, dict) or owner_dispatch.get("owner_repo") != "aoa-agents":
+        issues.append(ValidationIssue(example_path.name, "owner_dispatch must hand off to aoa-agents"))
 
 
 def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIssue]) -> None:
@@ -815,6 +873,8 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
             validate_adjunct_quest_board_surface(repo_root, issues)
         if quest_id == "AOA-RT-Q-0004":
             validate_rpg_navigation_bridge_surface(repo_root, issues)
+
+    validate_owner_dispatch_seam_surface(repo_root, issues)
 
     if "## Blocked / reanchor" not in questbook_text:
         issues.append(

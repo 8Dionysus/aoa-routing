@@ -63,6 +63,16 @@ def dump_json(data: Any) -> str:
 def render_or_check(path: Path, text: str, check: bool, repo_root: Path) -> None:
     if check:
         current = path.read_text(encoding="utf-8") if path.exists() else None
+        if path.suffix == ".json":
+            try:
+                current_payload = json.loads(current) if current is not None else None
+                expected_payload = json.loads(text)
+            except json.JSONDecodeError:
+                current_payload = None
+                expected_payload = object()
+            if current_payload != expected_payload:
+                raise SystemExit(f"{path.relative_to(repo_root).as_posix()} is out of date")
+            return
         if current != text:
             raise SystemExit(f"{path.relative_to(repo_root).as_posix()} is out of date")
         return
