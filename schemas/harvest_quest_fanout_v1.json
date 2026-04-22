@@ -71,7 +71,8 @@
           "type": "string"
         },
         "quests_created": {
-          "type": "integer"
+          "type": "integer",
+          "minimum": 0
         },
         "repos": {
           "type": "array",
