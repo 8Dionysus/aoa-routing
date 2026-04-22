@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://8dionysus.github.io/schemas/titan_console_route.schema.json",
+  "title": "Titan Console Route",
+  "type": "object",
+  "required": [
+    "version",
+    "routes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
+            "properties": {
+              "intent": {
+                "const": "structure"
+              },
+              "titan": {
+                "const": "Atlas"
+              },
+              "gate": {
+                "const": null
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
+            "properties": {
+              "intent": {
+                "const": "risk"
+              },
+              "titan": {
+                "const": "Sentinel"
+              },
+              "gate": {
+                "const": null
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
+            "properties": {
+              "intent": {
+                "const": "memory"
+              },
+              "titan": {
+                "const": "Mneme"
+              },
+              "gate": {
+                "const": null
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
+            "properties": {
+              "intent": {
+                "const": "mutation"
+              },
+              "titan": {
+                "const": "Forge"
+              },
+              "gate": {
+                "const": "mutation"
+              }
+            },
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
+            "properties": {
+              "intent": {
+                "const": "judgment"
+              },
+              "titan": {
+                "const": "Delta"
+              },
+              "gate": {
+                "const": "judgment"
+              }
+            },
+            "additionalProperties": false
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}

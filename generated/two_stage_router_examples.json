@@ -662,6 +662,14 @@
               "token:class",
               "token:diagnostic"
             ]
+          },
+          {
+            "id": "titan-service-cohort",
+            "score": 4,
+            "reasons": [
+              "token:runtime",
+              "token:turn"
+            ]
           }
         ],
         "shortlist": [
@@ -1039,29 +1047,31 @@
             ]
           },
           {
-            "name": "aoa-automation-opportunity-scan",
-            "band": "quest-harvest-governance",
+            "name": "titan-recall",
+            "band": "titan-service-cohort",
             "manual_invocation_required": true,
-            "project_overlay": false,
-            "score": 3,
+            "project_overlay": true,
+            "score": 4,
             "reasons": [
-              "band:quest-harvest-governance"
+              "token:note",
+              "token:runtime"
             ]
           },
           {
-            "name": "aoa-checkpoint-closeout-bridge",
-            "band": "quest-harvest-governance",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 3,
+            "name": "titan-receipt",
+            "band": "titan-service-cohort",
+            "manual_invocation_required": true,
+            "project_overlay": true,
+            "score": 4,
             "reasons": [
-              "band:quest-harvest-governance"
+              "token:note",
+              "token:runtime"
             ]
           }
         ],
         "confidence": "weak",
         "lead_score": 7,
-        "lead_gap": 4,
+        "lead_gap": 3,
         "fallback_candidates": [
           {
             "name": "aoa-change-protocol",
@@ -1088,7 +1098,7 @@
       "decision_packet": {
         "confidence": "weak",
         "lead_score": 7,
-        "lead_gap": 4,
+        "lead_gap": 3,
         "candidate_count": 3,
         "fallback_candidates": [
           {
@@ -1127,26 +1137,28 @@
             "activation_hint": "$aoa-session-donor-harvest"
           },
           {
-            "name": "aoa-automation-opportunity-scan",
-            "band": "quest-harvest-governance",
-            "score": 3,
+            "name": "titan-recall",
+            "band": "titan-service-cohort",
+            "score": 4,
             "preselect_reasons": [
-              "band:quest-harvest-governance"
+              "token:note",
+              "token:runtime"
             ],
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-automation-opportunity-scan"
+            "activation_hint": "$titan-recall"
           },
           {
-            "name": "aoa-checkpoint-closeout-bridge",
-            "band": "quest-harvest-governance",
-            "score": 3,
+            "name": "titan-receipt",
+            "band": "titan-service-cohort",
+            "score": 4,
             "preselect_reasons": [
-              "band:quest-harvest-governance"
+              "token:note",
+              "token:runtime"
             ],
-            "invocation_mode": "explicit-preferred",
-            "manual_invocation_required": false,
-            "activation_hint": "implicit-ok"
+            "invocation_mode": "explicit-only",
+            "manual_invocation_required": true,
+            "activation_hint": "$titan-receipt"
           }
         ],
         "decision_reason": "shortlist stayed below the precision-first activation thresholds",

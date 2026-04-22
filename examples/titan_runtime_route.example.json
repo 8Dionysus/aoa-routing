@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "intent": "implement a bounded change after review",
+  "active_titans": [
+    "Atlas",
+    "Sentinel",
+    "Mneme",
+    "Forge"
+  ],
+  "required_gates": [
+    "mutation"
+  ],
+  "receipt_ref": "receipts/titans/example.json"
+}

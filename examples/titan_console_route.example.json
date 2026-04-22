@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "routes": [
+    {
+      "intent": "structure",
+      "titan": "Atlas",
+      "gate": null
+    },
+    {
+      "intent": "risk",
+      "titan": "Sentinel",
+      "gate": null
+    },
+    {
+      "intent": "memory",
+      "titan": "Mneme",
+      "gate": null
+    },
+    {
+      "intent": "mutation",
+      "titan": "Forge",
+      "gate": "mutation"
+    },
+    {
+      "intent": "judgment",
+      "titan": "Delta",
+      "gate": "judgment"
+    }
+  ]
+}

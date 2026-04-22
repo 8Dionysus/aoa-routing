@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://8dionysus.github.io/schemas/titan_appserver_bridge_route.schema.json",
+  "title": "Titan Bridge Route",
+  "type": "object",
+  "required": [
+    "route"
+  ],
+  "properties": {
+    "route": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "Dionysus",
+          "aoa-agents",
+          "aoa-sdk",
+          "8Dionysus",
+          "aoa-evals",
+          "aoa-memo",
+          "aoa-stats"
+        ]
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    }
+  },
+  "additionalProperties": false
+}
