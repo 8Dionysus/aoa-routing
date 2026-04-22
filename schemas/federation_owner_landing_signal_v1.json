@@ -75,7 +75,10 @@
           "type": "string"
         },
         "action": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "open_owner_quest"
+          ]
         }
       }
     }

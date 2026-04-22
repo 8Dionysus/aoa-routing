@@ -109,7 +109,8 @@
           "minimum": 1
         },
         "routing_role": {
-          "type": "string"
+          "type": "string",
+          "const": "dispatch_only"
         },
         "meaning_authority": {
           "type": "boolean",

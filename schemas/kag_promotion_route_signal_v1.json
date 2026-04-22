@@ -72,7 +72,10 @@
           "type": "string"
         },
         "route": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "aoa-kag"
+          ]
         },
         "blocked": {
           "type": "boolean"
