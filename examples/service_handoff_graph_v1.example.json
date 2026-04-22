@@ -1,0 +1,30 @@
+{
+  "created_at": "2026-04-22T00:00:00Z",
+  "edges": [
+    {
+      "from": "concierge.assistant",
+      "receipt_required": true,
+      "to": "courier.assistant"
+    },
+    {
+      "from": "courier.assistant",
+      "receipt_required": true,
+      "to": "notary.assistant"
+    }
+  ],
+  "evidence_refs": [
+    "generated/multi_office_train_clean_flow/release_train.json"
+  ],
+  "id": "service_handoff_graph_v1_example",
+  "kind": "service_handoff_graph_v1",
+  "nodes": [
+    "notary.assistant",
+    "concierge.assistant",
+    "courier.assistant",
+    "monitor.assistant"
+  ],
+  "notes": "Example artifact for service_handoff_graph_v1.",
+  "owner_repo": "aoa-routing",
+  "status": "draft",
+  "version": "1.1.0"
+}
