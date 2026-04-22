@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://8dionysus.github.io/schemas/titan_runtime_route.schema.json",
+  "title": "Titan Runtime Route",
+  "type": "object",
+  "required": [
+    "version",
+    "intent",
+    "active_titans",
+    "required_gates"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "intent": {
+      "type": "string"
+    },
+    "active_titans": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "Atlas",
+          "Sentinel",
+          "Mneme",
+          "Forge",
+          "Delta"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "required_gates": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "mutation",
+          "judgment"
+        ]
+      },
+      "uniqueItems": true
+    },
+    "receipt_ref": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

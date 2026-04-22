@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Titan Console Route",
+  "type": "object",
+  "required": [
+    "version",
+    "routes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "intent",
+          "titan",
+          "gate"
+        ]
+      }
+    }
+  }
+}
