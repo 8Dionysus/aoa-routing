@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "kind": "federation_route_decision",
+  "id": "federation_route_decision.example",
+  "status": "approved",
+  "summary": "Example federation_route_decision object for v0.6 federation harvest seed.",
+  "owner_repo": "aoa-routing",
+  "evidence_refs": [
+    "receipt://v0.6/federation_route_decision/example"
+  ],
+  "payload": {
+    "decision": "route_to_owner",
+    "owner_repo": "aoa-routing",
+    "reason": "wrong_surface_family"
+  }
+}

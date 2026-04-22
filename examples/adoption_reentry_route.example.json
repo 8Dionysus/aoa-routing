@@ -1,0 +1,26 @@
+{
+  "schema_id": "adoption_reentry_route_v1",
+  "kind": "adoption_reentry_route",
+  "version": "1.0",
+  "status": "proposed",
+  "summary": "Example adoption_reentry_route object for Experience Adoption Forge v0.7.",
+  "refs": {
+    "source": "experience.shared_pattern_registry",
+    "owner": "aoa-routing",
+    "related": [
+      "experience.v0.6.federation_harvest",
+      "experience.v0.7.adoption_forge"
+    ]
+  },
+  "payload": {
+    "wave": "v0.7",
+    "repo": "aoa-routing",
+    "pattern_ref": "pattern.shared.wrong_surface_to_owner_landing.v1",
+    "owner_surface": "aoa-routing",
+    "requires_owner_consent": true,
+    "rollback_required": true,
+    "retention_cycles": 3,
+    "routing_role": "dispatch_only",
+    "meaning_authority": false
+  }
+}
