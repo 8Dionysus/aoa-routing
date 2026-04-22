@@ -19,8 +19,37 @@
           "intent",
           "titan",
           "gate"
-        ]
+        ],
+        "properties": {
+          "intent": {
+            "enum": [
+              "structure",
+              "risk",
+              "memory",
+              "mutation",
+              "judgment"
+            ]
+          },
+          "titan": {
+            "enum": [
+              "Atlas",
+              "Sentinel",
+              "Mneme",
+              "Forge",
+              "Delta"
+            ]
+          },
+          "gate": {
+            "enum": [
+              null,
+              "mutation",
+              "judgment"
+            ]
+          }
+        },
+        "additionalProperties": false
       }
     }
-  }
+  },
+  "additionalProperties": false
 }
