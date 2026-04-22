@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "rollback_dispatch",
+  "type": "object",
+  "description": "rollback_dispatch schema for AoA experience deployment watchtower v0.5.",
+  "required": [
+    "dispatch_id",
+    "trigger_id",
+    "target",
+    "authorized",
+    "status"
+  ],
+  "properties": {
+    "dispatch_id": {
+      "type": "string"
+    },
+    "trigger_id": {
+      "type": "string"
+    },
+    "target": {
+      "type": "string"
+    },
+    "authorized": {
+      "type": "boolean"
+    },
+    "status": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

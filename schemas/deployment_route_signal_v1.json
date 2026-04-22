@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "deployment_route_signal",
+  "type": "object",
+  "description": "deployment_route_signal schema for AoA experience deployment watchtower v0.5.",
+  "required": [
+    "signal_id",
+    "release_id",
+    "route_to",
+    "reason",
+    "priority"
+  ],
+  "properties": {
+    "signal_id": {
+      "type": "string"
+    },
+    "release_id": {
+      "type": "string"
+    },
+    "route_to": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "priority": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false
+}

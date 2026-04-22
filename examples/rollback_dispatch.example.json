@@ -1,0 +1,7 @@
+{
+  "dispatch_id": "rollback.dispatch.001",
+  "trigger_id": "rollback.trigger.001",
+  "target": "abyss-stack.rollback_job",
+  "authorized": true,
+  "status": "dispatched"
+}

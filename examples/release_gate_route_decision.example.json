@@ -1,0 +1,8 @@
+{
+  "id": "route.release.notary.001",
+  "kind": "release_gate_route_decision",
+  "candidate": "rc.notary.1.1.0.001",
+  "gate": "rollback",
+  "decision": "route_to_aoa_playbooks",
+  "required_artifact": "rollback_drill_plan"
+}

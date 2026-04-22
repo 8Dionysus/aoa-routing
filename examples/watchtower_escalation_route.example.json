@@ -1,0 +1,9 @@
+{
+  "route_id": "watch.escalate.001",
+  "alarm_id": "alarm.drift.001",
+  "owner_repo": "aoa-evals",
+  "action": "issue_alarm_verdict",
+  "required_evidence": [
+    "watch.record.017"
+  ]
+}

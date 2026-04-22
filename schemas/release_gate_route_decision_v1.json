@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "candidate": {
+      "type": "string"
+    },
+    "gate": {
+      "type": "string"
+    },
+    "decision": {
+      "type": "string"
+    },
+    "required_artifact": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "candidate",
+    "gate",
+    "decision",
+    "required_artifact"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Release Gate Route Decision V1"
+}
