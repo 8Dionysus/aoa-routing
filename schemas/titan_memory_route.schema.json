@@ -6,7 +6,6 @@
   "required": [
     "query",
     "record_id",
-    "source_ref",
     "owner_route"
   ],
   "properties": {
@@ -17,10 +16,10 @@
       "type": "string"
     },
     "source_ref": {
-      "type": [
-        "string",
-        "null"
-      ]
+      "type": "string"
+    },
+    "session_id": {
+      "type": "string"
     },
     "owner_route": {
       "type": "array",
@@ -31,5 +30,18 @@
     "authority_note": {
       "type": "string"
     }
-  }
+  },
+  "anyOf": [
+    {
+      "required": [
+        "source_ref"
+      ]
+    },
+    {
+      "required": [
+        "session_id"
+      ]
+    }
+  ],
+  "additionalProperties": false
 }

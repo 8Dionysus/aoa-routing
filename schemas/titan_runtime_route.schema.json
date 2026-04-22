@@ -43,5 +43,53 @@
       "type": "string"
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "active_titans": {
+            "contains": {
+              "const": "Forge"
+            }
+          }
+        },
+        "required": [
+          "active_titans"
+        ]
+      },
+      "then": {
+        "properties": {
+          "required_gates": {
+            "contains": {
+              "const": "mutation"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "active_titans": {
+            "contains": {
+              "const": "Delta"
+            }
+          }
+        },
+        "required": [
+          "active_titans"
+        ]
+      },
+      "then": {
+        "properties": {
+          "required_gates": {
+            "contains": {
+              "const": "judgment"
+            }
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }
