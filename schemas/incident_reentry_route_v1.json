@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "incident_reentry_route",
+  "type": "object",
+  "description": "incident_reentry_route schema for AoA experience deployment watchtower v0.5.",
+  "required": [
+    "route_id",
+    "incident_id",
+    "target_repo",
+    "reason",
+    "candidate_required"
+  ],
+  "properties": {
+    "route_id": {
+      "type": "string"
+    },
+    "incident_id": {
+      "type": "string"
+    },
+    "target_repo": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "candidate_required": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": true
+}

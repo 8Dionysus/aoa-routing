@@ -1,0 +1,9 @@
+{
+  "id": "route.cert.notary.001",
+  "kind": "certification_owner_route",
+  "blocked_gate": "authority",
+  "candidate": "rc.notary.1.1.0.001",
+  "owner_repo": "Agents-of-Abyss",
+  "next_surface": "operator_review_queue",
+  "reason": "operator approval required"
+}

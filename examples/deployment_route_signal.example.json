@@ -1,0 +1,7 @@
+{
+  "signal_id": "deploy.route.001",
+  "release_id": "assistant.notary.1.1.0",
+  "route_to": "aoa-evals",
+  "reason": "material alarm needs verdict",
+  "priority": "high"
+}

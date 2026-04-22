@@ -1,0 +1,38 @@
+{
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string"
+    },
+    "blocked_gate": {
+      "type": "string"
+    },
+    "candidate": {
+      "type": "string"
+    },
+    "owner_repo": {
+      "type": "string"
+    },
+    "next_surface": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "blocked_gate",
+    "candidate",
+    "owner_repo",
+    "next_surface",
+    "reason"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Certification Owner Route V1"
+}

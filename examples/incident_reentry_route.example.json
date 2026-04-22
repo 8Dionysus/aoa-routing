@@ -1,0 +1,7 @@
+{
+  "route_id": "incident.reentry.001",
+  "incident_id": "deployment.incident.001",
+  "target_repo": "aoa-agents",
+  "reason": "assistant contract drift",
+  "candidate_required": true
+}
