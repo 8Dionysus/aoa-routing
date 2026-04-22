@@ -23,3 +23,20 @@ Routing may rank and point.
 Routing may not judge and mutate.
 
 The gate signal should stay legible, small, and reversible.
+
+## Wave 1 owner dispatch seam
+
+Wave 1 adds one compact seam for the route signal, route decision, and owner
+dispatch handoff path:
+
+- `schemas/owner-dispatch-seam.schema.json`
+- `examples/owner_dispatch_seam.example.json`
+
+The seam keeps three layers separate:
+
+- `route_signal` is the candidate signal
+- `route_decision` is the bounded navigation choice
+- `owner_dispatch` is the handoff to the owning repo, not owner truth itself
+
+Routing may point and hand off. It may not become the authority surface it
+describes.
