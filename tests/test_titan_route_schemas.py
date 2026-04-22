@@ -49,6 +49,18 @@ def test_titan_route_examples_validate(schema_path: str, example_path: str) -> N
             {"version": 1, "routes": [{"intent": 7, "titan": "Forge", "gate": "mutation"}]},
         ),
         (
+            "schemas/titan_console_route.schema.json",
+            {"version": 1, "routes": [{"intent": "structure", "titan": "Forge", "gate": None}]},
+        ),
+        (
+            "schemas/titan_console_route.schema.json",
+            {"version": 1, "routes": [{"intent": "judgment", "titan": "Atlas", "gate": "mutation"}]},
+        ),
+        (
+            "schemas/titan_runtime_route.schema.json",
+            {"version": 1, "intent": "orientation", "active_titans": [], "required_gates": []},
+        ),
+        (
             "schemas/titan_runtime_route.schema.json",
             {"version": 1, "intent": "implementation", "active_titans": ["Forge"], "required_gates": []},
         ),

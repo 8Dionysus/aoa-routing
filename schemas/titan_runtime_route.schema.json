@@ -18,6 +18,7 @@
     },
     "active_titans": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "enum": [
           "Atlas",

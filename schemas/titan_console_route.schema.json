@@ -47,7 +47,74 @@
             ]
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "oneOf": [
+          {
+            "properties": {
+              "intent": {
+                "const": "structure"
+              },
+              "titan": {
+                "const": "Atlas"
+              },
+              "gate": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "intent": {
+                "const": "risk"
+              },
+              "titan": {
+                "const": "Sentinel"
+              },
+              "gate": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "intent": {
+                "const": "memory"
+              },
+              "titan": {
+                "const": "Mneme"
+              },
+              "gate": {
+                "const": null
+              }
+            }
+          },
+          {
+            "properties": {
+              "intent": {
+                "const": "mutation"
+              },
+              "titan": {
+                "const": "Forge"
+              },
+              "gate": {
+                "const": "mutation"
+              }
+            }
+          },
+          {
+            "properties": {
+              "intent": {
+                "const": "judgment"
+              },
+              "titan": {
+                "const": "Delta"
+              },
+              "gate": {
+                "const": "judgment"
+              }
+            }
+          }
+        ]
       }
     }
   },
