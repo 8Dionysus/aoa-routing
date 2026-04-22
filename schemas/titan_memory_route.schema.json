@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://8dionysus.github.io/schemas/titan_memory_route.schema.json",
   "title": "Titan Memory Route",
   "type": "object",
   "required": [

@@ -1,5 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://8dionysus.github.io/schemas/titan_console_route.schema.json",
   "title": "Titan Console Route",
   "type": "object",
   "required": [
