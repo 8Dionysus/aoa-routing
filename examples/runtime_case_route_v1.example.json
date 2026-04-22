@@ -1,0 +1,7 @@
+{
+  "case_id": "case_runtime_001",
+  "from_surface": "aoa-agents",
+  "reason": "release hold requires governance",
+  "route_id": "route_001",
+  "to_surface": "Agents-of-Abyss/governance"
+}
