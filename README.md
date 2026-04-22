@@ -33,6 +33,7 @@ Use the shortest route by need:
 - bounded federation-entry and return posture: `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, [docs/FEDERATION_ENTRY_ABI.md](docs/FEDERATION_ENTRY_ABI.md), and [docs/RECURRENCE_NAVIGATION_BOUNDARY.md](docs/RECURRENCE_NAVIGATION_BOUNDARY.md)
 - additive stress-routing contract surfaces: [docs/STRESS_POSTURE_ROUTING.md](docs/STRESS_POSTURE_ROUTING.md), [docs/DEGRADED_ROUTE_HINTS.md](docs/DEGRADED_ROUTE_HINTS.md), [docs/ROUTING_STRESS_CHAOS_WAVE1.md](docs/ROUTING_STRESS_CHAOS_WAVE1.md), `schemas/stress_navigation_hint_v1.json`, `examples/stress_navigation_hint.example.json`, `examples/stress_navigation_hint.timeout-chaos.example.json`, and `examples/stress_navigation_hint.skill-collision-chaos.example.json`
 - additive composite stress-route family: `generated/composite_stress_route_hints.min.json`, [docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md](docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md), [docs/KAG_QUARANTINE_ROUTE_HINTS.md](docs/KAG_QUARANTINE_ROUTE_HINTS.md), `schemas/composite_stress_route_hint_v1.json`, `examples/composite_stress_route_hint.example.json`, and `examples/composite_stress_route_hint.retrieval-outage-honesty.example.json`
+- stats re-grounding advisory: `generated/stats_regrounding_hints.min.json`, [docs/STATS_REGROUNDING_HINTS.md](docs/STATS_REGROUNDING_HINTS.md), `schemas/stats-regrounding-hints.schema.json`, and `examples/stats_regrounding_hint.example.json`
 - Agon gate routing: `generated/agon_gate_routing_registry.min.json`, [docs/AGON_GATE_ROUTING.md](docs/AGON_GATE_ROUTING.md), [docs/AGON_GATE_TRIGGER_MODEL.md](docs/AGON_GATE_TRIGGER_MODEL.md), [docs/AGON_GATE_DECISION_BOUNDARY.md](docs/AGON_GATE_DECISION_BOUNDARY.md), [docs/AGON_GATE_ASSISTANT_ESCALATION.md](docs/AGON_GATE_ASSISTANT_ESCALATION.md), and [docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md](docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md)
 - optional wave-9 seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, `config/two_stage_router_precision_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION.md](docs/TWO_STAGE_SKILL_SELECTION.md)
 - current direction: [ROADMAP](ROADMAP.md)
@@ -106,7 +107,7 @@ The tracked outputs under `generated/` are grouped into six families:
 
 - core routing: `cross_repo_registry.min.json`, `aoa_router.min.json`, `task_to_surface_hints.json`, `task_to_tier_hints.json`, `recommended_paths.min.json`, and `owner_layer_shortlist.min.json`
 - pairing, recall, and return posture: `pairing_hints.min.json`, `kag_source_lift_relation_hints.min.json`, and `return_navigation_hints.min.json`
-- additive stress overlays: `composite_stress_route_hints.min.json`
+- additive stress and re-grounding overlays: `composite_stress_route_hints.min.json` and `stats_regrounding_hints.min.json`
 - federation entry: `federation_entrypoints.min.json`
 - Agon gate routing: `agon_gate_routing_registry.min.json`
 - low-context routing: `tiny_model_entrypoints.json` plus the `two_stage_*` family for the optional wave-9 seam
@@ -146,6 +147,12 @@ Antifragility wave four stays additive too. `composite_stress_route_hints.min.js
 consumes the new stats summary plus structured playbook, KAG, and memo surfaces,
 but it does not replace `recommended_paths.min.json`, `owner_layer_shortlist.min.json`,
 or thin-router dispatch authority.
+
+Stats re-grounding hints are additive in the same way.
+`stats_regrounding_hints.min.json` consumes the stats summary surface catalog
+and source coverage summary, then points consumers back to owner truth before
+they rely on high-risk or thinly grounded stats surfaces. It does not decide
+the re-grounding policy itself; that remains an `aoa-sdk` control-plane concern.
 
 Agon gate routing stays additive too. `agon_gate_routing_registry.min.json`
 may emit pre-protocol gate candidates, missing-context hints, owner-review

@@ -1763,6 +1763,30 @@ def test_build_outputs_composite_stress_hints_include_memo_recovery_context(
     }
 
 
+def test_build_outputs_adds_stats_regrounding_advisory_hints() -> None:
+    outputs = build_fixture_outputs()
+    payload = outputs["stats_regrounding_hints.min.json"]
+
+    assert payload["schema_version"] == "aoa_routing_stats_regrounding_hints_v1"
+    assert payload["schema_ref"] == "schemas/stats-regrounding-hints.schema.json"
+    assert payload["coverage_thin_signal_flags"] == [
+        "missing_owner_repos",
+        "owner_share_dominant",
+    ]
+    hint = next(
+        item for item in payload["hints"] if item["surface_name"] == "surface_detection_summary"
+    )
+    assert hint["recommended_action"] == "reground_before_using_stats"
+    assert hint["advisory_only"] is True
+    assert hint["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-skills",
+        "target_ref": "aoa-skills core skill application receipts",
+    }
+    assert "high_consumer_risk" in hint["reason_codes"]
+    assert "coverage_owner_share_dominant" in hint["reason_codes"]
+
+
 def test_build_outputs_composite_stress_hints_skip_unreviewed_or_unrecallable_patterns(
     tmp_path: Path,
 ) -> None:

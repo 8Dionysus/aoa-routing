@@ -72,7 +72,6 @@ from router_core import (
     PROFILE_PUBLIC_ROUTE_MAP_PATH,
     RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
-    RESERVED_KINDS,
     RETURN_NAVIGATION_HINTS_FILE,
     RouterError,
     TECHNIQUE_KIND_SECOND_CUT_COLLECTION_KEY,
@@ -104,7 +103,6 @@ from router_core import (
     build_task_to_surface_hints_payload,
     collect_memo_recall_mode_order,
     ensure_bool,
-    ensure_cross_repo_surface_ref,
     ensure_list,
     ensure_mapping,
     ensure_repo_relative_path,
@@ -113,12 +111,9 @@ from router_core import (
     ensure_string_list,
     is_pending_technique_id,
     load_json_file,
-    load_agent_registry_entries,
     load_live_quest_projection_entries,
     load_memo_catalog_surfaces,
-    load_model_tier_entries,
     load_model_tier_registry,
-    load_playbook_registry_entries,
     load_technique_catalog_entries,
     load_tos_tiny_entry_route,
     relative_posix,
@@ -137,6 +132,7 @@ OUTPUT_SCHEMA_NAMES = {
     "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
     "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
     "composite_stress_route_hints.min.json": "composite-stress-route-hints.schema.json",
+    "stats_regrounding_hints.min.json": "stats-regrounding-hints.schema.json",
     "owner_layer_shortlist.min.json": "owner-layer-shortlist.schema.json",
     Path(QUEST_DISPATCH_HINTS_FILE).name: "quest-dispatch-hints.schema.json",
     Path(FEDERATION_ENTRYPOINTS_FILE).name: "federation-entrypoints.schema.json",
@@ -989,7 +985,7 @@ def validate_quest_dispatch_hints(
                 hint.get("delegate_tier"),
                 f"{location}.delegate_tier",
             )
-            source_path = ensure_repo_relative_path(
+            ensure_repo_relative_path(
                 hint.get("source_path"),
                 f"{location}.source_path",
             )

@@ -1,0 +1,32 @@
+{
+  "hint_id": "stats-reground:surface_detection_summary",
+  "surface_name": "surface_detection_summary",
+  "surface_ref": "generated/surface_detection_summary.min.json",
+  "recommended_action": "reground_before_using_stats",
+  "reason_codes": [
+    "high_consumer_risk",
+    "coverage_missing_owner_repos"
+  ],
+  "owner_truth_inputs": [
+    "aoa-skills core skill application receipts"
+  ],
+  "primary_action": {
+    "verb": "inspect",
+    "target_repo": "aoa-skills",
+    "target_ref": "aoa-skills core skill application receipts"
+  },
+  "fallback_actions": [
+    {
+      "verb": "inspect",
+      "target_repo": "aoa-stats",
+      "target_ref": "aoa-stats.summary_surface_catalog.min"
+    },
+    {
+      "verb": "inspect",
+      "target_repo": "aoa-stats",
+      "target_ref": "aoa-stats.source_coverage_summary.min"
+    }
+  ],
+  "advisory_only": true,
+  "authority_note": "Weaker than owner-local route decisions and weaker than aoa-sdk or aoa-routing dispatch surfaces."
+}
