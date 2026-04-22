@@ -1787,6 +1787,36 @@ def test_build_outputs_adds_stats_regrounding_advisory_hints() -> None:
     assert "coverage_owner_share_dominant" in hint["reason_codes"]
 
 
+def test_stats_regrounding_hints_require_summary_surfaces_key(tmp_path: Path) -> None:
+    stats_root = tmp_path / "aoa-stats"
+    shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)
+    catalog_path = stats_root / "generated" / "summary_surface_catalog.min.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    catalog.pop("surfaces")
+    write_json(catalog_path, catalog)
+
+    with pytest.raises(build_router.RouterError, match="summary_surface_catalog.surfaces"):
+        build_router.build_stats_regrounding_hints_payload(stats_root)
+
+
+def test_stats_regrounding_hints_read_legacy_surface_path(tmp_path: Path) -> None:
+    stats_root = tmp_path / "aoa-stats"
+    shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)
+    catalog_path = stats_root / "generated" / "summary_surface_catalog.min.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    surface = next(item for item in catalog["surfaces"] if item["name"] == "surface_detection_summary")
+    legacy_ref = surface.pop("surface_ref")
+    surface["surface_path"] = legacy_ref
+    write_json(catalog_path, catalog)
+
+    payload = build_router.build_stats_regrounding_hints_payload(stats_root)
+    hint = next(
+        item for item in payload["hints"] if item["surface_name"] == "surface_detection_summary"
+    )
+
+    assert hint["surface_ref"] == legacy_ref
+
+
 def test_build_outputs_composite_stress_hints_skip_unreviewed_or_unrecallable_patterns(
     tmp_path: Path,
 ) -> None:

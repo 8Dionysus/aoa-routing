@@ -995,7 +995,7 @@ def build_stats_regrounding_hints_payload(stats_root: Path) -> dict[str, Any]:
         load_json_file(stats_root / STATS_SOURCE_COVERAGE_SUMMARY_FILE),
         f"aoa-stats/{STATS_SOURCE_COVERAGE_SUMMARY_FILE}",
     )
-    surfaces = ensure_list(catalog.get("surfaces", []), "summary_surface_catalog.surfaces")
+    surfaces = ensure_list(catalog.get("surfaces"), "summary_surface_catalog.surfaces")
     thin_flags = [
         ensure_string(flag, "source_coverage_summary.thin_signal_flags[]")
         for flag in ensure_list(coverage.get("thin_signal_flags", []), "source_coverage_summary.thin_signal_flags")
@@ -1023,7 +1023,10 @@ def build_stats_regrounding_hints_payload(stats_root: Path) -> dict[str, Any]:
             {
                 "hint_id": f"stats-reground:{name}",
                 "surface_name": name,
-                "surface_ref": surface.get("surface_ref") or surface.get("path"),
+                "surface_ref": ensure_string(
+                    surface.get("surface_ref") or surface.get("surface_path") or surface.get("path"),
+                    f"summary_surface_catalog.surfaces[{name}].surface_ref",
+                ),
                 "recommended_action": "reground_before_using_stats",
                 "reason_codes": list(dict.fromkeys(reason_codes)),
                 "owner_truth_inputs": owner_truth_inputs,

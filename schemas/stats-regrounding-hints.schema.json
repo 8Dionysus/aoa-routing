@@ -115,7 +115,8 @@
           "minLength": 1
         },
         "surface_ref": {
-          "type": ["string", "null"]
+          "type": "string",
+          "minLength": 1
         },
         "recommended_action": {
           "const": "reground_before_using_stats"
