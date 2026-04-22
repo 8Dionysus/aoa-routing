@@ -14,42 +14,14 @@
     "routes": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": [
-          "intent",
-          "titan",
-          "gate"
-        ],
-        "properties": {
-          "intent": {
-            "enum": [
-              "structure",
-              "risk",
-              "memory",
-              "mutation",
-              "judgment"
-            ]
-          },
-          "titan": {
-            "enum": [
-              "Atlas",
-              "Sentinel",
-              "Mneme",
-              "Forge",
-              "Delta"
-            ]
-          },
-          "gate": {
-            "enum": [
-              null,
-              "mutation",
-              "judgment"
-            ]
-          }
-        },
-        "additionalProperties": false,
         "oneOf": [
           {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
             "properties": {
               "intent": {
                 "const": "structure"
@@ -60,9 +32,16 @@
               "gate": {
                 "const": null
               }
-            }
+            },
+            "additionalProperties": false
           },
           {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
             "properties": {
               "intent": {
                 "const": "risk"
@@ -73,9 +52,16 @@
               "gate": {
                 "const": null
               }
-            }
+            },
+            "additionalProperties": false
           },
           {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
             "properties": {
               "intent": {
                 "const": "memory"
@@ -86,9 +72,16 @@
               "gate": {
                 "const": null
               }
-            }
+            },
+            "additionalProperties": false
           },
           {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
             "properties": {
               "intent": {
                 "const": "mutation"
@@ -99,9 +92,16 @@
               "gate": {
                 "const": "mutation"
               }
-            }
+            },
+            "additionalProperties": false
           },
           {
+            "type": "object",
+            "required": [
+              "intent",
+              "titan",
+              "gate"
+            ],
             "properties": {
               "intent": {
                 "const": "judgment"
@@ -112,7 +112,8 @@
               "gate": {
                 "const": "judgment"
               }
-            }
+            },
+            "additionalProperties": false
           }
         ]
       }

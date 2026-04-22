@@ -76,6 +76,10 @@ def test_titan_route_examples_validate(schema_path: str, example_path: str) -> N
             "schemas/titan_memory_route.schema.json",
             {"query": "find memory", "record_id": "memory:1", "owner_route": ["aoa-memo"]},
         ),
+        (
+            "schemas/titan_memory_route.schema.json",
+            {"query": "find memory", "record_id": "memory:1", "session_id": "session:1", "owner_route": []},
+        ),
     ],
 )
 def test_titan_route_schemas_reject_malformed_payloads(schema_path: str, payload: object) -> None:
