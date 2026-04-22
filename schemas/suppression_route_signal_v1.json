@@ -1,0 +1,90 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa.local/schemas/suppression_route_signal_v1.json",
+  "title": "suppression_route_signal_v1",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "kind",
+    "id",
+    "status",
+    "summary",
+    "evidence_refs",
+    "payload",
+    "owner_repo"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "1.0"
+    },
+    "kind": {
+      "type": "string",
+      "const": "suppression_route_signal"
+    },
+    "id": {
+      "type": "string",
+      "minLength": 3
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "captured",
+        "candidate",
+        "review",
+        "approved",
+        "blocked",
+        "rejected",
+        "promoted",
+        "active",
+        "retired",
+        "scheduled",
+        "passed",
+        "failed"
+      ]
+    },
+    "summary": {
+      "type": "string",
+      "minLength": 1
+    },
+    "owner_repo": {
+      "type": "string",
+      "const": "aoa-routing"
+    },
+    "evidence_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1
+    },
+    "payload": {
+      "type": "object",
+      "required": [
+        "pattern_id",
+        "route",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "pattern_id": {
+          "type": "string"
+        },
+        "route": {
+          "type": "string",
+          "enum": [
+            "aoa-routing",
+            "aoa-stats",
+            "aoa-memo"
+          ]
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

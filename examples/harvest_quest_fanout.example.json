@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "kind": "harvest_quest_fanout",
+  "id": "harvest_quest_fanout.example",
+  "status": "candidate",
+  "summary": "Example harvest_quest_fanout object for v0.6 federation harvest seed.",
+  "owner_repo": "aoa-routing",
+  "evidence_refs": [
+    "receipt://v0.6/harvest_quest_fanout/example"
+  ],
+  "payload": {
+    "candidate_id": "pattern.wrong_surface.cross_repo.001",
+    "quests_created": 3,
+    "repos": [
+      "aoa-routing",
+      "aoa-evals",
+      "aoa-memo"
+    ]
+  }
+}

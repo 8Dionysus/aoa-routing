@@ -1,0 +1,46 @@
+# ADOPTION OWNER QUEST FANOUT
+
+Version: v0.7
+Owner surface: `aoa-routing`
+Seed family: Experience Adoption Forge
+
+## Purpose
+
+Quest fanout without owner meaning theft.
+
+## Core law
+
+- Adoption must be explicit.
+- Local owner consent is required.
+- Durable behavior change needs evidence, rollback and retention.
+- Routing dispatches; it does not author meaning.
+- Lifecycle hooks are route labels, not authorization states.
+- Activation labels point at owner-approved work only; they do not activate runtime behavior.
+
+## Lifecycle hooks
+
+- request
+- readiness
+- shadow
+- decision
+- activation
+- retention
+
+## Outputs
+
+These outputs are routing pointers only. They never approve adoption, certify meaning, or mutate owner repositories.
+
+- adoption_owner_quest_fanout
+
+## Stop lines
+
+- No hidden assistant self-adoption.
+- No adoption without local owner consent.
+- No direct Tree-of-Sophia runtime write or runtime adoption.
+- No KAG forced adoption into source repos.
+- No routing layer authorship of meaning.
+- No persistent change without rollback or explicit quarantine fallback.
+
+## Notes
+
+This document belongs to the v0.7 downstream adoption wave. It assumes the v0.6 federation harvest has already approved a shared pattern, but it refuses to treat approval as automatic adoption. Adoption is a second sovereign act: local owner consent, compatibility, shadow proof, rollback path, retention watch, and kind-safe projection are required.

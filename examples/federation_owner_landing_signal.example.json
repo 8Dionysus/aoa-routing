@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "kind": "federation_owner_landing_signal",
+  "id": "federation_owner_landing_signal.example",
+  "status": "candidate",
+  "summary": "Example federation_owner_landing_signal object for v0.6 federation harvest seed.",
+  "owner_repo": "aoa-routing",
+  "evidence_refs": [
+    "receipt://v0.6/federation_owner_landing_signal/example"
+  ],
+  "payload": {
+    "candidate_id": "pattern.wrong_surface.cross_repo.001",
+    "owner_repo": "aoa-routing",
+    "action": "open_owner_quest"
+  }
+}

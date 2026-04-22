@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "kind": "tos_dossier_route_signal",
+  "id": "tos_dossier_route_signal.example",
+  "status": "candidate",
+  "summary": "Example tos_dossier_route_signal object for v0.6 federation harvest seed.",
+  "owner_repo": "aoa-routing",
+  "evidence_refs": [
+    "receipt://v0.6/tos_dossier_route_signal/example"
+  ],
+  "payload": {
+    "dossier_id": "tos.dossier.pattern.001",
+    "route": "Tree-of-Sophia/intake",
+    "direct_write": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "schema_version": "1.0",
+  "kind": "suppression_route_signal",
+  "id": "suppression_route_signal.example",
+  "status": "candidate",
+  "summary": "Example suppression_route_signal object for v0.6 federation harvest seed.",
+  "owner_repo": "aoa-routing",
+  "evidence_refs": [
+    "receipt://v0.6/suppression_route_signal/example"
+  ],
+  "payload": {
+    "pattern_id": "pattern.duplicate.001",
+    "route": "aoa-stats",
+    "reason": "duplicate_low_signal"
+  }
+}
