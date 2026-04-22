@@ -49,7 +49,8 @@
       "minLength": 1
     },
     "owner_repo": {
-      "type": "string"
+      "type": "string",
+      "const": "aoa-routing"
     },
     "evidence_refs": {
       "type": "array",
@@ -72,7 +73,12 @@
           "type": "string"
         },
         "route": {
-          "type": "string"
+          "type": "string",
+          "enum": [
+            "aoa-routing",
+            "aoa-stats",
+            "aoa-memo"
+          ]
         },
         "reason": {
           "type": "string"

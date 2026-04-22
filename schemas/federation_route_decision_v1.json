@@ -49,7 +49,8 @@
       "minLength": 1
     },
     "owner_repo": {
-      "type": "string"
+      "type": "string",
+      "const": "aoa-routing"
     },
     "evidence_refs": {
       "type": "array",
@@ -78,7 +79,8 @@
           ]
         },
         "owner_repo": {
-          "type": "string"
+          "type": "string",
+          "const": "aoa-routing"
         },
         "reason": {
           "type": "string"
