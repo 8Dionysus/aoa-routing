@@ -434,6 +434,26 @@ def validate_against_schema(
     return not schema_errors
 
 
+def validate_against_schema_object(
+    data: Any,
+    schema: dict[str, Any],
+    location: str,
+    issues: list[ValidationIssue],
+) -> bool:
+    schema_errors = sorted(
+        Draft202012Validator(schema).iter_errors(data),
+        key=lambda error: (list(error.absolute_path), error.message),
+    )
+    for error in schema_errors:
+        error_path = format_schema_path(error.absolute_path)
+        if error_path:
+            message = f"schema violation at '{error_path}': {error.message}"
+        else:
+            message = f"schema violation: {error.message}"
+        issues.append(ValidationIssue(location, message))
+    return not schema_errors
+
+
 def load_output(path: Path, issues: list[ValidationIssue]) -> dict[str, Any] | None:
     try:
         payload = load_json_file(path)
@@ -736,7 +756,12 @@ def validate_owner_dispatch_seam_surface(repo_root: Path, issues: list[Validatio
     if example_payload.get("owner_repo") != "aoa-routing":
         issues.append(ValidationIssue(example_path.name, "owner_repo must stay aoa-routing"))
 
-    validate_against_schema(example_payload, "owner-dispatch-seam.schema.json", example_path.name, issues)
+    validate_against_schema_object(
+        example_payload,
+        schema_object,
+        repo_relative(repo_root, example_path),
+        issues,
+    )
     route_signal = example_payload.get("route_signal", {})
     route_decision = example_payload.get("route_decision", {})
     owner_dispatch = example_payload.get("owner_dispatch", {})
@@ -5383,7 +5408,10 @@ def validate_generated_outputs(
     seed_root = (seed_root or (REPO_ROOT.parent / "Dionysus")).resolve()
     profile_root = (profile_root or (REPO_ROOT.parent / "8Dionysus")).resolve()
     abyss_stack_root = (abyss_stack_root or (Path.home() / "src" / "abyss-stack")).resolve()
-    validate_local_questbook_surfaces(REPO_ROOT, issues)
+    if (routing_root / "QUESTBOOK.md").exists():
+        validate_local_questbook_surfaces(routing_root, issues)
+    elif routing_root == REPO_ROOT:
+        validate_local_questbook_surfaces(REPO_ROOT, issues)
 
     registry_path = generated_dir / "cross_repo_registry.min.json"
     router_path = generated_dir / "aoa_router.min.json"
