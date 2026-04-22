@@ -38,7 +38,6 @@ from router_core import (
     relative_posix,
     require_keys,
     sort_registry_entries,
-    write_json_file,
 )
 
 
@@ -48,7 +47,10 @@ EVAL_SOURCE_TYPE = "generated-catalog"
 MEMO_SOURCE_TYPE = "generated-catalog"
 OWNER_LAYER_SHORTLIST_FILE = "generated/owner_layer_shortlist.min.json"
 COMPOSITE_STRESS_ROUTE_HINTS_FILE = "generated/composite_stress_route_hints.min.json"
+STATS_REGROUNDING_HINTS_FILE = "generated/stats_regrounding_hints.min.json"
 STATS_STRESS_RECOVERY_WINDOW_SUMMARY_FILE = "generated/stress_recovery_window_summary.min.json"
+STATS_SUMMARY_SURFACE_CATALOG_FILE = "generated/summary_surface_catalog.min.json"
+STATS_SOURCE_COVERAGE_SUMMARY_FILE = "generated/source_coverage_summary.min.json"
 PLAYBOOK_STRESS_LANE_FILE = "examples/playbook_stress_lane.example.json"
 PLAYBOOK_REENTRY_GATE_FILE = "examples/playbook_reentry_gate.example.json"
 KAG_PROJECTION_HEALTH_FILE = "examples/projection_health_receipt.example.json"
@@ -770,7 +772,7 @@ def build_composite_stress_route_hints_payload(
     regrounding_ticket_path = kag_root / KAG_REGROUNDING_TICKET_FILE
 
     stats_summary = load_required_mapping(stats_path)
-    playbook_lane = load_required_mapping(playbook_lane_path)
+    load_required_mapping(playbook_lane_path)
     playbook_gate = load_required_mapping(playbook_gate_path)
     projection_health = load_required_mapping(projection_health_path)
     regrounding_ticket = load_required_mapping(regrounding_ticket_path)
@@ -984,6 +986,123 @@ def build_owner_layer_shortlist_payload() -> dict[str, Any]:
     }
 
 
+def build_stats_regrounding_hints_payload(stats_root: Path) -> dict[str, Any]:
+    catalog = ensure_mapping(
+        load_json_file(stats_root / STATS_SUMMARY_SURFACE_CATALOG_FILE),
+        f"aoa-stats/{STATS_SUMMARY_SURFACE_CATALOG_FILE}",
+    )
+    coverage = ensure_mapping(
+        load_json_file(stats_root / STATS_SOURCE_COVERAGE_SUMMARY_FILE),
+        f"aoa-stats/{STATS_SOURCE_COVERAGE_SUMMARY_FILE}",
+    )
+    surfaces = ensure_list(catalog.get("surfaces"), "summary_surface_catalog.surfaces")
+    thin_flags = [
+        ensure_string(flag, "source_coverage_summary.thin_signal_flags[]")
+        for flag in ensure_list(coverage.get("thin_signal_flags", []), "source_coverage_summary.thin_signal_flags")
+    ]
+    hints: list[dict[str, Any]] = []
+    for raw_surface in surfaces:
+        surface = ensure_mapping(raw_surface, "summary_surface_catalog.surfaces[]")
+        name = ensure_string(surface.get("name"), "summary_surface_catalog.surfaces[].name")
+        consumer_risk = surface.get("consumer_risk")
+        if consumer_risk != "high" and not thin_flags:
+            continue
+        owner_truth_inputs = [
+            ensure_string(item, f"summary_surface_catalog.surfaces[{name}].owner_truth_inputs[]")
+            for item in ensure_list(
+                surface.get("owner_truth_inputs", []),
+                f"summary_surface_catalog.surfaces[{name}].owner_truth_inputs",
+            )
+        ]
+        reason_codes = []
+        if consumer_risk == "high":
+            reason_codes.append("high_consumer_risk")
+        reason_codes.extend(f"coverage_{flag}" for flag in thin_flags)
+        primary_target = owner_truth_inputs[0] if owner_truth_inputs else "aoa-stats.summary_surface_catalog.min"
+        hints.append(
+            {
+                "hint_id": f"stats-reground:{name}",
+                "surface_name": name,
+                "surface_ref": ensure_string(
+                    surface.get("surface_ref") or surface.get("surface_path") or surface.get("path"),
+                    f"summary_surface_catalog.surfaces[{name}].surface_ref",
+                ),
+                "recommended_action": "reground_before_using_stats",
+                "reason_codes": list(dict.fromkeys(reason_codes)),
+                "owner_truth_inputs": owner_truth_inputs,
+                "primary_action": {
+                    "verb": "inspect",
+                    "target_repo": _infer_owner_repo(primary_target) or "aoa-stats",
+                    "target_ref": primary_target,
+                },
+                "fallback_actions": [
+                    {
+                        "verb": "inspect",
+                        "target_repo": "aoa-stats",
+                        "target_ref": "aoa-stats.summary_surface_catalog.min",
+                    },
+                    {
+                        "verb": "inspect",
+                        "target_repo": "aoa-stats",
+                        "target_ref": "aoa-stats.source_coverage_summary.min",
+                    },
+                ],
+                "advisory_only": True,
+                "authority_note": surface.get("authority_ceiling")
+                or "Routing only names the re-grounding path; it does not make stats authoritative.",
+            }
+        )
+
+    return {
+        "schema_version": "aoa_routing_stats_regrounding_hints_v1",
+        "schema_ref": "schemas/stats-regrounding-hints.schema.json",
+        "owner_repo": "aoa-routing",
+        "surface_kind": "stats_regrounding_hints",
+        "source_inputs": [
+            {
+                "repo": "aoa-stats",
+                "surface_kind": "summary_surface_catalog",
+                "ref": STATS_SUMMARY_SURFACE_CATALOG_FILE,
+            },
+            {
+                "repo": "aoa-stats",
+                "surface_kind": "source_coverage_summary",
+                "ref": STATS_SOURCE_COVERAGE_SUMMARY_FILE,
+            },
+        ],
+        "coverage_thin_signal_flags": thin_flags,
+        "hints": hints,
+        "boundary_notes": [
+            "This routing surface is advisory only.",
+            "It points consumers back to owner truth before relying on derived stats summaries.",
+            "It does not replace aoa-sdk re-grounding policy or aoa-evals proof verdicts.",
+        ],
+    }
+
+
+def _infer_owner_repo(target: str) -> str | None:
+    for owner in (
+        "Agents-of-Abyss",
+        "Tree-of-Sophia",
+        "8Dionysus",
+        "Dionysus",
+        "abyss-stack",
+        "aoa-techniques",
+        "aoa-skills",
+        "aoa-evals",
+        "aoa-memo",
+        "aoa-playbooks",
+        "aoa-agents",
+        "aoa-sdk",
+        "aoa-routing",
+        "aoa-stats",
+        "aoa-kag",
+    ):
+        if owner in target:
+            return owner
+    return None
+
+
 def build_outputs(
     techniques_root: Path,
     skills_root: Path,
@@ -1078,6 +1197,9 @@ def build_outputs(
         kag_root=kag_root,
         memo_root=memo_root,
     )
+    stats_regrounding_hints_payload = build_stats_regrounding_hints_payload(
+        stats_root=stats_root,
+    )
     owner_layer_shortlist_payload = build_owner_layer_shortlist_payload()
     pairing_payload = build_pairing_hints_payload(
         registry_entries,
@@ -1100,6 +1222,7 @@ def build_outputs(
         "recommended_paths.min.json": recommended_payload,
         "kag_source_lift_relation_hints.min.json": relation_hints_payload,
         Path(COMPOSITE_STRESS_ROUTE_HINTS_FILE).name: composite_stress_route_hints_payload,
+        Path(STATS_REGROUNDING_HINTS_FILE).name: stats_regrounding_hints_payload,
         Path(OWNER_LAYER_SHORTLIST_FILE).name: owner_layer_shortlist_payload,
         "pairing_hints.min.json": pairing_payload,
         "tiny_model_entrypoints.json": tiny_model_entrypoints_payload,

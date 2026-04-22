@@ -33,7 +33,7 @@
   "eval_case_count": 91,
   "base_entrypoint_count": 12,
   "router_skill_entry_count": 30,
-  "pairing_entry_count": 162,
+  "pairing_entry_count": 164,
   "task_hint_kinds": [
     "technique",
     "skill",
