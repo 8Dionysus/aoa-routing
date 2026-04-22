@@ -19,13 +19,26 @@ WAVE2_PREFIXES = (
 
 def wave2_pairs() -> list[tuple[Path, Path]]:
     pairs: list[tuple[Path, Path]] = []
+    missing_pairs: list[str] = []
     for example_path in sorted((ROOT / "examples").glob("*.example.json")):
         stem = example_path.name.removesuffix(".example.json")
         if not stem.startswith(WAVE2_PREFIXES):
             continue
         schema_path = ROOT / "schemas" / f"{stem}_v1.json"
-        if schema_path.exists():
-            pairs.append((schema_path, example_path))
+        if not schema_path.exists():
+            missing_pairs.append(f"{example_path.relative_to(ROOT)} -> {schema_path.relative_to(ROOT)}")
+            continue
+        pairs.append((schema_path, example_path))
+
+    for schema_path in sorted((ROOT / "schemas").glob("*_v1.json")):
+        stem = schema_path.name.removesuffix("_v1.json")
+        if not stem.startswith(WAVE2_PREFIXES):
+            continue
+        example_path = ROOT / "examples" / f"{stem}.example.json"
+        if not example_path.exists():
+            missing_pairs.append(f"{schema_path.relative_to(ROOT)} -> {example_path.relative_to(ROOT)}")
+
+    assert not missing_pairs, "missing wave2 contract pair(s): " + ", ".join(missing_pairs)
     return pairs
 
 
