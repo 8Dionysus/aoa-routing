@@ -54,7 +54,8 @@
     "evidence_refs": {
       "type": "array",
       "items": {
-        "type": "string"
+        "type": "string",
+        "minLength": 1
       },
       "minItems": 1
     },
@@ -71,7 +72,8 @@
           "type": "string"
         },
         "route": {
-          "type": "string"
+          "type": "string",
+          "const": "Tree-of-Sophia/intake"
         },
         "direct_write": {
           "type": "boolean",
