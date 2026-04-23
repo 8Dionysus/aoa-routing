@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-stats
-          ref: 6b097510aa93a92eb6c5a48ab7af59b6c8567378
+          ref: bb638e9db93f596c09f08614d232943d3be7d61e
           path: aoa-stats
 
       - name: Checkout aoa-memo
@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/Agents-of-Abyss
-          ref: 2eb39dc2f1d16087e4aeb58d74b819f3dc93ba94
+          ref: e43be40a6c107024194a75ae000b57d439438274
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks

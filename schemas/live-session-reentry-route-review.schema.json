@@ -1,0 +1,123 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing.local/schemas/live-session-reentry-route-review.schema.json",
+  "title": "aoa_routing_live_session_reentry_route_review_v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "owner_repo",
+    "surface_kind",
+    "status",
+    "receipt_ref",
+    "route_reason",
+    "loop_guard",
+    "budget_ref",
+    "primary_action",
+    "secondary_action",
+    "fallback_action",
+    "ownership_note"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "aoa_routing_live_session_reentry_route_review_v1"
+    },
+    "owner_repo": {
+      "const": "aoa-routing"
+    },
+    "surface_kind": {
+      "const": "live_session_reentry_route_review"
+    },
+    "status": {
+      "const": "candidate_only"
+    },
+    "receipt_ref": {
+      "const": "aoa-memo:schemas/inquiry_checkpoint.schema.json"
+    },
+    "route_reason": {
+      "const": "live_session_reentry_after_reviewed_checkpoint"
+    },
+    "loop_guard": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requires_loop_break",
+        "reentry_hops_max",
+        "route_loop_escalation"
+      ],
+      "properties": {
+        "requires_loop_break": {
+          "const": true
+        },
+        "reentry_hops_max": {
+          "const": 1
+        },
+        "route_loop_escalation": {
+          "const": "owner_review_required"
+        }
+      }
+    },
+    "budget_ref": {
+      "const": "Agents-of-Abyss:docs/EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md#owner-split"
+    },
+    "primary_action": {
+      "$ref": "#/$defs/source_owned_action"
+    },
+    "secondary_action": {
+      "$ref": "#/$defs/source_owned_action"
+    },
+    "fallback_action": {
+      "$ref": "#/$defs/source_owned_action"
+    },
+    "ownership_note": {
+      "const": "Routing references a reviewed receipt and budget ref for live-session reentry, but it does not own continuity truth, replay legitimacy, or budget policy."
+    }
+  },
+  "$defs": {
+    "action": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "verb",
+        "target_repo",
+        "target_surface"
+      ],
+      "properties": {
+        "verb": {
+          "enum": [
+            "inspect",
+            "recall"
+          ]
+        },
+        "target_repo": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target_surface": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "source_owned_action": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/action"
+        },
+        {
+          "not": {
+            "type": "object",
+            "properties": {
+              "target_repo": {
+                "const": "aoa-routing"
+              }
+            },
+            "required": [
+              "target_repo"
+            ]
+          }
+        }
+      ]
+    }
+  }
+}

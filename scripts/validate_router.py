@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path, PurePosixPath
@@ -176,6 +177,9 @@ EXPECTED_KAG_VIEW_IDS = {
     TOS_KAG_VIEW_ENTRY_ID,
 }
 LOW_CONTEXT_IMPLEMENTATION_PREFIXES = ("src/", "scripts/")
+LIVE_SESSION_REENTRY_ROUTE_REVIEW_DOC = "docs/LIVE_SESSION_REENTRY_ROUTE_REVIEW.md"
+LIVE_SESSION_REENTRY_ROUTE_REVIEW_SCHEMA = "schemas/live-session-reentry-route-review.schema.json"
+LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE = "examples/live_session_reentry_route_review.example.json"
 ROUTE_MAP_CAPSULE_EXPECTATIONS = {
     (AOA_ROOT_REPO, AOA_CENTER_ENTRY_MAP_PATH): {
         "schema_version": "aoa_center_entry_map_v1",
@@ -5953,6 +5957,209 @@ def validate_generated_outputs(
     return issues
 
 
+def validate_live_session_reentry_route_review(
+    repo_root: Path,
+    issues: list[ValidationIssue],
+    *,
+    repo_roots: dict[str, Path] | None = None,
+) -> None:
+    location = Path(LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE).name
+    doc_path = repo_root / LIVE_SESSION_REENTRY_ROUTE_REVIEW_DOC
+    schema_path = repo_root / LIVE_SESSION_REENTRY_ROUTE_REVIEW_SCHEMA
+    example_path = repo_root / LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE
+    readme_path = repo_root / "README.md"
+    if repo_roots is None:
+        def discover_neighbor(repo_name: str) -> Path:
+            for candidate in (repo_root / repo_name, repo_root.parent / repo_name):
+                if candidate.exists():
+                    return candidate
+            return repo_root.parent / repo_name
+
+        repo_roots = {
+            "aoa-routing": repo_root,
+            "aoa-evals": discover_neighbor("aoa-evals"),
+            "aoa-memo": discover_neighbor("aoa-memo"),
+            "aoa-agents": discover_neighbor("aoa-agents"),
+            AOA_ROOT_REPO: discover_neighbor(AOA_ROOT_REPO),
+        }
+
+    for required_path in (doc_path, schema_path, example_path, readme_path):
+        if not required_path.exists():
+            issues.append(
+                ValidationIssue(
+                    repo_relative(repo_root, required_path),
+                    "missing required live-session reentry contract surface",
+                )
+            )
+            return
+
+    def markdown_anchor_exists(path: Path, anchor: str) -> bool:
+        text = path.read_text(encoding="utf-8")
+        if f'id="{anchor}"' in text or f"id='{anchor}'" in text:
+            return True
+        heading_pattern = re.compile(r"^(#{1,6})\s+(.*)$")
+        for line in text.splitlines():
+            match = heading_pattern.match(line.strip())
+            if match is None:
+                continue
+            heading = match.group(2).strip().lower()
+            heading = re.sub(r"[^\w\s-]", "", heading)
+            heading = re.sub(r"\s+", "-", heading)
+            if heading == anchor:
+                return True
+        return False
+
+    def validate_repo_ref(raw_ref: str, ref_location: str) -> None:
+        try:
+            repo_name, relative_ref = ensure_repo_qualified_ref(raw_ref, ref_location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            return
+        path_text, _, anchor = relative_ref.partition("#")
+        target_root = repo_roots.get(repo_name)
+        if target_root is None:
+            issues.append(
+                ValidationIssue(
+                    location,
+                    f"{ref_location} references unsupported repo '{repo_name}'",
+                )
+            )
+            return
+        target_path = target_root / path_text
+        if not target_path.exists():
+            issues.append(
+                ValidationIssue(
+                    location,
+                    f"{ref_location} target '{repo_name}/{relative_ref}' is missing",
+                )
+            )
+            return
+        if anchor and target_path.suffix.lower() == ".md" and not markdown_anchor_exists(target_path, anchor):
+            issues.append(
+                ValidationIssue(
+                    location,
+                    f"{ref_location} anchor '{anchor}' was not found in {repo_name}/{path_text}",
+                )
+            )
+
+    doc_text = doc_path.read_text(encoding="utf-8")
+    readme_text = readme_path.read_text(encoding="utf-8")
+    required_doc_snippets = (
+        "receipt_ref",
+        "route_reason",
+        "loop_guard",
+        "budget_ref",
+        "It must not define or mutate budget policy.",
+        "It must not become the owner of either one.",
+        "fall back to a router-owned surface",
+    )
+    for snippet in required_doc_snippets:
+        if snippet not in doc_text:
+            issues.append(
+                ValidationIssue(
+                    LIVE_SESSION_REENTRY_ROUTE_REVIEW_DOC,
+                    f"missing required live-session reentry guidance: {snippet}",
+                )
+            )
+
+    for surface_ref in (
+        LIVE_SESSION_REENTRY_ROUTE_REVIEW_DOC,
+        LIVE_SESSION_REENTRY_ROUTE_REVIEW_SCHEMA,
+        LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE,
+    ):
+        if surface_ref not in readme_text:
+            issues.append(ValidationIssue("README.md", f"README.md must route {surface_ref}"))
+
+    try:
+        schema_payload = load_json_file(schema_path)
+        example_payload = load_json_file(example_path)
+    except RouterError as exc:
+        issues.append(ValidationIssue(location, str(exc)))
+        return
+    if not isinstance(schema_payload, dict):
+        issues.append(ValidationIssue(location, "schema payload must be an object"))
+        return
+    validate_against_schema_object(example_payload, schema_payload, location, issues)
+    if not isinstance(example_payload, dict):
+        return
+
+    if example_payload.get("owner_repo") != "aoa-routing":
+        issues.append(ValidationIssue(location, "owner_repo must remain aoa-routing"))
+    if example_payload.get("surface_kind") != "live_session_reentry_route_review":
+        issues.append(ValidationIssue(location, "surface_kind must remain live_session_reentry_route_review"))
+    if example_payload.get("status") != "candidate_only":
+        issues.append(ValidationIssue(location, "status must remain candidate_only"))
+    if example_payload.get("receipt_ref") != "aoa-memo:schemas/inquiry_checkpoint.schema.json":
+        issues.append(ValidationIssue(location, "receipt_ref must stay bound to aoa-memo inquiry checkpoint"))
+    else:
+        validate_repo_ref(example_payload["receipt_ref"], f"{location}.receipt_ref")
+    if example_payload.get("budget_ref") != (
+        "Agents-of-Abyss:docs/EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md#owner-split"
+    ):
+        issues.append(ValidationIssue(location, "budget_ref must stay bound to the W10 center owner split surface"))
+    else:
+        validate_repo_ref(example_payload["budget_ref"], f"{location}.budget_ref")
+
+    primary = example_payload.get("primary_action")
+    secondary = example_payload.get("secondary_action")
+    fallback = example_payload.get("fallback_action")
+    loop_guard = example_payload.get("loop_guard")
+
+    if not isinstance(primary, dict) or primary.get("target_repo") != "aoa-agents":
+        issues.append(ValidationIssue(location, "primary_action.target_repo must remain aoa-agents"))
+    if not isinstance(primary, dict) or primary.get("target_surface") != "docs/SELF_AGENCY_CONTINUITY_LANE.md":
+        issues.append(
+            ValidationIssue(
+                location,
+                "primary_action.target_surface must remain docs/SELF_AGENCY_CONTINUITY_LANE.md",
+            )
+        )
+    if isinstance(primary, dict):
+        validate_repo_ref(
+            f"{primary.get('target_repo')}:{primary.get('target_surface')}",
+            f"{location}.primary_action",
+        )
+    if not isinstance(secondary, dict) or secondary.get("target_repo") != "aoa-memo":
+        issues.append(ValidationIssue(location, "secondary_action.target_repo must remain aoa-memo"))
+    if not isinstance(secondary, dict) or secondary.get("target_surface") != "docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md":
+        issues.append(
+            ValidationIssue(
+                location,
+                "secondary_action.target_surface must remain docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md",
+            )
+        )
+    if isinstance(secondary, dict):
+        validate_repo_ref(
+            f"{secondary.get('target_repo')}:{secondary.get('target_surface')}",
+            f"{location}.secondary_action",
+        )
+    if not isinstance(fallback, dict):
+        issues.append(ValidationIssue(location, "fallback_action must be an object"))
+    elif fallback.get("target_repo") == "aoa-routing":
+        issues.append(ValidationIssue(location, "fallback_action.target_repo must stay source-owned, not aoa-routing"))
+    elif fallback.get("target_repo") == "":
+        issues.append(ValidationIssue(location, "fallback_action.target_repo must not be empty"))
+    else:
+        validate_repo_ref(
+            f"{fallback.get('target_repo')}:{fallback.get('target_surface')}",
+            f"{location}.fallback_action",
+        )
+    if isinstance(fallback, dict) and fallback.get("target_surface") in ("", "generated/return_navigation_hints.min.json"):
+        issues.append(
+            ValidationIssue(
+                location,
+                "fallback_action.target_surface must not point at router-owned generated return hints",
+            )
+        )
+    if isinstance(loop_guard, dict):
+        if loop_guard.get("requires_loop_break") is not True:
+            issues.append(ValidationIssue(location, "loop_guard.requires_loop_break must remain true"))
+        if loop_guard.get("reentry_hops_max") != 1:
+            issues.append(ValidationIssue(location, "loop_guard.reentry_hops_max must remain 1"))
+    else:
+        issues.append(ValidationIssue(location, "loop_guard must be an object"))
+
+
 def main() -> int:
     args = parse_args()
     stats_root = getattr(args, "stats_root", REPO_ROOT.parent / "aoa-stats")
@@ -5983,12 +6190,24 @@ def main() -> int:
             abyss_stack_root,
         )
     )
+    validate_live_session_reentry_route_review(
+        REPO_ROOT,
+        issues,
+        repo_roots={
+            "aoa-routing": REPO_ROOT.resolve(),
+            "aoa-evals": args.evals_root.resolve(),
+            "aoa-memo": args.memo_root.resolve(),
+            "aoa-agents": args.agents_root.resolve(),
+            AOA_ROOT_REPO: args.aoa_root.resolve(),
+        },
+    )
     if issues:
         for issue in issues:
             print(f"[error] {issue.location}: {issue.message}")
         return 1
     print("[ok] validated nested AGENTS docs")
     print("[ok] validated local questbook routing seam")
+    print("[ok] validated live-session reentry route review surface")
     print("[ok] validated generated routing outputs")
     return 0
 

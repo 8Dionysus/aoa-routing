@@ -69,6 +69,8 @@ Return navigation should stay:
 The first routing landing is a dedicated derived surface:
 
 - `generated/return_navigation_hints.min.json`
+- `schemas/live-session-reentry-route-review.schema.json`
+- `examples/live_session_reentry_route_review.example.json`
 
 Its job is narrow:
 
@@ -77,6 +79,11 @@ Its job is narrow:
 - keep recurrence support separate from source meaning
 
 It does not patch `task_to_surface_hints.json`, `federation_entrypoints.min.json`, or `tiny_model_entrypoints.json`.
+
+The post-W10 live-session review contract remains additive in the same way.
+It may carry `receipt_ref`, `route_reason`, `loop_guard`, and `budget_ref`
+for a candidate reentry review, but it does not convert routing into budget
+policy or direct runtime resume authority.
 
 ## Consumer Boundary
 
