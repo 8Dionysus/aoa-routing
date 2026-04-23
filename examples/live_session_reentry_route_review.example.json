@@ -1,0 +1,30 @@
+{
+  "schema_version": "aoa_routing_live_session_reentry_route_review_v1",
+  "owner_repo": "aoa-routing",
+  "surface_kind": "live_session_reentry_route_review",
+  "status": "candidate_only",
+  "receipt_ref": "aoa-memo:schemas/inquiry_checkpoint.schema.json",
+  "route_reason": "live_session_reentry_after_reviewed_checkpoint",
+  "loop_guard": {
+    "requires_loop_break": true,
+    "reentry_hops_max": 1,
+    "route_loop_escalation": "owner_review_required"
+  },
+  "budget_ref": "Agents-of-Abyss:docs/EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md#owner-split",
+  "primary_action": {
+    "verb": "inspect",
+    "target_repo": "aoa-agents",
+    "target_surface": "docs/SELF_AGENCY_CONTINUITY_LANE.md"
+  },
+  "secondary_action": {
+    "verb": "inspect",
+    "target_repo": "aoa-memo",
+    "target_surface": "docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md"
+  },
+  "fallback_action": {
+    "verb": "inspect",
+    "target_repo": "aoa-evals",
+    "target_surface": "docs/TRACE_EVAL_BRIDGE.md"
+  },
+  "ownership_note": "Routing references a reviewed receipt and budget ref for live-session reentry, but it does not own continuity truth, replay legitimacy, or budget policy."
+}
