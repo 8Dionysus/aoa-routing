@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-playbooks
-          ref: 4020a1b71b89f5871eb09db48a92b02925869044
+          ref: f05c99cbf652ff9b40e874e664ec20145ee6fef9
           path: aoa-playbooks
 
       - name: Checkout aoa-kag
