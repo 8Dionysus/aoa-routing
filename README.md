@@ -6,7 +6,7 @@ It does not author new meaning. It derives lightweight routing surfaces from sib
 
 **Source repos own meaning. Routing repo owns navigation.**
 
-> Current release: `v0.2.1`. See [CHANGELOG](CHANGELOG.md) for release notes.
+> Current release: `v0.2.2`. See [CHANGELOG](CHANGELOG.md) for release notes.
 
 The current public paths are:
 

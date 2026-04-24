@@ -7,21 +7,49 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-04-23
+
+### Summary
+
+- this patch adds Agon gate routing, recurrence routing manifests, downstream
+  routing contracts, source-ref requirements, owner-dispatch seams, and stats
+  re-grounding hints
+- Titan routing, Experience owner-dispatch, release, adoption, governance,
+  installation, office, incident, and post-W10 live-session reentry routes are
+  added or tightened
+- `aoa-routing` remains a thin navigation and dispatch layer that points to
+  owner truth without absorbing arena, runtime, memory, proof, or center law
+
 ### Added
 
 - Agon gate routing doctrine, trigger registry seed, and explicit builder /
   validator / test surfaces for the routing repository
+- Agon recurrence gate routing manifests, recurrence downstream routing
+  contracts, source-surface requirements, stats re-grounding hints, and
+  owner-dispatch routing seams
+- Titan routing surfaces and Experience advisory routes for release gates,
+  adoption, governance, installation, office handoff, incident reentry,
+  rollback, KAG promotion, harvest fanout, and live-session reentry review
 
 ### Changed
 
 - README, roadmap, and local guidance now expose the Wave V pre-protocol gate
   routing contour without widening routing into arena or center-owned law
+- routing review follow-ups, recurrence hint constraints, source-ref
+  requirements, Experience advisory route contracts, owner-dispatch/release
+  routing posture, and post-W10 reentry review posture were tightened
 
 ### Validation
 
+- `python scripts/release_check.py`
 - `python scripts/build_agon_gate_routing_registry.py --check`
 - `python scripts/validate_agon_gate_routing.py`
 - `python -m pytest -q tests/test_agon_gate_routing.py`
+
+### Notes
+
+- this patch strengthens route visibility and reentry posture without making
+  routing the owner of the surfaces it dispatches readers toward
 
 ## [0.2.1] - 2026-04-19
 

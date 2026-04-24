@@ -25,9 +25,9 @@ def test_roadmap_matches_current_v0_2_release_surfaces() -> None:
     changelog = read_text("CHANGELOG.md")
     roadmap = read_text("ROADMAP.md")
 
-    assert "v0.2.1" in readme
-    assert "[0.2.1]" in changelog
-    assert "v0.2.1" in roadmap
+    assert "v0.2.2" in readme
+    assert "[0.2.2]" in changelog
+    assert "v0.2.2" in roadmap
 
     for relative_path in (
         "generated/federation_entrypoints.min.json",
