@@ -11,19 +11,19 @@ from _wave9_router_lib import build_decision_packet, preselect
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LIVE_ROOTS = {
-    "aoa-techniques": Path("/srv/aoa-techniques"),
-    "aoa-skills": Path("/srv/aoa-skills"),
-    "aoa-evals": Path("/srv/aoa-evals"),
-    "aoa-memo": Path("/srv/aoa-memo"),
-    "aoa-stats": Path("/srv/aoa-stats"),
-    "aoa-sdk": Path("/srv/aoa-sdk"),
-    "aoa-agents": Path("/srv/aoa-agents"),
-    "Agents-of-Abyss": Path("/srv/Agents-of-Abyss"),
-    "aoa-playbooks": Path("/srv/aoa-playbooks"),
-    "aoa-kag": Path("/srv/aoa-kag"),
-    "Tree-of-Sophia": Path("/srv/Tree-of-Sophia"),
-    "Dionysus": Path("/srv/Dionysus"),
-    "8Dionysus": Path("/srv/8Dionysus"),
+    "aoa-techniques": Path("/srv/AbyssOS/aoa-techniques"),
+    "aoa-skills": Path("/srv/AbyssOS/aoa-skills"),
+    "aoa-evals": Path("/srv/AbyssOS/aoa-evals"),
+    "aoa-memo": Path("/srv/AbyssOS/aoa-memo"),
+    "aoa-stats": Path("/srv/AbyssOS/aoa-stats"),
+    "aoa-sdk": Path("/srv/AbyssOS/aoa-sdk"),
+    "aoa-agents": Path("/srv/AbyssOS/aoa-agents"),
+    "Agents-of-Abyss": Path("/srv/AbyssOS/Agents-of-Abyss"),
+    "aoa-playbooks": Path("/srv/AbyssOS/aoa-playbooks"),
+    "aoa-kag": Path("/srv/AbyssOS/aoa-kag"),
+    "Tree-of-Sophia": Path("/srv/AbyssOS/Tree-of-Sophia"),
+    "Dionysus": Path("/srv/AbyssOS/Dionysus"),
+    "8Dionysus": Path("/srv/AbyssOS/8Dionysus"),
     "abyss-stack": Path("/home/dionysus/src/abyss-stack"),
 }
 MISSING_LIVE_ROOTS = sorted(
@@ -240,7 +240,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             root_by_id["aoa-root"]["capsule_surface"],
             "Agents-of-Abyss:generated/center_entry_map.min.json",
         )
-        self.assertEqual(aoa_payload["schema_version"], "aoa_center_entry_map_v1")
+        self.assertEqual(aoa_payload["schema_version"], "aoa_center_entry_map_v2")
         self.assertEqual(aoa_payload["schema_ref"], "schemas/center-entry-map.schema.json")
         self.assertEqual(aoa_payload["owner_repo"], "Agents-of-Abyss")
         self.assertEqual(aoa_payload["surface_kind"], "center_entry_map")
@@ -248,7 +248,16 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertEqual(aoa_payload["public_root_ref"], "README.md")
         self.assertEqual(
             [route["route_id"] for route in aoa_payload["routes"]],
-            ["center-overview", "constitutional-boundary", "public-contour", "source-of-truth-rules"],
+            [
+                "first-reading",
+                "root-editing",
+                "direction-change",
+                "ownership-routing",
+                "mechanic-change",
+                "public-claim-validation",
+                "low-context-agent",
+                "district-work",
+            ],
         )
         self.assertEqual(
             root_by_id["aoa-root"]["next_actions"],
@@ -258,21 +267,21 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                     "target_repo": "Agents-of-Abyss",
                     "target_surface": "generated/center_entry_map.min.json",
                     "match_key": "route_id",
-                    "target_value": "center-overview",
+                    "target_value": "first-reading",
                 },
                 {
                     "verb": "inspect",
                     "target_repo": "Agents-of-Abyss",
                     "target_surface": "generated/center_entry_map.min.json",
                     "match_key": "route_id",
-                    "target_value": "public-contour",
+                    "target_value": "public-claim-validation",
                 },
                 {
                     "verb": "inspect",
                     "target_repo": "Agents-of-Abyss",
                     "target_surface": "generated/center_entry_map.min.json",
                     "match_key": "route_id",
-                    "target_value": "source-of-truth-rules",
+                    "target_value": "ownership-routing",
                 },
             ],
         )

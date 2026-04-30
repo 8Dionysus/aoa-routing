@@ -10,7 +10,7 @@
     "reentry_hops_max": 1,
     "route_loop_escalation": "owner_review_required"
   },
-  "budget_ref": "Agents-of-Abyss:docs/EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md#owner-split",
+  "budget_ref": "Agents-of-Abyss:mechanics/experience/parts/continuity-context/CONTRACT.md#stronger-owner-split",
   "primary_action": {
     "verb": "inspect",
     "target_repo": "aoa-agents",

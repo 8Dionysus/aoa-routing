@@ -174,6 +174,14 @@ AOA_CENTER_ROUTE_IDS = (
     "public-contour",
     "source-of-truth-rules",
 )
+AOA_CENTER_ROUTE_IDS_BY_SCHEMA = {
+    "aoa_center_entry_map_v1": AOA_CENTER_ROUTE_IDS,
+    "aoa_center_entry_map_v2": (
+        "first-reading",
+        "public-claim-validation",
+        "ownership-routing",
+    ),
+}
 TOS_ROOT_ROUTE_IDS = (
     "current-tiny-entry",
     "tree-first-model",
@@ -363,6 +371,24 @@ def ensure_string(value: Any, location: str) -> str:
     if not isinstance(value, str) or not value.strip():
         raise RouterError(f"{location} must be a non-empty string")
     return value
+
+
+def select_aoa_center_route_ids(payload: dict[str, Any], location: str) -> tuple[str, str, str]:
+    schema_version = ensure_string(payload.get("schema_version"), f"{location}.schema_version")
+    route_ids = {
+        ensure_string(route.get("route_id"), f"{location}.routes[{index}].route_id")
+        for index, route in enumerate(ensure_list(payload.get("routes"), f"{location}.routes"))
+        if isinstance(route, dict)
+    }
+    expected_route_ids = AOA_CENTER_ROUTE_IDS_BY_SCHEMA.get(schema_version)
+    if expected_route_ids is None:
+        raise RouterError(f"{location}.schema_version has unsupported value {schema_version!r}")
+    missing = [route_id for route_id in expected_route_ids if route_id not in route_ids]
+    if missing:
+        raise RouterError(
+            f"{location}.routes missing required center route ids: {', '.join(missing)}"
+        )
+    return expected_route_ids
 
 
 def ensure_bool(value: Any, location: str) -> bool:
@@ -1371,8 +1397,12 @@ def build_federation_entrypoints_payload(
     load_ecosystem_registry_entries(aoa_root)
     ensure_markdown_file(aoa_root / "README.md", f"{AOA_ROOT_REPO}/README.md")
     ensure_markdown_file(aoa_root / "CHARTER.md", f"{AOA_ROOT_REPO}/CHARTER.md")
-    ensure_mapping(
+    aoa_center_entry_map = ensure_mapping(
         load_json_file(aoa_root / AOA_CENTER_ENTRY_MAP_PATH),
+        f"{AOA_ROOT_REPO}/{AOA_CENTER_ENTRY_MAP_PATH}",
+    )
+    aoa_center_route_ids = select_aoa_center_route_ids(
+        aoa_center_entry_map,
         f"{AOA_ROOT_REPO}/{AOA_CENTER_ENTRY_MAP_PATH}",
     )
     ensure_markdown_file(tos_root / "README.md", f"{TOS_REPO}/README.md")
@@ -2001,7 +2031,7 @@ def build_federation_entrypoints_payload(
         ],
         risk=(
             "Runtime diagnostic entry cards stay anchored to the source checkout of "
-            "`abyss-stack`; do not confuse the deployed `/srv/abyss-stack` mirror with the "
+            "`abyss-stack`; do not confuse the deployed `/srv/AbyssOS/abyss-stack` mirror with the "
             "authoritative source repository."
         ),
     )
@@ -2152,21 +2182,21 @@ def build_federation_entrypoints_payload(
                         target_repo=AOA_ROOT_REPO,
                         target_surface=AOA_CENTER_ENTRY_MAP_PATH,
                         match_key="route_id",
-                        target_value=AOA_CENTER_ROUTE_IDS[0],
+                        target_value=aoa_center_route_ids[0],
                     ),
                     build_entry_action(
                         verb="inspect",
                         target_repo=AOA_ROOT_REPO,
                         target_surface=AOA_CENTER_ENTRY_MAP_PATH,
                         match_key="route_id",
-                        target_value=AOA_CENTER_ROUTE_IDS[1],
+                        target_value=aoa_center_route_ids[1],
                     ),
                     build_entry_action(
                         verb="inspect",
                         target_repo=AOA_ROOT_REPO,
                         target_surface=AOA_CENTER_ENTRY_MAP_PATH,
                         match_key="route_id",
-                        target_value=AOA_CENTER_ROUTE_IDS[2],
+                        target_value=aoa_center_route_ids[2],
                     ),
                 ],
                 "fallback": build_entry_action(

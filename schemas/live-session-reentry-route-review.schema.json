@@ -58,7 +58,7 @@
       }
     },
     "budget_ref": {
-      "const": "Agents-of-Abyss:docs/EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md#owner-split"
+      "const": "Agents-of-Abyss:mechanics/experience/parts/continuity-context/CONTRACT.md#stronger-owner-split"
     },
     "primary_action": {
       "$ref": "#/$defs/source_owned_action"

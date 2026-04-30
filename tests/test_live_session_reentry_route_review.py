@@ -52,7 +52,7 @@ def test_live_session_reentry_route_review_references_budget_without_owning_it()
     example = load_example()
 
     assert example["budget_ref"] == (
-        "Agents-of-Abyss:docs/EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md#owner-split"
+        "Agents-of-Abyss:mechanics/experience/parts/continuity-context/CONTRACT.md#stronger-owner-split"
     )
     assert example["fallback_action"]["target_repo"] == "aoa-evals"
     assert example["fallback_action"]["target_surface"] == "docs/TRACE_EVAL_BRIDGE.md"
@@ -94,9 +94,20 @@ def test_validate_router_rejects_missing_cross_repo_anchor(tmp_path: Path) -> No
         "# Trace Eval Bridge\n",
         encoding="utf-8",
     )
-    (tmp_root / "Agents-of-Abyss" / "docs").mkdir(parents=True, exist_ok=True)
-    (tmp_root / "Agents-of-Abyss" / "docs" / "EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md").write_text(
-        "# Living Workspace Continuity Runtime\n",
+    (tmp_root / "Agents-of-Abyss" / "mechanics" / "experience" / "parts" / "continuity-context").mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    (
+        tmp_root
+        / "Agents-of-Abyss"
+        / "mechanics"
+        / "experience"
+        / "parts"
+        / "continuity-context"
+        / "CONTRACT.md"
+    ).write_text(
+        "# Continuity Context Contract\n",
         encoding="utf-8",
     )
 
@@ -104,7 +115,7 @@ def test_validate_router_rejects_missing_cross_repo_anchor(tmp_path: Path) -> No
     validate_router.validate_live_session_reentry_route_review(repo_root, issues)
 
     assert any(
-        "budget_ref anchor 'owner-split' was not found" in issue.message for issue in issues
+        "budget_ref anchor 'stronger-owner-split' was not found" in issue.message for issue in issues
     )
 
 

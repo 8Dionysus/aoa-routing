@@ -118,6 +118,7 @@ from router_core import (
     load_technique_catalog_entries,
     load_tos_tiny_entry_route,
     relative_posix,
+    select_aoa_center_route_ids,
 )
 
 
@@ -182,7 +183,7 @@ LIVE_SESSION_REENTRY_ROUTE_REVIEW_SCHEMA = "schemas/live-session-reentry-route-r
 LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE = "examples/live_session_reentry_route_review.example.json"
 ROUTE_MAP_CAPSULE_EXPECTATIONS = {
     (AOA_ROOT_REPO, AOA_CENTER_ENTRY_MAP_PATH): {
-        "schema_version": "aoa_center_entry_map_v1",
+        "schema_version": ("aoa_center_entry_map_v1", "aoa_center_entry_map_v2"),
         "schema_ref": "schemas/center-entry-map.schema.json",
         "surface_kind": "center_entry_map",
         "route_mode": "repo_local",
@@ -2252,11 +2253,17 @@ def validate_federation_entrypoints(
             }
             for key, expected_value in expected_fields.items():
                 actual_value = payload.get(key)
-                if actual_value != expected_value:
+                if isinstance(expected_value, tuple):
+                    matches_expected = actual_value in expected_value
+                    expected_label = " or ".join(repr(item) for item in expected_value)
+                else:
+                    matches_expected = actual_value == expected_value
+                    expected_label = repr(expected_value)
+                if not matches_expected:
                     issues.append(
                         ValidationIssue(
                             "federation_entrypoints.min.json",
-                            f"{location}.capsule_surface payload must keep {key}={expected_value!r}",
+                            f"{location}.capsule_surface payload must keep {key}={expected_label}",
                         )
                     )
             schema_ref = validate_local_low_context_path(repo_name, payload.get("schema_ref"), f"{location}.capsule_payload.schema_ref")
@@ -2539,27 +2546,37 @@ def validate_federation_entrypoints(
                     f"aoa-root.capsule_surface must stay '{AOA_ROOT_REPO}:{AOA_CENTER_ENTRY_MAP_PATH}'",
                 )
             )
+        aoa_center_route_ids = AOA_CENTER_ROUTE_IDS
+        aoa_payload = load_target_payload(AOA_ROOT_REPO, AOA_CENTER_ENTRY_MAP_PATH)
+        if isinstance(aoa_payload, dict):
+            try:
+                aoa_center_route_ids = select_aoa_center_route_ids(
+                    aoa_payload,
+                    f"{AOA_ROOT_REPO}/{AOA_CENTER_ENTRY_MAP_PATH}",
+                )
+            except RouterError as exc:
+                issues.append(ValidationIssue("federation_entrypoints.min.json", str(exc)))
         expected_actions = [
             {
                 "verb": "inspect",
                 "target_repo": AOA_ROOT_REPO,
                 "target_surface": AOA_CENTER_ENTRY_MAP_PATH,
                 "match_key": "route_id",
-                "target_value": AOA_CENTER_ROUTE_IDS[0],
+                "target_value": aoa_center_route_ids[0],
             },
             {
                 "verb": "inspect",
                 "target_repo": AOA_ROOT_REPO,
                 "target_surface": AOA_CENTER_ENTRY_MAP_PATH,
                 "match_key": "route_id",
-                "target_value": AOA_CENTER_ROUTE_IDS[1],
+                "target_value": aoa_center_route_ids[1],
             },
             {
                 "verb": "inspect",
                 "target_repo": AOA_ROOT_REPO,
                 "target_surface": AOA_CENTER_ENTRY_MAP_PATH,
                 "match_key": "route_id",
-                "target_value": AOA_CENTER_ROUTE_IDS[2],
+                "target_value": aoa_center_route_ids[2],
             },
         ]
         next_actions = aoa_root_entry.get("next_actions")
@@ -6094,9 +6111,9 @@ def validate_live_session_reentry_route_review(
     else:
         validate_repo_ref(example_payload["receipt_ref"], f"{location}.receipt_ref")
     if example_payload.get("budget_ref") != (
-        "Agents-of-Abyss:docs/EXPERIENCE_V2_0_LIVING_WORKSPACE_CONTINUITY_RUNTIME.md#owner-split"
+        "Agents-of-Abyss:mechanics/experience/parts/continuity-context/CONTRACT.md#stronger-owner-split"
     ):
-        issues.append(ValidationIssue(location, "budget_ref must stay bound to the W10 center owner split surface"))
+        issues.append(ValidationIssue(location, "budget_ref must stay bound to the continuity-context owner split surface"))
     else:
         validate_repo_ref(example_payload["budget_ref"], f"{location}.budget_ref")
 
