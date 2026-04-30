@@ -60,7 +60,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/Agents-of-Abyss
-          ref: e43be40a6c107024194a75ae000b57d439438274
+          ref: f06c0977c182d9cf47b3bdc56c8416096058f39e
           path: Agents-of-Abyss
 
       - name: Checkout aoa-playbooks
