@@ -217,6 +217,18 @@ def build_fixture_generated(
     generated_dir_name: str = "generated",
 ) -> tuple[Path, dict[str, Path]]:
     roots = copy_fixture_roots(tmp_path)
+    ensure_local_ref_placeholder(
+        roots["aoa-techniques"],
+        "mechanics/growth-cycle/parts/questbook-integration/README.md",
+    )
+    ensure_local_ref_placeholder(
+        roots["aoa-skills"],
+        "mechanics/questbook/docs/QUESTBOOK_SKILL_INTEGRATION.md",
+    )
+    ensure_local_ref_placeholder(
+        roots["aoa-evals"],
+        "docs/QUESTBOOK_EVAL_INTEGRATION.md",
+    )
     generated_dir = tmp_path / generated_dir_name
     outputs = build_outputs_from_roots(roots)
     for filename, payload in outputs.items():
@@ -894,9 +906,9 @@ def test_validate_generated_outputs_rejects_closed_quest_in_live_routing_hints(t
                 {
                     "verb": "expand",
                     "target_repo": "aoa-techniques",
-                    "target_surface": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
+                    "target_surface": "mechanics/growth-cycle/parts/questbook-integration/README.md",
                     "match_key": "path",
-                    "target_value": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
+                    "target_value": "mechanics/growth-cycle/parts/questbook-integration/README.md",
                 },
                 {
                     "verb": "handoff",

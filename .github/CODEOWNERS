@@ -1,4 +1,5 @@
 # Narrow ownership map for governance-critical routing surfaces.
+/.agents/ @8Dionysus
 /.github/ @8Dionysus
 /scripts/ @8Dionysus
 /schemas/ @8Dionysus

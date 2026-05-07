@@ -254,6 +254,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 "direction-change",
                 "ownership-routing",
                 "mechanic-change",
+                "organ-alignment",
                 "public-claim-validation",
                 "low-context-agent",
                 "district-work",
