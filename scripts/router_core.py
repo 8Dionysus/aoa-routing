@@ -225,8 +225,8 @@ QUEST_ROUTING_ACTIONS_ENABLED = ("inspect", "expand", "handoff")
 QUEST_ROUTING_WAVE_SCOPE = "source-only"
 QUEST_ROUTING_CLOSED_STATES = frozenset({"done", "dropped"})
 QUEST_ROUTING_EXPAND_DOC_BY_REPO = {
-    "aoa-techniques": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
-    "aoa-skills": "docs/QUESTBOOK_SKILL_INTEGRATION.md",
+    "aoa-techniques": "mechanics/growth-cycle/parts/questbook-integration/README.md",
+    "aoa-skills": "mechanics/questbook/docs/QUESTBOOK_SKILL_INTEGRATION.md",
     "aoa-evals": "docs/QUESTBOOK_EVAL_INTEGRATION.md",
 }
 TASK_TO_TIER_HINT_SPECS = (

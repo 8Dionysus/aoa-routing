@@ -434,9 +434,9 @@ def test_build_outputs_from_fixtures() -> None:
             {
                 "verb": "expand",
                 "target_repo": "aoa-techniques",
-                "target_surface": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
+                "target_surface": "mechanics/growth-cycle/parts/questbook-integration/README.md",
                 "match_key": "path",
-                "target_value": "docs/QUESTBOOK_TECHNIQUE_INTEGRATION.md",
+                "target_value": "mechanics/growth-cycle/parts/questbook-integration/README.md",
             },
             {
                 "verb": "handoff",
