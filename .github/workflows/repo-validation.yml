@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-skills
-          ref: d98eaac04619b977558eeec0d244967a74e9353e
+          ref: 39ad193ff137b26be8377a13588ff4e8ef089750
           path: aoa-skills
 
       - name: Checkout aoa-evals
@@ -109,7 +109,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/abyss-stack
-          ref: 10323e2e868f80be089a1ffee43d0f422a7f1628
+          ref: 376f1c200bb289564b00e76a290f470dbf4e4e9c
           path: abyss-stack
 
       - name: Setup Python
