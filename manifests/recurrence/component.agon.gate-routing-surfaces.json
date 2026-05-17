@@ -10,7 +10,7 @@
       ],
       "match_signals": [
         "agon_stop_line_repeated",
-        "agon_recurrence_surface_seen"
+        "agon_recurrence_surface_changed"
       ],
       "notes": "Repeated gate candidates are routing pressure, not arena activation.",
       "observation_inputs": [

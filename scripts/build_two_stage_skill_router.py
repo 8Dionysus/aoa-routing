@@ -89,22 +89,30 @@ def load_optional_jsonl(path: Path) -> list[dict[str, Any]]:
 def expected_stage_2_mode(
     case: dict[str, Any],
     *,
-    preselected: dict[str, Any],
     signal_by_name: dict[str, dict[str, Any]],
-) -> str:
+) -> str | None:
     explicit_expectation = case.get("stage_2_expectation")
     if isinstance(explicit_expectation, str) and explicit_expectation:
         return explicit_expectation
 
-    shortlist = [
-        entry.get("name")
-        for entry in preselected.get("shortlist", [])
-        if isinstance(entry.get("name"), str) and entry.get("name")
-    ]
-    if not shortlist or preselected.get("confidence") in {"empty", "weak"}:
+    if str(case.get("case_id", "")).startswith("tiny-defer-"):
+        return None
+
+    expected_top1 = case.get("expected_top1")
+    if isinstance(expected_top1, str) and expected_top1:
+        expected_lead = expected_top1
+    else:
+        expected_shortlist = [
+            name
+            for name in case.get("expected_shortlist_includes", [])
+            if isinstance(name, str) and name
+        ]
+        expected_lead = expected_shortlist[0] if expected_shortlist else None
+
+    if expected_lead is None:
         return "no-skill"
 
-    lead_signal = signal_by_name.get(shortlist[0], {})
+    lead_signal = signal_by_name.get(expected_lead, {})
     return (
         "manual-invocation-required"
         if lead_signal.get("manual_invocation_required")
@@ -356,16 +364,16 @@ def build_outputs(
         )
         stage_2_expectation = expected_stage_2_mode(
             case,
-            preselected=preselected,
             signal_by_name=signal_by_name,
         )
         expected_shortlist_includes = case.get("expected_shortlist_includes", [])
         if stage_2_expectation == "activate-candidate" and not expected_shortlist_includes:
-            expected_shortlist_includes = [
-                entry.get("name")
-                for entry in preselected.get("shortlist", [])
-                if isinstance(entry.get("name"), str) and entry.get("name")
-            ][:1]
+            expected_top1 = case.get("expected_top1")
+            expected_shortlist_includes = (
+                [expected_top1]
+                if isinstance(expected_top1, str) and expected_top1
+                else []
+            )
         if len(examples) < 8:
             examples.append(
                 {
@@ -377,19 +385,19 @@ def build_outputs(
             )
 
         top_band = preselected["top_bands"][0]["id"] if preselected.get("top_bands") else None
-        routing_eval_cases.append(
-            {
-                "case_id": case["case_id"],
-                "prompt": case["prompt"],
-                "repo_family_hint": case.get("repo_family_hint"),
-                "expected_shortlist_includes": expected_shortlist_includes,
-                "expected_shortlist_excludes": case.get("expected_shortlist_excludes", []),
-                "expected_top1": case.get("expected_top1"),
-                "expected_top1_not": case.get("expected_top1_not"),
-                "expected_band": case.get("expected_band"),
-                "stage_2_expectation": stage_2_expectation,
-            }
-        )
+        eval_case = {
+            "case_id": case["case_id"],
+            "prompt": case["prompt"],
+            "repo_family_hint": case.get("repo_family_hint"),
+            "expected_shortlist_includes": expected_shortlist_includes,
+            "expected_shortlist_excludes": case.get("expected_shortlist_excludes", []),
+            "expected_top1": case.get("expected_top1"),
+            "expected_top1_not": case.get("expected_top1_not"),
+            "expected_band": case.get("expected_band"),
+        }
+        if stage_2_expectation is not None:
+            eval_case["stage_2_expectation"] = stage_2_expectation
+        routing_eval_cases.append(eval_case)
         for optional_field in ("expected_confidence", "expect_fallback_candidates"):
             if optional_field in case:
                 routing_eval_cases[-1][optional_field] = case[optional_field]

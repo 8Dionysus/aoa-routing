@@ -6,6 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+from router_core import default_dependency_root
+
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 DEPENDENCIES = {
@@ -27,19 +29,13 @@ DEPENDENCIES = {
 
 
 def _resolve(repo_name: str) -> Path:
+    override = None
     if repo_name == "abyss-stack":
         override = os.environ.get("ABYSS_STACK_ROOT") or os.environ.get("AOA_SOURCE_ROOT")
-        candidates = [
-            Path(override).expanduser() if override else None,
-            Path.home() / "src" / repo_name,
-            REPO_ROOT / repo_name,
-            REPO_ROOT.parent / repo_name,
-        ]
-    else:
-        candidates = [
-            REPO_ROOT / repo_name,
-            REPO_ROOT.parent / repo_name,
-        ]
+    candidates = [
+        Path(override).expanduser() if override else None,
+        default_dependency_root(repo_name, REPO_ROOT),
+    ]
     for candidate in candidates:
         if candidate is not None and candidate.exists():
             return candidate.resolve()

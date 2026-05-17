@@ -225,8 +225,8 @@ This landing reads sibling source and capsule surfaces:
 - `aoa-sdk/.aoa/workspace.toml`
 - `aoa-stats/generated/summary_surface_catalog.min.json`
 - `8Dionysus/generated/public_route_map.min.json`
-- `abyss-stack/generated/diagnostic_surface_catalog.min.json`
-- `abyss-stack/examples/diagnostic_session.min.example.json`
+- `abyss-stack/mechanics/diagnostic-spine/parts/diagnostic-surfaces/generated/diagnostic_surface_catalog.min.json`
+- `abyss-stack/mechanics/diagnostic-spine/parts/diagnostic-surfaces/examples/diagnostic_session.min.example.json`
 
 The compact capsule is the first inspect surface for seed, runtime-surface, and profile-entry re-entry.
 The heavier raw anchor remains visible only as a source anchor or verification target in the owner repo.

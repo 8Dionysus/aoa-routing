@@ -189,15 +189,12 @@ def test_build_outputs_anchor_eval_expectations_to_source_contracts() -> None:
     assert eval_cases["fixture-precision-weak-change-vs-scan"]["stage_2_expectation"] == "no-skill"
 
 
-def test_expected_stage_2_mode_tracks_strong_manual_only_lead_when_no_explicit_expectation() -> None:
+def test_expected_stage_2_mode_tracks_expected_manual_only_lead_when_no_explicit_expectation() -> None:
     stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
         {
             "case_id": "manual-only-lead-without-explicit-stage-2",
+            "expected_top1": "aoa-session-donor-harvest",
             "expected_shortlist_excludes": ["aoa-quest-harvest"],
-        },
-        preselected={
-            "shortlist": [{"name": "aoa-session-donor-harvest", "score": 11}],
-            "confidence": "strong",
         },
         signal_by_name={
             "aoa-session-donor-harvest": {
@@ -207,6 +204,39 @@ def test_expected_stage_2_mode_tracks_strong_manual_only_lead_when_no_explicit_e
     )
 
     assert stage_2_mode == "manual-invocation-required"
+
+
+def test_expected_stage_2_mode_ignores_actual_router_output_when_contract_is_no_skill() -> None:
+    stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
+        {
+            "case_id": "contract-empty-even-if-current-router-would-score",
+            "expected_shortlist_includes": [],
+        },
+        signal_by_name={
+            "aoa-session-donor-harvest": {
+                "manual_invocation_required": True,
+            }
+        },
+    )
+
+    assert stage_2_mode == "no-skill"
+
+
+def test_expected_stage_2_mode_leaves_tiny_defer_cases_stage_one_scoped_without_explicit_expectation() -> None:
+    stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
+        {
+            "case_id": "tiny-defer-aoa-safe-infra-change",
+            "expected_shortlist_includes": ["aoa-change-protocol"],
+            "expected_shortlist_excludes": ["aoa-safe-infra-change"],
+        },
+        signal_by_name={
+            "aoa-change-protocol": {
+                "manual_invocation_required": False,
+            }
+        },
+    )
+
+    assert stage_2_mode is None
 
 
 def test_validate_two_stage_outputs_accepts_fixture_build(tmp_path: Path) -> None:

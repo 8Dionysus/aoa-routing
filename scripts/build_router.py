@@ -26,6 +26,7 @@ from router_core import (
     build_tiny_model_entrypoints_payload,
     build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
+    default_dependency_root,
     ensure_bool,
     ensure_int,
     ensure_list,
@@ -307,85 +308,85 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--techniques-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-techniques",
+        default=default_dependency_root("aoa-techniques"),
         help="Path to the aoa-techniques repository root.",
     )
     parser.add_argument(
         "--skills-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-skills",
+        default=default_dependency_root("aoa-skills"),
         help="Path to the aoa-skills repository root.",
     )
     parser.add_argument(
         "--evals-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-evals",
+        default=default_dependency_root("aoa-evals"),
         help="Path to the aoa-evals repository root.",
     )
     parser.add_argument(
         "--memo-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-memo",
+        default=default_dependency_root("aoa-memo"),
         help="Path to the aoa-memo repository root for bounded memo routing surfaces.",
     )
     parser.add_argument(
         "--stats-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-stats",
+        default=default_dependency_root("aoa-stats"),
         help="Path to the aoa-stats repository root for additive stress recovery summary surfaces.",
     )
     parser.add_argument(
         "--agents-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-agents",
+        default=default_dependency_root("aoa-agents"),
         help="Path to the aoa-agents repository root for model-tier contracts.",
     )
     parser.add_argument(
         "--aoa-root",
         type=Path,
-        default=REPO_ROOT.parent / "Agents-of-Abyss",
+        default=default_dependency_root("Agents-of-Abyss"),
         help="Path to the Agents-of-Abyss repository root for federation root entry surfaces.",
     )
     parser.add_argument(
         "--playbooks-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-playbooks",
+        default=default_dependency_root("aoa-playbooks"),
         help="Path to the aoa-playbooks repository root for federation playbook entries.",
     )
     parser.add_argument(
         "--kag-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-kag",
+        default=default_dependency_root("aoa-kag"),
         help="Path to the aoa-kag repository root for federation KAG entry views.",
     )
     parser.add_argument(
         "--tos-root",
         type=Path,
-        default=REPO_ROOT.parent / "Tree-of-Sophia",
+        default=default_dependency_root("Tree-of-Sophia"),
         help="Path to the Tree-of-Sophia repository root for federation root entry surfaces.",
     )
     parser.add_argument(
         "--sdk-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-sdk",
+        default=default_dependency_root("aoa-sdk"),
         help="Path to the aoa-sdk repository root for runtime control-plane federation entries.",
     )
     parser.add_argument(
         "--seed-root",
         type=Path,
-        default=REPO_ROOT.parent / "Dionysus",
+        default=default_dependency_root("Dionysus"),
         help="Path to the Dionysus repository root for seed federation entries.",
     )
     parser.add_argument(
         "--profile-root",
         type=Path,
-        default=REPO_ROOT.parent / "8Dionysus",
+        default=default_dependency_root("8Dionysus"),
         help="Path to the 8Dionysus repository root for public orientation federation entries.",
     )
     parser.add_argument(
         "--abyss-stack-root",
         type=Path,
-        default=Path.home() / "src" / "abyss-stack",
+        default=default_dependency_root("abyss-stack"),
         help="Path to the abyss-stack source checkout for runtime federation entries.",
     )
     parser.add_argument(
@@ -1121,10 +1122,10 @@ def build_outputs(
     routing_root: Path | None = None,
 ) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
     routing_root = (routing_root or REPO_ROOT).resolve()
-    sdk_root = sdk_root or (routing_root.parent / "aoa-sdk")
-    seed_root = seed_root or (routing_root.parent / "Dionysus")
-    profile_root = profile_root or (routing_root.parent / "8Dionysus")
-    abyss_stack_root = abyss_stack_root or (Path.home() / "src" / "abyss-stack")
+    sdk_root = sdk_root or default_dependency_root("aoa-sdk", routing_root)
+    seed_root = seed_root or default_dependency_root("Dionysus", routing_root)
+    profile_root = profile_root or default_dependency_root("8Dionysus", routing_root)
+    abyss_stack_root = abyss_stack_root or default_dependency_root("abyss-stack", routing_root)
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
         techniques_root
     )
