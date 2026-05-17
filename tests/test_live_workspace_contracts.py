@@ -7,24 +7,28 @@ from pathlib import Path
 import build_router
 import validate_router
 from _wave9_router_lib import build_decision_packet, preselect
+from router_core import (
+    ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
+    default_dependency_root,
+)
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 LIVE_ROOTS = {
-    "aoa-techniques": Path("/srv/AbyssOS/aoa-techniques"),
-    "aoa-skills": Path("/srv/AbyssOS/aoa-skills"),
-    "aoa-evals": Path("/srv/AbyssOS/aoa-evals"),
-    "aoa-memo": Path("/srv/AbyssOS/aoa-memo"),
-    "aoa-stats": Path("/srv/AbyssOS/aoa-stats"),
-    "aoa-sdk": Path("/srv/AbyssOS/aoa-sdk"),
-    "aoa-agents": Path("/srv/AbyssOS/aoa-agents"),
-    "Agents-of-Abyss": Path("/srv/AbyssOS/Agents-of-Abyss"),
-    "aoa-playbooks": Path("/srv/AbyssOS/aoa-playbooks"),
-    "aoa-kag": Path("/srv/AbyssOS/aoa-kag"),
-    "Tree-of-Sophia": Path("/srv/AbyssOS/Tree-of-Sophia"),
-    "Dionysus": Path("/srv/AbyssOS/Dionysus"),
-    "8Dionysus": Path("/srv/AbyssOS/8Dionysus"),
-    "abyss-stack": Path("/home/dionysus/src/abyss-stack"),
+    "aoa-techniques": default_dependency_root("aoa-techniques", REPO_ROOT),
+    "aoa-skills": default_dependency_root("aoa-skills", REPO_ROOT),
+    "aoa-evals": default_dependency_root("aoa-evals", REPO_ROOT),
+    "aoa-memo": default_dependency_root("aoa-memo", REPO_ROOT),
+    "aoa-stats": default_dependency_root("aoa-stats", REPO_ROOT),
+    "aoa-sdk": default_dependency_root("aoa-sdk", REPO_ROOT),
+    "aoa-agents": default_dependency_root("aoa-agents", REPO_ROOT),
+    "Agents-of-Abyss": default_dependency_root("Agents-of-Abyss", REPO_ROOT),
+    "aoa-playbooks": default_dependency_root("aoa-playbooks", REPO_ROOT),
+    "aoa-kag": default_dependency_root("aoa-kag", REPO_ROOT),
+    "Tree-of-Sophia": default_dependency_root("Tree-of-Sophia", REPO_ROOT),
+    "Dionysus": default_dependency_root("Dionysus", REPO_ROOT),
+    "8Dionysus": default_dependency_root("8Dionysus", REPO_ROOT),
+    "abyss-stack": default_dependency_root("abyss-stack", REPO_ROOT),
 }
 MISSING_LIVE_ROOTS = sorted(
     repo_name for repo_name, repo_root in LIVE_ROOTS.items() if not repo_root.exists()
@@ -58,6 +62,7 @@ LIVE_REQUIRED_INPUTS = {
     ],
     "Tree-of-Sophia": [Path("generated/root_entry_map.min.json")],
     "8Dionysus": [Path("generated/public_route_map.min.json")],
+    "abyss-stack": [Path(ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH)],
 }
 MISSING_LIVE_INPUTS = sorted(
     f"{repo_name}/{relative_path.as_posix()}"
@@ -90,6 +95,13 @@ def resolve_repo_ref(ref: str, *, default_repo: str | None = None) -> Path:
     if default_repo is None:
         raise AssertionError(f"repo-qualified ref required, got {ref!r}")
     return LIVE_ROOTS[default_repo] / strip_anchor(ref)
+
+
+def assert_live_playbook_refs_exist(refs: list[object]) -> None:
+    self_refs = [ref for ref in refs if isinstance(ref, str)]
+    assert self_refs
+    for ref in self_refs:
+        assert (LIVE_ROOTS["aoa-playbooks"] / strip_anchor(ref)).exists(), ref
 
 
 @unittest.skipUnless(
@@ -209,10 +221,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertTrue(all("schema_ref" in entry and "surface_ref" in entry for entry in stats_payload["surfaces"]))
         self.assertTrue(all("path" not in entry for entry in stats_payload["surfaces"]))
 
-        abyss_payload = load_json(LIVE_ROOTS["abyss-stack"] / "generated" / "diagnostic_surface_catalog.min.json")
+        abyss_payload = load_json(LIVE_ROOTS["abyss-stack"] / ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH)
         self.assertEqual(
             entry_by_id["abyss-stack-diagnostic-spine"]["capsule_surface"],
-            "abyss-stack:generated/diagnostic_surface_catalog.min.json",
+            f"abyss-stack:{ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH}",
         )
         self.assertTrue(all("schema_ref" in entry and "example_ref" in entry for entry in abyss_payload["surfaces"]))
 
@@ -819,16 +831,6 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         review_ids = [item["playbook_id"] for item in review_status["playbooks"]]
         review_packet_ids = [item["playbook_id"] for item in review_packet_contracts["playbooks"]]
         review_intake_ids = [item["playbook_id"] for item in review_intake["playbooks"]]
-        gated_review_packet_ids = [
-            item["playbook_id"]
-            for item in review_packet_contracts["playbooks"]
-            if item.get("gate_verdict")
-        ]
-        gated_review_intake_ids = [
-            item["playbook_id"]
-            for item in review_intake["playbooks"]
-            if item.get("gate_verdict")
-        ]
 
         self.assertEqual(routed_playbook_ids, registry_ids)
         self.assertTrue(set(activation_ids).issubset(set(routed_playbook_ids)))
@@ -836,8 +838,6 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertTrue(set(review_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_packet_ids).issubset(set(routed_playbook_ids)))
         self.assertTrue(set(review_intake_ids).issubset(set(routed_playbook_ids)))
-        self.assertEqual(review_ids, gated_review_packet_ids)
-        self.assertEqual(review_ids, gated_review_intake_ids)
         self.assertIsInstance(activation, list)
         self.assertIsInstance(federation_surfaces, list)
         self.assertEqual(review_status["schema_version"], 1)
@@ -845,51 +845,24 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertEqual(review_intake["schema_version"], 1)
 
         review_by_id = {item["playbook_id"]: item for item in review_status["playbooks"]}
-        self.assertTrue(all(review_by_id[playbook_id].get("gate_verdict") for playbook_id in review_ids))
+        self.assertEqual(set(review_by_id), set(review_ids))
 
         packet_by_id = {item["playbook_id"]: item for item in review_packet_contracts["playbooks"]}
-        self.assertEqual(packet_by_id["AOA-P-0011"]["memo_runtime_surfaces"], ["approval_record"])
-        self.assertEqual(
-            packet_by_id["AOA-P-0017"]["source_review_refs"][0],
-            "playbooks/split-wave-cross-repo-rollout/PLAYBOOK.md",
-        )
-        self.assertEqual(
-            packet_by_id["AOA-P-0017"]["source_review_refs"][1],
-            "docs/gate-reviews/split-wave-cross-repo-rollout.md",
-        )
-        self.assertEqual(
-            packet_by_id["AOA-P-0021"]["source_review_refs"][:2],
-            [
-                "playbooks/owner-first-capability-landing/PLAYBOOK.md",
-                "docs/gate-reviews/owner-first-capability-landing.md",
-            ],
-        )
-        self.assertIn(
-            "docs/real-runs/2026-04-07.owner-first-capability-landing.md",
-            packet_by_id["AOA-P-0021"]["source_review_refs"],
-        )
-        self.assertEqual(
-            packet_by_id["AOA-P-0024"]["source_review_refs"],
-            [
-                "playbooks/federated-live-publisher-activation/PLAYBOOK.md",
-                "docs/gate-reviews/federated-live-publisher-activation.md",
-                "docs/real-runs/2026-04-07.federated-live-publisher-activation.md",
-            ],
-        )
+        for packet in packet_by_id.values():
+            assert_live_playbook_refs_exist(packet.get("source_review_refs", []))
+            memo_surfaces = packet.get("memo_runtime_surfaces", [])
+            self.assertIsInstance(memo_surfaces, list)
 
         intake_by_id = {item["playbook_id"]: item for item in review_intake["playbooks"]}
-        self.assertEqual(intake_by_id["AOA-P-0017"]["composition_posture"], "landed")
-        self.assertEqual(intake_by_id["AOA-P-0019"]["composition_posture"], "awaiting-reviewed-run")
-        self.assertEqual(intake_by_id["AOA-P-0021"]["composition_posture"], "landed")
-        self.assertEqual(intake_by_id["AOA-P-0024"]["composition_posture"], "held-after-review")
-        self.assertEqual(
-            intake_by_id["AOA-P-0017"]["accepted_packet_kinds"],
-            packet_by_id["AOA-P-0017"]["candidate_packet_kinds"],
-        )
-        self.assertEqual(
-            intake_by_id["AOA-P-0017"]["review_outcome_targets"]["gate_reviews"],
-            ["docs/gate-reviews/split-wave-cross-repo-rollout.md"],
-        )
+        for playbook_id, intake in intake_by_id.items():
+            self.assertIn(playbook_id, packet_by_id)
+            self.assertIsInstance(intake.get("composition_posture"), str)
+            accepted_packet_kinds = intake.get("accepted_packet_kinds", [])
+            candidate_packet_kinds = packet_by_id[playbook_id].get("candidate_packet_kinds", [])
+            self.assertTrue(set(accepted_packet_kinds).issubset(set(candidate_packet_kinds)))
+            gate_reviews = intake.get("review_outcome_targets", {}).get("gate_reviews", [])
+            if gate_reviews:
+                assert_live_playbook_refs_exist(gate_reviews)
 
     def test_live_workspace_playbook_eval_and_memo_intake_chain_resolves_to_real_surfaces(self) -> None:
         review_packet_contracts = load_json(

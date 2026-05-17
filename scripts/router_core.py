@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import posixpath
 import re
 from pathlib import Path
 from typing import Any, Iterable
@@ -46,6 +47,35 @@ KNOWN_REPOS = (
     SEED_REPO,
     ABYSS_STACK_REPO,
 ) + tuple(CANONICAL_REPO_BY_KIND.values())
+
+
+def default_dependency_root(repo_name: str, routing_root: Path | None = None) -> Path:
+    """Resolve a sibling repo from a checkout, worktree, or live workspace root."""
+    base_root = (routing_root or REPO_ROOT).resolve()
+    candidates: list[Path] = []
+
+    def add_candidate(path: Path) -> None:
+        if path not in candidates:
+            candidates.append(path)
+
+    for base in (base_root, base_root.parent, *base_root.parents):
+        repo_path = base / repo_name
+        if repo_name == ABYSS_STACK_REPO:
+            add_candidate(repo_path / "Configs")
+        add_candidate(repo_path)
+
+    if repo_name == ABYSS_STACK_REPO:
+        add_candidate(Path.home() / "src" / repo_name)
+
+    for candidate in candidates:
+        if candidate.exists():
+            return candidate
+
+    if repo_name == ABYSS_STACK_REPO:
+        return Path.home() / "src" / repo_name
+    return base_root.parent / repo_name
+
+
 KIND_ORDER = {kind: index for index, kind in enumerate(ALL_KINDS)}
 RELATION_REQUIRES = "requires"
 RELATION_REQUIRED_BY = "required_by"
@@ -128,9 +158,16 @@ AOA_STATS_SUMMARY_SURFACE_CATALOG_PATH = "generated/summary_surface_catalog.min.
 AOA_STATS_ARCHITECTURE_PATH = "docs/ARCHITECTURE.md"
 PROFILE_PUBLIC_ROUTE_MAP_PATH = "generated/public_route_map.min.json"
 PROFILE_PUBLIC_ENTRY_POSTURE_PATH = "docs/PUBLIC_ENTRY_POSTURE.md"
-ABYSS_STACK_DIAGNOSTIC_SESSION_PATH = "examples/diagnostic_session.min.example.json"
-ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH = "generated/diagnostic_surface_catalog.min.json"
-ABYSS_STACK_DIAGNOSTIC_SPINE_PATH = "docs/DIAGNOSTIC_SPINE.md"
+ABYSS_STACK_DIAGNOSTIC_SURFACE_ROOT = "mechanics/diagnostic-spine/parts/diagnostic-surfaces"
+ABYSS_STACK_DIAGNOSTIC_SESSION_PATH = (
+    f"{ABYSS_STACK_DIAGNOSTIC_SURFACE_ROOT}/examples/diagnostic_session.min.example.json"
+)
+ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH = (
+    f"{ABYSS_STACK_DIAGNOSTIC_SURFACE_ROOT}/generated/diagnostic_surface_catalog.min.json"
+)
+ABYSS_STACK_DIAGNOSTIC_SPINE_PATH = (
+    f"{ABYSS_STACK_DIAGNOSTIC_SURFACE_ROOT}/docs/DIAGNOSTIC_SPINE.md"
+)
 TOS_TINY_ENTRY_ROUTE_PATH = "examples/tos_tiny_entry_route.example.json"
 TOS_ROOT_ENTRY_MAP_PATH = "generated/root_entry_map.min.json"
 TOS_TINY_ENTRY_ROUTE_ID = "tos-tiny-entry.zarathustra-prologue"
@@ -448,7 +485,10 @@ def ensure_repo_relative_path(raw_path: str, location: str) -> str:
     normalized = value.replace("\\", "/")
     if ".." in Path(normalized).parts:
         raise RouterError(f"{location} must not traverse outside the repository root")
-    return normalized
+    canonical = posixpath.normpath(normalized)
+    if canonical == ".":
+        raise RouterError(f"{location} must be a repo-relative file path")
+    return canonical
 
 
 def ensure_repo_qualified_ref(value: Any, location: str) -> tuple[str, str]:
@@ -1799,6 +1839,10 @@ def build_federation_entrypoints_payload(
             kag_entry["current_entry_surface_refs"],
             f"{kag_view_id}.current_entry_surface_refs",
         )
+        if not entry_surface_refs:
+            raise RouterError(
+                f"{kag_view_id}.current_entry_surface_refs must include at least one current entry surface"
+            )
         object_surface_ref = ensure_string(
             kag_entry["current_object_surface_ref"],
             f"{kag_view_id}.current_object_surface_ref",

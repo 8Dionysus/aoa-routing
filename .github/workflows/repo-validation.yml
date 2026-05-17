@@ -18,14 +18,14 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-techniques
-          ref: dca2de00d21264b95410123e7b85fa65df6203e4
+          ref: 8db814b8e5a926929d7ca4c26ca42b0248501013
           path: aoa-techniques
 
       - name: Checkout aoa-skills
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-skills
-          ref: d98eaac04619b977558eeec0d244967a74e9353e
+          ref: 39ad193ff137b26be8377a13588ff4e8ef089750
           path: aoa-skills
 
       - name: Checkout aoa-evals
@@ -39,7 +39,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-stats
-          ref: 6cb257c6d008e89e1808cd50211c0cee2f4bff59
+          ref: 740f7c9f6140ed7d26cb89caf46f9184f1f75a93
           path: aoa-stats
 
       - name: Checkout aoa-memo
@@ -109,7 +109,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/abyss-stack
-          ref: 10323e2e868f80be089a1ffee43d0f422a7f1628
+          ref: 376f1c200bb289564b00e76a290f470dbf4e4e9c
           path: abyss-stack
 
       - name: Setup Python

@@ -29,23 +29,6 @@ FIXTURE_REPO_NAMES = (
 )
 
 
-def discover_workspace_root() -> Path:
-    test_file = Path(__file__).resolve()
-    candidates = (
-        test_file.parents[1],
-        test_file.parents[2],
-        test_file.parents[3],
-    )
-    required_repos = ("Agents-of-Abyss", "Tree-of-Sophia", "Dionysus", "8Dionysus", "aoa-sdk")
-    for candidate in candidates:
-        if all((candidate / repo_name).exists() for repo_name in required_repos):
-            return candidate
-    return test_file.parents[2]
-
-
-WORKSPACE_ROOT = discover_workspace_root()
-
-
 def write_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, separators=(",", ":")) + "\n", encoding="utf-8")
@@ -85,7 +68,11 @@ def copy_owner_dispatch_surface(repo_root: Path) -> None:
 
 
 def copy_live_repo_text(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
-    source = WORKSPACE_ROOT / repo_name / relative_path
+    source_root = router_core.default_dependency_root(
+        repo_name,
+        Path(__file__).resolve().parents[1],
+    )
+    source = source_root / relative_path
     destination = roots[repo_name] / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
@@ -178,7 +165,11 @@ def hydrate_capsule_fixture_roots(roots: dict[str, Path]) -> None:
     hydrate_route_map_fixture(roots, "Dionysus", "generated/seed_route_map.min.json")
     hydrate_route_map_fixture(roots, "8Dionysus", "generated/public_route_map.min.json")
     hydrate_catalog_fixture(roots, "aoa-stats", "generated/summary_surface_catalog.min.json")
-    hydrate_catalog_fixture(roots, "abyss-stack", "generated/diagnostic_surface_catalog.min.json")
+    hydrate_catalog_fixture(
+        roots,
+        "abyss-stack",
+        router_core.ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
+    )
 
 
 def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
@@ -1232,6 +1223,24 @@ def test_validate_generated_outputs_rejects_registry_entry_missing_kind_without_
     assert any("schema violation" in issue.message for issue in issues)
 
 
+def test_validate_generated_outputs_keeps_projection_parity_for_schema_only_registry_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    payload["entries"][0]["schema_only_noise"] = "invalid but projection-safe"
+    write_json(registry_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any("schema violation" in issue.message for issue in issues)
+    assert not any(
+        "aoa_router.min.json does not match the registry projection" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_missing_attributes_without_crashing(
     tmp_path: Path,
 ) -> None:
@@ -1602,6 +1611,30 @@ def test_validate_generated_outputs_rejects_missing_technique_second_cut_target(
     )
 
 
+def test_validate_generated_outputs_rejects_duplicate_technique_catalog_ids(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    catalog_path = roots["aoa-techniques"] / "generated" / "technique_catalog.min.json"
+    payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    payload["techniques"].append(dict(payload["techniques"][0]))
+    write_json(catalog_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any("duplicate technique id in catalog" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_duplicate_technique_ids_within_kind_bucket(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    manifest_path = roots["aoa-techniques"] / "generated" / "technique_kind_manifest.min.json"
+    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
+    payload["kinds"][0]["technique_ids"].append(payload["kinds"][0]["technique_ids"][0])
+    write_json(manifest_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any("contains duplicate technique" in issue.message for issue in issues)
+
+
 def test_validate_generated_outputs_rejects_section_payload_leakage(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
     router_path = generated_dir / "aoa_router.min.json"
@@ -1626,6 +1659,40 @@ def test_validate_generated_outputs_rejects_capsule_payload_leakage(tmp_path: Pa
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         "must not copy source-owned payload key 'one_line_intent'" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_validates_owner_layer_shortlist_schema(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    shortlist_path = generated_dir / "owner_layer_shortlist.min.json"
+    payload = json.loads(shortlist_path.read_text(encoding="utf-8"))
+    del payload["schema_version"]
+    write_json(shortlist_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any(
+        issue.location == "owner_layer_shortlist.min.json"
+        and "schema violation" in issue.message
+        and "schema_version" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_validates_stats_regrounding_hints_schema(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    hints_path = generated_dir / "stats_regrounding_hints.min.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    del payload["schema_version"]
+    write_json(hints_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any(
+        issue.location == "stats_regrounding_hints.min.json"
+        and "schema violation" in issue.message
+        and "schema_version" in issue.message
         for issue in issues
     )
 
@@ -2260,6 +2327,25 @@ def test_validate_generated_outputs_rejects_router_owned_primary_return_target(
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         "must not point primary authority or thin-router re-entry at aoa-routing" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_rejects_unscoped_aoap0031_primary_return_target(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    return_path = generated_dir / "return_navigation_hints.min.json"
+    payload = json.loads(return_path.read_text(encoding="utf-8"))
+    summon_return = payload["federation_entry_returns"]["AOA-P-0031"]
+    summon_return["primary_action"].pop("target_value", None)
+    write_json(return_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any(
+        "federation_entry_returns.AOA-P-0031.primary_action.target_value must stay 'AOA-P-0031'"
+        in issue.message
         for issue in issues
     )
 

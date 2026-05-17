@@ -27,6 +27,7 @@ from build_router import build_outputs
 from router_core import (
     ACTIVE_KINDS,
     ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
+    ABYSS_STACK_DIAGNOSTIC_SPINE_PATH,
     AOA_CENTER_ENTRY_MAP_PATH,
     AOA_CENTER_ROUTE_IDS,
     AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS,
@@ -103,6 +104,7 @@ from router_core import (
     build_task_to_tier_hints_payload,
     build_task_to_surface_hints_payload,
     collect_memo_recall_mode_order,
+    default_dependency_root,
     ensure_bool,
     ensure_list,
     ensure_mapping,
@@ -231,7 +233,7 @@ CATALOG_CAPSULE_EXPECTATIONS = {
         "required_top_level": {
             "owner_repo": "abyss-stack",
             "surface_kind": "runtime_surface",
-            "authority_ref": "docs/DIAGNOSTIC_SPINE.md",
+            "authority_ref": ABYSS_STACK_DIAGNOSTIC_SPINE_PATH,
         },
     },
 }
@@ -291,85 +293,85 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--techniques-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-techniques",
+        default=default_dependency_root("aoa-techniques"),
         help="Path to the aoa-techniques repository root.",
     )
     parser.add_argument(
         "--skills-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-skills",
+        default=default_dependency_root("aoa-skills"),
         help="Path to the aoa-skills repository root.",
     )
     parser.add_argument(
         "--evals-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-evals",
+        default=default_dependency_root("aoa-evals"),
         help="Path to the aoa-evals repository root.",
     )
     parser.add_argument(
         "--memo-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-memo",
+        default=default_dependency_root("aoa-memo"),
         help="Path to the aoa-memo repository root. Reserved only in v0.1.",
     )
     parser.add_argument(
         "--stats-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-stats",
+        default=default_dependency_root("aoa-stats"),
         help="Path to the aoa-stats repository root for additive stress-route inputs.",
     )
     parser.add_argument(
         "--agents-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-agents",
+        default=default_dependency_root("aoa-agents"),
         help="Path to the aoa-agents repository root for model-tier contracts.",
     )
     parser.add_argument(
         "--aoa-root",
         type=Path,
-        default=REPO_ROOT.parent / "Agents-of-Abyss",
+        default=default_dependency_root("Agents-of-Abyss"),
         help="Path to the Agents-of-Abyss repository root for federation root entry validation.",
     )
     parser.add_argument(
         "--playbooks-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-playbooks",
+        default=default_dependency_root("aoa-playbooks"),
         help="Path to the aoa-playbooks repository root for federation playbook entries.",
     )
     parser.add_argument(
         "--kag-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-kag",
+        default=default_dependency_root("aoa-kag"),
         help="Path to the aoa-kag repository root for federation KAG entry views.",
     )
     parser.add_argument(
         "--tos-root",
         type=Path,
-        default=REPO_ROOT.parent / "Tree-of-Sophia",
+        default=default_dependency_root("Tree-of-Sophia"),
         help="Path to the Tree-of-Sophia repository root for federation root entry validation.",
     )
     parser.add_argument(
         "--sdk-root",
         type=Path,
-        default=REPO_ROOT.parent / "aoa-sdk",
+        default=default_dependency_root("aoa-sdk"),
         help="Path to the aoa-sdk repository root for runtime control-plane federation validation.",
     )
     parser.add_argument(
         "--seed-root",
         type=Path,
-        default=REPO_ROOT.parent / "Dionysus",
+        default=default_dependency_root("Dionysus"),
         help="Path to the Dionysus repository root for seed federation validation.",
     )
     parser.add_argument(
         "--profile-root",
         type=Path,
-        default=REPO_ROOT.parent / "8Dionysus",
+        default=default_dependency_root("8Dionysus"),
         help="Path to the 8Dionysus repository root for profile federation validation.",
     )
     parser.add_argument(
         "--abyss-stack-root",
         type=Path,
-        default=Path.home() / "src" / "abyss-stack",
+        default=default_dependency_root("abyss-stack"),
         help="Path to the abyss-stack source checkout for runtime federation validation.",
     )
     parser.add_argument(
@@ -3588,6 +3590,16 @@ def validate_return_navigation_hints(
                     f"{location}.primary_action.target_surface must stay '{capsule_surface}'",
                 )
             )
+        if entry_id == "AOA-P-0031" and primary_action is not None:
+            expected_primary_selector = {"match_field": "id", "target_value": entry_id}
+            for key, expected_value in expected_primary_selector.items():
+                if primary_action.get(key) != expected_value:
+                    issues.append(
+                        ValidationIssue(
+                            location_prefix,
+                            f"{location}.primary_action.{key} must stay '{expected_value}'",
+                        )
+                    )
         expected_fallback = {
             "verb": "inspect",
             "target_repo": "aoa-routing",
@@ -3836,6 +3848,14 @@ def validate_technique_second_cut_targets(
         except RouterError as exc:
             issues.append(ValidationIssue(catalog_location, str(exc)))
             continue
+        if technique_id in technique_catalog_index:
+            issues.append(
+                ValidationIssue(
+                    catalog_location,
+                    f"duplicate technique id in catalog: {technique_id}",
+                )
+            )
+            continue
         technique_catalog_index[technique_id] = {"domain": domain, "status": status}
         all_domains.add(domain)
 
@@ -3990,6 +4010,19 @@ def validate_technique_second_cut_targets(
             except RouterError as exc:
                 issues.append(ValidationIssue(manifest_location, str(exc)))
                 continue
+
+            duplicate_ids = sorted(
+                technique_id
+                for technique_id in set(technique_ids)
+                if technique_ids.count(technique_id) > 1
+            )
+            for technique_id in duplicate_ids:
+                issues.append(
+                    ValidationIssue(
+                        manifest_location,
+                        f"{kind_location}.technique_ids contains duplicate technique '{technique_id}'",
+                    )
+                )
 
             if kind_value in seen_kind_values:
                 issues.append(
@@ -5425,10 +5458,10 @@ def validate_generated_outputs(
     issues: list[ValidationIssue] = []
     generated_dir = generated_dir.resolve()
     routing_root = (routing_root or REPO_ROOT).resolve()
-    sdk_root = (sdk_root or (REPO_ROOT.parent / "aoa-sdk")).resolve()
-    seed_root = (seed_root or (REPO_ROOT.parent / "Dionysus")).resolve()
-    profile_root = (profile_root or (REPO_ROOT.parent / "8Dionysus")).resolve()
-    abyss_stack_root = (abyss_stack_root or (Path.home() / "src" / "abyss-stack")).resolve()
+    sdk_root = (sdk_root or default_dependency_root("aoa-sdk", routing_root)).resolve()
+    seed_root = (seed_root or default_dependency_root("Dionysus", routing_root)).resolve()
+    profile_root = (profile_root or default_dependency_root("8Dionysus", routing_root)).resolve()
+    abyss_stack_root = (abyss_stack_root or default_dependency_root("abyss-stack", routing_root)).resolve()
     if (routing_root / "QUESTBOOK.md").exists():
         validate_local_questbook_surfaces(routing_root, issues)
     elif routing_root == REPO_ROOT:
@@ -5444,6 +5477,8 @@ def validate_generated_outputs(
     recommended_path = generated_dir / "recommended_paths.min.json"
     relation_hints_path = generated_dir / "kag_source_lift_relation_hints.min.json"
     composite_stress_route_hints_path = generated_dir / "composite_stress_route_hints.min.json"
+    stats_regrounding_hints_path = generated_dir / "stats_regrounding_hints.min.json"
+    owner_layer_shortlist_path = generated_dir / "owner_layer_shortlist.min.json"
     pairing_path = generated_dir / "pairing_hints.min.json"
     tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
     two_stage_entrypoints_path = generated_dir / "two_stage_skill_entrypoints.json"
@@ -5462,6 +5497,8 @@ def validate_generated_outputs(
     recommended_payload = load_output(recommended_path, issues)
     relation_hints_payload = load_output(relation_hints_path, issues)
     composite_stress_route_hints_payload = load_output(composite_stress_route_hints_path, issues)
+    stats_regrounding_hints_payload = load_output(stats_regrounding_hints_path, issues)
+    owner_layer_shortlist_payload = load_output(owner_layer_shortlist_path, issues)
     pairing_payload = load_output(pairing_path, issues)
     tiny_model_payload = load_output(tiny_model_path, issues)
     two_stage_entrypoints_payload = load_output(two_stage_entrypoints_path, issues)
@@ -5482,6 +5519,8 @@ def validate_generated_outputs(
             recommended_payload,
             relation_hints_payload,
             composite_stress_route_hints_payload,
+            stats_regrounding_hints_payload,
+            owner_layer_shortlist_payload,
             pairing_payload,
             tiny_model_payload,
             two_stage_entrypoints_payload,
@@ -5505,6 +5544,8 @@ def validate_generated_outputs(
             recommended_path.name: recommended_payload,
             relation_hints_path.name: relation_hints_payload,
             composite_stress_route_hints_path.name: composite_stress_route_hints_payload,
+            stats_regrounding_hints_path.name: stats_regrounding_hints_payload,
+            owner_layer_shortlist_path.name: owner_layer_shortlist_payload,
             pairing_path.name: pairing_payload,
             tiny_model_path.name: tiny_model_payload,
             two_stage_entrypoints_path.name: two_stage_entrypoints_payload,
@@ -5542,6 +5583,8 @@ def validate_generated_outputs(
         (recommended_path, recommended_payload),
         (relation_hints_path, relation_hints_payload),
         (composite_stress_route_hints_path, composite_stress_route_hints_payload),
+        (stats_regrounding_hints_path, stats_regrounding_hints_payload),
+        (owner_layer_shortlist_path, owner_layer_shortlist_payload),
         (pairing_path, pairing_payload),
         (tiny_model_path, tiny_model_payload),
         (two_stage_entrypoints_path, two_stage_entrypoints_payload),
@@ -5588,9 +5631,7 @@ def validate_generated_outputs(
         except RouterError as exc:
             issues.append(ValidationIssue(registry_path.name, str(exc)))
             continue
-        schema_issue_count = len(issues)
         validate_against_schema(entry, "router-entry.schema.json", location, issues)
-        schema_valid = len(issues) == schema_issue_count
         key = registry_entry_key(entry)
         if key is not None:
             if key in seen_registry_keys:
@@ -5611,7 +5652,7 @@ def validate_generated_outputs(
         normalized_registry_entries.append(entry)
         if attributes_valid:
             dependency_safe_registry_entries.append(entry)
-        if schema_valid and is_projection_safe_registry_entry(entry):
+        if is_projection_safe_registry_entry(entry):
             projection_safe_registry_entries.append(entry)
             if entry.get("kind") not in {"skill", "eval"} or attributes_valid:
                 recommended_safe_registry_entries.append(entry)
@@ -5950,13 +5991,18 @@ def validate_generated_outputs(
         (tier_hints_path.name, tier_hints_payload),
         (quest_dispatch_hints_path.name, quest_dispatch_hints_payload),
         (federation_entrypoints_path.name, federation_entrypoints_payload),
+        (return_navigation_path.name, return_navigation_payload),
         (recommended_path.name, recommended_payload),
         (relation_hints_path.name, relation_hints_payload),
+        (composite_stress_route_hints_path.name, composite_stress_route_hints_payload),
         (pairing_path.name, pairing_payload),
+        (stats_regrounding_hints_path.name, stats_regrounding_hints_payload),
+        (owner_layer_shortlist_path.name, owner_layer_shortlist_payload),
         (tiny_model_path.name, tiny_model_payload),
         (two_stage_entrypoints_path.name, two_stage_entrypoints_payload),
         (two_stage_prompt_blocks_path.name, two_stage_prompt_blocks_payload),
         (two_stage_tool_schemas_path.name, two_stage_tool_schemas_payload),
+        (two_stage_examples_path.name, two_stage_examples_payload),
         (two_stage_manifest_path.name, two_stage_manifest_payload),
     ):
         for key in SOURCE_OWNED_PAYLOAD_KEYS:
@@ -5987,10 +6033,7 @@ def validate_live_session_reentry_route_review(
     readme_path = repo_root / "README.md"
     if repo_roots is None:
         def discover_neighbor(repo_name: str) -> Path:
-            for candidate in (repo_root / repo_name, repo_root.parent / repo_name):
-                if candidate.exists():
-                    return candidate
-            return repo_root.parent / repo_name
+            return default_dependency_root(repo_name, repo_root)
 
         repo_roots = {
             "aoa-routing": repo_root,
@@ -6179,11 +6222,11 @@ def validate_live_session_reentry_route_review(
 
 def main() -> int:
     args = parse_args()
-    stats_root = getattr(args, "stats_root", REPO_ROOT.parent / "aoa-stats")
-    sdk_root = getattr(args, "sdk_root", REPO_ROOT.parent / "aoa-sdk")
-    seed_root = getattr(args, "seed_root", REPO_ROOT.parent / "Dionysus")
-    profile_root = getattr(args, "profile_root", REPO_ROOT.parent / "8Dionysus")
-    abyss_stack_root = getattr(args, "abyss_stack_root", Path.home() / "src" / "abyss-stack")
+    stats_root = getattr(args, "stats_root", default_dependency_root("aoa-stats"))
+    sdk_root = getattr(args, "sdk_root", default_dependency_root("aoa-sdk"))
+    seed_root = getattr(args, "seed_root", default_dependency_root("Dionysus"))
+    profile_root = getattr(args, "profile_root", default_dependency_root("8Dionysus"))
+    abyss_stack_root = getattr(args, "abyss_stack_root", default_dependency_root("abyss-stack"))
     issues = [
         ValidationIssue(location, message)
         for location, message in validate_nested_agents.run_validation(REPO_ROOT)

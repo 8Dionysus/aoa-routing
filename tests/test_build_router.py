@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import build_router
+import router_core
 
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
@@ -26,6 +27,28 @@ FIXTURE_REPO_NAMES = (
     "8Dionysus",
     "abyss-stack",
 )
+
+
+def test_default_dependency_root_climbs_out_of_codex_worktree(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    routing_root = workspace / ".codex" / "worktrees" / "aoa-routing-fix"
+    sibling_root = workspace / "aoa-skills"
+    routing_root.mkdir(parents=True)
+    sibling_root.mkdir(parents=True)
+
+    assert router_core.default_dependency_root("aoa-skills", routing_root) == sibling_root
+
+
+def test_default_dependency_root_prefers_abyss_stack_configs_runtime_mirror(tmp_path: Path) -> None:
+    workspace = tmp_path / "workspace"
+    routing_root = workspace / ".codex" / "worktrees" / "aoa-routing-fix"
+    configs_root = workspace / "abyss-stack" / "Configs"
+    source_root = workspace / "abyss-stack"
+    routing_root.mkdir(parents=True)
+    configs_root.mkdir(parents=True)
+
+    assert router_core.default_dependency_root("abyss-stack", routing_root) == configs_root
+    assert source_root.exists()
 KAG_SOURCE_LIFT_TECHNIQUE_IDS = [
     "AOA-T-0018",
     "AOA-T-0019",
@@ -757,7 +780,7 @@ def test_build_outputs_from_fixtures() -> None:
     assert entry_returns["abyss-stack-diagnostic-spine"]["primary_action"] == {
         "verb": "inspect",
         "target_repo": "abyss-stack",
-        "target_surface": "generated/diagnostic_surface_catalog.min.json",
+        "target_surface": router_core.ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
     }
     assert entry_returns["dionysus-seed-garden"]["primary_action"] == {
         "verb": "inspect",
@@ -828,7 +851,10 @@ def test_build_outputs_from_fixtures() -> None:
     } >= {
         ("aoa_sdk_workspace_control_plane", "generated/workspace_control_plane.min.json"),
         ("dionysus_seed_route_map", "generated/seed_route_map.min.json"),
-        ("abyss_stack_diagnostic_surface_catalog", "generated/diagnostic_surface_catalog.min.json"),
+        (
+            "abyss_stack_diagnostic_surface_catalog",
+            router_core.ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
+        ),
     }
     assert tiny_model["queries"][0] == {
         "verb": "pick",
@@ -1334,7 +1360,7 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     abyss_runtime_entry = entry_by_key[("runtime_surface", "abyss-stack-diagnostic-spine")]
     assert (
         abyss_runtime_entry["capsule_surface"]
-        == "abyss-stack:generated/diagnostic_surface_catalog.min.json"
+        == f"abyss-stack:{router_core.ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH}"
     )
 
     profile_entry = entry_by_key[("orientation_surface", "8dionysus-public-route-map")]
@@ -1351,6 +1377,36 @@ def test_build_outputs_reject_tos_kag_view_spine_drift(tmp_path: Path) -> None:
 
     with pytest.raises(build_router.RouterError, match="current_entry_surface_refs must stay"):
         build_fixture_outputs(kag_root=kag_root)
+
+
+def test_build_outputs_reject_empty_kag_view_entry_surface_refs(tmp_path: Path) -> None:
+    kag_root = tmp_path / "aoa-kag"
+    shutil.copytree(FIXTURES_ROOT / "aoa-kag", kag_root)
+    spine_path = kag_root / "generated" / "federation_spine.min.json"
+    payload = json.loads(spine_path.read_text(encoding="utf-8"))
+    payload["repos"][0]["current_entry_surface_refs"] = []
+    write_json(spine_path, payload)
+
+    with pytest.raises(build_router.RouterError, match="must include at least one current entry surface"):
+        build_fixture_outputs(kag_root=kag_root)
+
+
+def test_tos_tiny_entry_hop_surface_canonicalizes_equivalent_relative_refs(tmp_path: Path) -> None:
+    tos_root = tmp_path / "Tree-of-Sophia"
+    target = tos_root / "examples" / "concept_node.example.json"
+    target.parent.mkdir(parents=True)
+    target.write_text("{}\n", encoding="utf-8")
+
+    hop = router_core.load_tos_tiny_entry_hop_surface(
+        {
+            "bounded_hop": "examples/./concept_node.example.json",
+            "lineage_or_context_hop": "examples/concept_node.example.json",
+        },
+        "fixture",
+        tos_root=tos_root,
+    )
+
+    assert hop == "examples/concept_node.example.json"
 
 
 def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
