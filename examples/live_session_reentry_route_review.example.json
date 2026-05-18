@@ -3,7 +3,7 @@
   "owner_repo": "aoa-routing",
   "surface_kind": "live_session_reentry_route_review",
   "status": "candidate_only",
-  "receipt_ref": "aoa-memo:schemas/inquiry_checkpoint.schema.json",
+  "receipt_ref": "aoa-memo:mechanics/checkpoint/schemas/inquiry_checkpoint.schema.json",
   "route_reason": "live_session_reentry_after_reviewed_checkpoint",
   "loop_guard": {
     "requires_loop_break": true,
@@ -19,7 +19,7 @@
   "secondary_action": {
     "verb": "inspect",
     "target_repo": "aoa-memo",
-    "target_surface": "docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md"
+    "target_surface": "mechanics/writeback/docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md"
   },
   "fallback_action": {
     "verb": "inspect",

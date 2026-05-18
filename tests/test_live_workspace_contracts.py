@@ -878,10 +878,18 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-evals"] / "generated" / "runtime_candidate_intake.min.json"
         )
         runtime_writeback_targets = load_json(
-            LIVE_ROOTS["aoa-memo"] / "generated" / "runtime_writeback_targets.min.json"
+            LIVE_ROOTS["aoa-memo"]
+            / "mechanics"
+            / "writeback"
+            / "generated"
+            / "runtime_writeback_targets.min.json"
         )
         runtime_writeback_intake = load_json(
-            LIVE_ROOTS["aoa-memo"] / "generated" / "runtime_writeback_intake.min.json"
+            LIVE_ROOTS["aoa-memo"]
+            / "mechanics"
+            / "writeback"
+            / "generated"
+            / "runtime_writeback_intake.min.json"
         )
 
         available_eval_anchors = {
@@ -1025,13 +1033,25 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         for surface_path in object_family["capsule_surfaces_by_mode"].values():
             self.assertTrue((memo_root / surface_path).exists())
         checkpoint_contract = load_json(
-            memo_root / "examples" / "checkpoint_to_memory_contract.example.json"
+            memo_root
+            / "mechanics"
+            / "checkpoint"
+            / "examples"
+            / "checkpoint_to_memory_contract.example.json"
         )
         writeback_targets = load_json(
-            memo_root / "generated" / "runtime_writeback_targets.min.json"
+            memo_root
+            / "mechanics"
+            / "writeback"
+            / "generated"
+            / "runtime_writeback_targets.min.json"
         )
         writeback_intake = load_json(
-            memo_root / "generated" / "runtime_writeback_intake.min.json"
+            memo_root
+            / "mechanics"
+            / "writeback"
+            / "generated"
+            / "runtime_writeback_intake.min.json"
         )
         mapped_runtime_surfaces = {
             item["runtime_surface"] for item in checkpoint_contract["mapping_rules"]

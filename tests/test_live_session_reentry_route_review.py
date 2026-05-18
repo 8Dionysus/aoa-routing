@@ -58,6 +58,9 @@ def test_live_session_reentry_route_review_references_budget_without_owning_it()
     assert example["fallback_action"]["target_surface"] == "docs/TRACE_EVAL_BRIDGE.md"
     assert example["primary_action"]["target_repo"] == "aoa-agents"
     assert example["secondary_action"]["target_repo"] == "aoa-memo"
+    assert example["secondary_action"]["target_surface"] == (
+        "mechanics/writeback/docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md"
+    )
 
 
 def test_validate_router_accepts_live_session_reentry_route_review_surface() -> None:
@@ -84,8 +87,33 @@ def test_validate_router_rejects_missing_cross_repo_anchor(tmp_path: Path) -> No
         "# Self-Agency Continuity Lane\n",
         encoding="utf-8",
     )
-    (tmp_root / "aoa-memo" / "docs").mkdir(parents=True, exist_ok=True)
-    (tmp_root / "aoa-memo" / "docs" / "SELF_AGENCY_CONTINUITY_WRITEBACK.md").write_text(
+    (tmp_root / "aoa-memo" / "mechanics" / "checkpoint" / "schemas").mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    (
+        tmp_root
+        / "aoa-memo"
+        / "mechanics"
+        / "checkpoint"
+        / "schemas"
+        / "inquiry_checkpoint.schema.json"
+    ).write_text(
+        "{}\n",
+        encoding="utf-8",
+    )
+    (tmp_root / "aoa-memo" / "mechanics" / "writeback" / "docs").mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    (
+        tmp_root
+        / "aoa-memo"
+        / "mechanics"
+        / "writeback"
+        / "docs"
+        / "SELF_AGENCY_CONTINUITY_WRITEBACK.md"
+    ).write_text(
         "# SELF_AGENCY_CONTINUITY_WRITEBACK\n",
         encoding="utf-8",
     )
