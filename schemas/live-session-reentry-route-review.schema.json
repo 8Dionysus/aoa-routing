@@ -32,7 +32,7 @@
       "const": "candidate_only"
     },
     "receipt_ref": {
-      "const": "aoa-memo:schemas/inquiry_checkpoint.schema.json"
+      "const": "aoa-memo:mechanics/checkpoint/schemas/inquiry_checkpoint.schema.json"
     },
     "route_reason": {
       "const": "live_session_reentry_after_reviewed_checkpoint"

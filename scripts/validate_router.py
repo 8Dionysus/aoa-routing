@@ -183,6 +183,12 @@ LOW_CONTEXT_IMPLEMENTATION_PREFIXES = ("src/", "scripts/")
 LIVE_SESSION_REENTRY_ROUTE_REVIEW_DOC = "docs/LIVE_SESSION_REENTRY_ROUTE_REVIEW.md"
 LIVE_SESSION_REENTRY_ROUTE_REVIEW_SCHEMA = "schemas/live-session-reentry-route-review.schema.json"
 LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE = "examples/live_session_reentry_route_review.example.json"
+LIVE_SESSION_REENTRY_RECEIPT_REF = (
+    "aoa-memo:mechanics/checkpoint/schemas/inquiry_checkpoint.schema.json"
+)
+LIVE_SESSION_REENTRY_MEMO_WRITEBACK_SURFACE = (
+    "mechanics/writeback/docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md"
+)
 ROUTE_MAP_CAPSULE_EXPECTATIONS = {
     (AOA_ROOT_REPO, AOA_CENTER_ENTRY_MAP_PATH): {
         "schema_version": ("aoa_center_entry_map_v1", "aoa_center_entry_map_v2"),
@@ -6149,7 +6155,7 @@ def validate_live_session_reentry_route_review(
         issues.append(ValidationIssue(location, "surface_kind must remain live_session_reentry_route_review"))
     if example_payload.get("status") != "candidate_only":
         issues.append(ValidationIssue(location, "status must remain candidate_only"))
-    if example_payload.get("receipt_ref") != "aoa-memo:schemas/inquiry_checkpoint.schema.json":
+    if example_payload.get("receipt_ref") != LIVE_SESSION_REENTRY_RECEIPT_REF:
         issues.append(ValidationIssue(location, "receipt_ref must stay bound to aoa-memo inquiry checkpoint"))
     else:
         validate_repo_ref(example_payload["receipt_ref"], f"{location}.receipt_ref")
@@ -6181,11 +6187,11 @@ def validate_live_session_reentry_route_review(
         )
     if not isinstance(secondary, dict) or secondary.get("target_repo") != "aoa-memo":
         issues.append(ValidationIssue(location, "secondary_action.target_repo must remain aoa-memo"))
-    if not isinstance(secondary, dict) or secondary.get("target_surface") != "docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md":
+    if not isinstance(secondary, dict) or secondary.get("target_surface") != LIVE_SESSION_REENTRY_MEMO_WRITEBACK_SURFACE:
         issues.append(
             ValidationIssue(
                 location,
-                "secondary_action.target_surface must remain docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md",
+                f"secondary_action.target_surface must remain {LIVE_SESSION_REENTRY_MEMO_WRITEBACK_SURFACE}",
             )
         )
     if isinstance(secondary, dict):

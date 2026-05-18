@@ -46,7 +46,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-memo
-          ref: e4c84b41ea58571fda5815d2d20bc2968cd184d3
+          ref: 404a402acdd9c2a5c27921a4379cc8708c7dc7b6
           path: aoa-memo
 
       - name: Checkout aoa-agents
