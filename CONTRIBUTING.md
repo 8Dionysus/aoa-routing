@@ -33,10 +33,14 @@ python -m pip install -r requirements-dev.txt
 python scripts/build_router.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/generate_decision_indexes.py --check
+python scripts/validate_decision_records.py
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
 python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests
 ```
+
+When a change creates durable route, generated-output, validator, fallback, or owner-boundary rationale, add or update `docs/decisions/AOA-RT-D-####-*.md`, regenerate indexes, and keep the owning source surface stronger than the decision note.
 
 ## Preferred PR scope
 

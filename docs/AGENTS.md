@@ -2,7 +2,7 @@
 
 ## Guidance for `docs/`
 
-`docs/` explains routing ABI, federation entry, recurrence navigation, stress posture, route reviews, and owner-dispatch seams.
+`docs/` explains routing ABI, federation entry, recurrence navigation, stress posture, route reviews, durable decision rationale, and owner-dispatch seams.
 
 Docs may define navigation semantics, but they must not replace owner repos for skill, technique, eval, memo, agent, playbook, KAG, or runtime meaning.
 
@@ -15,4 +15,6 @@ Verify with:
 ```bash
 python scripts/validate_router.py
 python scripts/validate_semantic_agents.py
+python scripts/generate_decision_indexes.py --check
+python scripts/validate_decision_records.py
 ```

@@ -136,6 +136,8 @@ def _command_with_roots(command: str) -> list[str]:
 COMMANDS = [
     ("validate routing surfaces", "validate_router"),
     ("check rebuild parity", "build_router_check"),
+    ("check decision indexes", [sys.executable, "scripts/generate_decision_indexes.py", "--check"]),
+    ("validate decision records", [sys.executable, "scripts/validate_decision_records.py"]),
     ("run tests", [sys.executable, "-m", "pytest", "-q", "tests"]),
     ("check wave-9 router build", "two_stage_build"),
     ("check wave-9 router validation", "two_stage_validate"),

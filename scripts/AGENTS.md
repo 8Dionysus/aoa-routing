@@ -11,6 +11,7 @@ This file applies to Python tooling under `scripts/`.
 - `validate_router.py` enforces schema integrity, rebuild parity, and bounded cross-repo routing rules
 - `build_agon_gate_routing_registry.py` writes the additive Wave V gate-routing surface
 - `validate_agon_gate_routing.py` enforces the pre-protocol gate-routing stop-lines
+- `generate_decision_indexes.py` and `validate_decision_records.py` keep decision-rationale lookup surfaces derived and bounded
 
 The controlling doctrine still applies here in full:
 
@@ -47,6 +48,8 @@ After script changes, run the normal build and validation path:
 python scripts/build_router.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/generate_decision_indexes.py --check
+python scripts/validate_decision_records.py
 python scripts/build_agon_gate_routing_registry.py --check
 python scripts/validate_agon_gate_routing.py
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
