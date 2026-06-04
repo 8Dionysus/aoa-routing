@@ -16,6 +16,8 @@ def test_readme_lists_full_read_only_verify_battery() -> None:
     commands = [
         "python scripts/validate_router.py",
         "python scripts/build_router.py --check",
+        "python scripts/generate_decision_indexes.py --check",
+        "python scripts/validate_decision_records.py",
         "python -m pytest -q tests",
         "python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check",
         "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
@@ -27,7 +29,7 @@ def test_readme_lists_full_read_only_verify_battery() -> None:
 
 
 def test_contributor_and_agent_surfaces_use_exact_verify_commands() -> None:
-    expected_fragments = [
+    core_fragments = [
         "python scripts/validate_router.py",
         "python scripts/build_router.py --check",
         "python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check",
@@ -43,7 +45,22 @@ def test_contributor_and_agent_surfaces_use_exact_verify_commands() -> None:
         "tests/AGENTS.md",
     ]:
         text = read_text(relative_path)
-        for fragment in expected_fragments:
+        for fragment in core_fragments:
+            assert fragment in text, f"{relative_path} missing {fragment}"
+
+    decision_fragments = [
+        "python scripts/generate_decision_indexes.py --check",
+        "python scripts/validate_decision_records.py",
+    ]
+    for relative_path in [
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "scripts/AGENTS.md",
+        "tests/AGENTS.md",
+        "docs/decisions/AGENTS.md",
+    ]:
+        text = read_text(relative_path)
+        for fragment in decision_fragments:
             assert fragment in text, f"{relative_path} missing {fragment}"
 
 

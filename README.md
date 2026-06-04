@@ -38,6 +38,7 @@ Use the shortest route by need:
 - stats re-grounding advisory: `generated/stats_regrounding_hints.min.json`, [docs/STATS_REGROUNDING_HINTS.md](docs/STATS_REGROUNDING_HINTS.md), `schemas/stats-regrounding-hints.schema.json`, and `examples/stats_regrounding_hint.example.json`
 - Agon gate routing: `generated/agon_gate_routing_registry.min.json`, [docs/AGON_GATE_ROUTING.md](docs/AGON_GATE_ROUTING.md), [docs/AGON_GATE_TRIGGER_MODEL.md](docs/AGON_GATE_TRIGGER_MODEL.md), [docs/AGON_GATE_DECISION_BOUNDARY.md](docs/AGON_GATE_DECISION_BOUNDARY.md), [docs/AGON_GATE_ASSISTANT_ESCALATION.md](docs/AGON_GATE_ASSISTANT_ESCALATION.md), and [docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md](docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md)
 - optional wave-9 seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, `config/two_stage_router_precision_cases.jsonl`, and [docs/TWO_STAGE_SKILL_SELECTION.md](docs/TWO_STAGE_SKILL_SELECTION.md)
+- durable routing rationale: [docs/decisions](docs/decisions/README.md)
 - current direction: [ROADMAP](ROADMAP.md)
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
@@ -48,9 +49,11 @@ Use this order for the current promoted routing contour:
 
 1. `python scripts/validate_router.py`
 2. `python scripts/build_router.py --check`
-3. `python -m pytest -q tests`
-4. `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`
-5. `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`
+3. `python scripts/generate_decision_indexes.py --check`
+4. `python scripts/validate_decision_records.py`
+5. `python -m pytest -q tests`
+6. `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`
+7. `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`
 
 ## Route by need
 
@@ -64,7 +67,7 @@ Use this order for the current promoted routing contour:
 - via negativa pruning checklist: [docs/VIA_NEGATIVA_CHECKLIST](docs/VIA_NEGATIVA_CHECKLIST.md)
 - additive composite stress-route overlays: `generated/composite_stress_route_hints.min.json`, [docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION](docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md), [docs/KAG_QUARANTINE_ROUTE_HINTS](docs/KAG_QUARANTINE_ROUTE_HINTS.md), `schemas/composite_stress_route_hint_v1.json`, `examples/composite_stress_route_hint.example.json`, and `examples/composite_stress_route_hint.retrieval-outage-honesty.example.json`
 - Agon gate routing surfaces: `generated/agon_gate_routing_registry.min.json`, [docs/AGON_GATE_ROUTING](docs/AGON_GATE_ROUTING.md), [docs/AGON_GATE_TRIGGER_MODEL](docs/AGON_GATE_TRIGGER_MODEL.md), [docs/AGON_GATE_DECISION_BOUNDARY](docs/AGON_GATE_DECISION_BOUNDARY.md), [docs/AGON_GATE_ASSISTANT_ESCALATION](docs/AGON_GATE_ASSISTANT_ESCALATION.md), `schemas/agon-gate-routing-registry.schema.json`, `schemas/agon-gate-trigger.schema.json`, `schemas/agon-gate-route-hint.schema.json`, and `examples/agon_gate_route_hint.example.json`
-- local build, schema, and validation path: `schemas/`, `python scripts/build_router.py`, `python scripts/build_router.py --check`, `python scripts/validate_router.py`, `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`, `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`, and `python -m pytest -q tests`
+- local build, schema, decision, and validation path: `schemas/`, [docs/decisions](docs/decisions/README.md), `python scripts/build_router.py`, `python scripts/build_router.py --check`, `python scripts/validate_router.py`, `python scripts/generate_decision_indexes.py --check`, `python scripts/validate_decision_records.py`, `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`, `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`, and `python -m pytest -q tests`
 
 ## What `aoa-routing` owns
 
@@ -190,6 +193,8 @@ For a read-only current-state verify pass:
 ```bash
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/generate_decision_indexes.py --check
+python scripts/validate_decision_records.py
 python -m pytest -q tests
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
 python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
@@ -206,6 +211,8 @@ Validate the refreshed outputs:
 ```bash
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/generate_decision_indexes.py --check
+python scripts/validate_decision_records.py
 python -m pytest -q tests
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
 python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills

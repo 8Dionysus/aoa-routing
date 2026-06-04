@@ -31,7 +31,8 @@ It does not own:
 5. `generated/owner_layer_shortlist.min.json`
 6. `generated/recommended_paths.min.json`
 7. affected source catalogs or upstream generated surfaces
-8. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
+8. `docs/decisions/README.md` when durable route, boundary, generated-output, validator, or source-lane rationale is in scope
+9. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
 
 
 ## AGENTS stack law
@@ -81,12 +82,15 @@ For routing logic changes:
 python scripts/build_router.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/generate_decision_indexes.py --check
+python scripts/validate_decision_records.py
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
 python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests
 ```
 
 Use Agon, stress, quest, or federation-entry branches from `docs/AGENTS_ROOT_REFERENCE.md` when those surfaces change.
+Use `docs/decisions/AGENTS.md` when durable routing rationale changes; decision records explain why and do not replace generated routing authority.
 
 ## Report
 

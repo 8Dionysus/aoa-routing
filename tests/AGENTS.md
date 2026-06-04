@@ -13,6 +13,7 @@ Important surfaces include:
 - `tests/test_build_router.py` for builder behavior
 - `tests/test_validate_router.py` for validator behavior
 - `tests/test_route_walkthroughs.py` for bounded walkthroughs across pick, inspect, expand, pair, recall, and federation entry paths
+- `tests/test_decision_indexes.py` for generated decision-index parity
 
 ## Editing posture
 
@@ -35,6 +36,8 @@ Run:
 ```bash
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/generate_decision_indexes.py --check
+python scripts/validate_decision_records.py
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
 python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests
