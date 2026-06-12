@@ -23,15 +23,16 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
         "python -m pytest -q tests",
     ),
-    "schemas/AGENTS.md": (
+    "routing/core/schemas/AGENTS.md": (
         "aoa-router.schema.json",
         "cross-repo-registry.schema.json",
         "router-entry.schema.json",
-        "federation-entrypoints.schema.json",
-        "quest_dispatch_hint.schema.json",
-        "quest-dispatch-hints.schema.json",
+        "recommended-paths.schema.json",
+        "pairing-hints.schema.json",
         "tiny-model-entrypoints.schema.json",
+        "mechanics/<head>/parts/<part>",
         "contract change",
+        "routing/core/schemas/",
         "python scripts/validate_router.py",
     ),
     "scripts/AGENTS.md": (
@@ -68,6 +69,30 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "Source repos own meaning. Routing repo owns navigation.",
         "python scripts/generate_decision_indexes.py --check",
         "python scripts/validate_decision_records.py",
+    ),
+    "routing/AGENTS.md": (
+        "source-home district",
+        "routing/README.md",
+        "mechanics/",
+        "root generated",
+        "root scripts",
+        "legacy accounting",
+    ),
+    "mechanics/AGENTS.md": (
+        "active operation atlas",
+        "Head mechanics use OS Abyss names",
+        "Parts are operation nodes",
+        "PROVENANCE.md",
+        "legacy/",
+        "root districts",
+    ),
+    "quests/AGENTS.md": (
+        "source quest record placement",
+        "QUESTBOOK.md",
+        "mechanics/questbook/",
+        "quests/<lane>/<state>/<quest-file>",
+        "AOA-RT-Q-*.yaml",
+        "python scripts/validate_router.py",
     ),
 }
 

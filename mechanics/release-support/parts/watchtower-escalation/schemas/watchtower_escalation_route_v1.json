@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://aoa-routing/mechanics/release-support/parts/watchtower-escalation/schemas/watchtower_escalation_route_v1.json",
+  "title": "watchtower_escalation_route",
+  "type": "object",
+  "description": "watchtower_escalation_route schema for AoA experience deployment watchtower v0.5.",
+  "required": [
+    "route_id",
+    "alarm_id",
+    "owner_repo",
+    "action",
+    "required_evidence"
+  ],
+  "properties": {
+    "route_id": {
+      "type": "string"
+    },
+    "alarm_id": {
+      "type": "string"
+    },
+    "owner_repo": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string"
+    },
+    "required_evidence": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "additionalProperties": false
+}

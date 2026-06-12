@@ -29,9 +29,9 @@ Usually lower-risk candidates look like:
 ## Resulting action
 
 When checkpoint posture is needed, the next artifact is usually not a ready
-automation seed.
+automation candidate.
 It is a checkpoint-aware repair route, playbook review packet, or bounded skill
 proposal with explicit approval seams.
-If the packet still names `seed_ready: true`, its `automation_mode_posture`
+If the packet still names `candidate_ready: true`, its `automation_mode_posture`
 should stay no stronger than `human_approved_execution` until the checkpoint
 route accepts a narrower mode.

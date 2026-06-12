@@ -22,7 +22,7 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Added
 
-- Agon gate routing doctrine, trigger registry seed, and explicit builder /
+- Agon gate routing doctrine, trigger registry config, and explicit builder /
   validator / test surfaces for the routing repository
 - Agon recurrence gate routing manifests, recurrence downstream routing
   contracts, source-surface requirements, stats re-grounding hints, and
@@ -33,7 +33,7 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Changed
 
-- README, roadmap, and local guidance now expose the Wave V pre-protocol gate
+- README, roadmap, and local guidance now expose the Agon gate-routing contour
   routing contour without widening routing into arena or center-owned law
 - routing review follow-ups, recurrence hint constraints, source-ref
   requirements, Experience advisory route contracts, owner-dispatch/release
@@ -42,9 +42,9 @@ Tracking starts with the community-docs baseline for this repository.
 ### Validation
 
 - `python scripts/release_check.py`
-- `python scripts/build_agon_gate_routing_registry.py --check`
-- `python scripts/validate_agon_gate_routing.py`
-- `python -m pytest -q tests/test_agon_gate_routing.py`
+- `python mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py --check`
+- `python mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py`
+- `python -m pytest -q mechanics/agon/parts/gate-routing/tests/test_agon_gate_routing.py`
 
 ### Notes
 
@@ -55,7 +55,7 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Summary
 
-- this patch adds chaos-wave routing stress hints, A2A summon return
+- this patch adds stress routing hints, A2A summon return
   navigation, and stronger owner-first readiness routes
 - routing release posture, sibling pins, pull request intake, and
   required-check plus Node24 workflow refs are aligned with the current
@@ -65,10 +65,10 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Added
 
-- chaos wave 1 routing stress hints and A2A summon return plus
+- stress routing hints and A2A summon return plus
   memory-readiness owner-first navigation surfaces
 - a GitHub pull request template and refreshed quest dispatch hints for the
-  current routing wave
+  current routing contour
 
 ### Changed
 
@@ -112,7 +112,7 @@ Tracking starts with the community-docs baseline for this repository.
 
 - retargeted federation routing through owner capsules, language-neutral v2
   envelopes, and tighter thin-router validation contracts
-- aligned wave-9 two-stage artifacts, generated eval cases, and current
+- aligned two-stage artifacts, generated eval cases, and current
   `aoa-skills`-driven precision behavior on `main`
 - refreshed the pinned sibling validation matrix in CI so release verification
   now checks against the merged owner-repo release heads instead of the
@@ -125,7 +125,7 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Included in this release
 
-- routing-surface expansion across `docs/`, `generated/`, `config/`, `schemas/`,
+- routing-surface expansion across `docs/`, `generated/`, `config/`, `routing/core/schemas/`,
   `examples/`, `scripts/`, and `tests/`, including federation-mesh owner
   capsules, checkpoint starter handoffs, owner-layer shortlist routing, ToS
   return-navigation tightening, and memo return-capsule cross-validation
@@ -150,7 +150,7 @@ This changelog entry uses the release-prep merge date.
 
 - community-docs baseline established for this repository
 - `CHANGELOG.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, and `CONTRIBUTING.md`
-- `docs/FEDERATION_ENTRY_ABI.md` as the doctrine surface for the federation entry orientation layer
+- `mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md` as the doctrine surface for the federation entry orientation layer
 - `generated/federation_entrypoints.min.json` and its schema-backed validation path
 - additive `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
 - build, validation, and CI support for `Agents-of-Abyss`, `Tree-of-Sophia`, `aoa-playbooks`, and `aoa-kag` as federation entry inputs
@@ -159,7 +159,7 @@ This changelog entry uses the release-prep merge date.
 ### Changed
 
 - `tos-root` in `generated/federation_entrypoints.min.json` now hands off first to the source-owned ToS tiny-entry route while keeping `README.md` and `CHARTER.md` as root card surfaces
-- `docs/FEDERATION_ENTRY_ABI.md`, `README.md`, and `ROADMAP.md` now describe the ToS tiny-entry sync as additive and non-authoritative
+- `mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md`, `README.md`, and `ROADMAP.md` now describe the ToS tiny-entry sync as additive and non-authoritative
 - `generated/federation_entrypoints.min.json` now publishes a second live `kag_view` for `Tree-of-Sophia`, while `kag-view-root` stays defaulted to `aoa-techniques`
 - ToS tiny-entry input validation now accepts `bounded_hop` as the primary hop field and keeps `lineage_or_context_hop` as a compatibility alias during the current transition window
 - memo recall hints now publish mode-indexed `capsule_surfaces_by_mode` for router-ready doctrine and parallel object-facing recall when upstream `aoa-memo` contracts expose a capsule step
@@ -167,7 +167,7 @@ This changelog entry uses the release-prep merge date.
 ### Included in this release
 
 - core routing outputs under `generated/`, including `aoa_router.min.json`, `task_to_surface_hints.json`, `recommended_paths.min.json`, and `task_to_tier_hints.json`
-- federation-entry and return-navigation surfaces under `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, and `docs/FEDERATION_ENTRY_ABI.md`
+- federation-entry and return-navigation surfaces under `generated/federation_entrypoints.min.json`, `generated/return_navigation_hints.min.json`, and `mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md`
 - the optional low-context routing family under `generated/tiny_model_entrypoints.json` and the `two_stage_*` generated surfaces
 
 ### Validation

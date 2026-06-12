@@ -1,0 +1,24 @@
+{
+  "contract_id": "aoa-routing.owner-dispatch-seam.v1",
+  "owner_repo": "aoa-routing",
+  "route_signal": {
+    "signal_kind": "candidate",
+    "signal_state": "active",
+    "owner_truth_ref": "mechanics/agon/parts/gate-routing/docs/decision-boundary.md#owner-dispatch-seam"
+  },
+  "route_decision": {
+    "decision_kind": "owner_review",
+    "next_hop": "aoa-agents",
+    "decision_note": "Send assistant projection and role-boundary questions to the owning repo."
+  },
+  "owner_dispatch": {
+    "dispatch_kind": "owner_handoff",
+    "owner_repo": "aoa-agents",
+    "handoff_note": "Routing may hand off to the owner repo, but it does not replace the owner repo's decision surfaces."
+  },
+  "source_refs": [
+    "mechanics/agon/parts/gate-routing/docs/decision-boundary.md#owner-dispatch-seam",
+    "mechanics/agon/parts/gate-routing/docs/gate-routing.md#routing-may-say",
+    "mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md#purpose"
+  ]
+}

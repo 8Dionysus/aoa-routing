@@ -1,0 +1,38 @@
+{
+  "schema_version": "aoa_routing_legacy_former_routes.v1",
+  "owner": "mechanics/recurrence",
+  "routes": [
+    {
+      "former_path": "docs/RECURRENCE_NAVIGATION_BOUNDARY.md",
+      "current_path": "mechanics/recurrence/parts/return-navigation/docs/recurrence-navigation-boundary.md"
+    },
+    {
+      "former_path": "docs/RECURRENCE_DOWNSTREAM_HINTS.md",
+      "current_path": "mechanics/recurrence/parts/downstream-hints/docs/recurrence-downstream-hints.md"
+    },
+    {
+      "former_path": "docs/INCIDENT_REENTRY_ROUTING.md",
+      "current_path": "mechanics/recurrence/parts/incident-reentry/docs/incident-reentry-routing.md"
+    },
+    {
+      "former_path": "schemas/return-navigation-hints.schema.json",
+      "current_path": "mechanics/recurrence/parts/return-navigation/schemas/return-navigation-hints.schema.json"
+    },
+    {
+      "former_path": "schemas/recurrence-routing-projection.schema.json",
+      "current_path": "mechanics/recurrence/parts/downstream-hints/schemas/recurrence-routing-projection.schema.json"
+    },
+    {
+      "former_path": "schemas/incident_reentry_route_v1.json",
+      "current_path": "mechanics/recurrence/parts/incident-reentry/schemas/incident_reentry_route_v1.json"
+    },
+    {
+      "former_path": "examples/recurrence_routing_projection.example.json",
+      "current_path": "mechanics/recurrence/parts/downstream-hints/examples/recurrence_routing_projection.example.json"
+    },
+    {
+      "former_path": "examples/incident_reentry_route.example.json",
+      "current_path": "mechanics/recurrence/parts/incident-reentry/examples/incident_reentry_route.example.json"
+    }
+  ]
+}

@@ -1,10 +1,14 @@
 # QUESTBOOK.md — aoa-routing
 
-This questbook tracks routing-layer work around quest discovery and thin dispatch hints.
+This questbook tracks routing-layer work around quest discovery and thin
+dispatch hints.
+
+It is the human open-obligation index. Source records live in `quests/`.
+Questbook operation law and validation posture live in `mechanics/questbook/`.
 
 ## Frontier
 
-- `AOA-RT-Q-0004` — add example-only RPG navigation cards for the bridge wave
+- `AOA-RT-Q-0004` — add example-only RPG navigation cards for the bridge contour
 
 ## Near
 

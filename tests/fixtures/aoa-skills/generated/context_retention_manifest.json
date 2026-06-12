@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "profile": "codex-facing-wave-3-context-retention",
+  "profile": "codex-facing-context-retention",
   "skills": [
     {
       "name": "aoa-change-protocol",

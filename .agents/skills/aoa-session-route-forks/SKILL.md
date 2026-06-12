@@ -10,7 +10,7 @@ metadata:
   aoa_source_skill_path: skills/core/session-growth/aoa-session-route-forks/SKILL.md
   aoa_source_repo: 8Dionysus/aoa-skills
   aoa_technique_dependencies: AOA-T-0078,AOA-T-0079
-  aoa_portable_profile: codex-facing-wave-3
+  aoa_portable_profile: codex-facing-context
 ---
 
 # aoa-session-route-forks
@@ -27,7 +27,7 @@ Use this skill when:
 - a reviewed session ended with multiple plausible next moves
 - the operator or local coding agent needs explicit branch choices instead of a buried recommendation
 - the next route may change owner repo, risk posture, or difficulty posture
-- the choice may include staying manual, becoming a bounded skill, becoming a playbook automation seed candidate, or waiting for prerequisite repair
+- the choice may include staying manual, becoming a bounded skill, becoming a playbook automation candidate, or waiting for prerequisite repair
 - the session needs quest-board legibility without pretending to be runtime state
 
 Do not use this skill when:
@@ -90,7 +90,7 @@ Do not use this skill when:
 - using fork cards as hidden routing policy
 - collapsing all branches into one generic recommendation
 - confusing playbook outline with branch analysis
-- confusing an automation seed candidate with a live scheduler or background job
+- confusing an automation candidate with a live scheduler or background job
 - treating quest-board cards as runtime state
 - treating branch receipts as if they already chose the route
 

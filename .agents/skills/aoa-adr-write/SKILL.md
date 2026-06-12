@@ -10,7 +10,7 @@ metadata:
   aoa_source_skill_path: skills/core/engineering/aoa-adr-write/SKILL.md
   aoa_source_repo: 8Dionysus/aoa-skills
   aoa_technique_dependencies: AOA-T-0033,AOA-T-0002
-  aoa_portable_profile: codex-facing-wave-3
+  aoa_portable_profile: codex-facing-context
 ---
 
 # aoa-adr-write

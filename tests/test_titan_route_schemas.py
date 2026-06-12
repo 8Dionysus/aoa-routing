@@ -19,12 +19,12 @@ def load_json(relative_path: str) -> object:
     ("schema_path", "example_path"),
     [
         (
-            "schemas/titan_appserver_bridge_route.schema.json",
-            "examples/titan_appserver_bridge_route.example.json",
+            "mechanics/titan/parts/appserver-bridge/schemas/titan_appserver_bridge_route.schema.json",
+            "mechanics/titan/parts/appserver-bridge/examples/titan_appserver_bridge_route.example.json",
         ),
         (
-            "schemas/titan_console_route.schema.json",
-            "examples/titan_console_route.example.json",
+            "mechanics/titan/parts/console-route/schemas/titan_console_route.schema.json",
+            "mechanics/titan/parts/console-route/examples/titan_console_route.example.json",
         ),
     ],
 )
@@ -35,49 +35,49 @@ def test_titan_route_examples_validate(schema_path: str, example_path: str) -> N
 @pytest.mark.parametrize(
     ("schema_path", "payload"),
     [
-        ("schemas/titan_appserver_bridge_route.schema.json", {}),
+        ("mechanics/titan/parts/appserver-bridge/schemas/titan_appserver_bridge_route.schema.json", {}),
         (
-            "schemas/titan_appserver_bridge_route.schema.json",
+            "mechanics/titan/parts/appserver-bridge/schemas/titan_appserver_bridge_route.schema.json",
             {"route": ["unknown-repo"]},
         ),
         (
-            "schemas/titan_console_route.schema.json",
+            "mechanics/titan/parts/console-route/schemas/titan_console_route.schema.json",
             {"version": 1, "routes": [{"intent": "mutation", "titan": "Forge", "gate": "freewrite"}]},
         ),
         (
-            "schemas/titan_console_route.schema.json",
+            "mechanics/titan/parts/console-route/schemas/titan_console_route.schema.json",
             {"version": 1, "routes": [{"intent": 7, "titan": "Forge", "gate": "mutation"}]},
         ),
         (
-            "schemas/titan_console_route.schema.json",
+            "mechanics/titan/parts/console-route/schemas/titan_console_route.schema.json",
             {"version": 1, "routes": [{"intent": "structure", "titan": "Forge", "gate": None}]},
         ),
         (
-            "schemas/titan_console_route.schema.json",
+            "mechanics/titan/parts/console-route/schemas/titan_console_route.schema.json",
             {"version": 1, "routes": [{"intent": "judgment", "titan": "Atlas", "gate": "mutation"}]},
         ),
         (
-            "schemas/titan_runtime_route.schema.json",
+            "mechanics/titan/parts/runtime-route/schemas/titan_runtime_route.schema.json",
             {"version": 1, "intent": "orientation", "active_titans": [], "required_gates": []},
         ),
         (
-            "schemas/titan_runtime_route.schema.json",
+            "mechanics/titan/parts/runtime-route/schemas/titan_runtime_route.schema.json",
             {"version": 1, "intent": "implementation", "active_titans": ["Forge"], "required_gates": []},
         ),
         (
-            "schemas/titan_runtime_route.schema.json",
+            "mechanics/titan/parts/runtime-route/schemas/titan_runtime_route.schema.json",
             {"version": 1, "intent": "judgment", "active_titans": ["Delta"], "required_gates": []},
         ),
         (
-            "schemas/titan_memory_route.schema.json",
+            "mechanics/titan/parts/memory-route/schemas/titan_memory_route.schema.json",
             {"query": "find memory", "record_id": "memory:1", "source_ref": None, "owner_route": ["aoa-memo"]},
         ),
         (
-            "schemas/titan_memory_route.schema.json",
+            "mechanics/titan/parts/memory-route/schemas/titan_memory_route.schema.json",
             {"query": "find memory", "record_id": "memory:1", "owner_route": ["aoa-memo"]},
         ),
         (
-            "schemas/titan_memory_route.schema.json",
+            "mechanics/titan/parts/memory-route/schemas/titan_memory_route.schema.json",
             {"query": "find memory", "record_id": "memory:1", "session_id": "session:1", "owner_route": []},
         ),
     ],
@@ -93,7 +93,7 @@ def test_titan_route_schemas_reject_malformed_payloads(schema_path: str, payload
     ("schema_path", "payload"),
     [
         (
-            "schemas/titan_runtime_route.schema.json",
+            "mechanics/titan/parts/runtime-route/schemas/titan_runtime_route.schema.json",
             {
                 "version": 1,
                 "intent": "implementation",
@@ -102,7 +102,7 @@ def test_titan_route_schemas_reject_malformed_payloads(schema_path: str, payload
             },
         ),
         (
-            "schemas/titan_runtime_route.schema.json",
+            "mechanics/titan/parts/runtime-route/schemas/titan_runtime_route.schema.json",
             {
                 "version": 1,
                 "intent": "verdict",
@@ -111,7 +111,7 @@ def test_titan_route_schemas_reject_malformed_payloads(schema_path: str, payload
             },
         ),
         (
-            "schemas/titan_memory_route.schema.json",
+            "mechanics/titan/parts/memory-route/schemas/titan_memory_route.schema.json",
             {
                 "query": "find memory",
                 "record_id": "memory:1",

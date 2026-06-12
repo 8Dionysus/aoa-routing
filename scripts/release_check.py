@@ -22,7 +22,7 @@ DEPENDENCIES = {
     "kag": "aoa-kag",
     "tos": "Tree-of-Sophia",
     "sdk": "aoa-sdk",
-    "seed": "Dionysus",
+    "source_route": "Dionysus",
     "profile": "8Dionysus",
     "abyss_stack": "abyss-stack",
 }
@@ -70,8 +70,8 @@ def _command_with_roots(command: str) -> list[str]:
             str(roots["tos"]),
             "--sdk-root",
             str(roots["sdk"]),
-            "--seed-root",
-            str(roots["seed"]),
+            "--source-route-root",
+            str(roots["source_route"]),
             "--profile-root",
             str(roots["profile"]),
             "--abyss-stack-root",
@@ -103,8 +103,8 @@ def _command_with_roots(command: str) -> list[str]:
             str(roots["tos"]),
             "--sdk-root",
             str(roots["sdk"]),
-            "--seed-root",
-            str(roots["seed"]),
+            "--source-route-root",
+            str(roots["source_route"]),
             "--profile-root",
             str(roots["profile"]),
             "--abyss-stack-root",
@@ -134,13 +134,16 @@ def _command_with_roots(command: str) -> list[str]:
 
 
 COMMANDS = [
+    ("validate source-home topology", [sys.executable, "scripts/validate_source_home.py"]),
+    ("validate mechanics topology", [sys.executable, "scripts/validate_mechanics_topology.py"]),
+    ("validate active legacy names", [sys.executable, "scripts/validate_active_legacy_names.py"]),
     ("validate routing surfaces", "validate_router"),
     ("check rebuild parity", "build_router_check"),
     ("check decision indexes", [sys.executable, "scripts/generate_decision_indexes.py", "--check"]),
     ("validate decision records", [sys.executable, "scripts/validate_decision_records.py"]),
     ("run tests", [sys.executable, "-m", "pytest", "-q", "tests"]),
-    ("check wave-9 router build", "two_stage_build"),
-    ("check wave-9 router validation", "two_stage_validate"),
+    ("check two-stage router build", "two_stage_build"),
+    ("check two-stage router validation", "two_stage_validate"),
 ]
 
 

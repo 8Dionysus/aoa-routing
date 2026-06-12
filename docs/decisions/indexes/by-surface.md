@@ -10,10 +10,23 @@
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
 
+## mechanics/route-law
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
 ## scripts/validation
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
 
 ## tests/route-law
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
+
+## tests/topology
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## topology/source-home
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)

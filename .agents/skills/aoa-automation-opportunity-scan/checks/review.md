@@ -9,7 +9,7 @@ from reviewed evidence and packages them into a bounded
 ## When it applies
 
 - a reviewed session or recurring project slice is being scanned for honest automation value
-- the reviewer must check whether the route should stay manual, become a bounded skill, become a playbook automation seed candidate, or stay deferred
+- the reviewer must check whether the route should stay manual, become a bounded skill, become a playbook automation candidate, or stay deferred
 - the route may touch approval, rollback, or self-change posture
 - the output must stay detection-shaped rather than scheduler-shaped
 
@@ -18,7 +18,7 @@ from reviewed evidence and packages them into a bounded
 - [ ] The candidate route is reviewed, real, and currently manual rather than speculative.
 - [ ] Repeat signal and friction are evidenced rather than asserted from enthusiasm.
 - [ ] Input clarity, output clarity, proof surface, reversibility, and approval sensitivity were assessed explicitly.
-- [ ] Each candidate received an explicit `seed_ready` or `not_now` verdict.
+- [ ] Each candidate received an explicit `candidate_ready` or `not_now` verdict.
 - [ ] Each candidate named an `automation_mode_posture` that is no stronger than the evidence supports.
 - [ ] The next artifact and likely owner layer were named.
 - [ ] The nearest wrong target was rejected explicitly.

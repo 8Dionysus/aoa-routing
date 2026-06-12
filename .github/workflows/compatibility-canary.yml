@@ -121,7 +121,7 @@ jobs:
             --kag-root ./aoa-kag \
             --tos-root ./Tree-of-Sophia \
             --sdk-root ./aoa-sdk \
-            --seed-root ./Dionysus \
+            --source-route-root ./Dionysus \
             --profile-root ./8Dionysus \
             --abyss-stack-root ./abyss-stack
 
@@ -139,7 +139,7 @@ jobs:
             --kag-root ./aoa-kag \
             --tos-root ./Tree-of-Sophia \
             --sdk-root ./aoa-sdk \
-            --seed-root ./Dionysus \
+            --source-route-root ./Dionysus \
             --profile-root ./8Dionysus \
             --abyss-stack-root ./abyss-stack \
             --check

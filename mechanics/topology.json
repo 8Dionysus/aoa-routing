@@ -1,0 +1,120 @@
+{
+  "schema_version": "aoa_routing_mechanics_topology.v1",
+  "owner_repo": "aoa-routing",
+  "mechanics_root": "mechanics/",
+  "parents": [
+    {
+      "id": "agon",
+      "status": "candidate-evidenced",
+      "parts": [
+        "gate-routing",
+        "recurrence-adapter"
+      ]
+    },
+    {
+      "id": "experience",
+      "status": "candidate-evidenced",
+      "parts": [
+        "office-route-gate",
+        "service-handoff",
+        "adoption-routing",
+        "certification-owner-landing"
+      ]
+    },
+    {
+      "id": "checkpoint",
+      "status": "candidate-evidenced",
+      "parts": [
+        "live-session-reentry-route-review"
+      ]
+    },
+    {
+      "id": "recurrence",
+      "status": "candidate-evidenced",
+      "parts": [
+        "return-navigation",
+        "downstream-hints",
+        "incident-reentry"
+      ]
+    },
+    {
+      "id": "questbook",
+      "status": "candidate-evidenced",
+      "parts": [
+        "source-contract",
+        "quest-routing-seam",
+        "quest-board-seam",
+        "harvest-fanout"
+      ]
+    },
+    {
+      "id": "boundary-bridge",
+      "status": "candidate-evidenced",
+      "parts": [
+        "federation-entry",
+        "cross-repo-router-bridge",
+        "owner-layer-shortlist",
+        "federation-harvest-routing",
+        "tos-kag-boundary",
+        "stats-regrounding"
+      ]
+    },
+    {
+      "id": "governance",
+      "status": "candidate-evidenced",
+      "parts": [
+        "appeal-and-veto",
+        "charter-change-routing",
+        "council-dispatch",
+        "governance-escalation",
+        "precedent-route-hints"
+      ]
+    },
+    {
+      "id": "antifragility",
+      "status": "candidate-evidenced",
+      "parts": [
+        "stress-routing",
+        "degraded-route-hints",
+        "composite-stress-routing",
+        "rollback-routing",
+        "quarantine-routing",
+        "via-negativa"
+      ]
+    },
+    {
+      "id": "release-support",
+      "status": "candidate-evidenced",
+      "parts": [
+        "release-gate-routing",
+        "deployment-ring-routing",
+        "installation-routing",
+        "watchtower-escalation"
+      ]
+    },
+    {
+      "id": "titan",
+      "status": "candidate-evidenced",
+      "parts": [
+        "runtime-route",
+        "console-route",
+        "memory-route",
+        "appserver-bridge",
+        "runtime-case-routing"
+      ]
+    },
+    {
+      "id": "rpg",
+      "status": "candidate-evidenced",
+      "parts": [
+        "navigation-bridge"
+      ]
+    }
+  ],
+  "placement_rules": [
+    "head mechanic names follow OS Abyss federation vocabulary",
+    "parts are operation nodes, not file-type buckets",
+    "payload files move under the owning part when the part owns the operation",
+    "legacy maps former flat paths back to active routes"
+  ]
+}

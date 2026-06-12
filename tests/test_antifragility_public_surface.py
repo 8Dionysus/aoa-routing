@@ -14,68 +14,104 @@ def load_json(relative_path: str) -> object:
 
 
 def test_stress_navigation_example_validates_against_schema() -> None:
-    schema = load_json("schemas/stress_navigation_hint_v1.json")
-    example = load_json("examples/stress_navigation_hint.example.json")
+    schema = load_json("mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json")
+    example = load_json("mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.example.json")
 
-    assert schema["$id"] == "https://aoa-routing/schemas/stress_navigation_hint_v1.json"
+    assert schema["$id"] == "https://aoa-routing/mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json"
     Draft202012Validator(schema).validate(example)
 
 
 def test_timeout_chaos_stress_navigation_example_validates_against_schema() -> None:
-    schema = load_json("schemas/stress_navigation_hint_v1.json")
-    example = load_json("examples/stress_navigation_hint.timeout-chaos.example.json")
+    schema = load_json("mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json")
+    example = load_json("mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.timeout-chaos.example.json")
 
     Draft202012Validator(schema).validate(example)
 
 
 def test_skill_collision_chaos_stress_navigation_example_validates_against_schema() -> None:
-    schema = load_json("schemas/stress_navigation_hint_v1.json")
-    example = load_json("examples/stress_navigation_hint.skill-collision-chaos.example.json")
+    schema = load_json("mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json")
+    example = load_json("mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.skill-collision-chaos.example.json")
 
     Draft202012Validator(schema).validate(example)
 
 
 def test_composite_stress_route_hint_example_validates_against_schema() -> None:
-    schema = load_json("schemas/composite_stress_route_hint_v1.json")
-    example = load_json("examples/composite_stress_route_hint.example.json")
+    schema = load_json("mechanics/antifragility/parts/composite-stress-routing/schemas/composite_stress_route_hint_v1.json")
+    example = load_json("mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json")
 
     Draft202012Validator(schema).validate(example)
 
 
 def test_retrieval_outage_honesty_composite_example_validates_against_schema() -> None:
-    schema = load_json("schemas/composite_stress_route_hint_v1.json")
-    example = load_json("examples/composite_stress_route_hint.retrieval-outage-honesty.example.json")
+    schema = load_json("mechanics/antifragility/parts/composite-stress-routing/schemas/composite_stress_route_hint_v1.json")
+    example = load_json("mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json")
 
     Draft202012Validator(schema).validate(example)
 
 
 def test_antifragility_surfaces_are_discoverable_and_keep_routing_thin() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    routing_doc = (REPO_ROOT / "docs" / "STRESS_POSTURE_ROUTING.md").read_text(encoding="utf-8")
-    chaos_doc = (REPO_ROOT / "docs" / "ROUTING_STRESS_CHAOS_WAVE1.md").read_text(encoding="utf-8")
-    degraded_doc = (REPO_ROOT / "docs" / "DEGRADED_ROUTE_HINTS.md").read_text(encoding="utf-8")
-    playbook_doc = (REPO_ROOT / "docs" / "PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md").read_text(
-        encoding="utf-8"
-    )
-    kag_doc = (REPO_ROOT / "docs" / "KAG_QUARANTINE_ROUTE_HINTS.md").read_text(
-        encoding="utf-8"
-    )
+    routing_doc = (
+        REPO_ROOT
+        / "mechanics"
+        / "antifragility"
+        / "parts"
+        / "stress-routing"
+        / "docs"
+        / "stress-posture-routing.md"
+    ).read_text(encoding="utf-8")
+    chaos_doc = (
+        REPO_ROOT
+        / "mechanics"
+        / "antifragility"
+        / "parts"
+        / "stress-routing"
+        / "docs"
+        / "routing-stress-chaos.md"
+    ).read_text(encoding="utf-8")
+    degraded_doc = (
+        REPO_ROOT
+        / "mechanics"
+        / "antifragility"
+        / "parts"
+        / "degraded-route-hints"
+        / "docs"
+        / "degraded-route-hints.md"
+    ).read_text(encoding="utf-8")
+    playbook_doc = (
+        REPO_ROOT
+        / "mechanics"
+        / "antifragility"
+        / "parts"
+        / "composite-stress-routing"
+        / "docs"
+        / "playbook-stress-route-consumption.md"
+    ).read_text(encoding="utf-8")
+    kag_doc = (
+        REPO_ROOT
+        / "mechanics"
+        / "antifragility"
+        / "parts"
+        / "quarantine-routing"
+        / "docs"
+        / "kag-quarantine-route-hints.md"
+    ).read_text(encoding="utf-8")
 
     for fragment in [
-        "docs/STRESS_POSTURE_ROUTING.md",
-        "docs/DEGRADED_ROUTE_HINTS.md",
-        "docs/ROUTING_STRESS_CHAOS_WAVE1.md",
-        "schemas/stress_navigation_hint_v1.json",
-        "examples/stress_navigation_hint.example.json",
-        "examples/stress_navigation_hint.timeout-chaos.example.json",
-        "examples/stress_navigation_hint.skill-collision-chaos.example.json",
+        "mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md",
+        "mechanics/antifragility/parts/degraded-route-hints/docs/degraded-route-hints.md",
+        "mechanics/antifragility/parts/stress-routing/docs/routing-stress-chaos.md",
+        "mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json",
+        "mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.example.json",
+        "mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.timeout-chaos.example.json",
+        "mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.skill-collision-chaos.example.json",
         "generated/composite_stress_route_hints.min.json",
-        "docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md",
-        "docs/KAG_QUARANTINE_ROUTE_HINTS.md",
-        "schemas/composite_stress_route_hint_v1.json",
-        "examples/composite_stress_route_hint.example.json",
-        "examples/composite_stress_route_hint.retrieval-outage-honesty.example.json",
-        "config/two_stage_router_precision_cases.jsonl",
+        "mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md",
+        "mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md",
+        "mechanics/antifragility/parts/composite-stress-routing/schemas/composite_stress_route_hint_v1.json",
+        "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json",
+        "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json",
+        "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
     ]:
         assert fragment in readme
 

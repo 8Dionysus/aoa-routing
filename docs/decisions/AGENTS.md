@@ -37,8 +37,9 @@ Use this lane to preserve rationale when a future agent would otherwise need to 
 Use owning surfaces for current behavior:
 
 - routing outputs stay in `generated/`
-- contracts stay in `schemas/`
-- fixtures and public examples stay in `examples/`
+- core contracts stay in `routing/core/schemas/`
+- mechanic contracts stay under their owning `mechanics/<head>/parts/<part>/`
+- fixtures and public examples stay under owning part examples or `tests/fixtures/`
 - build and validation behavior stays in `scripts/`
 - regression proof stays in `tests/`
 - source meaning stays in the sibling owner repository named by the route

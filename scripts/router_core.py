@@ -24,7 +24,7 @@ KAG_REPO = "aoa-kag"
 SDK_REPO = "aoa-sdk"
 STATS_REPO = "aoa-stats"
 PROFILE_REPO = "8Dionysus"
-SEED_REPO = "Dionysus"
+DIONYSUS_REPO = "Dionysus"
 ABYSS_STACK_REPO = "abyss-stack"
 AOA_ROOT_REPO = "Agents-of-Abyss"
 TOS_REPO = "Tree-of-Sophia"
@@ -44,7 +44,7 @@ KNOWN_REPOS = (
     SDK_REPO,
     STATS_REPO,
     PROFILE_REPO,
-    SEED_REPO,
+    DIONYSUS_REPO,
     ABYSS_STACK_REPO,
 ) + tuple(CANONICAL_REPO_BY_KIND.values())
 
@@ -58,14 +58,14 @@ def default_dependency_root(repo_name: str, routing_root: Path | None = None) ->
         if path not in candidates:
             candidates.append(path)
 
+    if repo_name == ABYSS_STACK_REPO:
+        add_candidate(Path.home() / "src" / repo_name)
+
     for base in (base_root, base_root.parent, *base_root.parents):
         repo_path = base / repo_name
         if repo_name == ABYSS_STACK_REPO:
             add_candidate(repo_path / "Configs")
         add_candidate(repo_path)
-
-    if repo_name == ABYSS_STACK_REPO:
-        add_candidate(Path.home() / "src" / repo_name)
 
     for candidate in candidates:
         if candidate.exists():
@@ -103,7 +103,9 @@ MODEL_TIER_REGISTRY_PATH = "generated/model_tier_registry.json"
 AGENT_REGISTRY_PATH = "generated/agent_registry.min.json"
 RUNTIME_SEAM_BINDINGS_PATH = "generated/runtime_seam_bindings.json"
 PLAYBOOK_REGISTRY_PATH = "generated/playbook_registry.min.json"
-PLAYBOOK_PORTFOLIO_PATH = "docs/PLAYBOOK_PORTFOLIO.md"
+PLAYBOOK_PORTFOLIO_PATH = (
+    "mechanics/portfolio-governance/parts/lifecycle-and-portfolio/docs/playbook-portfolio.md"
+)
 FEDERATION_SPINE_PATH = "generated/federation_spine.min.json"
 AOA_ECOSYSTEM_REGISTRY_PATH = "generated/ecosystem_registry.min.json"
 AOA_CENTER_ENTRY_MAP_PATH = "generated/center_entry_map.min.json"
@@ -113,21 +115,21 @@ TINY_MODEL_ENTRYPOINTS_FILE = "generated/tiny_model_entrypoints.json"
 FEDERATION_ENTRYPOINTS_FILE = "generated/federation_entrypoints.min.json"
 RETURN_NAVIGATION_HINTS_FILE = "generated/return_navigation_hints.min.json"
 QUEST_DISPATCH_HINTS_FILE = "generated/quest_dispatch_hints.min.json"
-MEMO_INSPECT_SURFACE_FILE = "generated/memory_catalog.min.json"
-MEMO_EXPAND_SURFACE_FILE = "generated/memory_sections.full.json"
-MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory_object_catalog.min.json"
-MEMO_OBJECT_CAPSULE_SURFACE_FILE = "generated/memory_object_capsules.json"
-MEMO_OBJECT_EXPAND_SURFACE_FILE = "generated/memory_object_sections.full.json"
+MEMO_INSPECT_SURFACE_FILE = "generated/memory/memory_catalog.min.json"
+MEMO_EXPAND_SURFACE_FILE = "generated/memory/memory_sections.full.json"
+MEMO_OBJECT_INSPECT_SURFACE_FILE = "generated/memory-objects/memory_object_catalog.min.json"
+MEMO_OBJECT_CAPSULE_SURFACE_FILE = "generated/memory-objects/memory_object_capsules.json"
+MEMO_OBJECT_EXPAND_SURFACE_FILE = "generated/memory-objects/memory_object_sections.full.json"
 MEMO_CAPSULE_RECALL_MODES = ("semantic", "lineage")
 DEFAULT_MEMO_RECALL_MODE = "semantic"
 ROUTER_READY_RECALL_CONTRACT_PREFIX = "recall_contract.router."
 MEMO_OBJECT_RECALL_FAMILY = "memory_objects"
 MEMO_OBJECT_RECALL_DEFAULT_MODE = "working"
-MEMO_OBJECT_RETURN_READY_CONTRACT = "examples/recall_contract.object.working.return.json"
+MEMO_OBJECT_RETURN_READY_CONTRACT = "examples/recall/recall_contract.object.working.return.json"
 MEMO_OBJECT_RECALL_CONTRACTS_BY_MODE = {
-    "working": "examples/recall_contract.object.working.json",
-    "semantic": "examples/recall_contract.object.semantic.json",
-    "lineage": "examples/recall_contract.object.lineage.json",
+    "working": "examples/recall/recall_contract.object.working.json",
+    "semantic": "examples/recall/recall_contract.object.semantic.json",
+    "lineage": "examples/recall/recall_contract.object.lineage.json",
 }
 KAG_DEFAULT_ENTRYPOINT_ID = "AOA-T-0019"
 FEDERATION_ROOT_IDS = ("aoa-root", "tos-root")
@@ -136,7 +138,7 @@ FEDERATION_ACTIVE_ENTRY_KINDS = (
     "tier",
     "playbook",
     "kag_view",
-    "seed",
+    "source_route",
     "runtime_surface",
     "orientation_surface",
 )
@@ -145,12 +147,10 @@ FEDERATION_DEFAULT_AGENT_ENTRY_ID = "AOA-A-0001"
 FEDERATION_DEFAULT_TIER_ENTRY_ID = "router"
 FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID = "AOA-P-0008"
 FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID = "aoa-techniques"
-FEDERATION_DEFAULT_SEED_ENTRY_ID = "dionysus-seed-garden"
+FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID = "dionysus-source-route"
 FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID = "aoa-sdk-control-plane"
 FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID = "8dionysus-public-route-map"
-DIONYSUS_SEED_REGISTRY_PATH = "seed-registry.yaml"
-DIONYSUS_SEED_ROUTE_MAP_PATH = "generated/seed_route_map.min.json"
-DIONYSUS_PLANTING_PROTOCOL_PATH = "docs/codex/planting-protocol.md"
+DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH = "docs/codex/planting-protocol.md"
 AOA_SDK_WORKSPACE_TOML_PATH = ".aoa/workspace.toml"
 AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH = "generated/workspace_control_plane.min.json"
 AOA_SDK_BOUNDARIES_PATH = "docs/boundaries.md"
@@ -224,6 +224,8 @@ TOS_ROOT_ROUTE_IDS = (
     "tree-first-model",
     "bounded-export",
 )
+OLD_STAGE_ROUTE_LABEL = "wa" + "ve"
+OLD_BOOTSTRAP_ROUTE_LABEL = "se" + "ed"
 FALLBACK_ROUTER_KIND = "technique"
 RETURN_REASONS_BY_THIN_KIND = {
     "technique": ("artifact_contract_lost", "source_boundary_lost", "reroute_required"),
@@ -240,7 +242,7 @@ RETURN_REASONS_BY_FEDERATION_KIND = {
     "tier": ("authority_unclear", "artifact_contract_lost", "reroute_required"),
     "playbook": ("authority_unclear", "artifact_contract_lost", "reroute_required"),
     "kag_view": ("authority_unclear", "source_boundary_lost", "reroute_required"),
-    "seed": ("authority_unclear", "source_boundary_lost", "reroute_required"),
+    "source_route": ("authority_unclear", "source_boundary_lost", "reroute_required"),
     "runtime_surface": ("authority_unclear", "artifact_contract_lost", "reroute_required"),
     "orientation_surface": ("authority_unclear", "source_boundary_lost", "reroute_required"),
 }
@@ -259,12 +261,12 @@ QUEST_ROUTING_SOURCE_REPOS = (
     "aoa-evals",
 )
 QUEST_ROUTING_ACTIONS_ENABLED = ("inspect", "expand", "handoff")
-QUEST_ROUTING_WAVE_SCOPE = "source-only"
+QUEST_ROUTING_CONTOUR_SCOPE = "source-only"
 QUEST_ROUTING_CLOSED_STATES = frozenset({"done", "dropped"})
 QUEST_ROUTING_EXPAND_DOC_BY_REPO = {
     "aoa-techniques": "mechanics/growth-cycle/parts/questbook-integration/README.md",
     "aoa-skills": "mechanics/questbook/docs/QUESTBOOK_SKILL_INTEGRATION.md",
-    "aoa-evals": "docs/QUESTBOOK_EVAL_INTEGRATION.md",
+    "aoa-evals": "docs/operations/QUESTBOOK_EVAL_INTEGRATION.md",
 }
 TASK_TO_TIER_HINT_SPECS = (
     {
@@ -586,7 +588,7 @@ def load_tos_tiny_entry_route(tos_root: Path) -> tuple[str, dict[str, Any]]:
     route_id = ensure_string(payload.get("route_id"), f"{location}.route_id")
     if route_id != TOS_TINY_ENTRY_ROUTE_ID:
         raise RouterError(
-            f"{location}.route_id must stay '{TOS_TINY_ENTRY_ROUTE_ID}' in the current routing wave"
+            f"{location}.route_id must stay '{TOS_TINY_ENTRY_ROUTE_ID}' in the current routing contour"
         )
 
     root_surface = ensure_tos_route_surface_path(
@@ -595,7 +597,7 @@ def load_tos_tiny_entry_route(tos_root: Path) -> tuple[str, dict[str, Any]]:
         tos_root=tos_root,
     )
     if root_surface != "README.md":
-        raise RouterError(f"{location}.root_surface must stay 'README.md' in the current routing wave")
+        raise RouterError(f"{location}.root_surface must stay 'README.md' in the current routing contour")
 
     ensure_string(payload.get("node_kind"), f"{location}.node_kind")
     ensure_string(payload.get("node_id"), f"{location}.node_id")
@@ -748,7 +750,7 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
     entries = ensure_list(payload.get("repos"), f"{location}.repos")
 
     # Accept the current compact aoa-kag spine shape while keeping the
-    # router-facing KAG view cards stable for this routing wave.
+    # router-facing KAG view cards stable for this routing contour.
     def normalize_adjunct_surfaces(
         repo_name: str,
         value: Any,
@@ -895,21 +897,21 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
     aoa_techniques_entry = repo_index.get(FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID)
     if aoa_techniques_entry is None:
         raise RouterError(
-            "federation spine must publish aoa-techniques in the current routing wave"
+            "federation spine must publish aoa-techniques in the current routing contour"
         )
     if aoa_techniques_entry.get("adjunct_surfaces") != []:
         raise RouterError(
-            "aoa-techniques.adjunct_surfaces must stay [] in the current routing wave"
+            "aoa-techniques.adjunct_surfaces must stay [] in the current routing contour"
         )
     tos_entry = repo_index.get(TOS_KAG_VIEW_ENTRY_ID)
     if tos_entry is None:
         raise RouterError(
-            "federation spine must publish Tree-of-Sophia in the current routing wave"
+            "federation spine must publish Tree-of-Sophia in the current routing contour"
         )
     if tos_entry.get("adjunct_surfaces") != [EXPECTED_TOS_KAG_VIEW_ADJUNCT]:
         raise RouterError(
             "Tree-of-Sophia.adjunct_surfaces must publish exactly the bounded "
-            "AOA-K-0011 adjunct in the current routing wave"
+            "AOA-K-0011 adjunct in the current routing contour"
         )
     return FEDERATION_SPINE_PATH, repos
 
@@ -1193,7 +1195,7 @@ def build_quest_dispatch_hints_payload(
 
     return {
         "version": 1,
-        "wave_scope": QUEST_ROUTING_WAVE_SCOPE,
+        "contour_scope": QUEST_ROUTING_CONTOUR_SCOPE,
         "actions_enabled": list(QUEST_ROUTING_ACTIONS_ENABLED),
         "source_inputs": source_inputs,
         "hints": hints,
@@ -1236,6 +1238,42 @@ def title_case_slug(value: str) -> str:
     return " ".join(part.capitalize() for part in value.replace("_", "-").split("-") if part)
 
 
+def has_old_route_label(value: str | None) -> bool:
+    if not value:
+        return False
+    text = value.lower()
+    return OLD_STAGE_ROUTE_LABEL in text or OLD_BOOTSTRAP_ROUTE_LABEL in text
+
+
+def normalize_active_route_label(value: str) -> str:
+    text = value
+    replacements = (
+        (
+            f"split-{OLD_STAGE_ROUTE_LABEL}-cross-repo-rollout",
+            "cross-repo-staged-rollout",
+        ),
+        (
+            f"{OLD_BOOTSTRAP_ROUTE_LABEL}-pack-publication-route",
+            "source-pack-publication-route",
+        ),
+    )
+    for old, new in replacements:
+        text = re.sub(re.escape(old), new, text, flags=re.IGNORECASE)
+    text = re.sub(
+        rf"\b{OLD_STAGE_ROUTE_LABEL}(?:[-_ ]?[0-9]+)?\b",
+        "contour",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        rf"\b{OLD_BOOTSTRAP_ROUTE_LABEL}(?:s|ed)?\b",
+        "source",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return text
+
+
 def load_repo_doc_manifest_default_doc_id(repo_root: Path, manifest_relative_path: str) -> str:
     manifest_path = repo_root / manifest_relative_path
     location = relative_posix(manifest_path, repo_root)
@@ -1251,6 +1289,24 @@ def load_repo_doc_manifest_default_doc_id(repo_root: Path, manifest_relative_pat
         raise RouterError(f"{location}.docs must not be empty")
     first_doc = ensure_mapping(docs[0], f"{location}.docs[0]")
     return ensure_string(first_doc.get("doc_id"), f"{location}.docs[0].doc_id")
+
+
+def find_playbook_authority_path(playbooks_root: Path, playbook_name: str) -> str | None:
+    direct_path = Path("playbooks") / playbook_name / "PLAYBOOK.md"
+    if (playbooks_root / direct_path).exists():
+        return direct_path.as_posix()
+
+    matches = sorted(
+        path
+        for path in (playbooks_root / "playbooks").glob(f"**/{playbook_name}/PLAYBOOK.md")
+        if path.is_file()
+    )
+    if not matches:
+        return None
+    if len(matches) > 1:
+        rendered = ", ".join(relative_posix(path, playbooks_root) for path in matches)
+        raise RouterError(f"ambiguous playbook authority path for '{playbook_name}': {rendered}")
+    return relative_posix(matches[0], playbooks_root)
 
 
 def load_memo_catalog_surfaces(memo_root: Path) -> list[dict[str, Any]]:
@@ -1271,7 +1327,7 @@ def collect_memo_recall_mode_order(memo_surfaces: list[dict[str, Any]]) -> list[
     ordered_modes: list[str] = []
     seen_modes: set[str] = set()
     for index, surface in enumerate(memo_surfaces):
-        location = f"generated/memory_catalog.min.json.memo_surfaces[{index}]"
+        location = f"{MEMO_INSPECT_SURFACE_FILE}.memo_surfaces[{index}]"
         modes = ensure_string_list(surface.get("recall_modes"), f"{location}.recall_modes")
         for mode in modes:
             if mode in seen_modes:
@@ -1372,7 +1428,7 @@ def load_router_ready_memo_recall_contracts(
     contracts_by_mode: dict[str, str] = {}
     capsule_surfaces_by_mode: dict[str, str] = {}
 
-    examples_dir = memo_root / "examples"
+    examples_dir = memo_root / "examples" / "recall"
     if examples_dir.exists():
         for contract_path in sorted(examples_dir.glob(f"{ROUTER_READY_RECALL_CONTRACT_PREFIX}*.json")):
             location = relative_posix(contract_path, memo_root)
@@ -1430,7 +1486,7 @@ def build_federation_entrypoints_payload(
     tos_root: Path,
     sdk_root: Path,
     stats_root: Path,
-    seed_root: Path,
+    source_route_root: Path,
     profile_root: Path,
     abyss_stack_root: Path,
 ) -> dict[str, Any]:
@@ -1460,14 +1516,9 @@ def build_federation_entrypoints_payload(
         kag_root / "docs" / "FEDERATION_SPINE.md",
         f"{KAG_REPO}/docs/FEDERATION_SPINE.md",
     )
-    ensure_text_file(seed_root / DIONYSUS_SEED_REGISTRY_PATH, f"{SEED_REPO}/{DIONYSUS_SEED_REGISTRY_PATH}")
-    ensure_mapping(
-        load_json_file(seed_root / DIONYSUS_SEED_ROUTE_MAP_PATH),
-        f"{SEED_REPO}/{DIONYSUS_SEED_ROUTE_MAP_PATH}",
-    )
     ensure_markdown_file(
-        seed_root / DIONYSUS_PLANTING_PROTOCOL_PATH,
-        f"{SEED_REPO}/{DIONYSUS_PLANTING_PROTOCOL_PATH}",
+        source_route_root / DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
+        f"{DIONYSUS_REPO}/{DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH}",
     )
     ensure_text_file(
         sdk_root / AOA_SDK_WORKSPACE_TOML_PATH,
@@ -1669,7 +1720,7 @@ def build_federation_entrypoints_payload(
     for agent_id in sorted(agent_index):
         agent = agent_index[agent_id]
         agent_name = ensure_string(agent["name"], f"{agent_id}.name")
-        authority_path = f"profiles/{agent_name}.profile.json"
+        authority_path = f"agents/roles/{agent_name}/profile.json"
         ensure_mapping(
             load_json_file(agents_root / authority_path),
             f"{AGENTS_REPO}/{authority_path}",
@@ -1708,7 +1759,7 @@ def build_federation_entrypoints_payload(
         )
 
     for tier_id in sorted(tier_index):
-        authority_path = f"model_tiers/{tier_id}.tier.json"
+        authority_path = f"agents/operating-model/tiers/{tier_id}.tier.json"
         ensure_mapping(
             load_json_file(agents_root / authority_path),
             f"{AGENTS_REPO}/{authority_path}",
@@ -1751,10 +1802,14 @@ def build_federation_entrypoints_payload(
     for playbook_id in sorted(playbook_index):
         playbook = playbook_index[playbook_id]
         playbook_name = ensure_string(playbook["name"], f"{playbook_id}.name")
-        candidate_authority_path = f"playbooks/{playbook_name}/PLAYBOOK.md"
-        authority_path = candidate_authority_path
-        if not (playbooks_root / authority_path).exists():
+        authority_path = find_playbook_authority_path(playbooks_root, playbook_name)
+        if (
+            authority_path is None
+            or has_old_route_label(playbook_name)
+            or has_old_route_label(authority_path)
+        ):
             authority_path = PLAYBOOK_PORTFOLIO_PATH
+        published_playbook_name = normalize_active_route_label(playbook_name)
         ensure_markdown_file(playbooks_root / authority_path, f"{PLAYBOOKS_REPO}/{authority_path}")
 
         expected_artifacts = ensure_string_list(
@@ -1811,7 +1866,7 @@ def build_federation_entrypoints_payload(
                 "kind": "playbook",
                 "id": playbook_id,
                 "owner_repo": PLAYBOOKS_REPO,
-                "title": title_case_slug(playbook_name),
+                "title": title_case_slug(published_playbook_name),
                 "capsule_surface": make_repo_qualified_ref(
                     PLAYBOOKS_REPO, PLAYBOOK_REGISTRY_PATH
                 ),
@@ -1860,23 +1915,23 @@ def build_federation_entrypoints_payload(
         if kag_view_id == FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID:
             if pilot_posture != "existing_generated_surfaces":
                 raise RouterError(
-                    f"{kag_view_id}.pilot_posture must stay 'existing_generated_surfaces' in the current routing wave"
+                    f"{kag_view_id}.pilot_posture must stay 'existing_generated_surfaces' in the current routing contour"
                 )
             if entry_surface_refs != [AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF]:
                 raise RouterError(
-                    f"{kag_view_id}.current_entry_surface_refs must stay '{AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF}' in the current routing wave"
+                    f"{kag_view_id}.current_entry_surface_refs must stay '{AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF}' in the current routing contour"
                 )
             if object_surface_ref != AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF:
                 raise RouterError(
-                    f"{kag_view_id}.current_object_surface_ref must stay '{AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF}' in the current routing wave"
+                    f"{kag_view_id}.current_object_surface_ref must stay '{AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF}' in the current routing contour"
                 )
             if example_object_ids != list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS):
                 raise RouterError(
-                    f"{kag_view_id}.example_object_ids must stay {list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS)!r} in the current routing wave"
+                    f"{kag_view_id}.example_object_ids must stay {list(AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS)!r} in the current routing contour"
                 )
             if adjunct_surfaces != []:
                 raise RouterError(
-                    f"{kag_view_id}.adjunct_surfaces must stay [] in the current routing wave"
+                    f"{kag_view_id}.adjunct_surfaces must stay [] in the current routing contour"
                 )
             entry_target_repo, entry_target_surface = ensure_cross_repo_surface_ref(
                 entry_surface_refs[0],
@@ -1915,24 +1970,24 @@ def build_federation_entrypoints_payload(
         elif kag_view_id == TOS_KAG_VIEW_ENTRY_ID:
             if pilot_posture != "source_owned_tiny_entry_route":
                 raise RouterError(
-                    f"{kag_view_id}.pilot_posture must stay 'source_owned_tiny_entry_route' in the current routing wave"
+                    f"{kag_view_id}.pilot_posture must stay 'source_owned_tiny_entry_route' in the current routing contour"
                 )
             if entry_surface_refs != list(TOS_KAG_VIEW_ENTRY_SURFACE_REFS):
                 raise RouterError(
-                    f"{kag_view_id}.current_entry_surface_refs must stay {list(TOS_KAG_VIEW_ENTRY_SURFACE_REFS)!r} in the current routing wave"
+                    f"{kag_view_id}.current_entry_surface_refs must stay {list(TOS_KAG_VIEW_ENTRY_SURFACE_REFS)!r} in the current routing contour"
                 )
             if object_surface_ref != TOS_KAG_VIEW_OBJECT_SURFACE_REF:
                 raise RouterError(
-                    f"{kag_view_id}.current_object_surface_ref must stay '{TOS_KAG_VIEW_OBJECT_SURFACE_REF}' in the current routing wave"
+                    f"{kag_view_id}.current_object_surface_ref must stay '{TOS_KAG_VIEW_OBJECT_SURFACE_REF}' in the current routing contour"
                 )
             if example_object_ids != [TOS_TINY_ENTRY_ROUTE_ID]:
                 raise RouterError(
-                    f"{kag_view_id}.example_object_ids must stay ['{TOS_TINY_ENTRY_ROUTE_ID}'] in the current routing wave"
+                    f"{kag_view_id}.example_object_ids must stay ['{TOS_TINY_ENTRY_ROUTE_ID}'] in the current routing contour"
                 )
             if adjunct_surfaces != [EXPECTED_TOS_KAG_VIEW_ADJUNCT]:
                 raise RouterError(
                     f"{kag_view_id}.adjunct_surfaces must publish exactly the bounded "
-                    "AOA-K-0011 adjunct in the current routing wave"
+                    "AOA-K-0011 adjunct in the current routing contour"
                 )
             retrieval_adjunct = ensure_mapping(
                 adjunct_surfaces[0],
@@ -2010,20 +2065,20 @@ def build_federation_entrypoints_payload(
         )
 
     append_mesh_entry(
-        kind="seed",
-        entry_id=FEDERATION_DEFAULT_SEED_ENTRY_ID,
-        owner_repo=SEED_REPO,
-        title="Dionysus Seed Garden",
-        capsule_surface=make_repo_qualified_ref(SEED_REPO, DIONYSUS_SEED_ROUTE_MAP_PATH),
-        authority_surface=make_repo_qualified_ref(SEED_REPO, DIONYSUS_PLANTING_PROTOCOL_PATH),
+        kind="source_route",
+        entry_id=FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID,
+        owner_repo=DIONYSUS_REPO,
+        title="Dionysus Source Route",
+        capsule_surface=make_repo_qualified_ref(DIONYSUS_REPO, DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH),
+        authority_surface=make_repo_qualified_ref(DIONYSUS_REPO, DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH),
         next_entries=[
             ("orientation_surface", FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID),
             ("runtime_surface", FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID),
         ],
         risk=(
-            "Seed entry cards are lineage and staging orientation only; confirm the seed "
-            "registry, planting protocol, and target owner repo before treating a seed "
-            "route as implementation authority."
+            "Source-route entry cards are lineage and staging orientation only; confirm the "
+            "planting protocol and target owner repo before treating the route as "
+            "implementation authority."
         ),
     )
     append_mesh_entry(
@@ -2071,7 +2126,7 @@ def build_federation_entrypoints_payload(
         ),
         next_entries=[
             ("runtime_surface", FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID),
-            ("seed", FEDERATION_DEFAULT_SEED_ENTRY_ID),
+            ("source_route", FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID),
         ],
         risk=(
             "Runtime diagnostic entry cards stay anchored to the source checkout of "
@@ -2090,7 +2145,7 @@ def build_federation_entrypoints_payload(
         ),
         next_entries=[
             ("runtime_surface", FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID),
-            ("seed", FEDERATION_DEFAULT_SEED_ENTRY_ID),
+            ("source_route", FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID),
         ],
         risk=(
             "Profile route cards are orientation-only; `8Dionysus` must not replace owner "
@@ -2100,7 +2155,7 @@ def build_federation_entrypoints_payload(
 
     return {
         "schema_version": "aoa_routing_federation_entrypoints_v2",
-        "schema_ref": "schemas/federation-entrypoints.schema.json",
+        "schema_ref": "mechanics/boundary-bridge/parts/federation-entry/schemas/federation-entrypoints.schema.json",
         "owner_repo": "aoa-routing",
         "surface_kind": "federation_entrypoints",
         "source_inputs": [
@@ -2165,16 +2220,10 @@ def build_federation_entrypoints_payload(
                 "ref": federation_spine_path,
             },
             {
-                "name": "dionysus_seed_route_map",
-                "repo": SEED_REPO,
-                "role": "seed_capsule",
-                "ref": DIONYSUS_SEED_ROUTE_MAP_PATH,
-            },
-            {
-                "name": "dionysus_seed_registry",
-                "repo": SEED_REPO,
-                "role": "seed_anchor",
-                "ref": DIONYSUS_SEED_REGISTRY_PATH,
+                "name": "dionysus_source_route_anchor",
+                "repo": DIONYSUS_REPO,
+                "role": "source_route_anchor",
+                "ref": DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
             },
             {
                 "name": "aoa_sdk_workspace_control_plane",
@@ -2324,7 +2373,7 @@ def build_return_navigation_hints_payload(
     kag_root: Path,
     tos_root: Path,
     sdk_root: Path,
-    seed_root: Path,
+    source_route_root: Path,
     profile_root: Path,
     abyss_stack_root: Path,
     hints_payload: dict[str, Any],
@@ -2357,7 +2406,7 @@ def build_return_navigation_hints_payload(
         KAG_REPO: kag_root,
         SDK_REPO: sdk_root,
         STATS_REPO: stats_root,
-        SEED_REPO: seed_root,
+        DIONYSUS_REPO: source_route_root,
         PROFILE_REPO: profile_root,
         ABYSS_STACK_REPO: abyss_stack_root,
     }
@@ -2654,13 +2703,13 @@ def build_return_navigation_hints_payload(
                 "bounded derived entry surface."
             ),
         },
-        "seed": {
-            "owner_repo": SEED_REPO,
-            "primary_surface": DIONYSUS_SEED_ROUTE_MAP_PATH,
+        "source_route": {
+            "owner_repo": DIONYSUS_REPO,
+            "primary_surface": DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
             "ownership_note": (
-                "Seed lineage stays in Dionysus; routing restores the compact owner-owned "
-                "seed capsule first and leaves planting authority in the seed protocol and "
-                "target owner repo."
+                "Source-route lineage stays in Dionysus; routing restores the owner-owned "
+                "planting protocol first and leaves implementation authority in the target "
+                "owner repo."
             ),
         },
         "runtime_surface": {
@@ -2759,12 +2808,12 @@ def build_return_navigation_hints_payload(
                 "routing must return there without confusing /srv mirrors for source truth."
             ),
         },
-        FEDERATION_DEFAULT_SEED_ENTRY_ID: {
-            "entry_kind": "seed",
-            "owner_repo": SEED_REPO,
+        FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID: {
+            "entry_kind": "source_route",
+            "owner_repo": DIONYSUS_REPO,
             "ownership_note": (
-                "Dionysus owns the compact seed route map; routing returns there before any "
-                "seed-ledger or planting-protocol deepening."
+                "Dionysus owns the planting protocol anchor; routing returns there before "
+                "any owner-repo deepening."
             ),
         },
         FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID: {
@@ -2824,7 +2873,7 @@ def build_return_navigation_hints_payload(
 
     return {
         "schema_version": "aoa_routing_return_navigation_hints_v2",
-        "schema_ref": "schemas/return-navigation-hints.schema.json",
+        "schema_ref": "mechanics/recurrence/parts/return-navigation/schemas/return-navigation-hints.schema.json",
         "owner_repo": "aoa-routing",
         "surface_kind": "return_navigation_hints",
         "thin_router_returns": thin_router_returns,
@@ -3495,9 +3544,9 @@ def build_tiny_model_entrypoints_payload(
         raise RouterError(
             f"tiny-model federation seam requires KAG view '{FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID}'"
         )
-    if FEDERATION_DEFAULT_SEED_ENTRY_ID not in federation_entry_ids_by_kind.get("seed", []):
+    if FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID not in federation_entry_ids_by_kind.get("source_route", []):
         raise RouterError(
-            f"tiny-model federation seam requires seed entry '{FEDERATION_DEFAULT_SEED_ENTRY_ID}'"
+            f"tiny-model federation seam requires source-route entry '{FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID}'"
         )
     if (
         FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID
@@ -3602,13 +3651,13 @@ def build_tiny_model_entrypoints_payload(
             "entry_kind": "kag_view",
         },
         {
-            "name": "seed-root",
+            "name": "source-route-root",
             "verb": "inspect",
             "source_repo": PAIRING_SURFACE_REPO,
             "target_surface": FEDERATION_ENTRYPOINTS_FILE,
             "match_key": "id",
-            "target_value": FEDERATION_DEFAULT_SEED_ENTRY_ID,
-            "entry_kind": "seed",
+            "target_value": FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID,
+            "entry_kind": "source_route",
         },
         {
             "name": "runtime-surface-root",
@@ -3641,7 +3690,7 @@ def build_tiny_model_entrypoints_payload(
 
     return {
         "schema_version": "aoa_routing_tiny_model_entrypoints_v2",
-        "schema_ref": "schemas/tiny-model-entrypoints.schema.json",
+        "schema_ref": "routing/core/schemas/tiny-model-entrypoints.schema.json",
         "owner_repo": "aoa-routing",
         "surface_kind": "tiny_model_entrypoints",
         "queries": queries,

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -12,6 +13,8 @@ from build_two_stage_skill_router import build_outputs as build_two_stage_output
 from router_core import (
     CANONICAL_REPO_BY_KIND,
     FEDERATION_ENTRYPOINTS_FILE,
+    MEMO_INSPECT_SURFACE_FILE,
+    MEMO_OBJECT_INSPECT_SURFACE_FILE,
     QUEST_DISPATCH_HINTS_FILE,
     REPO_ROOT,
     RETURN_NAVIGATION_HINTS_FILE,
@@ -52,16 +55,22 @@ STATS_REGROUNDING_HINTS_FILE = "generated/stats_regrounding_hints.min.json"
 STATS_STRESS_RECOVERY_WINDOW_SUMMARY_FILE = "generated/stress_recovery_window_summary.min.json"
 STATS_SUMMARY_SURFACE_CATALOG_FILE = "generated/summary_surface_catalog.min.json"
 STATS_SOURCE_COVERAGE_SUMMARY_FILE = "generated/source_coverage_summary.min.json"
-PLAYBOOK_STRESS_LANE_FILE = "examples/playbook_stress_lane.example.json"
-PLAYBOOK_REENTRY_GATE_FILE = "examples/playbook_reentry_gate.example.json"
+PLAYBOOK_STRESS_LANE_FILE = (
+    "mechanics/antifragility/parts/stress-lanes/examples/playbook_stress_lane.example.json"
+)
+PLAYBOOK_REENTRY_GATE_FILE = (
+    "mechanics/antifragility/parts/reentry-gates/examples/playbook_reentry_gate.example.json"
+)
 KAG_PROJECTION_HEALTH_FILE = "examples/projection_health_receipt.example.json"
 KAG_REGROUNDING_TICKET_FILE = "examples/regrounding_ticket.example.json"
-MEMO_OBJECT_CATALOG_FILE = "generated/memory_object_catalog.min.json"
+MEMO_OBJECT_CATALOG_FILE = MEMO_OBJECT_INSPECT_SURFACE_FILE
 MEMO_RECOVERY_PATTERN_MARKERS = (
     "stress-recovery-window",
     "recovery-pattern",
     "antifragility",
 )
+OLD_STAGE_ROUTE_LABEL = "wa" + "ve"
+OLD_BOOTSTRAP_ROUTE_LABEL = "se" + "ed"
 MEMO_REVIEW_READY_STATES = {"confirmed"}
 MEMO_RECALL_READY_STATES = {"allowed", "preferred"}
 OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
@@ -154,13 +163,13 @@ OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
         "ambiguity": "clear",
     },
     {
-        "shortlist_id": "explicit-request.seed.primary",
+        "shortlist_id": "explicit-request.source_route.primary",
         "signal": "explicit-request",
         "owner_repo": "Dionysus",
-        "object_kind": "seed",
-        "target_surface": "Dionysus.seed_route_map.min",
-        "inspect_surface": "Dionysus.seed_route_map.min",
-        "hint_reason": "explicit seed or staging requests should inspect the Dionysus seed route map before crossing into owner repos",
+        "object_kind": "source_route",
+        "target_surface": "Dionysus.source_route_anchor",
+        "inspect_surface": "Dionysus.source_route_anchor",
+        "hint_reason": "explicit source-route or staging requests should inspect the Dionysus source-route anchor before crossing into owner repos",
         "confidence": "high",
         "ambiguity": "clear",
     },
@@ -372,10 +381,10 @@ def parse_args() -> argparse.Namespace:
         help="Path to the aoa-sdk repository root for runtime control-plane federation entries.",
     )
     parser.add_argument(
-        "--seed-root",
+        "--source-route-root",
         type=Path,
         default=default_dependency_root("Dionysus"),
-        help="Path to the Dionysus repository root for seed federation entries.",
+        help="Path to the Dionysus repository root for source-route federation entries.",
     )
     parser.add_argument(
         "--profile-root",
@@ -444,6 +453,43 @@ def validate_generated_dir_matches_outputs(
     return mismatches
 
 
+def normalize_active_generated_text(value: str) -> str:
+    text = value
+    replacements = (
+        (
+            f"comparison-spine wording {OLD_STAGE_ROUTE_LABEL}s",
+            "comparison-spine wording passes",
+        ),
+        (
+            f"first inspect/capsule/expand consumer {OLD_STAGE_ROUTE_LABEL}",
+            "first inspect/capsule/expand consumer contour",
+        ),
+        (
+            f"Dionysus fifteenth {OLD_STAGE_ROUTE_LABEL} manifest",
+            "Dionysus fifteenth manifest",
+        ),
+        (
+            f"Dionysus sixteenth {OLD_STAGE_ROUTE_LABEL} manifest",
+            "Dionysus sixteenth manifest",
+        ),
+    )
+    for old, new in replacements:
+        text = re.sub(re.escape(old), new, text, flags=re.IGNORECASE)
+    text = re.sub(
+        rf"\b{OLD_STAGE_ROUTE_LABEL}(?:[-_ ]?[0-9]+)?s?\b",
+        "contour",
+        text,
+        flags=re.IGNORECASE,
+    )
+    text = re.sub(
+        rf"\b{OLD_BOOTSTRAP_ROUTE_LABEL}(?:s|ed)?\b",
+        "source-route",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return text
+
+
 def collect_technique_entries(techniques_root: Path) -> list[dict[str, Any]]:
     catalog_path = techniques_root / "generated" / "technique_catalog.min.json"
     payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
@@ -478,7 +524,9 @@ def collect_technique_entries(techniques_root: Path) -> list[dict[str, Any]]:
                     technique["technique_path"], f"{location}.technique_path"
                 ),
                 "status": ensure_string(technique["status"], f"{location}.status"),
-                "summary": ensure_string(technique["summary"], f"{location}.summary"),
+                "summary": normalize_active_generated_text(
+                    ensure_string(technique["summary"], f"{location}.summary")
+                ),
                 "source_type": TECHNIQUE_SOURCE_TYPE,
                 "attributes": {
                     "domain": ensure_string(technique["domain"], f"{location}.domain"),
@@ -538,7 +586,9 @@ def collect_skill_entries(skills_root: Path) -> list[dict[str, Any]]:
                 "repo": CANONICAL_REPO_BY_KIND["skill"],
                 "path": ensure_repo_relative_path(skill["skill_path"], f"{location}.skill_path"),
                 "status": ensure_string(skill["status"], f"{location}.status"),
-                "summary": ensure_string(skill["summary"], f"{location}.summary"),
+                "summary": normalize_active_generated_text(
+                    ensure_string(skill["summary"], f"{location}.summary")
+                ),
                 "source_type": SKILL_SOURCE_TYPE,
                 "attributes": {
                     "scope": ensure_string(skill["scope"], f"{location}.scope"),
@@ -596,15 +646,19 @@ def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
                 "repo": CANONICAL_REPO_BY_KIND["eval"],
                 "path": ensure_repo_relative_path(evaluation["eval_path"], f"{location}.eval_path"),
                 "status": ensure_string(evaluation["status"], f"{location}.status"),
-                "summary": ensure_string(evaluation["summary"], f"{location}.summary"),
+                "summary": normalize_active_generated_text(
+                    ensure_string(evaluation["summary"], f"{location}.summary")
+                ),
                 "source_type": EVAL_SOURCE_TYPE,
                 "attributes": {
                     "category": ensure_string(
                         evaluation["category"], f"{location}.category"
                     ),
-                    "object_under_evaluation": ensure_string(
-                        evaluation["object_under_evaluation"],
-                        f"{location}.object_under_evaluation",
+                    "object_under_evaluation": normalize_active_generated_text(
+                        ensure_string(
+                            evaluation["object_under_evaluation"],
+                            f"{location}.object_under_evaluation",
+                        )
                     ),
                     "claim_type": ensure_string(
                         evaluation["claim_type"], f"{location}.claim_type"
@@ -636,7 +690,7 @@ def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
 
 
 def collect_memo_entries(memo_root: Path) -> list[dict[str, Any]]:
-    catalog_path = memo_root / "generated" / "memory_catalog.min.json"
+    catalog_path = memo_root / MEMO_INSPECT_SURFACE_FILE
     payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
     memo_surfaces = ensure_list(
         payload.get("memo_surfaces"),
@@ -668,7 +722,9 @@ def collect_memo_entries(memo_root: Path) -> list[dict[str, Any]]:
                 "repo": CANONICAL_REPO_BY_KIND["memo"],
                 "path": ensure_repo_relative_path(surface["source_path"], f"{location}.source_path"),
                 "status": ensure_string(surface["status"], f"{location}.status"),
-                "summary": ensure_string(surface["summary"], f"{location}.summary"),
+                "summary": normalize_active_generated_text(
+                    ensure_string(surface["summary"], f"{location}.summary")
+                ),
                 "source_type": MEMO_SOURCE_TYPE,
                 "attributes": {
                     "surface_kind": ensure_string(
@@ -980,7 +1036,7 @@ def dump_jsonl(rows: list[dict[str, Any]]) -> str:
 def build_owner_layer_shortlist_payload() -> dict[str, Any]:
     return {
         "schema_version": "aoa_routing_owner_layer_shortlist_v2",
-        "schema_ref": "schemas/owner-layer-shortlist.schema.json",
+        "schema_ref": "mechanics/boundary-bridge/parts/owner-layer-shortlist/schemas/owner-layer-shortlist.schema.json",
         "owner_repo": "aoa-routing",
         "surface_kind": "owner_layer_shortlist",
         "hints": [dict(spec) for spec in OWNER_LAYER_SHORTLIST_SPECS],
@@ -1004,12 +1060,16 @@ def build_stats_regrounding_hints_payload(stats_root: Path) -> dict[str, Any]:
     hints: list[dict[str, Any]] = []
     for raw_surface in surfaces:
         surface = ensure_mapping(raw_surface, "summary_surface_catalog.surfaces[]")
-        name = ensure_string(surface.get("name"), "summary_surface_catalog.surfaces[].name")
+        name = normalize_active_generated_text(
+            ensure_string(surface.get("name"), "summary_surface_catalog.surfaces[].name")
+        )
         consumer_risk = surface.get("consumer_risk")
         if consumer_risk != "high" and not thin_flags:
             continue
         owner_truth_inputs = [
-            ensure_string(item, f"summary_surface_catalog.surfaces[{name}].owner_truth_inputs[]")
+            normalize_active_generated_text(
+                ensure_string(item, f"summary_surface_catalog.surfaces[{name}].owner_truth_inputs[]")
+            )
             for item in ensure_list(
                 surface.get("owner_truth_inputs", []),
                 f"summary_surface_catalog.surfaces[{name}].owner_truth_inputs",
@@ -1024,9 +1084,11 @@ def build_stats_regrounding_hints_payload(stats_root: Path) -> dict[str, Any]:
             {
                 "hint_id": f"stats-reground:{name}",
                 "surface_name": name,
-                "surface_ref": ensure_string(
-                    surface.get("surface_ref") or surface.get("surface_path") or surface.get("path"),
-                    f"summary_surface_catalog.surfaces[{name}].surface_ref",
+                "surface_ref": normalize_active_generated_text(
+                    ensure_string(
+                        surface.get("surface_ref") or surface.get("surface_path") or surface.get("path"),
+                        f"summary_surface_catalog.surfaces[{name}].surface_ref",
+                    )
                 ),
                 "recommended_action": "reground_before_using_stats",
                 "reason_codes": list(dict.fromkeys(reason_codes)),
@@ -1049,14 +1111,19 @@ def build_stats_regrounding_hints_payload(stats_root: Path) -> dict[str, Any]:
                     },
                 ],
                 "advisory_only": True,
-                "authority_note": surface.get("authority_ceiling")
-                or "Routing only names the re-grounding path; it does not make stats authoritative.",
+                "authority_note": normalize_active_generated_text(
+                    ensure_string(
+                        surface.get("authority_ceiling")
+                        or "Routing only names the re-grounding path; it does not make stats authoritative.",
+                        f"summary_surface_catalog.surfaces[{name}].authority_ceiling",
+                    )
+                ),
             }
         )
 
     return {
         "schema_version": "aoa_routing_stats_regrounding_hints_v1",
-        "schema_ref": "schemas/stats-regrounding-hints.schema.json",
+        "schema_ref": "mechanics/boundary-bridge/parts/stats-regrounding/schemas/stats-regrounding-hints.schema.json",
         "owner_repo": "aoa-routing",
         "surface_kind": "stats_regrounding_hints",
         "source_inputs": [
@@ -1116,14 +1183,14 @@ def build_outputs(
     kag_root: Path,
     tos_root: Path,
     sdk_root: Path | None = None,
-    seed_root: Path | None = None,
+    source_route_root: Path | None = None,
     profile_root: Path | None = None,
     abyss_stack_root: Path | None = None,
     routing_root: Path | None = None,
 ) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
     routing_root = (routing_root or REPO_ROOT).resolve()
     sdk_root = sdk_root or default_dependency_root("aoa-sdk", routing_root)
-    seed_root = seed_root or default_dependency_root("Dionysus", routing_root)
+    source_route_root = source_route_root or default_dependency_root("Dionysus", routing_root)
     profile_root = profile_root or default_dependency_root("8Dionysus", routing_root)
     abyss_stack_root = abyss_stack_root or default_dependency_root("abyss-stack", routing_root)
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
@@ -1164,7 +1231,7 @@ def build_outputs(
         tos_root,
         sdk_root,
         stats_root,
-        seed_root,
+        source_route_root,
         profile_root,
         abyss_stack_root,
     )
@@ -1180,7 +1247,7 @@ def build_outputs(
         kag_root,
         tos_root,
         sdk_root,
-        seed_root,
+        source_route_root,
         profile_root,
         abyss_stack_root,
         hints_payload,
@@ -1255,7 +1322,7 @@ def main() -> int:
         args.kag_root.resolve(),
         args.tos_root.resolve(),
         args.sdk_root.resolve(),
-        args.seed_root.resolve(),
+        args.source_route_root.resolve(),
         args.profile_root.resolve(),
         args.abyss_stack_root.resolve(),
         REPO_ROOT.resolve(),

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import build_router
 import validate_router
-from _wave9_router_lib import build_decision_packet, preselect
+from _two_stage_router_lib import build_decision_packet, preselect
 from router_core import (
     ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
     default_dependency_root,
@@ -42,10 +42,10 @@ LIVE_REQUIRED_INPUTS = {
     "aoa-evals": [Path("generated/eval_capsules.json")],
     "aoa-kag": [Path("generated/federation_spine.min.json")],
     "aoa-memo": [
-        Path("generated/memory_catalog.min.json"),
-        Path("generated/memory_capsules.json"),
-        Path("generated/memory_object_catalog.min.json"),
-        Path("generated/memory_object_capsules.json"),
+        Path("generated/memory/memory_catalog.min.json"),
+        Path("generated/memory/memory_capsules.json"),
+        Path("generated/memory-objects/memory_object_catalog.min.json"),
+        Path("generated/memory-objects/memory_object_capsules.json"),
     ],
     "aoa-playbooks": [Path("generated/playbook_registry.min.json")],
     "aoa-skills": [
@@ -156,14 +156,14 @@ class LiveWorkspaceContractTests(unittest.TestCase):
 
         self.assertEqual(issues, [])
 
-    def test_live_workspace_runtime_seed_and_profile_capsules_stay_language_neutral(self) -> None:
+    def test_live_workspace_runtime_source_and_profile_capsules_stay_language_neutral(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")
         entry_by_id = {
             entry["id"]: entry
             for entry in federation["entrypoints"]
             if entry["id"] in {
                 "aoa-sdk-control-plane",
-                "dionysus-seed-garden",
+                "dionysus-source-route",
                 "aoa-stats-summary-catalog",
                 "abyss-stack-diagnostic-spine",
                 "8dionysus-public-route-map",
@@ -185,20 +185,15 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             )
         )
 
-        seed_payload = load_json(LIVE_ROOTS["Dionysus"] / "generated" / "seed_route_map.min.json")
         self.assertEqual(
-            entry_by_id["dionysus-seed-garden"]["capsule_surface"],
-            "Dionysus:generated/seed_route_map.min.json",
+            entry_by_id["dionysus-source-route"]["capsule_surface"],
+            "Dionysus:docs/codex/planting-protocol.md",
         )
-        self.assertEqual(seed_payload["schema_version"], "dionysus_seed_route_map_v2")
-        self.assertEqual(seed_payload["schema_ref"], "schemas/seed-route-map.schema.json")
-        self.assertTrue(
-            all(
-                not ref.partition("#")[0].startswith(("src/", "scripts/"))
-                for route in seed_payload["routes"]
-                for ref in [route["surface_ref"], *route["verification_refs"]]
-            )
+        self.assertEqual(
+            entry_by_id["dionysus-source-route"]["authority_surface"],
+            "Dionysus:docs/codex/planting-protocol.md",
         )
+        self.assertTrue((LIVE_ROOTS["Dionysus"] / "docs" / "codex" / "planting-protocol.md").exists())
 
         stats_payload = load_json(LIVE_ROOTS["aoa-stats"] / "generated" / "summary_surface_catalog.min.json")
         self.assertEqual(
@@ -269,6 +264,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 "organ-alignment",
                 "public-claim-validation",
                 "low-context-agent",
+                "local-memory-port",
                 "district-work",
             ],
         )
@@ -376,7 +372,13 @@ class LiveWorkspaceContractTests(unittest.TestCase):
     def test_live_workspace_skill_root_handoff_reaches_source_owned_activation_seams(self) -> None:
         tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
         two_stage = load_json(REPO_ROOT / "generated" / "two_stage_skill_entrypoints.json")
-        policy = load_json(REPO_ROOT / "config" / "two_stage_router_policy.json")
+        policy = load_json(
+            REPO_ROOT
+            / "routing"
+            / "two-stage-skill-selection"
+            / "config"
+            / "two_stage_router_policy.json"
+        )
         eval_cases = {
             entry["case_id"]: entry
             for entry in load_jsonl(REPO_ROOT / "generated" / "two_stage_router_eval_cases.jsonl")
@@ -508,26 +510,12 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 kag_targets[(action["target_surface"], action["target_value"])],
             )
 
-        seed_entry = entry_by_id[federation_starters["seed-root"]["target_value"]]
-        self.assertEqual(seed_entry["kind"], "seed")
-        self.assertTrue(resolve_repo_ref(seed_entry["capsule_surface"]).exists())
-        self.assertTrue(resolve_repo_ref(seed_entry["authority_surface"]).exists())
-        seed_payload = load_json(resolve_repo_ref(seed_entry["capsule_surface"]))
-        seed_routes = {route["route_id"]: route for route in seed_payload["routes"]}
+        source_route_entry = entry_by_id[federation_starters["source-route-root"]["target_value"]]
+        self.assertEqual(source_route_entry["kind"], "source_route")
+        self.assertTrue(resolve_repo_ref(source_route_entry["capsule_surface"]).exists())
+        self.assertTrue(resolve_repo_ref(source_route_entry["authority_surface"]).exists())
         self.assertEqual(
-            list(seed_routes),
-            ["next-live-seed", "registry-validation", "questbook-follow-through"],
-        )
-        for route in seed_routes.values():
-            self.assertTrue(resolve_repo_ref(route["surface_ref"], default_repo="Dionysus").exists())
-            self.assertTrue(
-                all(
-                    resolve_repo_ref(ref, default_repo="Dionysus").exists()
-                    for ref in route["verification_refs"]
-                )
-            )
-        self.assertEqual(
-            [hop["id"] for hop in seed_entry["next_hops"]],
+            [hop["id"] for hop in source_route_entry["next_hops"]],
             ["8dionysus-public-route-map", "aoa-sdk-control-plane"],
         )
 
@@ -551,16 +539,16 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertEqual(
             list(runtime_routes),
             [
-                "workspace-topology",
+                "workspace-root-resolution",
                 "compatibility-posture",
-                "surface-detection",
+                "owner-layer-signal-handoff",
                 "checkpoint-growth",
             ],
         )
         checkpoint_route = runtime_routes["checkpoint-growth"]
         self.assertEqual(
             checkpoint_route["surface_ref"],
-            "docs/session-growth-checkpoints.md",
+            "mechanics/checkpoint/parts/session-growth-checkpoint-cycle/docs/session-growth-checkpoint-cycle.md",
         )
         self.assertTrue(
             all(
@@ -668,8 +656,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
 
         memo_hint = next(hint for hint in hints["hints"] if hint["kind"] == "memo")
         memo_entry = router_entries_by_kind["memo"][0]
-        memo_catalog = load_json(LIVE_ROOTS["aoa-memo"] / "generated" / "memory_catalog.min.json")
-        memo_capsules = load_json(LIVE_ROOTS["aoa-memo"] / "generated" / "memory_capsules.json")
+        memo_catalog = load_json(LIVE_ROOTS["aoa-memo"] / "generated" / "memory" / "memory_catalog.min.json")
+        memo_capsules = load_json(LIVE_ROOTS["aoa-memo"] / "generated" / "memory" / "memory_capsules.json")
         memo_ids = {entry["id"] for entry in memo_catalog["memo_surfaces"]}
         memo_capsule_ids = {entry["id"] for entry in memo_capsules["memo_surfaces"]}
         self.assertEqual(starters["memo-root"]["target_value"], "memo")
@@ -762,42 +750,66 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         two_stage_manifest = load_json(REPO_ROOT / "generated" / "two_stage_router_manifest.json")
 
         self.assertEqual(federation["schema_version"], "aoa_routing_federation_entrypoints_v2")
-        self.assertEqual(federation["schema_ref"], "schemas/federation-entrypoints.schema.json")
+        self.assertEqual(
+            federation["schema_ref"],
+            "mechanics/boundary-bridge/parts/federation-entry/schemas/federation-entrypoints.schema.json",
+        )
         self.assertEqual(federation["owner_repo"], "aoa-routing")
         self.assertEqual(federation["surface_kind"], "federation_entrypoints")
         self.assertEqual(tiny["schema_version"], "aoa_routing_tiny_model_entrypoints_v2")
-        self.assertEqual(tiny["schema_ref"], "schemas/tiny-model-entrypoints.schema.json")
+        self.assertEqual(tiny["schema_ref"], "routing/core/schemas/tiny-model-entrypoints.schema.json")
         self.assertEqual(tiny["owner_repo"], "aoa-routing")
         self.assertEqual(tiny["surface_kind"], "tiny_model_entrypoints")
         self.assertEqual(shortlist["schema_version"], "aoa_routing_owner_layer_shortlist_v2")
-        self.assertEqual(shortlist["schema_ref"], "schemas/owner-layer-shortlist.schema.json")
+        self.assertEqual(
+            shortlist["schema_ref"],
+            "mechanics/boundary-bridge/parts/owner-layer-shortlist/schemas/owner-layer-shortlist.schema.json",
+        )
         self.assertEqual(shortlist["owner_repo"], "aoa-routing")
         self.assertEqual(shortlist["surface_kind"], "owner_layer_shortlist")
         self.assertEqual(returns["schema_version"], "aoa_routing_return_navigation_hints_v2")
-        self.assertEqual(returns["schema_ref"], "schemas/return-navigation-hints.schema.json")
+        self.assertEqual(
+            returns["schema_ref"],
+            "mechanics/recurrence/parts/return-navigation/schemas/return-navigation-hints.schema.json",
+        )
         self.assertEqual(returns["owner_repo"], "aoa-routing")
         self.assertEqual(returns["surface_kind"], "return_navigation_hints")
         self.assertEqual(two_stage_entrypoints["schema_version"], "aoa_routing_two_stage_skill_entrypoints_v2")
-        self.assertEqual(two_stage_entrypoints["schema_ref"], "schemas/two-stage-skill-entrypoints.schema.json")
+        self.assertEqual(
+            two_stage_entrypoints["schema_ref"],
+            "routing/two-stage-skill-selection/schemas/two-stage-skill-entrypoints.schema.json",
+        )
         self.assertEqual(two_stage_entrypoints["owner_repo"], "aoa-routing")
         self.assertEqual(two_stage_entrypoints["surface_kind"], "two_stage_skill_entrypoints")
         self.assertEqual(two_stage_prompt_blocks["schema_version"], "aoa_routing_two_stage_router_prompt_blocks_v2")
-        self.assertEqual(two_stage_prompt_blocks["schema_ref"], "schemas/two-stage-router-prompt-blocks.schema.json")
+        self.assertEqual(
+            two_stage_prompt_blocks["schema_ref"],
+            "routing/two-stage-skill-selection/schemas/two-stage-router-prompt-blocks.schema.json",
+        )
         self.assertEqual(two_stage_prompt_blocks["owner_repo"], "aoa-routing")
         self.assertEqual(two_stage_prompt_blocks["surface_kind"], "two_stage_router_prompt_blocks")
         self.assertEqual(two_stage_prompt_blocks["low_context_boundary"]["wording_scope"], "routing-owned")
         self.assertEqual(two_stage_prompt_blocks["low_context_boundary"]["source_payload_copying"], "forbidden")
         self.assertEqual(two_stage_tool_schemas["schema_version"], "aoa_routing_two_stage_router_tool_schemas_v2")
-        self.assertEqual(two_stage_tool_schemas["schema_ref"], "schemas/two-stage-router-tool-schemas.schema.json")
+        self.assertEqual(
+            two_stage_tool_schemas["schema_ref"],
+            "routing/two-stage-skill-selection/schemas/two-stage-router-tool-schemas.schema.json",
+        )
         self.assertEqual(two_stage_tool_schemas["owner_repo"], "aoa-routing")
         self.assertEqual(two_stage_tool_schemas["surface_kind"], "two_stage_router_tool_schemas")
         self.assertEqual(two_stage_tool_schemas["low_context_boundary"], two_stage_prompt_blocks["low_context_boundary"])
         self.assertEqual(two_stage_examples["schema_version"], "aoa_routing_two_stage_router_examples_v2")
-        self.assertEqual(two_stage_examples["schema_ref"], "schemas/two-stage-router-examples.schema.json")
+        self.assertEqual(
+            two_stage_examples["schema_ref"],
+            "routing/two-stage-skill-selection/schemas/two-stage-router-examples.schema.json",
+        )
         self.assertEqual(two_stage_examples["owner_repo"], "aoa-routing")
         self.assertEqual(two_stage_examples["surface_kind"], "two_stage_router_examples")
         self.assertEqual(two_stage_manifest["schema_version"], "aoa_routing_two_stage_router_manifest_v2")
-        self.assertEqual(two_stage_manifest["schema_ref"], "schemas/two-stage-router-manifest.schema.json")
+        self.assertEqual(
+            two_stage_manifest["schema_ref"],
+            "routing/two-stage-skill-selection/schemas/two-stage-router-manifest.schema.json",
+        )
         self.assertEqual(two_stage_manifest["owner_repo"], "aoa-routing")
         self.assertEqual(two_stage_manifest["surface_kind"], "two_stage_router_manifest")
 
@@ -872,15 +884,29 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-playbooks"] / "generated" / "playbook_review_intake.min.json"
         )
         runtime_template_index = load_json(
-            LIVE_ROOTS["aoa-evals"] / "generated" / "runtime_candidate_template_index.min.json"
+            LIVE_ROOTS["aoa-evals"]
+            / "mechanics"
+            / "audit"
+            / "parts"
+            / "candidate-readers"
+            / "generated"
+            / "runtime_candidate_template_index.min.json"
         )
         runtime_candidate_intake = load_json(
-            LIVE_ROOTS["aoa-evals"] / "generated" / "runtime_candidate_intake.min.json"
+            LIVE_ROOTS["aoa-evals"]
+            / "mechanics"
+            / "audit"
+            / "parts"
+            / "candidate-readers"
+            / "generated"
+            / "runtime_candidate_intake.min.json"
         )
         runtime_writeback_targets = load_json(
             LIVE_ROOTS["aoa-memo"]
             / "mechanics"
             / "writeback"
+            / "parts"
+            / "runtime-and-temperature"
             / "generated"
             / "runtime_writeback_targets.min.json"
         )
@@ -888,6 +914,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             LIVE_ROOTS["aoa-memo"]
             / "mechanics"
             / "writeback"
+            / "parts"
+            / "runtime-and-temperature"
             / "generated"
             / "runtime_writeback_intake.min.json"
         )
@@ -936,7 +964,7 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         self.assertEqual(by_id["AOA-P-0011"]["memo_runtime_surfaces"], ["approval_record"])
         self.assertEqual(
             by_id["AOA-P-0011"]["source_review_refs"][0],
-            "playbooks/bounded-change-safe/PLAYBOOK.md",
+            "playbooks/operations/change/bounded-change-safe/PLAYBOOK.md",
         )
         self.assertEqual(
             by_id["AOA-P-0017"]["eval_anchors"],
@@ -1036,6 +1064,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             memo_root
             / "mechanics"
             / "checkpoint"
+            / "parts"
+            / "checkpoint-to-memory-mapping"
             / "examples"
             / "checkpoint_to_memory_contract.example.json"
         )
@@ -1043,6 +1073,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             memo_root
             / "mechanics"
             / "writeback"
+            / "parts"
+            / "runtime-and-temperature"
             / "generated"
             / "runtime_writeback_targets.min.json"
         )
@@ -1050,6 +1082,8 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             memo_root
             / "mechanics"
             / "writeback"
+            / "parts"
+            / "runtime-and-temperature"
             / "generated"
             / "runtime_writeback_intake.min.json"
         )

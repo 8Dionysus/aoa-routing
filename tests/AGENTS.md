@@ -34,6 +34,7 @@ A good test should clarify whether the router stayed thin, bounded, and aligned 
 Run:
 
 ```bash
+python scripts/validate_active_legacy_names.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
 python scripts/generate_decision_indexes.py --check

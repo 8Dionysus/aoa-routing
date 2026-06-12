@@ -75,36 +75,36 @@ Before making changes, read in this order:
 5. `generated/owner_layer_shortlist.min.json`
 6. `generated/recommended_paths.min.json`
 7. `generated/federation_entrypoints.min.json` when the task touches federation entry
-8. `docs/TWO_STAGE_SKILL_SELECTION.md` when the task touches the optional wave-9 seam
+8. `routing/two-stage-skill-selection/docs/two-stage-skill-selection.md` when the task touches the optional two-stage seam
 
 Then branch by task:
 
 - federation entry or bounded return posture:
-  `docs/FEDERATION_ENTRY_ABI.md` and
-  `docs/RECURRENCE_NAVIGATION_BOUNDARY.md`
+  `mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md` and
+  `mechanics/recurrence/parts/return-navigation/docs/recurrence-navigation-boundary.md`
 - quest-style adjunct seams:
-  `docs/QUEST_BOARD_SEAM.md` and
-  `docs/QUEST_ROUTING_SEAM.md`
+  `mechanics/questbook/parts/quest-board-seam/docs/quest-board-seam.md` and
+  `mechanics/questbook/parts/quest-routing-seam/docs/quest-routing-seam.md`
 - stress overlays:
-  `docs/STRESS_POSTURE_ROUTING.md`,
-  `docs/DEGRADED_ROUTE_HINTS.md`,
-  `docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md`, and
-  `docs/KAG_QUARANTINE_ROUTE_HINTS.md`
+  `mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md`,
+  `mechanics/antifragility/parts/degraded-route-hints/docs/degraded-route-hints.md`,
+  `mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md`, and
+  `mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md`
 - Agon gate routing:
-  `docs/AGON_GATE_ROUTING.md`,
-  `docs/AGON_GATE_TRIGGER_MODEL.md`,
-  `docs/AGON_GATE_DECISION_BOUNDARY.md`,
-  `docs/AGON_GATE_ASSISTANT_ESCALATION.md`, and
-  `docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md`
+  `mechanics/agon/parts/gate-routing/docs/gate-routing.md`,
+  `mechanics/agon/parts/gate-routing/docs/trigger-model.md`,
+  `mechanics/agon/parts/gate-routing/docs/decision-boundary.md`,
+  `mechanics/agon/parts/gate-routing/docs/assistant-escalation.md`, and
+  `mechanics/agon/parts/gate-routing/docs/owner-handoffs.md`
 - stage-two skill routing:
   the `two_stage_*` generated family and
-  `docs/TWO_STAGE_SKILL_SELECTION.md`
+  `routing/two-stage-skill-selection/docs/two-stage-skill-selection.md`
 
 If the task affects ingestion contracts, inspect the relevant upstream
 generated catalogs before editing routing logic.
 
-If you are editing inside `generated/`, `schemas/`, `scripts/`, or `tests/`,
-also follow the nested `AGENTS.md` in that directory.
+If you are editing inside `generated/`, `routing/core/schemas/`, `scripts/`, or
+`tests/`, also follow the nested `AGENTS.md` in that directory.
 
 ## Primary objects
 
@@ -113,11 +113,12 @@ The most important objects in this repository are:
 - `scripts/build_router.py`
 - `scripts/router_core.py`
 - `scripts/validate_router.py`
-- `scripts/build_agon_gate_routing_registry.py`
-- `scripts/validate_agon_gate_routing.py`
+- `mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py`
+- `mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py`
 - `scripts/build_two_stage_skill_router.py`
 - `scripts/validate_two_stage_skill_router.py`
-- `schemas/*`
+- `routing/core/schemas/*`
+- `mechanics/<head>/parts/<part>/schemas/*`
 - `generated/*.json`
 - tests that validate routing integrity
 
@@ -163,6 +164,7 @@ finishing:
 
 ```bash
 python scripts/build_router.py
+python scripts/validate_active_legacy_names.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check

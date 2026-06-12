@@ -1,0 +1,26 @@
+{
+  "schema_version": "aoa_routing_legacy_former_routes.v1",
+  "owner": "mechanics/titan",
+  "routes": [
+    {
+      "former_path": "docs/TITAN_RUNTIME_ROUTE.md",
+      "current_path": "mechanics/titan/parts/runtime-route/docs/titan-runtime-route.md"
+    },
+    {
+      "former_path": "docs/TITAN_CONSOLE_ROUTE.md",
+      "current_path": "mechanics/titan/parts/console-route/docs/titan-console-route.md"
+    },
+    {
+      "former_path": "docs/TITAN_MEMORY_ROUTE.md",
+      "current_path": "mechanics/titan/parts/memory-route/docs/titan-memory-route.md"
+    },
+    {
+      "former_path": "docs/TITAN_APPSERVER_BRIDGE_ROUTE.md",
+      "current_path": "mechanics/titan/parts/appserver-bridge/docs/titan-appserver-bridge-route.md"
+    },
+    {
+      "former_path": "docs/RUNTIME_CASE_ROUTING.md",
+      "current_path": "mechanics/titan/parts/runtime-case-routing/docs/runtime-case-routing.md"
+    }
+  ]
+}

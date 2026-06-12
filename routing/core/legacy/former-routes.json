@@ -1,0 +1,42 @@
+{
+  "schema_version": "aoa_routing_legacy_former_routes.v1",
+  "owner": "routing/core",
+  "routes": [
+    {
+      "former_path": "schemas/AGENTS.md",
+      "current_path": "routing/core/schemas/AGENTS.md"
+    },
+    {
+      "former_path": "schemas/aoa-router.schema.json",
+      "current_path": "routing/core/schemas/aoa-router.schema.json"
+    },
+    {
+      "former_path": "schemas/cross-repo-registry.schema.json",
+      "current_path": "routing/core/schemas/cross-repo-registry.schema.json"
+    },
+    {
+      "former_path": "schemas/router-entry.schema.json",
+      "current_path": "routing/core/schemas/router-entry.schema.json"
+    },
+    {
+      "former_path": "schemas/task-to-surface-hints.schema.json",
+      "current_path": "routing/core/schemas/task-to-surface-hints.schema.json"
+    },
+    {
+      "former_path": "schemas/task-to-tier-hints.schema.json",
+      "current_path": "routing/core/schemas/task-to-tier-hints.schema.json"
+    },
+    {
+      "former_path": "schemas/recommended-paths.schema.json",
+      "current_path": "routing/core/schemas/recommended-paths.schema.json"
+    },
+    {
+      "former_path": "schemas/pairing-hints.schema.json",
+      "current_path": "routing/core/schemas/pairing-hints.schema.json"
+    },
+    {
+      "former_path": "schemas/tiny-model-entrypoints.schema.json",
+      "current_path": "routing/core/schemas/tiny-model-entrypoints.schema.json"
+    }
+  ]
+}

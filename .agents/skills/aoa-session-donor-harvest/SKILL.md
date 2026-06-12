@@ -10,7 +10,7 @@ metadata:
   aoa_source_skill_path: skills/core/session-growth/aoa-session-donor-harvest/SKILL.md
   aoa_source_repo: 8Dionysus/aoa-skills
   aoa_technique_dependencies: AOA-T-0075,AOA-T-0076,AOA-T-0077
-  aoa_portable_profile: codex-facing-wave-3
+  aoa_portable_profile: codex-facing-context
 ---
 
 # aoa-session-donor-harvest
@@ -116,7 +116,7 @@ Do not use this skill when:
     ambiguity is specifically the final promotion target among quest, skill,
     playbook, agent, eval, or memo, hand off to `aoa-quest-harvest`
 23. draft the smallest next artifact for each accepted candidate, such as
-    `TECHNIQUE.md`, `SKILL.md`, `PLAYBOOK.md`, `EVAL.md`, memory object seed,
+    `TECHNIQUE.md`, `SKILL.md`, `PLAYBOOK.md`, `EVAL.md`, memory object candidate,
     or agent/orchestrator surface note
 24. keep `cluster_ref`, `owner_hypothesis`, `owner_shape`,
     `nearest_wrong_target`, `status_posture`, `evidence_refs`, `supersedes`,

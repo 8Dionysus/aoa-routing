@@ -1,0 +1,85 @@
+{
+  "schema_version": "aoa_routing_source_home.v1",
+  "owner_repo": "aoa-routing",
+  "source_home": "routing/",
+  "role": "local source-home for routing-owned navigation behavior",
+  "routes": [
+    {
+      "id": "core",
+      "path": "routing/core/",
+      "status": "active",
+      "owns": [
+        "thin-router derivation",
+        "cross-repo registry projection",
+        "task surface and tier hints",
+        "recommended paths",
+        "pairing hints",
+        "core public-output schemas",
+        "public generated routing output derivation"
+      ],
+      "public_outputs": [
+        "generated/cross_repo_registry.min.json",
+        "generated/aoa_router.min.json",
+        "generated/task_to_surface_hints.json",
+        "generated/task_to_tier_hints.json",
+        "generated/recommended_paths.min.json",
+        "generated/pairing_hints.min.json",
+        "generated/tiny_model_entrypoints.json"
+      ],
+      "former_flat_implementation_surfaces": [
+        "schemas/AGENTS.md",
+        "schemas/aoa-router.schema.json",
+        "schemas/cross-repo-registry.schema.json",
+        "schemas/router-entry.schema.json",
+        "schemas/task-to-surface-hints.schema.json",
+        "schemas/task-to-tier-hints.schema.json",
+        "schemas/recommended-paths.schema.json",
+        "schemas/pairing-hints.schema.json",
+        "schemas/tiny-model-entrypoints.schema.json",
+        "scripts/build_router.py",
+        "scripts/router_core.py",
+        "scripts/validate_router.py"
+      ]
+    },
+    {
+      "id": "two-stage-skill-selection",
+      "path": "routing/two-stage-skill-selection/",
+      "status": "active",
+      "owns": [
+        "stage-1 skill shortlist policy",
+        "stage-2 skill decision packet support",
+        "two-stage prompt and tool routing contracts",
+        "precision case validation"
+      ],
+      "public_outputs": [
+        "generated/two_stage_skill_entrypoints.json",
+        "generated/two_stage_router_prompt_blocks.json",
+        "generated/two_stage_router_tool_schemas.json",
+        "generated/two_stage_router_examples.json",
+        "generated/two_stage_router_manifest.json",
+        "generated/two_stage_router_eval_cases.jsonl"
+      ],
+      "former_flat_implementation_surfaces": [
+        "config/two_stage_router_policy.json",
+        "config/two_stage_router_precision_cases.jsonl",
+        "docs/TWO_STAGE_SKILL_SELECTION.md",
+        "schemas/two-stage-router-examples.schema.json",
+        "schemas/two-stage-router-manifest.schema.json",
+        "schemas/two-stage-router-prompt-blocks.schema.json",
+        "schemas/two-stage-router-tool-schemas.schema.json",
+        "schemas/two-stage-skill-entrypoints.schema.json",
+        "scripts/_two_stage_router_lib.py",
+        "scripts/build_two_stage_skill_router.py",
+        "scripts/two_stage_skill_router.py",
+        "scripts/validate_two_stage_skill_router.py",
+        "tests/test_two_stage_skill_router.py"
+      ]
+    }
+  ],
+  "placement_rules": [
+    "routing-local source behavior starts under routing/",
+    "shared OS Abyss mechanic participation routes to mechanics/<head>/parts/<part>/",
+    "root generated outputs may remain root-published when consumed outside one part",
+    "root scripts may remain only as repo-wide validators, release gates, or compatibility wrappers"
+  ]
+}

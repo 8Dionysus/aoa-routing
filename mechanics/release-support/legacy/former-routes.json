@@ -1,0 +1,30 @@
+{
+  "schema_version": "aoa_routing_legacy_former_routes.v1",
+  "owner": "mechanics/release-support",
+  "routes": [
+    {
+      "former_path": "docs/RELEASE_GATE_ROUTING.md",
+      "current_path": "mechanics/release-support/parts/release-gate-routing/docs/release-gate-routing.md"
+    },
+    {
+      "former_path": "docs/RELEASING.md",
+      "current_path": "mechanics/release-support/parts/release-gate-routing/docs/releasing.md"
+    },
+    {
+      "former_path": "docs/DEPLOYMENT_RING_ROUTING.md",
+      "current_path": "mechanics/release-support/parts/deployment-ring-routing/docs/deployment-ring-routing.md"
+    },
+    {
+      "former_path": "docs/INSTALLATION_BOUNDARY_ROUTING.md",
+      "current_path": "mechanics/release-support/parts/installation-routing/docs/installation-boundary-routing.md"
+    },
+    {
+      "former_path": "docs/INSTALLATION_ROUTE_PLAN.md",
+      "current_path": "mechanics/release-support/parts/installation-routing/docs/installation-route-plan.md"
+    },
+    {
+      "former_path": "docs/WATCHTOWER_ESCALATION_ROUTING.md",
+      "current_path": "mechanics/release-support/parts/watchtower-escalation/docs/watchtower-escalation-routing.md"
+    }
+  ]
+}

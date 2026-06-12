@@ -38,7 +38,7 @@ different gains, costs, and risks.
 - Do not launch a child route from the cards; once one branch is selected,
   anchored, and output-named, use `aoa-summon`.
 - Do not confuse branch analysis with final promotion triage.
-- Treat historical fixture suffixes such as wave labels as lineage only. Skill
+- Treat historical fixture suffixes such as legacy labels as lineage only. Skill
   output should use stable names like `FORK_CARDS`,
   `DECISION_FORK_RECEIPT`, and `CORE_SKILL_APPLICATION_RECEIPT`.
 
