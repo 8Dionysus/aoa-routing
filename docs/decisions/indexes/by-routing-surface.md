@@ -10,6 +10,19 @@
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
 
+## generated outputs
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## mechanics atlas
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## routing source-home
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
 ## thin router
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)

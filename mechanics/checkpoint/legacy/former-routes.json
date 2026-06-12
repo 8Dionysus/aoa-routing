@@ -1,0 +1,26 @@
+{
+  "schema_version": "aoa_routing_former_routes.v1",
+  "owner": "mechanics/checkpoint",
+  "former_flat_paths": [
+    {
+      "former_path": "docs/LIVE_SESSION_REENTRY_ROUTE_REVIEW.md",
+      "current_path": "mechanics/checkpoint/parts/live-session-reentry-route-review/docs/live-session-reentry-route-review.md",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/live-session-reentry-route-review.schema.json",
+      "current_path": "mechanics/checkpoint/parts/live-session-reentry-route-review/schemas/live-session-reentry-route-review.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "examples/live_session_reentry_route_review.example.json",
+      "current_path": "mechanics/checkpoint/parts/live-session-reentry-route-review/examples/live_session_reentry_route_review.example.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "tests/test_live_session_reentry_route_review.py",
+      "current_path": "mechanics/checkpoint/parts/live-session-reentry-route-review/tests/test_live_session_reentry_route_review.py",
+      "status": "retired-flat-owner"
+    }
+  ]
+}

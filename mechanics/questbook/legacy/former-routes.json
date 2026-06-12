@@ -1,0 +1,76 @@
+{
+  "schema_version": "aoa_routing_former_routes.v1",
+  "owner": "mechanics/questbook",
+  "former_flat_paths": [
+    {
+      "former_path": "QUESTBOOK.md",
+      "current_path": "QUESTBOOK.md",
+      "status": "active-root-index-restored"
+    },
+    {
+      "former_path": "quests/AOA-RT-Q-0001.yaml",
+      "current_path": "quests/routing/done/AOA-RT-Q-0001.yaml",
+      "status": "source-record-lane-restored"
+    },
+    {
+      "former_path": "quests/AOA-RT-Q-0002.yaml",
+      "current_path": "quests/routing/reanchor/AOA-RT-Q-0002.yaml",
+      "status": "source-record-lane-restored"
+    },
+    {
+      "former_path": "quests/AOA-RT-Q-0003.yaml",
+      "current_path": "quests/routing/captured/AOA-RT-Q-0003.yaml",
+      "status": "source-record-lane-restored"
+    },
+    {
+      "former_path": "quests/AOA-RT-Q-0004.yaml",
+      "current_path": "quests/routing/triaged/AOA-RT-Q-0004.yaml",
+      "status": "source-record-lane-restored"
+    },
+    {
+      "former_path": "docs/QUEST_ROUTING_SEAM.md",
+      "current_path": "mechanics/questbook/parts/quest-routing-seam/docs/quest-routing-seam.md",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "docs/QUEST_BOARD_SEAM.md",
+      "current_path": "mechanics/questbook/parts/quest-board-seam/docs/quest-board-seam.md",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "docs/HARVEST_QUEST_FANOUT.md",
+      "current_path": "mechanics/questbook/parts/harvest-fanout/docs/harvest-quest-fanout.md",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/quest_dispatch_hint.schema.json",
+      "current_path": "mechanics/questbook/parts/quest-routing-seam/schemas/quest_dispatch_hint.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/quest-dispatch-hints.schema.json",
+      "current_path": "mechanics/questbook/parts/quest-routing-seam/schemas/quest-dispatch-hints.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/quest_board_entry.schema.json",
+      "current_path": "mechanics/questbook/parts/quest-board-seam/schemas/quest_board_entry.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/harvest_quest_fanout_v1.json",
+      "current_path": "mechanics/questbook/parts/harvest-fanout/schemas/harvest_quest_fanout_v1.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "examples/harvest_quest_fanout.example.json",
+      "current_path": "mechanics/questbook/parts/harvest-fanout/examples/harvest_quest_fanout.example.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "generated/quest_board.min.example.json",
+      "current_path": "mechanics/questbook/parts/quest-board-seam/generated/quest_board.min.example.json",
+      "status": "retired-flat-owner"
+    }
+  ]
+}

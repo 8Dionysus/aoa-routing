@@ -10,7 +10,7 @@ metadata:
   aoa_source_skill_path: skills/core/session-growth/aoa-summon/SKILL.md
   aoa_source_repo: 8Dionysus/aoa-skills
   aoa_technique_dependencies: AOA-T-0078,AOA-T-0079,AOA-T-0062,AOA-T-0058
-  aoa_portable_profile: codex-facing-wave-3
+  aoa_portable_profile: codex-facing-context
 ---
 
 # aoa-summon

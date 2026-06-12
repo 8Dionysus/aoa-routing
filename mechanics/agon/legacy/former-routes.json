@@ -1,0 +1,136 @@
+{
+  "schema_version": "aoa_routing_mechanics_legacy_routes_v1",
+  "parent": "agon",
+  "entries": [
+    {
+      "former_path": "docs/AGON_GATE_ROUTING.md",
+      "active_route": "mechanics/agon/parts/gate-routing/docs/gate-routing.md",
+      "status": "distilled"
+    },
+    {
+      "former_path": "docs/AGON_GATE_TRIGGER_MODEL.md",
+      "active_route": "mechanics/agon/parts/gate-routing/docs/trigger-model.md",
+      "status": "distilled"
+    },
+    {
+      "former_path": "docs/AGON_GATE_DECISION_BOUNDARY.md",
+      "active_route": "mechanics/agon/parts/gate-routing/docs/decision-boundary.md",
+      "status": "distilled"
+    },
+    {
+      "former_path": "docs/AGON_GATE_ASSISTANT_ESCALATION.md",
+      "active_route": "mechanics/agon/parts/gate-routing/docs/assistant-escalation.md",
+      "status": "distilled"
+    },
+    {
+      "former_path": "docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md",
+      "active_route": "mechanics/agon/parts/gate-routing/docs/owner-handoffs.md",
+      "status": "distilled"
+    },
+    {
+      "former_path": "docs/AGON_RECURRENCE_ADAPTER.md",
+      "active_route": "mechanics/agon/parts/recurrence-adapter/docs/recurrence-adapter.md",
+      "status": "distilled"
+    },
+    {
+      "former_path": "docs/AGON_WAVE5_ROUTING_LANDING.md",
+      "active_route": "mechanics/agon/legacy/raw/AGON_WAVE5_ROUTING_LANDING.md",
+      "status": "historical_raw"
+    },
+    {
+      "former_path": "config/agon_gate_routing.seed.json",
+      "active_route": "mechanics/agon/parts/gate-routing/config/agon_gate_routing.seed.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "schemas/agon-gate-routing-registry.schema.json",
+      "active_route": "mechanics/agon/parts/gate-routing/schemas/agon-gate-routing-registry.schema.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "schemas/agon-gate-trigger.schema.json",
+      "active_route": "mechanics/agon/parts/gate-routing/schemas/agon-gate-trigger.schema.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "schemas/agon-gate-route-hint.schema.json",
+      "active_route": "mechanics/agon/parts/gate-routing/schemas/agon-gate-route-hint.schema.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "schemas/owner-dispatch-seam.schema.json",
+      "active_route": "mechanics/agon/parts/gate-routing/schemas/owner-dispatch-seam.schema.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "examples/agon_gate_route_hint.example.json",
+      "active_route": "mechanics/agon/parts/gate-routing/examples/agon_gate_route_hint.example.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "examples/agon_gate_route_hint.assistant_scope_breach.example.json",
+      "active_route": "mechanics/agon/parts/gate-routing/examples/agon_gate_route_hint.assistant_scope_breach.example.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "examples/agon_gate_route_hint.contested_closure.example.json",
+      "active_route": "mechanics/agon/parts/gate-routing/examples/agon_gate_route_hint.contested_closure.example.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "examples/owner_dispatch_seam.example.json",
+      "active_route": "mechanics/agon/parts/gate-routing/examples/owner_dispatch_seam.example.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "generated/agon_gate_routing_registry.min.json",
+      "active_route": "mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "scripts/build_agon_gate_routing_registry.py",
+      "active_route": "mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py",
+      "status": "compat_launcher_kept"
+    },
+    {
+      "former_path": "scripts/validate_agon_gate_routing.py",
+      "active_route": "mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py",
+      "status": "compat_launcher_kept"
+    },
+    {
+      "former_path": "tests/test_agon_gate_routing.py",
+      "active_route": "mechanics/agon/parts/gate-routing/tests/test_agon_gate_routing.py",
+      "status": "distilled"
+    },
+    {
+      "former_path": "tests/test_wave1_owner_dispatch_seam.py",
+      "active_route": "mechanics/agon/parts/gate-routing/tests/test_owner_dispatch_seam.py",
+      "status": "distilled"
+    },
+    {
+      "former_path": "quests/AOR-Q-AGON-0001-agon-gate-routing.md",
+      "active_route": "mechanics/agon/legacy/raw/AOR-Q-AGON-0001-agon-gate-routing.md",
+      "status": "historical_raw"
+    },
+    {
+      "former_path": "quests/AOR-Q-AGON-0002-gate-validation-integration.md",
+      "active_route": "mechanics/agon/legacy/raw/AOR-Q-AGON-0002-gate-validation-integration.md",
+      "status": "historical_raw"
+    },
+    {
+      "former_path": "quests/AOR-Q-AGON-0003-routing-to-center-gate-boundary.md",
+      "active_route": "mechanics/agon/legacy/raw/AOR-Q-AGON-0003-routing-to-center-gate-boundary.md",
+      "status": "historical_raw"
+    },
+    {
+      "former_path": "manifests/recurrence/component.agon.gate-routing-surfaces.json",
+      "active_route": "mechanics/agon/parts/recurrence-adapter/manifests/recurrence/component.agon.gate-routing-surfaces.json",
+      "status": "distilled"
+    },
+    {
+      "former_path": "manifests/recurrence/hooks/component.agon.gate-routing-surfaces.hooks.json",
+      "active_route": "mechanics/agon/parts/recurrence-adapter/manifests/recurrence/hooks/component.agon.gate-routing-surfaces.hooks.json",
+      "status": "distilled"
+    }
+  ]
+}

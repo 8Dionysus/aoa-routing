@@ -80,6 +80,7 @@ For routing logic changes:
 
 ```bash
 python scripts/build_router.py
+python scripts/validate_active_legacy_names.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
 python scripts/generate_decision_indexes.py --check

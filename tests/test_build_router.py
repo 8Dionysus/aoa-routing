@@ -39,7 +39,7 @@ def test_default_dependency_root_climbs_out_of_codex_worktree(tmp_path: Path) ->
     assert router_core.default_dependency_root("aoa-skills", routing_root) == sibling_root
 
 
-def test_default_dependency_root_prefers_abyss_stack_configs_runtime_mirror(tmp_path: Path) -> None:
+def test_default_dependency_root_prefers_abyss_stack_source_checkout(tmp_path: Path) -> None:
     workspace = tmp_path / "workspace"
     routing_root = workspace / ".codex" / "worktrees" / "aoa-routing-fix"
     configs_root = workspace / "abyss-stack" / "Configs"
@@ -47,7 +47,11 @@ def test_default_dependency_root_prefers_abyss_stack_configs_runtime_mirror(tmp_
     routing_root.mkdir(parents=True)
     configs_root.mkdir(parents=True)
 
-    assert router_core.default_dependency_root("abyss-stack", routing_root) == configs_root
+    expected_root = Path.home() / "src" / "abyss-stack"
+    if not expected_root.exists():
+        expected_root = configs_root
+
+    assert router_core.default_dependency_root("abyss-stack", routing_root) == expected_root
     assert source_root.exists()
 KAG_SOURCE_LIFT_TECHNIQUE_IDS = [
     "AOA-T-0018",
@@ -88,7 +92,7 @@ def build_fixture_outputs(
     playbooks_root: Path = FIXTURES_ROOT / "aoa-playbooks",
     kag_root: Path = FIXTURES_ROOT / "aoa-kag",
     tos_root: Path = FIXTURES_ROOT / "Tree-of-Sophia",
-    seed_root: Path = FIXTURES_ROOT / "Dionysus",
+    source_route_root: Path = FIXTURES_ROOT / "Dionysus",
     profile_root: Path = FIXTURES_ROOT / "8Dionysus",
     abyss_stack_root: Path = FIXTURES_ROOT / "abyss-stack",
     routing_root: Path = FIXTURES_ROOT / "aoa-routing",
@@ -105,7 +109,7 @@ def build_fixture_outputs(
         kag_root,
         tos_root,
         sdk_root,
-        seed_root,
+        source_route_root,
         profile_root,
         abyss_stack_root,
         routing_root,
@@ -236,7 +240,7 @@ def test_collect_memo_entries_reads_generated_catalog() -> None:
     assert entries[0]["path"] == "CHARTER.md"
     assert entries[0]["source_type"] == "generated-catalog"
     assert entries[0]["attributes"]["recall_modes"] == ["semantic", "source_route"]
-    assert entries[0]["attributes"]["inspect_surface"] == "generated/memory_catalog.min.json"
+    assert entries[0]["attributes"]["inspect_surface"] == "generated/memory/memory_catalog.min.json"
 
 
 def test_collect_skill_entries_raises_on_missing_generated_catalog(tmp_path: Path) -> None:
@@ -403,10 +407,13 @@ def test_build_outputs_from_fixtures() -> None:
         "regrounding_ticket",
     ]
     assert quest_dispatch_hints["version"] == 1
-    assert quest_dispatch_hints["wave_scope"] == "source-only"
+    assert quest_dispatch_hints["contour_scope"] == "source-only"
     assert quest_dispatch_hints["actions_enabled"] == ["inspect", "expand", "handoff"]
     assert shortlist["schema_version"] == "aoa_routing_owner_layer_shortlist_v2"
-    assert shortlist["schema_ref"] == "schemas/owner-layer-shortlist.schema.json"
+    assert (
+        shortlist["schema_ref"]
+        == "mechanics/boundary-bridge/parts/owner-layer-shortlist/schemas/owner-layer-shortlist.schema.json"
+    )
     assert shortlist["owner_repo"] == "aoa-routing"
     assert shortlist["surface_kind"] == "owner_layer_shortlist"
     assert {
@@ -542,12 +549,12 @@ def test_build_outputs_from_fixtures() -> None:
             "pick": {"enabled": True},
             "inspect": {
                 "enabled": True,
-                "surface_file": "generated/memory_catalog.min.json",
+                "surface_file": "generated/memory/memory_catalog.min.json",
                 "match_field": "id",
             },
             "expand": {
                 "enabled": True,
-                "surface_file": "generated/memory_sections.full.json",
+                "surface_file": "generated/memory/memory_sections.full.json",
                 "match_field": "id",
                 "section_key_field": "section_id",
                 "default_sections": [],
@@ -556,32 +563,32 @@ def test_build_outputs_from_fixtures() -> None:
             "pair": {"enabled": False},
             "recall": {
                 "enabled": True,
-                "contract_file": "examples/recall_contract.router.semantic.json",
+                "contract_file": "examples/recall/recall_contract.router.semantic.json",
                 "default_mode": "semantic",
                 "supported_modes": ["semantic", "source_route", "lineage"],
                 "contracts_by_mode": {
-                    "semantic": "examples/recall_contract.router.semantic.json",
-                    "source_route": "examples/recall_contract.router.source_route.json",
-                    "lineage": "examples/recall_contract.router.lineage.json",
+                    "semantic": "examples/recall/recall_contract.router.semantic.json",
+                    "source_route": "examples/recall/recall_contract.router.source_route.json",
+                    "lineage": "examples/recall/recall_contract.router.lineage.json",
                 },
                 "capsule_surfaces_by_mode": {
-                    "semantic": "generated/memory_capsules.json",
-                    "lineage": "generated/memory_capsules.json",
+                    "semantic": "generated/memory/memory_capsules.json",
+                    "lineage": "generated/memory/memory_capsules.json",
                 },
                 "parallel_families": {
                     "memory_objects": {
-                        "inspect_surface": "generated/memory_object_catalog.min.json",
-                        "expand_surface": "generated/memory_object_sections.full.json",
+                        "inspect_surface": "generated/memory-objects/memory_object_catalog.min.json",
+                        "expand_surface": "generated/memory-objects/memory_object_sections.full.json",
                         "default_mode": "working",
                         "supported_modes": ["working", "semantic", "lineage"],
                         "contracts_by_mode": {
-                            "working": "examples/recall_contract.object.working.json",
-                            "semantic": "examples/recall_contract.object.semantic.json",
-                            "lineage": "examples/recall_contract.object.lineage.json",
+                            "working": "examples/recall/recall_contract.object.working.json",
+                            "semantic": "examples/recall/recall_contract.object.semantic.json",
+                            "lineage": "examples/recall/recall_contract.object.lineage.json",
                         },
                         "capsule_surfaces_by_mode": {
-                            "semantic": "generated/memory_object_capsules.json",
-                            "lineage": "generated/memory_object_capsules.json",
+                            "semantic": "generated/memory-objects/memory_object_capsules.json",
+                            "lineage": "generated/memory-objects/memory_object_capsules.json",
                         },
                     }
                 },
@@ -636,7 +643,10 @@ def test_build_outputs_from_fixtures() -> None:
         ],
     }
     assert federation["schema_version"] == "aoa_routing_federation_entrypoints_v2"
-    assert federation["schema_ref"] == "schemas/federation-entrypoints.schema.json"
+    assert (
+        federation["schema_ref"]
+        == "mechanics/boundary-bridge/parts/federation-entry/schemas/federation-entrypoints.schema.json"
+    )
     assert federation["owner_repo"] == "aoa-routing"
     assert federation["surface_kind"] == "federation_entrypoints"
     assert federation["active_entry_kinds"] == [
@@ -644,13 +654,16 @@ def test_build_outputs_from_fixtures() -> None:
         "tier",
         "playbook",
         "kag_view",
-        "seed",
+        "source_route",
         "runtime_surface",
         "orientation_surface",
     ]
     assert federation["declared_entry_kinds"] == ["tos_node"]
     assert return_navigation["schema_version"] == "aoa_routing_return_navigation_hints_v2"
-    assert return_navigation["schema_ref"] == "schemas/return-navigation-hints.schema.json"
+    assert (
+        return_navigation["schema_ref"]
+        == "mechanics/recurrence/parts/return-navigation/schemas/return-navigation-hints.schema.json"
+    )
     assert return_navigation["owner_repo"] == "aoa-routing"
     assert return_navigation["surface_kind"] == "return_navigation_hints"
     memo_return = next(
@@ -667,12 +680,12 @@ def test_build_outputs_from_fixtures() -> None:
         "primary_action": {
             "verb": "recall",
             "target_repo": "aoa-memo",
-            "target_surface": "examples/recall_contract.object.working.return.json",
+            "target_surface": "examples/recall/recall_contract.object.working.return.json",
         },
         "secondary_action": {
             "verb": "inspect",
             "target_repo": "aoa-memo",
-            "target_surface": "generated/memory_object_catalog.min.json",
+            "target_surface": "generated/memory-objects/memory_object_catalog.min.json",
             "match_field": "id",
         },
         "ownership_note": "Checkpoint continuity and recall meaning stay in aoa-memo; routing only points back to the public return-ready contract and object surface.",
@@ -712,15 +725,15 @@ def test_build_outputs_from_fixtures() -> None:
         "match_field": "kind",
         "target_value": "playbook",
     }
-    seed_return = next(
+    source_route_return = next(
         record
         for record in return_navigation["federation_kind_returns"]
-        if record["entry_kind"] == "seed"
+        if record["entry_kind"] == "source_route"
     )
-    assert seed_return["primary_action"] == {
+    assert source_route_return["primary_action"] == {
         "verb": "inspect",
         "target_repo": "Dionysus",
-        "target_surface": "generated/seed_route_map.min.json",
+        "target_surface": "docs/codex/planting-protocol.md",
     }
     runtime_return = next(
         record
@@ -782,10 +795,10 @@ def test_build_outputs_from_fixtures() -> None:
         "target_repo": "abyss-stack",
         "target_surface": router_core.ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
     }
-    assert entry_returns["dionysus-seed-garden"]["primary_action"] == {
+    assert entry_returns["dionysus-source-route"]["primary_action"] == {
         "verb": "inspect",
         "target_repo": "Dionysus",
-        "target_surface": "generated/seed_route_map.min.json",
+        "target_surface": "docs/codex/planting-protocol.md",
     }
     assert entry_returns["8dionysus-public-route-map"]["primary_action"] == {
         "verb": "inspect",
@@ -850,7 +863,7 @@ def test_build_outputs_from_fixtures() -> None:
         if entry["repo"] in {"aoa-sdk", "Dionysus", "abyss-stack"}
     } >= {
         ("aoa_sdk_workspace_control_plane", "generated/workspace_control_plane.min.json"),
-        ("dionysus_seed_route_map", "generated/seed_route_map.min.json"),
+        ("dionysus_source_route_anchor", "docs/codex/planting-protocol.md"),
         (
             "abyss_stack_diagnostic_surface_catalog",
             router_core.ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
@@ -864,7 +877,7 @@ def test_build_outputs_from_fixtures() -> None:
         "allowed_kinds": ["technique", "skill", "eval", "memo"],
     }
     assert tiny_model["schema_version"] == "aoa_routing_tiny_model_entrypoints_v2"
-    assert tiny_model["schema_ref"] == "schemas/tiny-model-entrypoints.schema.json"
+    assert tiny_model["schema_ref"] == "routing/core/schemas/tiny-model-entrypoints.schema.json"
     assert tiny_model["owner_repo"] == "aoa-routing"
     assert tiny_model["surface_kind"] == "tiny_model_entrypoints"
     assert tiny_model["queries"][-2:] == [
@@ -1028,7 +1041,7 @@ def test_build_outputs_from_fixtures() -> None:
                 "tier",
                 "playbook",
                 "kag_view",
-                "seed",
+                "source_route",
                 "runtime_surface",
                 "orientation_surface",
             ],
@@ -1044,7 +1057,7 @@ def test_build_outputs_from_fixtures() -> None:
                 "tier",
                 "playbook",
                 "kag_view",
-                "seed",
+                "source_route",
                 "runtime_surface",
                 "orientation_surface",
             ],
@@ -1118,13 +1131,13 @@ def test_build_outputs_from_fixtures() -> None:
             "entry_kind": "kag_view",
         },
         {
-            "name": "seed-root",
+            "name": "source-route-root",
             "verb": "inspect",
             "source_repo": "aoa-routing",
             "target_surface": "generated/federation_entrypoints.min.json",
             "match_key": "id",
-            "target_value": "dionysus-seed-garden",
-            "entry_kind": "seed",
+            "target_value": "dionysus-source-route",
+            "entry_kind": "source_route",
         },
         {
             "name": "runtime-surface-root",
@@ -1270,7 +1283,10 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
 
     router_tier = entry_by_key[("tier", "router")]
     assert router_tier["capsule_surface"] == "aoa-agents:generated/model_tier_registry.json"
-    assert router_tier["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
+    assert (
+        router_tier["authority_surface"]
+        == "aoa-agents:agents/operating-model/tiers/router.tier.json"
+    )
     assert router_tier["fallback"] == {
         "verb": "inspect",
         "target_repo": "aoa-routing",
@@ -1336,10 +1352,10 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     ]
     assert "Tree-of-Sophia remains authoritative" in tos_kag_view["risk"]
 
-    seed_entry = entry_by_key[("seed", "dionysus-seed-garden")]
-    assert seed_entry["capsule_surface"] == "Dionysus:generated/seed_route_map.min.json"
-    assert seed_entry["authority_surface"] == "Dionysus:docs/codex/planting-protocol.md"
-    assert seed_entry["next_hops"] == [
+    source_route_entry = entry_by_key[("source_route", "dionysus-source-route")]
+    assert source_route_entry["capsule_surface"] == "Dionysus:docs/codex/planting-protocol.md"
+    assert source_route_entry["authority_surface"] == "Dionysus:docs/codex/planting-protocol.md"
+    assert source_route_entry["next_hops"] == [
         {"kind": "orientation_surface", "id": "8dionysus-public-route-map"},
         {"kind": "runtime_surface", "id": "aoa-sdk-control-plane"},
     ]
@@ -1561,7 +1577,13 @@ def test_build_outputs_keeps_routing_root_pinned_instead_of_inferring_from_techn
     shutil.copytree(FIXTURES_ROOT / "aoa-techniques", techniques_root)
     shutil.copytree(FIXTURES_ROOT / "aoa-routing", foreign_routing_root)
 
-    foreign_policy_path = foreign_routing_root / "config" / "two_stage_router_policy.json"
+    foreign_policy_path = (
+        foreign_routing_root
+        / "routing"
+        / "two-stage-skill-selection"
+        / "config"
+        / "two_stage_router_policy.json"
+    )
     foreign_policy = json.loads(foreign_policy_path.read_text(encoding="utf-8"))
     foreign_policy["defaults"]["max_stage_2_shortlist"] = 1
     write_json(foreign_policy_path, foreign_policy)
@@ -1574,8 +1596,8 @@ def test_build_outputs_keeps_routing_root_pinned_instead_of_inferring_from_techn
 def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(tmp_path: Path) -> None:
     memo_root = tmp_path / "aoa-memo"
     shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
-    (memo_root / "examples" / "recall_contract.router.source_route.json").unlink()
-    (memo_root / "examples" / "recall_contract.router.lineage.json").unlink()
+    (memo_root / "examples" / "recall" / "recall_contract.router.source_route.json").unlink()
+    (memo_root / "examples" / "recall" / "recall_contract.router.lineage.json").unlink()
 
     outputs = build_fixture_outputs(memo_root=memo_root)
 
@@ -1584,29 +1606,29 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
     )
     assert memo_hint["actions"]["recall"] == {
         "enabled": True,
-        "contract_file": "examples/recall_contract.router.semantic.json",
+        "contract_file": "examples/recall/recall_contract.router.semantic.json",
         "default_mode": "semantic",
         "supported_modes": ["semantic"],
         "contracts_by_mode": {
-            "semantic": "examples/recall_contract.router.semantic.json",
+            "semantic": "examples/recall/recall_contract.router.semantic.json",
         },
         "capsule_surfaces_by_mode": {
-            "semantic": "generated/memory_capsules.json",
+            "semantic": "generated/memory/memory_capsules.json",
         },
         "parallel_families": {
             "memory_objects": {
-                "inspect_surface": "generated/memory_object_catalog.min.json",
-                "expand_surface": "generated/memory_object_sections.full.json",
+                "inspect_surface": "generated/memory-objects/memory_object_catalog.min.json",
+                "expand_surface": "generated/memory-objects/memory_object_sections.full.json",
                 "default_mode": "working",
                 "supported_modes": ["working", "semantic", "lineage"],
                 "contracts_by_mode": {
-                    "working": "examples/recall_contract.object.working.json",
-                    "semantic": "examples/recall_contract.object.semantic.json",
-                    "lineage": "examples/recall_contract.object.lineage.json",
+                    "working": "examples/recall/recall_contract.object.working.json",
+                    "semantic": "examples/recall/recall_contract.object.semantic.json",
+                    "lineage": "examples/recall/recall_contract.object.lineage.json",
                 },
                 "capsule_surfaces_by_mode": {
-                    "semantic": "generated/memory_object_capsules.json",
-                    "lineage": "generated/memory_object_capsules.json",
+                    "semantic": "generated/memory-objects/memory_object_capsules.json",
+                    "lineage": "generated/memory-objects/memory_object_capsules.json",
                 },
             }
         },
@@ -1670,7 +1692,7 @@ def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(
 def test_build_outputs_omits_parallel_object_family_when_object_contract_is_missing(tmp_path: Path) -> None:
     memo_root = tmp_path / "aoa-memo"
     shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
-    (memo_root / "examples" / "recall_contract.object.lineage.json").unlink()
+    (memo_root / "examples" / "recall" / "recall_contract.object.lineage.json").unlink()
 
     outputs = build_fixture_outputs(memo_root=memo_root)
 
@@ -1693,7 +1715,12 @@ def test_build_outputs_omits_parallel_object_family_when_object_contract_is_miss
 def test_build_outputs_omits_parallel_object_family_when_object_surface_is_missing(tmp_path: Path) -> None:
     memo_root = tmp_path / "aoa-memo"
     shutil.copytree(FIXTURES_ROOT / "aoa-memo", memo_root)
-    (memo_root / "generated" / "memory_object_sections.full.json").unlink()
+    (
+        memo_root
+        / "generated"
+        / "memory-objects"
+        / "memory_object_sections.full.json"
+    ).unlink()
 
     outputs = build_fixture_outputs(memo_root=memo_root)
 
@@ -1759,14 +1786,19 @@ def test_build_outputs_composite_stress_hints_include_memo_recovery_context(
         shutil.copytree(FIXTURES_ROOT / repo_name, target)
         roots[repo_name] = target
 
-    catalog_path = roots["aoa-memo"] / "generated" / "memory_object_catalog.min.json"
+    catalog_path = (
+        roots["aoa-memo"]
+        / "generated"
+        / "memory-objects"
+        / "memory_object_catalog.min.json"
+    )
     catalog_payload = json.loads(catalog_path.read_text(encoding="utf-8"))
     catalog_payload["memory_objects"].append(
         {
             "id": "memo.pattern.2026-04-07.antifragility-stress-recovery-window",
             "kind": "pattern",
             "title": "Stress recovery stays bounded only when replay follows source receipt, gate, and regrounding order",
-            "summary": "Reviewed recovery pattern for the fourth-wave stress window.",
+            "summary": "Reviewed recovery pattern for the composite stress window.",
             "scope_classes": ["repo", "project"],
             "temperature": "cool",
             "review_state": "confirmed",
@@ -1824,7 +1856,10 @@ def test_build_outputs_adds_stats_regrounding_advisory_hints() -> None:
     payload = outputs["stats_regrounding_hints.min.json"]
 
     assert payload["schema_version"] == "aoa_routing_stats_regrounding_hints_v1"
-    assert payload["schema_ref"] == "schemas/stats-regrounding-hints.schema.json"
+    assert (
+        payload["schema_ref"]
+        == "mechanics/boundary-bridge/parts/stats-regrounding/schemas/stats-regrounding-hints.schema.json"
+    )
     assert payload["coverage_thin_signal_flags"] == [
         "missing_owner_repos",
         "owner_share_dominant",
@@ -1882,7 +1917,12 @@ def test_build_outputs_composite_stress_hints_skip_unreviewed_or_unrecallable_pa
         shutil.copytree(FIXTURES_ROOT / repo_name, target)
         roots[repo_name] = target
 
-    catalog_path = roots["aoa-memo"] / "generated" / "memory_object_catalog.min.json"
+    catalog_path = (
+        roots["aoa-memo"]
+        / "generated"
+        / "memory-objects"
+        / "memory_object_catalog.min.json"
+    )
     catalog_payload = json.loads(catalog_path.read_text(encoding="utf-8"))
     catalog_payload["memory_objects"].extend(
         [
@@ -1977,7 +2017,7 @@ def test_owner_layer_shortlist_includes_explicit_and_ambiguous_family_hints() ->
         for entry in shortlist["hints"]
         if entry["signal"] == "scenario-recurring"
     ]
-    explicit_seed = next(
+    explicit_source_route = next(
         entry
         for entry in shortlist["hints"]
         if entry["signal"] == "explicit-request" and entry["owner_repo"] == "Dionysus"
@@ -1994,7 +2034,7 @@ def test_owner_layer_shortlist_includes_explicit_and_ambiguous_family_hints() ->
     )
 
     assert explicit_skill["target_surface"] == "aoa-skills.runtime_discovery_index"
-    assert explicit_seed["target_surface"] == "Dionysus.seed_route_map.min"
+    assert explicit_source_route["target_surface"] == "Dionysus.source_route_anchor"
     assert explicit_runtime["target_surface"] == "abyss-stack.diagnostic_surface_catalog.min"
     assert explicit_profile["target_surface"] == "8Dionysus.public_route_map.min"
     assert explicit_skill["confidence"] == "high"

@@ -1,0 +1,90 @@
+{
+  "schema_version": "aoa_routing_legacy_former_routes.v1",
+  "owner": "mechanics/antifragility",
+  "routes": [
+    {
+      "former_path": "docs/STRESS_POSTURE_ROUTING.md",
+      "current_path": "mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md"
+    },
+    {
+      "former_path": "docs/ROUTING_STRESS_CHAOS_WAVE1.md",
+      "current_path": "mechanics/antifragility/parts/stress-routing/docs/routing-stress-chaos.md"
+    },
+    {
+      "former_path": "docs/DEGRADED_ROUTE_HINTS.md",
+      "current_path": "mechanics/antifragility/parts/degraded-route-hints/docs/degraded-route-hints.md"
+    },
+    {
+      "former_path": "docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md",
+      "current_path": "mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md"
+    },
+    {
+      "former_path": "docs/KAG_QUARANTINE_ROUTE_HINTS.md",
+      "current_path": "mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md"
+    },
+    {
+      "former_path": "docs/ROLLBACK_ROUTE_SIGNALS.md",
+      "current_path": "mechanics/antifragility/parts/rollback-routing/docs/rollback-route-signals.md"
+    },
+    {
+      "former_path": "docs/AUTO_ROLLBACK_DISPATCH.md",
+      "current_path": "mechanics/antifragility/parts/rollback-routing/docs/auto-rollback-dispatch.md"
+    },
+    {
+      "former_path": "docs/STAY_ORDER_DISPATCH.md",
+      "current_path": "mechanics/antifragility/parts/rollback-routing/docs/stay-order-dispatch.md"
+    },
+    {
+      "former_path": "docs/VIA_NEGATIVA_CHECKLIST.md",
+      "current_path": "mechanics/antifragility/parts/via-negativa/docs/via-negativa-checklist.md"
+    },
+    {
+      "former_path": "schemas/stress_navigation_hint_v1.json",
+      "current_path": "mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json"
+    },
+    {
+      "former_path": "schemas/composite_stress_route_hint_v1.json",
+      "current_path": "mechanics/antifragility/parts/composite-stress-routing/schemas/composite_stress_route_hint_v1.json"
+    },
+    {
+      "former_path": "schemas/composite-stress-route-hints.schema.json",
+      "current_path": "mechanics/antifragility/parts/composite-stress-routing/schemas/composite-stress-route-hints.schema.json"
+    },
+    {
+      "former_path": "schemas/rollback_route_signal_v1.json",
+      "current_path": "mechanics/antifragility/parts/rollback-routing/schemas/rollback_route_signal_v1.json"
+    },
+    {
+      "former_path": "schemas/rollback_dispatch_v1.json",
+      "current_path": "mechanics/antifragility/parts/rollback-routing/schemas/rollback_dispatch_v1.json"
+    },
+    {
+      "former_path": "examples/stress_navigation_hint.example.json",
+      "current_path": "mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.example.json"
+    },
+    {
+      "former_path": "examples/stress_navigation_hint.timeout-chaos.example.json",
+      "current_path": "mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.timeout-chaos.example.json"
+    },
+    {
+      "former_path": "examples/stress_navigation_hint.skill-collision-chaos.example.json",
+      "current_path": "mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.skill-collision-chaos.example.json"
+    },
+    {
+      "former_path": "examples/composite_stress_route_hint.example.json",
+      "current_path": "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json"
+    },
+    {
+      "former_path": "examples/composite_stress_route_hint.retrieval-outage-honesty.example.json",
+      "current_path": "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json"
+    },
+    {
+      "former_path": "examples/rollback_route_signal_v1.example.json",
+      "current_path": "mechanics/antifragility/parts/rollback-routing/examples/rollback_route_signal_v1.example.json"
+    },
+    {
+      "former_path": "examples/rollback_dispatch.example.json",
+      "current_path": "mechanics/antifragility/parts/rollback-routing/examples/rollback_dispatch.example.json"
+    }
+  ]
+}

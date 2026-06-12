@@ -5,7 +5,7 @@
 A reviewed run shows that the same weekly doc drift check keeps repeating with
 the same inputs, the same checklist, and the same small report output. The
 team wants to know whether this should stay manual, become a bounded skill, or
-become a playbook automation seed candidate.
+become a playbook automation candidate.
 
 ## Why this skill fits
 
@@ -25,10 +25,10 @@ automation is honest yet.
 
 - one `AUTOMATION_OPPORTUNITY_PACKET`
 - one `AUTOMATION_CANDIDATE` card for the doc drift check
-- an explicit `seed_ready` or `not_now` verdict
+- an explicit `candidate_ready` or `not_now` verdict
 - `automation_mode_posture: dry_run_preview` when the first honest automation mode is preview-only
 - `checkpoint_required: false` if the route is read-only and previewable
-- a next-artifact suggestion such as `skill` or `playbook_seed`
+- a next-artifact suggestion such as `skill` or `playbook_candidate`
 - one `AUTOMATION_CANDIDATE_RECEIPT` with repeat signal posture,
   `checkpoint_required`, and the next-artifact hint
 - one `CORE_SKILL_APPLICATION_RECEIPT` that records the finished

@@ -18,11 +18,11 @@ currently hard to place, then collapse the rest.
 
 | Lens | Use When | Clarifying Question | Common Failure |
 |---|---|---|---|
-| Object-kind | Different object classes are being treated as one thing. | Is this a practice pattern, execution skill, evaluation artifact, scenario, route, memory object, role contract, generated view, runtime body, seed, or source node? | One object becomes a weak substitute for another. |
+| Object-kind | Different object classes are being treated as one thing. | Is this a practice pattern, execution skill, evaluation artifact, scenario, route, memory object, role contract, generated view, runtime body, source route, or source node? | One object becomes a weak substitute for another. |
 | Owner | More than one repository, layer, team, or surface could claim the truth. | Which owner can change this meaning, and which surfaces only point to it? | A local note absorbs stronger owner law. |
-| Layer | The work crosses practice, execution, proof, routing, memory, role, scenario, derived, runtime, source, seed, or public-entry layers. | Which layer owns the meaning and which layer only composes, derives, runs, or routes it? | Layer labels become decoration while authority still drifts. |
+| Layer | The work crosses practice, execution, proof, routing, memory, role, scenario, derived, runtime, source, source-route, or public-entry layers. | Which layer owns the meaning and which layer only composes, derives, runs, or routes it? | Layer labels become decoration while authority still drifts. |
 | Surface state | Authored source, generated output, export, adapter, legacy archive, staging note, receipt, and runtime mirror are mixed. | Is this surface authoritative, derived, transported, historical, provisional, or live operational evidence? | Generated or historical material starts acting like current source truth. |
-| Lifecycle | The same object has seed, candidate, scaffold, evaluated, canonical, released, deprecated, live, or future-roadmap posture. | What is true now, what is planned, and what is only provenance? | A future direction or old receipt is read as current status. |
+| Lifecycle | The same object has candidate, scaffold, evaluated, canonical, released, deprecated, live, or future-roadmap posture. | What is true now, what is planned, and what is only provenance? | A future direction or old receipt is read as current status. |
 | Workflow/process | A task, session note, checkpoint, closeout, scenario, campaign, or roadmap is being used as if it had the same authority. | Is this temporary execution context, reviewed session evidence, durable obligation, or program direction? | Session-local hints become durable canon without review. |
 | Authority/proof | Claims, evidence, tests, evals, verdicts, assumptions, and trust language are blending. | What claim is being made, what proves it, and what remains unproven? | Proof language gets stronger than the evidence. |
 | Portability | Public reusable core and project-local overlay details both matter. | What must work without local paths, secrets, runtime state, or ecosystem-only assumptions? | A portable surface quietly depends on private or local context. |
@@ -52,7 +52,7 @@ Use a lens pass for many different task shapes:
   collapsed into one execution skill
 - a role or agent-profile request where persona, execution workflow, handoff,
   and runtime autonomy need distinct boundaries
-- a seed or intake surface that is useful as provenance but not yet the owning
+- a source-route or intake surface that is useful as provenance but not yet the owning
   repository's truth
 - a runtime or infrastructure task where service behavior, source meaning,
   operator command, and observed receipt must stay separate

@@ -1,0 +1,54 @@
+{
+  "schema_version": "aoa_routing_legacy_former_routes.v1",
+  "owner": "mechanics/experience",
+  "routes": [
+    {
+      "former_path": "docs/FIRST_OFFICE_ROUTE_GATE.md",
+      "current_path": "mechanics/experience/parts/office-route-gate/docs/first-office-route-gate.md"
+    },
+    {
+      "former_path": "docs/OFFICE_ROUTE_GATE.md",
+      "current_path": "mechanics/experience/parts/office-route-gate/docs/office-route-gate.md"
+    },
+    {
+      "former_path": "docs/OFFICE_HANDOFF_PACKET.md",
+      "current_path": "mechanics/experience/parts/office-route-gate/docs/office-handoff-packet.md"
+    },
+    {
+      "former_path": "docs/SERVICE_HANDOFF_GRAPH.md",
+      "current_path": "mechanics/experience/parts/service-handoff/docs/service-handoff-graph.md"
+    },
+    {
+      "former_path": "docs/SERVICE_TO_AGON_BOUNDARY.md",
+      "current_path": "mechanics/experience/parts/service-handoff/docs/service-to-agon-boundary.md"
+    },
+    {
+      "former_path": "docs/ADOPTION_ESCALATION_PATHS.md",
+      "current_path": "mechanics/experience/parts/adoption-routing/docs/adoption-escalation-paths.md"
+    },
+    {
+      "former_path": "docs/ADOPTION_OWNER_QUEST_FANOUT.md",
+      "current_path": "mechanics/experience/parts/adoption-routing/docs/adoption-owner-quest-fanout.md"
+    },
+    {
+      "former_path": "docs/ADOPTION_REENTRY_ROUTING.md",
+      "current_path": "mechanics/experience/parts/adoption-routing/docs/adoption-reentry-routing.md"
+    },
+    {
+      "former_path": "docs/ADOPTION_ROUTING_GATE.md",
+      "current_path": "mechanics/experience/parts/adoption-routing/docs/adoption-routing-gate.md"
+    },
+    {
+      "former_path": "docs/ADOPTION_SUPPRESSION_ROUTING.md",
+      "current_path": "mechanics/experience/parts/adoption-routing/docs/adoption-suppression-routing.md"
+    },
+    {
+      "former_path": "docs/ROUTE_RULE_ADOPTION.md",
+      "current_path": "mechanics/experience/parts/adoption-routing/docs/route-rule-adoption.md"
+    },
+    {
+      "former_path": "docs/CERTIFICATION_OWNER_LANDING.md",
+      "current_path": "mechanics/experience/parts/certification-owner-landing/docs/certification-owner-landing.md"
+    }
+  ]
+}

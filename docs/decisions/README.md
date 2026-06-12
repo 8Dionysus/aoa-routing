@@ -24,8 +24,8 @@ Decision notes explain why a route was chosen.
 They are weaker than the source surface they describe:
 
 - generated routing outputs stay in `generated/`;
-- schema contracts stay in `schemas/`;
-- example contracts stay in `examples/`;
+- core schema contracts stay in `routing/core/schemas/`;
+- mechanic-owned contracts stay under their owning `mechanics/<head>/parts/<part>/`;
 - build and validation behavior stays in `scripts/`;
 - regression proof stays in `tests/`;
 - route direction stays in `README.md` and `ROADMAP.md`;

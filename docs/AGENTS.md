@@ -13,6 +13,7 @@ When docs change a route boundary, re-check schemas, examples, generated surface
 Verify with:
 
 ```bash
+python scripts/validate_active_legacy_names.py
 python scripts/validate_router.py
 python scripts/validate_semantic_agents.py
 python scripts/generate_decision_indexes.py --check

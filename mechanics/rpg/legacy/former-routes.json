@@ -1,0 +1,21 @@
+{
+  "schema_version": "aoa_routing_former_routes.v1",
+  "owner": "mechanics/rpg",
+  "former_flat_paths": [
+    {
+      "former_path": "docs/RPG_NAVIGATION_BRIDGE.md",
+      "current_path": "mechanics/rpg/parts/navigation-bridge/docs/rpg-navigation-bridge.md",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/rpg_navigation_bundle.schema.json",
+      "current_path": "mechanics/rpg/parts/navigation-bridge/schemas/rpg_navigation_bundle.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "generated/rpg_navigation.min.example.json",
+      "current_path": "mechanics/rpg/parts/navigation-bridge/generated/rpg_navigation.min.example.json",
+      "status": "retired-flat-owner"
+    }
+  ]
+}

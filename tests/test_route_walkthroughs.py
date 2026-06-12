@@ -7,7 +7,7 @@ from pathlib import Path
 import pytest
 
 import build_router
-from _wave9_router_lib import build_decision_packet, preselect
+from _two_stage_router_lib import build_decision_packet, preselect
 
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
@@ -415,7 +415,7 @@ def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> Non
     assert starters["kag-view-root"]["target_value"] in entry_by_id
     assert starters["checkpoint-root"]["target_value"] in entry_by_id
 
-    assert entry_by_id["router"]["authority_surface"] == "aoa-agents:model_tiers/router.tier.json"
+    assert entry_by_id["router"]["authority_surface"] == "aoa-agents:agents/operating-model/tiers/router.tier.json"
     assert entry_by_id["aoa-techniques"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
     assert entry_by_id["Tree-of-Sophia"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
     assert root_by_id["tos-root"]["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
@@ -479,7 +479,14 @@ def test_two_stage_skill_root_walkthrough_reaches_source_owned_activation_seams(
         for case in outputs["two_stage_router_eval_cases.jsonl"]
         if case["case_id"] == case_id
     )
-    policy = load_json(FIXTURES_ROOT / "aoa-routing" / "config" / "two_stage_router_policy.json")
+    policy = load_json(
+        FIXTURES_ROOT
+        / "aoa-routing"
+        / "routing"
+        / "two-stage-skill-selection"
+        / "config"
+        / "two_stage_router_policy.json"
+    )
     preselected = preselect(
         task=eval_case["prompt"],
         signals_doc=load_json(roots["aoa-skills"] / two_stage["stage_1"]["signals_surface"]),

@@ -10,7 +10,7 @@ metadata:
   aoa_source_skill_path: skills/core/session-growth/aoa-session-self-repair/SKILL.md
   aoa_source_repo: 8Dionysus/aoa-skills
   aoa_technique_dependencies: AOA-T-0082,AOA-T-0083
-  aoa_portable_profile: codex-facing-wave-3
+  aoa_portable_profile: codex-facing-context
 ---
 
 # aoa-session-self-repair
@@ -53,7 +53,7 @@ Do not use this skill when:
 - explicit repair execution posture such as proposed, prepared, executing, verified, blocked, or handoff_required
 - optional repair quest when execution should remain deferred
 - optional automation-readiness prerequisite packet when the real need is to
-  stabilize a route before later automation scanning or seeding
+  stabilize a route before later automation scanning or candidate preparation
 - explicit stop conditions and escalation points
 - one `REPAIR_CYCLE_RECEIPT` using `references/stats-event-envelope.md` and
   `references/repair-cycle-receipt-schema.yaml`

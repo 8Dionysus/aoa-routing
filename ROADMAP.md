@@ -14,23 +14,23 @@ It already carries:
 
 - federation-mesh entry capsules, owner-capsule routing, and checkpoint-starter
   handoffs through `generated/federation_entrypoints.min.json` and
-  `docs/FEDERATION_ENTRY_ABI.md`
+  `mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md`
 - recurrence and return posture through `generated/return_navigation_hints.min.json`
 - technique-kind second-cut routing delegated back to
   `aoa-techniques/generated/technique_kind_manifest.min.json` rather than
   reclassified inside `aoa-routing`
 - additive composite stress-route hints through
   `generated/composite_stress_route_hints.min.json`,
-  `docs/PLAYBOOK_STRESS_ROUTE_CONSUMPTION.md`, and
-  `docs/KAG_QUARANTINE_ROUTE_HINTS.md`
-- stress posture routing contracts through `docs/STRESS_POSTURE_ROUTING.md` and
-  `docs/DEGRADED_ROUTE_HINTS.md`
-- optional low-context and wave-9 two-stage skill routing surfaces through
+  `mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md`, and
+  `mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md`
+- stress posture routing contracts through `mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md` and
+  `mechanics/antifragility/parts/degraded-route-hints/docs/degraded-route-hints.md`
+- optional low-context and two-stage skill routing surfaces through
   `generated/tiny_model_entrypoints.json`,
   `generated/two_stage_skill_entrypoints.json`,
   `generated/two_stage_router_manifest.json`,
   `generated/two_stage_router_eval_cases.jsonl`, and
-  `docs/TWO_STAGE_SKILL_SELECTION.md`
+  `routing/two-stage-skill-selection/docs/two-stage-skill-selection.md`
 
 The near-term risk is roadmap drift: routing has already shipped
 federation-mesh, composite stress, technique-kind second-cut, and two-stage
@@ -106,10 +106,10 @@ Goal:
 
 Merged as bounded memo recall dispatch readiness now that `aoa-memo` exposes initialized source-owned memory surfaces.
 
-Wave 1 tiny-model recall activation now routes small models through published memo recall hints rather than hardcoding semantic-only behavior.
-Wave 2 parallel memo adoption keeps the root inspect/expand path doctrine-first while allowing `task_to_surface_hints.json` to advertise an optional object-facing recall family when upstream object contracts are complete.
-Wave 3 tiny-model recall-family selection keeps doctrine recall as the default starter path while adding explicit `recall_family = memory_objects` queries and starters for the parallel object-facing family.
-Wave 4 router-first capsule adoption keeps recall additive while publishing mode-indexed capsule surfaces for doctrine and object-facing memo recall when upstream contracts expose them.
+Tiny-model recall activation now routes small models through published memo recall hints rather than hardcoding semantic-only behavior.
+Parallel memo adoption keeps the root inspect/expand path doctrine-first while allowing `task_to_surface_hints.json` to advertise an optional object-facing recall family when upstream object contracts are complete.
+Tiny-model recall-family selection keeps doctrine recall as the default starter path while adding explicit `recall_family = memory_objects` queries and starters for the parallel object-facing family.
+Router-first capsule adoption keeps recall additive while publishing mode-indexed capsule surfaces for doctrine and object-facing memo recall when upstream contracts expose them.
 
 `aoa-routing` should own:
 
@@ -128,11 +128,11 @@ It must not own:
 
 Merged as a separate orientation layer rather than a widening of the thin router core.
 
-This wave adds:
+This contour adds:
 
 - `generated/federation_entrypoints.min.json`
 - explicit `aoa-root` and `tos-root` root cards
-- active entry cards for `agent`, `tier`, `playbook`, `kag_view`, `seed`, `runtime_surface`, and `orientation_surface`
+- active entry cards for `agent`, `tier`, `playbook`, `kag_view`, `source_route`, `runtime_surface`, and `orientation_surface`
 - `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
 - schema-backed validation that orientation never points authority at route-owned generated surfaces
 - router-owned generated-surface refresh stays a parity-maintenance lane for routing-owned outputs and must not transfer source authority from sibling repos
@@ -159,7 +159,7 @@ Land as one additive routing surface:
 
 - `generated/return_navigation_hints.min.json`
 
-This wave should publish a bounded re-entry map that points drifted routes back to source-owned inspect, expand, or memo recall surfaces.
+This contour should publish a bounded re-entry map that points drifted routes back to source-owned inspect, expand, or memo recall surfaces.
 
 It should own:
 
@@ -178,7 +178,7 @@ It must not own:
 
 Merged as an optional adjacent seam rather than a replacement for flat routing.
 
-This wave adds:
+This contour adds:
 
 - `generated/two_stage_skill_entrypoints.json`
 - `generated/two_stage_router_prompt_blocks.json`
@@ -213,22 +213,22 @@ It must not own:
 
 Land as one additive pre-protocol routing family:
 
-- `generated/agon_gate_routing_registry.min.json`
-- `docs/AGON_GATE_ROUTING.md`
-- `docs/AGON_GATE_TRIGGER_MODEL.md`
-- `docs/AGON_GATE_DECISION_BOUNDARY.md`
-- `docs/AGON_GATE_ASSISTANT_ESCALATION.md`
-- `docs/AGON_GATE_ROUTING_OWNER_HANDOFFS.md`
-- `schemas/agon-gate-routing-registry.schema.json`
-- `schemas/agon-gate-trigger.schema.json`
-- `schemas/agon-gate-route-hint.schema.json`
-- `config/agon_gate_routing.seed.json`
-- `examples/agon_gate_route_hint.example.json`
-- `scripts/build_agon_gate_routing_registry.py`
-- `scripts/validate_agon_gate_routing.py`
-- `tests/test_agon_gate_routing.py`
+- `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`
+- `mechanics/agon/parts/gate-routing/docs/gate-routing.md`
+- `mechanics/agon/parts/gate-routing/docs/trigger-model.md`
+- `mechanics/agon/parts/gate-routing/docs/decision-boundary.md`
+- `mechanics/agon/parts/gate-routing/docs/assistant-escalation.md`
+- `mechanics/agon/parts/gate-routing/docs/owner-handoffs.md`
+- `mechanics/agon/parts/gate-routing/schemas/agon-gate-routing-registry.schema.json`
+- `mechanics/agon/parts/gate-routing/schemas/agon-gate-trigger.schema.json`
+- `mechanics/agon/parts/gate-routing/schemas/agon-gate-route-hint.schema.json`
+- `mechanics/agon/parts/gate-routing/config/agon_gate_routing.config.json`
+- `mechanics/agon/parts/gate-routing/examples/agon_gate_route_hint.example.json`
+- `mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py`
+- `mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py`
+- `mechanics/agon/parts/gate-routing/tests/test_agon_gate_routing.py`
 
-This wave should publish trigger classes, decision states, route hints, and
+This contour should publish trigger classes, decision states, route hints, and
 center-facing stop-lines for when ordinary routing is no longer enough and a
 pre-protocol Agon gate candidate should be emitted.
 
@@ -253,7 +253,7 @@ It must not own:
 
 ## Boundaries To Preserve
 
-These boundaries come directly from the seed and should remain hard constraints:
+These boundaries come directly from the source config and should remain hard constraints:
 
 - `aoa-routing` does not author doctrine, policy, or object meaning
 - capsules and sections live beside the objects they describe, inside source repos

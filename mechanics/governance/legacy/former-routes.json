@@ -1,0 +1,30 @@
+{
+  "schema_version": "aoa_routing_legacy_former_routes.v1",
+  "owner": "mechanics/governance",
+  "routes": [
+    {
+      "former_path": "docs/APPEAL_AND_VETO_ROUTING.md",
+      "current_path": "mechanics/governance/parts/appeal-and-veto/docs/appeal-and-veto-routing.md"
+    },
+    {
+      "former_path": "docs/APPEAL_ROUTE_ESCALATION.md",
+      "current_path": "mechanics/governance/parts/appeal-and-veto/docs/appeal-route-escalation.md"
+    },
+    {
+      "former_path": "docs/CHARTER_CHANGE_ROUTING.md",
+      "current_path": "mechanics/governance/parts/charter-change-routing/docs/charter-change-routing.md"
+    },
+    {
+      "former_path": "docs/COUNCIL_DISPATCH.md",
+      "current_path": "mechanics/governance/parts/council-dispatch/docs/council-dispatch.md"
+    },
+    {
+      "former_path": "docs/GOVERNANCE_ESCALATION_ROUTING.md",
+      "current_path": "mechanics/governance/parts/governance-escalation/docs/governance-escalation-routing.md"
+    },
+    {
+      "former_path": "docs/PRECEDENT_ROUTE_HINTS.md",
+      "current_path": "mechanics/governance/parts/precedent-route-hints/docs/precedent-route-hints.md"
+    }
+  ]
+}

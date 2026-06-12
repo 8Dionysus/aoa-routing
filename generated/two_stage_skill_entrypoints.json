@@ -1,13 +1,13 @@
 {
   "schema_version": "aoa_routing_two_stage_skill_entrypoints_v2",
-  "schema_ref": "schemas/two-stage-skill-entrypoints.schema.json",
+  "schema_ref": "routing/two-stage-skill-selection/schemas/two-stage-skill-entrypoints.schema.json",
   "owner_repo": "aoa-routing",
   "surface_kind": "two_stage_skill_entrypoints",
-  "profile": "aoa-routing-wave-9-two-stage-skill-router",
+  "profile": "aoa-routing-two-stage-skill-router",
   "validation_refs": [
-    "scripts/build_two_stage_skill_router.py",
-    "scripts/validate_two_stage_skill_router.py",
-    "tests/test_two_stage_skill_router.py"
+    "routing/two-stage-skill-selection/scripts/build_two_stage_skill_router.py",
+    "routing/two-stage-skill-selection/scripts/validate_two_stage_skill_router.py",
+    "routing/two-stage-skill-selection/tests/test_two_stage_skill_router.py"
   ],
   "inherits_from": "generated/tiny_model_entrypoints.json",
   "tiny_model_handoff": {
@@ -28,7 +28,7 @@
     "max_stage_1_tokens": 1200,
     "activation_policy": "never-activate",
     "manual_policy": "include-but-mark-manual",
-    "policy_ref": "config/two_stage_router_policy.json"
+    "policy_ref": "routing/two-stage-skill-selection/config/two_stage_router_policy.json"
   },
   "stage_2": {
     "name": "main-model-skill-decider",

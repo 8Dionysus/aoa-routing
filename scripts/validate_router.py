@@ -39,14 +39,14 @@ from router_core import (
     AOA_ROOT_REPO,
     CANONICAL_REPO_BY_KIND,
     DIRECT_RELATION_TYPES_SET,
-    DIONYSUS_SEED_ROUTE_MAP_PATH,
+    DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
     FEDERATION_ACTIVE_ENTRY_KINDS,
     FEDERATION_DECLARED_ENTRY_KINDS,
     FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID,
     FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID,
     FEDERATION_DEFAULT_PLAYBOOK_ENTRY_ID,
     FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID,
-    FEDERATION_DEFAULT_SEED_ENTRY_ID,
+    FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID,
     FEDERATION_DEFAULT_TIER_ENTRY_ID,
     FEDERATION_ENTRYPOINTS_FILE,
     FEDERATION_ROOT_IDS,
@@ -70,7 +70,7 @@ from router_core import (
     QUEST_ROUTING_CLOSED_STATES,
     QUEST_ROUTING_EXPAND_DOC_BY_REPO,
     QUEST_ROUTING_SOURCE_REPOS,
-    QUEST_ROUTING_WAVE_SCOPE,
+    QUEST_ROUTING_CONTOUR_SCOPE,
     PROFILE_PUBLIC_ROUTE_MAP_PATH,
     RECOMMENDED_HOP_KINDS,
     REPO_ROOT,
@@ -131,25 +131,39 @@ class ValidationIssue:
 
 
 OUTPUT_SCHEMA_NAMES = {
-    "cross_repo_registry.min.json": "cross-repo-registry.schema.json",
-    "aoa_router.min.json": "aoa-router.schema.json",
-    "task_to_surface_hints.json": "task-to-surface-hints.schema.json",
-    "task_to_tier_hints.json": "task-to-tier-hints.schema.json",
-    "composite_stress_route_hints.min.json": "composite-stress-route-hints.schema.json",
-    "stats_regrounding_hints.min.json": "stats-regrounding-hints.schema.json",
-    "owner_layer_shortlist.min.json": "owner-layer-shortlist.schema.json",
-    Path(QUEST_DISPATCH_HINTS_FILE).name: "quest-dispatch-hints.schema.json",
-    Path(FEDERATION_ENTRYPOINTS_FILE).name: "federation-entrypoints.schema.json",
-    Path(RETURN_NAVIGATION_HINTS_FILE).name: "return-navigation-hints.schema.json",
-    "recommended_paths.min.json": "recommended-paths.schema.json",
-    "kag_source_lift_relation_hints.min.json": "kag-source-lift-relation-hints.schema.json",
-    "pairing_hints.min.json": "pairing-hints.schema.json",
-    "tiny_model_entrypoints.json": "tiny-model-entrypoints.schema.json",
-    "two_stage_skill_entrypoints.json": "two-stage-skill-entrypoints.schema.json",
-    "two_stage_router_prompt_blocks.json": "two-stage-router-prompt-blocks.schema.json",
-    "two_stage_router_tool_schemas.json": "two-stage-router-tool-schemas.schema.json",
-    "two_stage_router_examples.json": "two-stage-router-examples.schema.json",
-    "two_stage_router_manifest.json": "two-stage-router-manifest.schema.json",
+    "cross_repo_registry.min.json": "routing/core/schemas/cross-repo-registry.schema.json",
+    "aoa_router.min.json": "routing/core/schemas/aoa-router.schema.json",
+    "task_to_surface_hints.json": "routing/core/schemas/task-to-surface-hints.schema.json",
+    "task_to_tier_hints.json": "routing/core/schemas/task-to-tier-hints.schema.json",
+    "composite_stress_route_hints.min.json": (
+        "mechanics/antifragility/parts/composite-stress-routing/schemas/composite-stress-route-hints.schema.json"
+    ),
+    "stats_regrounding_hints.min.json": (
+        "mechanics/boundary-bridge/parts/stats-regrounding/schemas/stats-regrounding-hints.schema.json"
+    ),
+    "owner_layer_shortlist.min.json": (
+        "mechanics/boundary-bridge/parts/owner-layer-shortlist/schemas/owner-layer-shortlist.schema.json"
+    ),
+    Path(QUEST_DISPATCH_HINTS_FILE).name: (
+        "mechanics/questbook/parts/quest-routing-seam/schemas/quest-dispatch-hints.schema.json"
+    ),
+    Path(FEDERATION_ENTRYPOINTS_FILE).name: (
+        "mechanics/boundary-bridge/parts/federation-entry/schemas/federation-entrypoints.schema.json"
+    ),
+    Path(RETURN_NAVIGATION_HINTS_FILE).name: (
+        "mechanics/recurrence/parts/return-navigation/schemas/return-navigation-hints.schema.json"
+    ),
+    "recommended_paths.min.json": "routing/core/schemas/recommended-paths.schema.json",
+    "kag_source_lift_relation_hints.min.json": (
+        "mechanics/boundary-bridge/parts/tos-kag-boundary/schemas/kag-source-lift-relation-hints.schema.json"
+    ),
+    "pairing_hints.min.json": "routing/core/schemas/pairing-hints.schema.json",
+    "tiny_model_entrypoints.json": "routing/core/schemas/tiny-model-entrypoints.schema.json",
+    "two_stage_skill_entrypoints.json": "routing/two-stage-skill-selection/schemas/two-stage-skill-entrypoints.schema.json",
+    "two_stage_router_prompt_blocks.json": "routing/two-stage-skill-selection/schemas/two-stage-router-prompt-blocks.schema.json",
+    "two_stage_router_tool_schemas.json": "routing/two-stage-skill-selection/schemas/two-stage-router-tool-schemas.schema.json",
+    "two_stage_router_examples.json": "routing/two-stage-skill-selection/schemas/two-stage-router-examples.schema.json",
+    "two_stage_router_manifest.json": "routing/two-stage-skill-selection/schemas/two-stage-router-manifest.schema.json",
 }
 
 SOURCE_OWNED_PAYLOAD_KEYS = (
@@ -180,11 +194,17 @@ EXPECTED_KAG_VIEW_IDS = {
     TOS_KAG_VIEW_ENTRY_ID,
 }
 LOW_CONTEXT_IMPLEMENTATION_PREFIXES = ("src/", "scripts/")
-LIVE_SESSION_REENTRY_ROUTE_REVIEW_DOC = "docs/LIVE_SESSION_REENTRY_ROUTE_REVIEW.md"
-LIVE_SESSION_REENTRY_ROUTE_REVIEW_SCHEMA = "schemas/live-session-reentry-route-review.schema.json"
-LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE = "examples/live_session_reentry_route_review.example.json"
+LIVE_SESSION_REENTRY_ROUTE_REVIEW_DOC = (
+    "mechanics/checkpoint/parts/live-session-reentry-route-review/docs/live-session-reentry-route-review.md"
+)
+LIVE_SESSION_REENTRY_ROUTE_REVIEW_SCHEMA = (
+    "mechanics/checkpoint/parts/live-session-reentry-route-review/schemas/live-session-reentry-route-review.schema.json"
+)
+LIVE_SESSION_REENTRY_ROUTE_REVIEW_EXAMPLE = (
+    "mechanics/checkpoint/parts/live-session-reentry-route-review/examples/live_session_reentry_route_review.example.json"
+)
 LIVE_SESSION_REENTRY_RECEIPT_REF = (
-    "aoa-memo:mechanics/checkpoint/schemas/inquiry_checkpoint.schema.json"
+    "aoa-memo:mechanics/checkpoint/parts/checkpoint-carry-contract/schemas/inquiry_checkpoint.schema.json"
 )
 LIVE_SESSION_REENTRY_MEMO_WRITEBACK_SURFACE = (
     "mechanics/writeback/docs/SELF_AGENCY_CONTINUITY_WRITEBACK.md"
@@ -206,12 +226,6 @@ ROUTE_MAP_CAPSULE_EXPECTATIONS = {
         "schema_version": "aoa_sdk_workspace_control_plane_v2",
         "schema_ref": "schemas/workspace-control-plane.schema.json",
         "surface_kind": "runtime_surface",
-        "route_mode": "repo_local",
-    },
-    ("Dionysus", DIONYSUS_SEED_ROUTE_MAP_PATH): {
-        "schema_version": "dionysus_seed_route_map_v2",
-        "schema_ref": "schemas/seed-route-map.schema.json",
-        "surface_kind": "seed",
         "route_mode": "repo_local",
     },
     ("8Dionysus", PROFILE_PUBLIC_ROUTE_MAP_PATH): {
@@ -245,16 +259,40 @@ CATALOG_CAPSULE_EXPECTATIONS = {
 }
 FOUNDATION_ROUTING_QUEST_IDS = ("AOA-RT-Q-0001", "AOA-RT-Q-0002")
 REQUIRED_ROUTING_QUEST_IDS = FOUNDATION_ROUTING_QUEST_IDS
+QUESTBOOK_SOURCE_CONTRACT_ROOT = Path("mechanics") / "questbook" / "parts" / "source-contract"
+QUESTBOOK_PATH = Path("QUESTBOOK.md")
+QUESTS_DIR = Path("quests")
+QUESTS_ROUTING_LANE = "routing"
+QUEST_ROUTING_SEAM_DOC = (
+    Path("mechanics") / "questbook" / "parts" / "quest-routing-seam" / "docs" / "quest-routing-seam.md"
+)
+QUEST_DISPATCH_HINT_SCHEMA = (
+    Path("mechanics")
+    / "questbook"
+    / "parts"
+    / "quest-routing-seam"
+    / "schemas"
+    / "quest_dispatch_hint.schema.json"
+)
+QUEST_BOARD_SEAM_DOC = (
+    Path("mechanics") / "questbook" / "parts" / "quest-board-seam" / "docs" / "quest-board-seam.md"
+)
+QUEST_BOARD_SCHEMA_PATH = (
+    Path("mechanics") / "questbook" / "parts" / "quest-board-seam" / "schemas" / "quest_board_entry.schema.json"
+)
+QUEST_BOARD_EXAMPLE_PATH = (
+    Path("mechanics") / "questbook" / "parts" / "quest-board-seam" / "generated" / "quest_board.min.example.json"
+)
 REQUIRED_ROUTING_SEAM_SNIPPETS = (
     "Source repos own quest meaning.",
     "`aoa-routing` may only consume thin, derived quest projections from live generated quest surfaces.",
     "- parse live `quests/*.yaml` as authority",
     "- `generated/quest_catalog.min.json`",
     "- `generated/quest_dispatch.min.json`",
-    "The first live quest-routing wave is source-only.",
+    "The first live quest-routing contour is source-only.",
     "Production routing does not read `.example.json` quest fixtures.",
-    "The only live quest actions in this wave are `inspect`, `expand`, and `handoff`.",
-    "`pair` and `recall` belong to later routing waves.",
+    "The only live quest actions in this contour are `inspect`, `expand`, and `handoff`.",
+    "`pair` and `recall` belong to later routing contours.",
 )
 REQUIRED_QUEST_SCHEMA_TOP_LEVEL_KEYS = (
     "$schema",
@@ -275,12 +313,16 @@ EXPECTED_ROUTING_QUEST_STATES = {
 REQUIRED_REANCHOR_NOTE_SNIPPET = (
     "no live frontier + d0/d1 + r0/r1 source/proof quest leaves currently exist"
 )
-QUEST_BOARD_SCHEMA_NAME = "quest_board_entry.schema.json"
-QUEST_BOARD_EXAMPLE_NAME = "quest_board.min.example.json"
+QUEST_BOARD_SCHEMA_NAME = QUEST_BOARD_SCHEMA_PATH.as_posix()
+QUEST_BOARD_EXAMPLE_NAME = QUEST_BOARD_EXAMPLE_PATH.name
 QUEST_BOARD_REQUIRED_INPUT_REPOS = ("aoa-skills", "aoa-agents", "aoa-evals")
-RPG_NAVIGATION_SCHEMA_NAME = "rpg_navigation_bundle.schema.json"
-RPG_NAVIGATION_EXAMPLE_NAME = "rpg_navigation.min.example.json"
-RPG_NAVIGATION_DOC_NAME = "docs/RPG_NAVIGATION_BRIDGE.md"
+RPG_NAVIGATION_ROOT = Path("mechanics") / "rpg" / "parts" / "navigation-bridge"
+RPG_NAVIGATION_SCHEMA_PATH = RPG_NAVIGATION_ROOT / "schemas" / "rpg_navigation_bundle.schema.json"
+RPG_NAVIGATION_SCHEMA_NAME = RPG_NAVIGATION_SCHEMA_PATH.as_posix()
+RPG_NAVIGATION_EXAMPLE_PATH = RPG_NAVIGATION_ROOT / "generated" / "rpg_navigation.min.example.json"
+RPG_NAVIGATION_EXAMPLE_NAME = RPG_NAVIGATION_EXAMPLE_PATH.name
+RPG_NAVIGATION_DOC_PATH = RPG_NAVIGATION_ROOT / "docs" / "rpg-navigation-bridge.md"
+RPG_NAVIGATION_DOC_NAME = RPG_NAVIGATION_DOC_PATH.as_posix()
 RPG_NAVIGATION_REQUIRED_DOC_TOKENS = (
     "## Core rule",
     "Routing owns navigation.",
@@ -363,10 +405,10 @@ def parse_args() -> argparse.Namespace:
         help="Path to the aoa-sdk repository root for runtime control-plane federation validation.",
     )
     parser.add_argument(
-        "--seed-root",
+        "--source-route-root",
         type=Path,
         default=default_dependency_root("Dionysus"),
-        help="Path to the Dionysus repository root for seed federation validation.",
+        help="Path to the Dionysus repository root for source-route federation validation.",
     )
     parser.add_argument(
         "--profile-root",
@@ -391,7 +433,8 @@ def parse_args() -> argparse.Namespace:
 
 @lru_cache(maxsize=None)
 def load_schema(schema_name: str) -> dict[str, Any]:
-    schema_path = REPO_ROOT / "schemas" / schema_name
+    schema_ref = Path(schema_name)
+    schema_path = REPO_ROOT / schema_ref if len(schema_ref.parts) > 1 else REPO_ROOT / "schemas" / schema_ref
     with schema_path.open(encoding="utf-8") as handle:
         return json.load(handle)
 
@@ -399,8 +442,14 @@ def load_schema(schema_name: str) -> dict[str, Any]:
 @lru_cache(maxsize=None)
 def get_schema_registry() -> Registry:
     resources: list[tuple[str, Resource]] = []
-    for schema_path in sorted((REPO_ROOT / "schemas").glob("*.schema.json")):
-        schema = load_schema(schema_path.name)
+    schema_paths = [
+        *sorted((REPO_ROOT / "routing" / "core" / "schemas").glob("*.schema.json")),
+        *sorted((REPO_ROOT / "mechanics").glob("**/schemas/*.schema.json")),
+        *sorted((REPO_ROOT / "mechanics").glob("**/schemas/*.json")),
+        *sorted((REPO_ROOT / "routing" / "two-stage-skill-selection" / "schemas").glob("*.schema.json")),
+    ]
+    for schema_path in schema_paths:
+        schema = load_schema(schema_path.relative_to(REPO_ROOT).as_posix())
         schema_id = schema.get("$id")
         if not isinstance(schema_id, str) or not schema_id.strip():
             raise RouterError(f"{schema_path.name} is missing a usable $id")
@@ -510,23 +559,29 @@ def quest_sort_key(quest_id: str) -> tuple[int, str]:
         return (10**9, quest_id)
 
 
+def routing_quest_record_path(quest_id: str, state: str) -> Path:
+    return QUESTS_DIR / QUESTS_ROUTING_LANE / state / f"{quest_id}.yaml"
+
+
+def discover_routing_quest_paths(repo_root: Path) -> dict[str, Path]:
+    quest_paths = {
+        path.stem: path
+        for path in (repo_root / QUESTS_DIR / QUESTS_ROUTING_LANE).rglob("AOA-RT-Q-*.yaml")
+        if path.is_file()
+    }
+    return dict(sorted(quest_paths.items(), key=lambda item: quest_sort_key(item[0])))
+
+
 def discover_routing_quest_ids(repo_root: Path) -> list[str]:
-    quest_ids = sorted(
-        {
-            path.stem
-            for path in (repo_root / "quests").glob("AOA-RT-Q-*.yaml")
-            if path.is_file()
-        },
-        key=quest_sort_key,
-    )
+    quest_ids = list(discover_routing_quest_paths(repo_root))
     if not quest_ids:
         return list(FOUNDATION_ROUTING_QUEST_IDS)
     return quest_ids
 
 
 def validate_adjunct_quest_board_surface(repo_root: Path, issues: list[ValidationIssue]) -> None:
-    schema_path = repo_root / "schemas" / QUEST_BOARD_SCHEMA_NAME
-    example_path = repo_root / "generated" / QUEST_BOARD_EXAMPLE_NAME
+    schema_path = repo_root / QUEST_BOARD_SCHEMA_PATH
+    example_path = repo_root / QUEST_BOARD_EXAMPLE_PATH
 
     try:
         schema_payload = load_json_file(schema_path)
@@ -560,11 +615,11 @@ def validate_adjunct_quest_board_surface(repo_root: Path, issues: list[Validatio
                 "authority must stay 'derived-example-only'",
             )
         )
-    if example_payload.get("wave_scope") != "adjunct-rpg-first-wave":
+    if example_payload.get("contour_scope") != "adjunct-rpg-first-contour":
         issues.append(
             ValidationIssue(
                 QUEST_BOARD_EXAMPLE_NAME,
-                "wave_scope must stay 'adjunct-rpg-first-wave'",
+                "contour_scope must stay 'adjunct-rpg-first-contour'",
             )
         )
 
@@ -591,7 +646,7 @@ def validate_adjunct_quest_board_surface(repo_root: Path, issues: list[Validatio
         issues.append(
             ValidationIssue(
                 QUEST_BOARD_EXAMPLE_NAME,
-                "inputs must stay ordered as aoa-skills, aoa-agents, aoa-evals for the first adjunct example wave",
+                "inputs must stay ordered as aoa-skills, aoa-agents, aoa-evals for the first adjunct example contour",
             )
         )
 
@@ -614,9 +669,9 @@ def validate_adjunct_quest_board_surface(repo_root: Path, issues: list[Validatio
 
 
 def validate_rpg_navigation_bridge_surface(repo_root: Path, issues: list[ValidationIssue]) -> None:
-    doc_path = repo_root / RPG_NAVIGATION_DOC_NAME
-    schema_path = repo_root / "schemas" / RPG_NAVIGATION_SCHEMA_NAME
-    example_path = repo_root / "generated" / RPG_NAVIGATION_EXAMPLE_NAME
+    doc_path = repo_root / RPG_NAVIGATION_DOC_PATH
+    schema_path = repo_root / RPG_NAVIGATION_SCHEMA_PATH
+    example_path = repo_root / RPG_NAVIGATION_EXAMPLE_PATH
 
     try:
         doc_text = doc_path.read_text(encoding="utf-8")
@@ -659,8 +714,8 @@ def validate_rpg_navigation_bridge_surface(repo_root: Path, issues: list[Validat
         issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, "schema_version must stay 'rpg_navigation_bundle_v1'"))
     if example_payload.get("authority") != "derived-example-only":
         issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, "authority must stay 'derived-example-only'"))
-    if example_payload.get("wave_scope") != "adjunct-rpg-bridge-wave":
-        issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, "wave_scope must stay 'adjunct-rpg-bridge-wave'"))
+    if example_payload.get("contour_scope") != "adjunct-rpg-bridge-contour":
+        issues.append(ValidationIssue(RPG_NAVIGATION_EXAMPLE_NAME, "contour_scope must stay 'adjunct-rpg-bridge-contour'"))
 
     try:
         inputs = ensure_list(example_payload.get("inputs"), f"{RPG_NAVIGATION_EXAMPLE_NAME}.inputs")
@@ -723,9 +778,10 @@ def validate_rpg_navigation_bridge_surface(repo_root: Path, issues: list[Validat
 
 
 def validate_owner_dispatch_seam_surface(repo_root: Path, issues: list[ValidationIssue]) -> None:
-    doc_path = repo_root / "docs" / "AGON_GATE_DECISION_BOUNDARY.md"
-    schema_path = repo_root / "schemas" / "owner-dispatch-seam.schema.json"
-    example_path = repo_root / "examples" / "owner_dispatch_seam.example.json"
+    part_root = repo_root / "mechanics" / "agon" / "parts" / "gate-routing"
+    doc_path = part_root / "docs" / "decision-boundary.md"
+    schema_path = part_root / "schemas" / "owner-dispatch-seam.schema.json"
+    example_path = part_root / "examples" / "owner_dispatch_seam.example.json"
 
     try:
         doc_text = doc_path.read_text(encoding="utf-8")
@@ -733,7 +789,7 @@ def validate_owner_dispatch_seam_surface(repo_root: Path, issues: list[Validatio
         issues.append(ValidationIssue(repo_relative(repo_root, doc_path), "missing required file"))
         return
 
-    for token in ("route_signal", "route_decision", "owner_dispatch", "schemas/owner-dispatch-seam.schema.json"):
+    for token in ("route_signal", "route_decision", "owner_dispatch", "mechanics/agon/parts/gate-routing/schemas/owner-dispatch-seam.schema.json"):
         if token not in doc_text:
             issues.append(
                 ValidationIssue(
@@ -778,8 +834,12 @@ def validate_owner_dispatch_seam_surface(repo_root: Path, issues: list[Validatio
     route_signal = example_payload.get("route_signal", {})
     route_decision = example_payload.get("route_decision", {})
     owner_dispatch = example_payload.get("owner_dispatch", {})
-    if not isinstance(route_signal, dict) or route_signal.get("owner_truth_ref") != "docs/AGON_GATE_DECISION_BOUNDARY.md#wave-1-owner-dispatch-seam":
-        issues.append(ValidationIssue(example_path.name, "route_signal must point at the wave 1 owner dispatch seam"))
+    expected_owner_truth_ref = (
+        "mechanics/agon/parts/gate-routing/docs/"
+        "decision-boundary.md#owner-dispatch-seam"
+    )
+    if not isinstance(route_signal, dict) or route_signal.get("owner_truth_ref") != expected_owner_truth_ref:
+        issues.append(ValidationIssue(example_path.name, "route_signal must point at the owner dispatch seam"))
     if not isinstance(route_decision, dict) or route_decision.get("next_hop") != "aoa-agents":
         issues.append(ValidationIssue(example_path.name, "route_decision must keep next_hop aoa-agents"))
     if not isinstance(owner_dispatch, dict) or owner_dispatch.get("owner_repo") != "aoa-agents":
@@ -787,10 +847,10 @@ def validate_owner_dispatch_seam_surface(repo_root: Path, issues: list[Validatio
 
 
 def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIssue]) -> None:
-    questbook_path = repo_root / "QUESTBOOK.md"
-    seam_path = repo_root / "docs" / "QUEST_ROUTING_SEAM.md"
-    schema_path = repo_root / "schemas" / "quest_dispatch_hint.schema.json"
-    quests_dir = repo_root / "quests"
+    questbook_path = repo_root / QUESTBOOK_PATH
+    seam_path = repo_root / QUEST_ROUTING_SEAM_DOC
+    schema_path = repo_root / QUEST_DISPATCH_HINT_SCHEMA
+    quests_dir = repo_root / QUESTS_DIR
 
     try:
         questbook_text = questbook_path.read_text(encoding="utf-8")
@@ -843,14 +903,17 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
         except SchemaError as exc:
             issues.append(ValidationIssue(repo_relative(repo_root, schema_path), f"invalid JSON schema: {exc.message}"))
 
-    actual_ids = discover_routing_quest_ids(repo_root)
+    quest_paths_by_id = discover_routing_quest_paths(repo_root)
+    actual_ids = list(quest_paths_by_id)
+    if not actual_ids:
+        actual_ids = discover_routing_quest_ids(repo_root)
     missing_foundation = [
         quest_id for quest_id in FOUNDATION_ROUTING_QUEST_IDS if quest_id not in actual_ids
     ]
     if missing_foundation:
         issues.append(
             ValidationIssue(
-                "quests",
+                QUESTS_DIR.as_posix(),
                 "routing quest set must include the foundation quests (missing: "
                 + ", ".join(missing_foundation)
                 + ")",
@@ -858,35 +921,64 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
         )
 
     for quest_id in actual_ids:
-        payload = load_yaml_mapping(quests_dir / f"{quest_id}.yaml", issues, repo_root=repo_root)
+        quest_path = quest_paths_by_id.get(quest_id)
+        if quest_path is None:
+            quest_path = quests_dir / QUESTS_ROUTING_LANE / "missing" / f"{quest_id}.yaml"
+        quest_location = repo_relative(repo_root, quest_path)
+        payload = load_yaml_mapping(quest_path, issues, repo_root=repo_root)
         if payload is None:
             continue
+        relative_parts = quest_path.relative_to(quests_dir).parts
+        if len(relative_parts) != 3:
+            issues.append(
+                ValidationIssue(
+                    quest_location,
+                    "routing quest records must live at quests/routing/<state>/<quest-id>.yaml",
+                )
+            )
+            continue
+        lane, state_dir, _filename = relative_parts
+        if lane != QUESTS_ROUTING_LANE:
+            issues.append(
+                ValidationIssue(
+                    quest_location,
+                    f"routing quest records must stay in quests/{QUESTS_ROUTING_LANE}/",
+                )
+            )
         if payload.get("schema_version") != "work_quest_v1":
             issues.append(
                 ValidationIssue(
-                    f"quests/{quest_id}.yaml",
+                    quest_location,
                     f"unsupported schema_version '{payload.get('schema_version')}'",
                 )
             )
         if payload.get("repo") != "aoa-routing":
-            issues.append(ValidationIssue(f"quests/{quest_id}.yaml", "quest must target repo 'aoa-routing'"))
+            issues.append(ValidationIssue(quest_location, "quest must target repo 'aoa-routing'"))
         if payload.get("id") != quest_id:
-            issues.append(ValidationIssue(f"quests/{quest_id}.yaml", f"id must match filename '{quest_id}'"))
+            issues.append(ValidationIssue(quest_location, f"id must match filename '{quest_id}'"))
         if payload.get("public_safe") is not True:
-            issues.append(ValidationIssue(f"quests/{quest_id}.yaml", "quest must set public_safe: true"))
+            issues.append(ValidationIssue(quest_location, "quest must set public_safe: true"))
         expected_state = EXPECTED_ROUTING_QUEST_STATES.get(quest_id)
         if expected_state is not None and payload.get("state") != expected_state:
             issues.append(
                 ValidationIssue(
-                    f"quests/{quest_id}.yaml",
-                    f"quest state must stay '{expected_state}' in the current routing wave",
+                    quest_location,
+                    f"quest state must stay '{expected_state}' in the current routing contour",
+                )
+            )
+        payload_state = payload.get("state")
+        if isinstance(payload_state, str) and state_dir != payload_state:
+            issues.append(
+                ValidationIssue(
+                    quest_location,
+                    "quest lifecycle directory must match the YAML state",
                 )
             )
         if expected_state in {"done", "dropped"}:
             if quest_id in questbook_text:
                 issues.append(
                     ValidationIssue(
-                        "QUESTBOOK.md",
+                        QUESTBOOK_PATH.as_posix(),
                         f"closed quest id '{quest_id}' must not stay in the active human questbook",
                     )
                 )
@@ -894,8 +986,8 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
             if quest_id not in questbook_text:
                 issues.append(
                     ValidationIssue(
-                        "QUESTBOOK.md",
-                        f"active or reanchored quest id '{quest_id}' must stay visible in QUESTBOOK.md",
+                        QUESTBOOK_PATH.as_posix(),
+                        f"active or reanchored quest id '{quest_id}' must stay visible in {QUESTBOOK_PATH.as_posix()}",
                     )
                 )
         if quest_id == "AOA-RT-Q-0002":
@@ -903,7 +995,7 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
             if not isinstance(notes, str) or REQUIRED_REANCHOR_NOTE_SNIPPET not in notes:
                 issues.append(
                     ValidationIssue(
-                        f"quests/{quest_id}.yaml",
+                        quest_location,
                         "reanchored quest must record the current lack of live frontier d0/d1 r0/r1 leaves",
                     )
                 )
@@ -917,8 +1009,8 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
     if "## Blocked / reanchor" not in questbook_text:
         issues.append(
             ValidationIssue(
-                "QUESTBOOK.md",
-                "QUESTBOOK.md must keep a 'Blocked / reanchor' bucket in the first live routing wave",
+                QUESTBOOK_PATH.as_posix(),
+                f"{QUESTBOOK_PATH.as_posix()} must keep a 'Blocked / reanchor' bucket in the first live routing contour",
             )
         )
 
@@ -926,7 +1018,7 @@ def validate_local_questbook_surfaces(repo_root: Path, issues: list[ValidationIs
         if snippet not in seam_text:
             issues.append(
                 ValidationIssue(
-                    "docs/QUEST_ROUTING_SEAM.md",
+                    QUEST_ROUTING_SEAM_DOC.as_posix(),
                     "QUEST routing seam must refuse live quest authority and name generated-only ingestion",
                 )
             )
@@ -966,11 +1058,11 @@ def validate_quest_dispatch_hints(
         issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
         return
 
-    if quest_dispatch_hints_payload.get("wave_scope") != QUEST_ROUTING_WAVE_SCOPE:
+    if quest_dispatch_hints_payload.get("contour_scope") != QUEST_ROUTING_CONTOUR_SCOPE:
         issues.append(
             ValidationIssue(
                 "quest_dispatch_hints.min.json",
-                f"wave_scope must stay '{QUEST_ROUTING_WAVE_SCOPE}' in the first live routing wave",
+                f"contour_scope must stay '{QUEST_ROUTING_CONTOUR_SCOPE}' in the first live routing contour",
             )
         )
     if actions_enabled != list(QUEST_ROUTING_ACTIONS_ENABLED):
@@ -1071,7 +1163,7 @@ def validate_quest_dispatch_hints(
         except RouterError as exc:
             issues.append(ValidationIssue("quest_dispatch_hints.min.json", str(exc)))
             continue
-        validate_against_schema(hint, "quest_dispatch_hint.schema.json", location, issues)
+        validate_against_schema(hint, QUEST_DISPATCH_HINT_SCHEMA.as_posix(), location, issues)
         try:
             repo_name = ensure_string(hint.get("repo"), f"{location}.repo")
             quest_id = ensure_string(hint.get("id"), f"{location}.id")
@@ -1096,7 +1188,7 @@ def validate_quest_dispatch_hints(
             issues.append(
                 ValidationIssue(
                     "quest_dispatch_hints.min.json",
-                    f"{location}.repo must stay within the first live source-only wave",
+                    f"{location}.repo must stay within the first live source-only contour",
                 )
             )
             continue
@@ -1104,7 +1196,7 @@ def validate_quest_dispatch_hints(
             issues.append(
                 ValidationIssue(
                     "quest_dispatch_hints.min.json",
-                    "Dionysus quests must stay out of the first live source-only routing wave",
+                    "Dionysus quests must stay out of the first live source-only routing contour",
                 )
             )
         if state in QUEST_ROUTING_CLOSED_STATES:
@@ -1343,7 +1435,7 @@ def validate_rebuild_parity(
     kag_root: Path,
     tos_root: Path,
     sdk_root: Path,
-    seed_root: Path,
+    source_route_root: Path,
     profile_root: Path,
     abyss_stack_root: Path,
     routing_root: Path,
@@ -1362,7 +1454,7 @@ def validate_rebuild_parity(
             kag_root.resolve(),
             tos_root.resolve(),
             sdk_root.resolve(),
-            seed_root.resolve(),
+            source_route_root.resolve(),
             profile_root.resolve(),
             abyss_stack_root.resolve(),
             routing_root.resolve(),
@@ -1991,7 +2083,6 @@ def load_surface_entries_for_validation(
         Path(AOA_CENTER_ENTRY_MAP_PATH).name: "routes",
         Path(TOS_ROOT_ENTRY_MAP_PATH).name: "routes",
         Path(AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH).name: "routes",
-        Path(DIONYSUS_SEED_ROUTE_MAP_PATH).name: "routes",
         Path(PROFILE_PUBLIC_ROUTE_MAP_PATH).name: "routes",
         Path(TOS_ROUTE_RETRIEVAL_SURFACE_REF).name: "routes",
         "repo_doc_surface_manifest.min.json": "docs",
@@ -2031,7 +2122,7 @@ def validate_federation_entrypoints(
     techniques_root: Path,
     stats_root: Path,
     sdk_root: Path,
-    seed_root: Path,
+    source_route_root: Path,
     profile_root: Path,
     abyss_stack_root: Path,
     agents_root: Path,
@@ -2046,7 +2137,7 @@ def validate_federation_entrypoints(
         "aoa-techniques": techniques_root.resolve(),
         "aoa-stats": stats_root.resolve(),
         "aoa-sdk": sdk_root.resolve(),
-        "Dionysus": seed_root.resolve(),
+        "Dionysus": source_route_root.resolve(),
         "8Dionysus": profile_root.resolve(),
         "abyss-stack": abyss_stack_root.resolve(),
         AGENTS_REPO: agents_root.resolve(),
@@ -2285,12 +2376,6 @@ def validate_federation_entrypoints(
                     repo_name,
                     payload.get("workspace_manifest_ref"),
                     f"{location}.capsule_payload.workspace_manifest_ref",
-                )
-            if repo_name == "Dionysus":
-                validate_local_low_context_path(
-                    repo_name,
-                    payload.get("next_live_seed_ref"),
-                    f"{location}.capsule_payload.next_live_seed_ref",
                 )
             if repo_name == "8Dionysus" and payload.get("posture") != "route-map-only":
                 issues.append(
@@ -2592,7 +2677,7 @@ def validate_federation_entrypoints(
             issues.append(
                 ValidationIssue(
                     "federation_entrypoints.min.json",
-                    "aoa-root must publish exactly three center-entry route actions in the current routing wave",
+                    "aoa-root must publish exactly three center-entry route actions in the current routing contour",
                 )
             )
         else:
@@ -2679,7 +2764,7 @@ def validate_federation_entrypoints(
                 issues.append(
                     ValidationIssue(
                         "federation_entrypoints.min.json",
-                        "tos-root must publish exactly three bounded next_actions in the current routing wave",
+                        "tos-root must publish exactly three bounded next_actions in the current routing contour",
                     )
                 )
             for action_index, expected_action in enumerate(expected_actions):
@@ -2709,7 +2794,7 @@ def validate_federation_entrypoints(
             issues.append(
                 ValidationIssue(
                     "federation_entrypoints.min.json",
-                    "tos-root next_hops must stay bounded to the ToS-specific KAG view and AOA-P-0009 in the current routing wave",
+                    "tos-root next_hops must stay bounded to the ToS-specific KAG view and AOA-P-0009 in the current routing contour",
                 )
             )
 
@@ -2842,7 +2927,7 @@ def validate_federation_entrypoints(
         issues.append(
             ValidationIssue(
                 "federation_entrypoints.min.json",
-                "kag_view entries must publish exactly aoa-techniques and Tree-of-Sophia in the current routing wave",
+                "kag_view entries must publish exactly aoa-techniques and Tree-of-Sophia in the current routing contour",
             )
         )
 
@@ -2953,7 +3038,7 @@ def validate_return_navigation_hints(
     memo_root: Path,
     stats_root: Path,
     sdk_root: Path,
-    seed_root: Path,
+    source_route_root: Path,
     profile_root: Path,
     abyss_stack_root: Path,
     agents_root: Path,
@@ -2973,7 +3058,7 @@ def validate_return_navigation_hints(
         "aoa-memo": memo_root.resolve(),
         "aoa-stats": stats_root.resolve(),
         "aoa-sdk": sdk_root.resolve(),
-        "Dionysus": seed_root.resolve(),
+        "Dionysus": source_route_root.resolve(),
         "8Dionysus": profile_root.resolve(),
         "abyss-stack": abyss_stack_root.resolve(),
         AGENTS_REPO: agents_root.resolve(),
@@ -2991,7 +3076,7 @@ def validate_return_navigation_hints(
         "tier": AGENTS_REPO,
         "playbook": PLAYBOOKS_REPO,
         "kag_view": KAG_REPO,
-        "seed": "Dionysus",
+        "source_route": "Dionysus",
         "runtime_surface": "aoa-sdk",
         "orientation_surface": "8Dionysus",
     }
@@ -3000,7 +3085,7 @@ def validate_return_navigation_hints(
         "tier": MODEL_TIER_REGISTRY_PATH,
         "playbook": "generated/playbook_registry.min.json",
         "kag_view": "generated/federation_spine.min.json",
-        "seed": DIONYSUS_SEED_ROUTE_MAP_PATH,
+        "source_route": DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
         "runtime_surface": AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH,
         "orientation_surface": PROFILE_PUBLIC_ROUTE_MAP_PATH,
     }
@@ -3263,7 +3348,7 @@ def validate_return_navigation_hints(
                 issues.append(
                     ValidationIssue(
                         location_prefix,
-                        "memo return primary_action must point to aoa-memo/examples/recall_contract.object.working.return.json",
+                        f"memo return primary_action must point to aoa-memo/{MEMO_OBJECT_RETURN_READY_CONTRACT}",
                     )
                 )
             if secondary_action is not None and (
@@ -3273,7 +3358,7 @@ def validate_return_navigation_hints(
                 issues.append(
                     ValidationIssue(
                         location_prefix,
-                        "memo return secondary_action must point to aoa-memo/generated/memory_object_catalog.min.json",
+                        f"memo return secondary_action must point to aoa-memo/{MEMO_OBJECT_INSPECT_SURFACE_FILE}",
                     )
                 )
             contract_location = f"aoa-memo/{MEMO_OBJECT_RETURN_READY_CONTRACT}"
@@ -3410,7 +3495,7 @@ def validate_return_navigation_hints(
             issues.append(
                 ValidationIssue(
                     location_prefix,
-                    f"{location} must not publish secondary_action for aoa-root in the current routing wave",
+                    f"{location} must not publish secondary_action for aoa-root in the current routing contour",
                 )
             )
         if root_id == "tos-root":
@@ -3515,7 +3600,7 @@ def validate_return_navigation_hints(
         FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID,
         "aoa-stats-summary-catalog",
         "abyss-stack-diagnostic-spine",
-        FEDERATION_DEFAULT_SEED_ENTRY_ID,
+        FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID,
         FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID,
     }
     seen_entry_ids: set[str] = set()
@@ -5456,7 +5541,7 @@ def validate_generated_outputs(
     kag_root: Path,
     tos_root: Path,
     sdk_root: Path | None = None,
-    seed_root: Path | None = None,
+    source_route_root: Path | None = None,
     profile_root: Path | None = None,
     abyss_stack_root: Path | None = None,
     routing_root: Path | None = None,
@@ -5465,10 +5550,10 @@ def validate_generated_outputs(
     generated_dir = generated_dir.resolve()
     routing_root = (routing_root or REPO_ROOT).resolve()
     sdk_root = (sdk_root or default_dependency_root("aoa-sdk", routing_root)).resolve()
-    seed_root = (seed_root or default_dependency_root("Dionysus", routing_root)).resolve()
+    source_route_root = (source_route_root or default_dependency_root("Dionysus", routing_root)).resolve()
     profile_root = (profile_root or default_dependency_root("8Dionysus", routing_root)).resolve()
     abyss_stack_root = (abyss_stack_root or default_dependency_root("abyss-stack", routing_root)).resolve()
-    if (routing_root / "QUESTBOOK.md").exists():
+    if (routing_root / QUESTBOOK_PATH).exists():
         validate_local_questbook_surfaces(routing_root, issues)
     elif routing_root == REPO_ROOT:
         validate_local_questbook_surfaces(REPO_ROOT, issues)
@@ -5571,7 +5656,7 @@ def validate_generated_outputs(
         kag_root,
         tos_root,
         sdk_root,
-        seed_root,
+        source_route_root,
         profile_root,
         abyss_stack_root,
         routing_root,
@@ -5637,7 +5722,7 @@ def validate_generated_outputs(
         except RouterError as exc:
             issues.append(ValidationIssue(registry_path.name, str(exc)))
             continue
-        validate_against_schema(entry, "router-entry.schema.json", location, issues)
+        validate_against_schema(entry, "routing/core/schemas/router-entry.schema.json", location, issues)
         key = registry_entry_key(entry)
         if key is not None:
             if key in seen_registry_keys:
@@ -5684,7 +5769,7 @@ def validate_generated_outputs(
         except RouterError as exc:
             issues.append(ValidationIssue(router_path.name, str(exc)))
             continue
-        validate_against_schema(entry, "router-entry.schema.json", location, issues)
+        validate_against_schema(entry, "routing/core/schemas/router-entry.schema.json", location, issues)
         key = registry_entry_key(entry)
         if key is not None:
             if key in seen_router_keys:
@@ -5747,7 +5832,7 @@ def validate_generated_outputs(
             tos_root,
             sdk_root,
             stats_root,
-            seed_root,
+            source_route_root,
             profile_root,
             abyss_stack_root,
         )
@@ -5775,7 +5860,7 @@ def validate_generated_outputs(
         techniques_root,
         stats_root,
         sdk_root,
-        seed_root,
+        source_route_root,
         profile_root,
         abyss_stack_root,
         agents_root,
@@ -5807,7 +5892,7 @@ def validate_generated_outputs(
             kag_root,
             tos_root,
             sdk_root,
-            seed_root,
+            source_route_root,
             profile_root,
             abyss_stack_root,
             hints_payload,
@@ -5837,7 +5922,7 @@ def validate_generated_outputs(
             memo_root,
             stats_root,
             sdk_root,
-            seed_root,
+            source_route_root,
             profile_root,
             abyss_stack_root,
             agents_root,
@@ -6173,11 +6258,14 @@ def validate_live_session_reentry_route_review(
 
     if not isinstance(primary, dict) or primary.get("target_repo") != "aoa-agents":
         issues.append(ValidationIssue(location, "primary_action.target_repo must remain aoa-agents"))
-    if not isinstance(primary, dict) or primary.get("target_surface") != "docs/SELF_AGENCY_CONTINUITY_LANE.md":
+    primary_continuity_surface = (
+        "mechanics/checkpoint/parts/continuity-lane/docs/self-agency-continuity-lane.md"
+    )
+    if not isinstance(primary, dict) or primary.get("target_surface") != primary_continuity_surface:
         issues.append(
             ValidationIssue(
                 location,
-                "primary_action.target_surface must remain docs/SELF_AGENCY_CONTINUITY_LANE.md",
+                f"primary_action.target_surface must remain {primary_continuity_surface}",
             )
         )
     if isinstance(primary, dict):
@@ -6230,7 +6318,7 @@ def main() -> int:
     args = parse_args()
     stats_root = getattr(args, "stats_root", default_dependency_root("aoa-stats"))
     sdk_root = getattr(args, "sdk_root", default_dependency_root("aoa-sdk"))
-    seed_root = getattr(args, "seed_root", default_dependency_root("Dionysus"))
+    source_route_root = getattr(args, "source_route_root", default_dependency_root("Dionysus"))
     profile_root = getattr(args, "profile_root", default_dependency_root("8Dionysus"))
     abyss_stack_root = getattr(args, "abyss_stack_root", default_dependency_root("abyss-stack"))
     issues = [
@@ -6251,7 +6339,7 @@ def main() -> int:
             args.kag_root,
             args.tos_root,
             sdk_root,
-            seed_root,
+            source_route_root,
             profile_root,
             abyss_stack_root,
         )

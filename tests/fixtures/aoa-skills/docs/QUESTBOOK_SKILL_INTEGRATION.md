@@ -21,7 +21,7 @@ Use stable anchors such as:
 - `docs/CODEX_PORTABLE_LAYER.md`
 - `docs/LOCAL_ADAPTER_CONTRACT.md`
 - `docs/OVERLAY_SPEC.md`
-- `docs/TWO_STAGE_SKILL_SELECTION.md`
+- `routing/two-stage-skill-selection/docs/two-stage-skill-selection.md`
 
 ## Initial posture
 

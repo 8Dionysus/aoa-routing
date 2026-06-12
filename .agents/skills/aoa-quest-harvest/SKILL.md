@@ -10,7 +10,7 @@ metadata:
   aoa_source_skill_path: skills/core/session-growth/aoa-quest-harvest/SKILL.md
   aoa_source_repo: 8Dionysus/aoa-skills
   aoa_technique_dependencies: AOA-T-0089,AOA-T-0090
-  aoa_portable_profile: codex-facing-wave-3
+  aoa_portable_profile: codex-facing-context
 ---
 
 # aoa-quest-harvest

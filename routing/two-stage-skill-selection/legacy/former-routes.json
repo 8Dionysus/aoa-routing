@@ -1,0 +1,75 @@
+{
+  "schema_version": "aoa_routing_former_routes.v1",
+  "owner": "routing/two-stage-skill-selection",
+  "former_flat_paths": [
+    {
+      "former_path": "config/two_stage_router_policy.json",
+      "current_path": "routing/two-stage-skill-selection/config/two_stage_router_policy.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "config/two_stage_router_precision_cases.jsonl",
+      "current_path": "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "docs/TWO_STAGE_SKILL_SELECTION.md",
+      "current_path": "routing/two-stage-skill-selection/docs/two-stage-skill-selection.md",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/two-stage-router-examples.schema.json",
+      "current_path": "routing/two-stage-skill-selection/schemas/two-stage-router-examples.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/two-stage-router-manifest.schema.json",
+      "current_path": "routing/two-stage-skill-selection/schemas/two-stage-router-manifest.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/two-stage-router-prompt-blocks.schema.json",
+      "current_path": "routing/two-stage-skill-selection/schemas/two-stage-router-prompt-blocks.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/two-stage-router-tool-schemas.schema.json",
+      "current_path": "routing/two-stage-skill-selection/schemas/two-stage-router-tool-schemas.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "schemas/two-stage-skill-entrypoints.schema.json",
+      "current_path": "routing/two-stage-skill-selection/schemas/two-stage-skill-entrypoints.schema.json",
+      "status": "retired-flat-owner"
+    },
+    {
+      "former_path": "scripts/_wave9_router_lib.py",
+      "current_path": "routing/two-stage-skill-selection/scripts/wave9_router_lib.py",
+      "compatibility_path": "scripts/_wave9_router_lib.py",
+      "status": "compatibility-wrapper-only"
+    },
+    {
+      "former_path": "scripts/build_two_stage_skill_router.py",
+      "current_path": "routing/two-stage-skill-selection/scripts/build_two_stage_skill_router.py",
+      "compatibility_path": "scripts/build_two_stage_skill_router.py",
+      "status": "compatibility-wrapper-only"
+    },
+    {
+      "former_path": "scripts/two_stage_skill_router.py",
+      "current_path": "routing/two-stage-skill-selection/scripts/two_stage_skill_router.py",
+      "compatibility_path": "scripts/two_stage_skill_router.py",
+      "status": "compatibility-wrapper-only"
+    },
+    {
+      "former_path": "scripts/validate_two_stage_skill_router.py",
+      "current_path": "routing/two-stage-skill-selection/scripts/validate_two_stage_skill_router.py",
+      "compatibility_path": "scripts/validate_two_stage_skill_router.py",
+      "status": "compatibility-wrapper-only"
+    },
+    {
+      "former_path": "tests/test_two_stage_skill_router.py",
+      "current_path": "routing/two-stage-skill-selection/tests/test_two_stage_skill_router.py",
+      "status": "retired-flat-owner"
+    }
+  ]
+}

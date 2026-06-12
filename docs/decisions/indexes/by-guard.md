@@ -6,9 +6,26 @@
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
 
+## generated-output boundary
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## legacy provenance
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## mechanics topology
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
 ## owner boundary
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## source-home boundary
+
+- [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
 
 ## source-owned authority
 

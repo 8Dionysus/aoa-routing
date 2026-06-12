@@ -17,7 +17,7 @@ Route-forks may compare:
 
 - keep manual for now
 - convert into a bounded skill
-- package as a playbook automation seed
+- package as a playbook automation candidate
 - defer until prerequisite repair lands
 
 ## Self-diagnose

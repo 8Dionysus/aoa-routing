@@ -47,7 +47,7 @@ routing re-entry in their owning repositories.
   `aoa-session-route-forks` first.
 - Do not let `d3+` work skip the split step.
 - Do not let remote transport bypass the same gates that local execution must satisfy.
-- Treat historical fixture suffixes such as wave labels as lineage only. Skill
+- Treat historical fixture suffixes such as legacy labels as lineage only. Skill
   output should use stable v3 request/result names and explicit route refs.
 
 ## Verification notes
