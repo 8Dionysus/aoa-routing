@@ -158,7 +158,7 @@ def hydrate_catalog_fixture(roots: dict[str, Path], repo_name: str, relative_pat
 
 def hydrate_capsule_fixture_roots(roots: dict[str, Path]) -> None:
     hydrate_route_map_fixture(roots, "Agents-of-Abyss", "generated/center_entry_map.min.json")
-    hydrate_route_map_fixture(roots, "Tree-of-Sophia", "generated/root_entry_map.min.json")
+    hydrate_route_map_fixture(roots, "Tree-of-Sophia", "ToS/derived-exports/root_entry_map.min.json")
     hydrate_route_map_fixture(roots, "aoa-sdk", "generated/workspace_control_plane.min.json")
     hydrate_route_map_fixture(roots, "8Dionysus", "generated/public_route_map.min.json")
     hydrate_catalog_fixture(roots, "aoa-stats", "generated/summary_surface_catalog.min.json")
@@ -2132,7 +2132,12 @@ def test_validate_generated_outputs_rejects_tos_tiny_entry_route_boundary_drift(
     tmp_path: Path,
 ) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    route_path = roots["Tree-of-Sophia"] / "examples" / "tos_tiny_entry_route.example.json"
+    route_path = (
+        roots["Tree-of-Sophia"]
+        / "ToS"
+        / "public-compatibility"
+        / "tos_tiny_entry_route.example.json"
+    )
     payload = json.loads(route_path.read_text(encoding="utf-8"))
     payload["fallback"] = "aoa-routing/generated/aoa_router.min.json"
     write_json(route_path, payload)
@@ -2148,7 +2153,12 @@ def test_validate_generated_outputs_rejects_tos_tiny_entry_route_id_drift(
     tmp_path: Path,
 ) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    route_path = roots["Tree-of-Sophia"] / "examples" / "tos_tiny_entry_route.example.json"
+    route_path = (
+        roots["Tree-of-Sophia"]
+        / "ToS"
+        / "public-compatibility"
+        / "tos_tiny_entry_route.example.json"
+    )
     payload = json.loads(route_path.read_text(encoding="utf-8"))
     payload["route_id"] = "tos-tiny-entry.drifted"
     write_json(route_path, payload)
@@ -2302,12 +2312,12 @@ def test_validate_generated_outputs_rejects_tos_root_secondary_reentry_drift(
     tos_root_return = next(
         record for record in payload["federation_root_returns"] if record["root_id"] == "tos-root"
     )
-    tos_root_return["secondary_action"]["target_surface"] = "docs/TINY_ENTRY_ROUTE.md"
+    tos_root_return["secondary_action"]["target_surface"] = "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md"
     write_json(return_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "secondary_action.target_surface must stay 'examples/tos_tiny_entry_route.example.json'"
+        "secondary_action.target_surface must stay 'ToS/public-compatibility/tos_tiny_entry_route.example.json'"
         in issue.message
         for issue in issues
     )

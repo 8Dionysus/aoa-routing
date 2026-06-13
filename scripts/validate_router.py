@@ -218,7 +218,7 @@ ROUTE_MAP_CAPSULE_EXPECTATIONS = {
     },
     (TOS_REPO, TOS_ROOT_ENTRY_MAP_PATH): {
         "schema_version": "tos_root_entry_map_v1",
-        "schema_ref": "schemas/root-entry-map.schema.json",
+        "schema_ref": "ToS/contracts/root-entry-map.schema.json",
         "surface_kind": "root_entry_map",
         "route_mode": "repo_local",
     },

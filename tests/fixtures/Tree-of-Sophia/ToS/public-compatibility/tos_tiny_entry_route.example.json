@@ -3,9 +3,9 @@
   "root_surface": "README.md",
   "node_kind": "source_node",
   "node_id": "tos.source.thus-spoke-zarathustra.prologue",
-  "capsule_surface": "docs/ZARATHUSTRA_TRILINGUAL_ENTRY.md",
-  "authority_surface": "examples/source_node.example.json",
-  "lineage_or_context_hop": "examples/concept_node.example.json",
-  "fallback": "docs/KNOWLEDGE_MODEL.md",
+  "capsule_surface": "ToS/zarathustra/prologue-1/TRILINGUAL_ENTRY.md",
+  "authority_surface": "ToS/public-compatibility/source_node.example.json",
+  "lineage_or_context_hop": "ToS/public-compatibility/concept_node.example.json",
+  "fallback": "ToS/doctrine/KNOWLEDGE_MODEL.md",
   "non_identity_boundary": "This tiny-entry route stays inside Tree-of-Sophia and does not delegate authority to downstream systems."
 }

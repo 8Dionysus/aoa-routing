@@ -168,12 +168,12 @@ ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH = (
 ABYSS_STACK_DIAGNOSTIC_SPINE_PATH = (
     f"{ABYSS_STACK_DIAGNOSTIC_SURFACE_ROOT}/docs/DIAGNOSTIC_SPINE.md"
 )
-TOS_TINY_ENTRY_ROUTE_PATH = "examples/tos_tiny_entry_route.example.json"
-TOS_ROOT_ENTRY_MAP_PATH = "generated/root_entry_map.min.json"
+TOS_TINY_ENTRY_ROUTE_PATH = "ToS/public-compatibility/tos_tiny_entry_route.example.json"
+TOS_ROOT_ENTRY_MAP_PATH = "ToS/derived-exports/root_entry_map.min.json"
 TOS_TINY_ENTRY_ROUTE_ID = "tos-tiny-entry.zarathustra-prologue"
 TOS_TINY_ENTRY_PRIMARY_HOP_FIELD = "bounded_hop"
 TOS_TINY_ENTRY_LEGACY_HOP_FIELD = "lineage_or_context_hop"
-TOS_TINY_ENTRY_DOCTRINE_PATH = "docs/TINY_ENTRY_ROUTE.md"
+TOS_TINY_ENTRY_DOCTRINE_PATH = "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md"
 AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF = (
     "aoa-techniques/generated/repo_doc_surface_manifest.min.json"
 )
@@ -188,9 +188,11 @@ TECHNIQUE_KIND_SECOND_CUT_PREREQUISITE_AXES = ("domain",)
 TOS_KAG_VIEW_ENTRY_ID = TOS_REPO
 TOS_KAG_VIEW_ENTRY_SURFACE_REFS = (
     "Tree-of-Sophia/README.md",
-    "Tree-of-Sophia/docs/TINY_ENTRY_ROUTE.md",
+    "Tree-of-Sophia/ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
 )
-TOS_KAG_VIEW_OBJECT_SURFACE_REF = "Tree-of-Sophia/examples/tos_tiny_entry_route.example.json"
+TOS_KAG_VIEW_OBJECT_SURFACE_REF = (
+    "Tree-of-Sophia/ToS/public-compatibility/tos_tiny_entry_route.example.json"
+)
 TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID = "AOA-P-0009"
 TOS_ROUTE_RETRIEVAL_SURFACE_ID = "AOA-K-0011"
 TOS_ROUTE_RETRIEVAL_SURFACE_NAME = "tos-zarathustra-route-retrieval-surface"
