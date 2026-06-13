@@ -27,13 +27,13 @@
     "../aoa-skills/generated/context_retention_manifest.json",
     "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl"
   ],
-  "skill_count": 50,
-  "band_count": 7,
+  "skill_count": 56,
+  "band_count": 8,
   "example_count": 8,
-  "eval_case_count": 134,
+  "eval_case_count": 152,
   "base_entrypoint_count": 12,
-  "router_skill_entry_count": 50,
-  "pairing_entry_count": 196,
+  "router_skill_entry_count": 56,
+  "pairing_entry_count": 202,
   "task_hint_kinds": [
     "technique",
     "skill",

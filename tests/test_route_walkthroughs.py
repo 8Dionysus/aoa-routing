@@ -539,7 +539,7 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
     assert first_action == {
         "verb": "inspect",
         "target_repo": "Tree-of-Sophia",
-        "target_surface": "generated/root_entry_map.min.json",
+        "target_surface": "ToS/derived-exports/root_entry_map.min.json",
         "match_key": "route_id",
         "target_value": "current-tiny-entry",
     }
@@ -551,10 +551,10 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
         first_action["target_value"],
     )
     assert root_entry is not None
-    assert root_entry["surface_ref"] == "examples/tos_tiny_entry_route.example.json"
+    assert root_entry["surface_ref"] == "ToS/public-compatibility/tos_tiny_entry_route.example.json"
     assert root_entry["verification_refs"] == [
-        "docs/TINY_ENTRY_ROUTE.md",
-        "docs/ZARATHUSTRA_TRILINGUAL_ENTRY.md",
+        "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
+        "ToS/zarathustra/prologue-1/TRILINGUAL_ENTRY.md",
     ]
 
     route_payload = load_json(roots["Tree-of-Sophia"] / root_entry["surface_ref"])
@@ -565,16 +565,16 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
     )
     assert route_entry is not None
     assert route_entry["root_surface"] == "README.md"
-    assert route_entry["capsule_surface"] == "docs/ZARATHUSTRA_TRILINGUAL_ENTRY.md"
-    assert route_entry["authority_surface"] == "examples/source_node.example.json"
-    assert route_entry["lineage_or_context_hop"] == "examples/concept_node.example.json"
-    assert route_entry["fallback"] == "docs/KNOWLEDGE_MODEL.md"
+    assert route_entry["capsule_surface"] == "ToS/zarathustra/prologue-1/TRILINGUAL_ENTRY.md"
+    assert route_entry["authority_surface"] == "ToS/public-compatibility/source_node.example.json"
+    assert route_entry["lineage_or_context_hop"] == "ToS/public-compatibility/concept_node.example.json"
+    assert route_entry["fallback"] == "ToS/doctrine/KNOWLEDGE_MODEL.md"
 
     second_action = tos_root["next_actions"][1]
     assert second_action == {
         "verb": "inspect",
         "target_repo": "Tree-of-Sophia",
-        "target_surface": "generated/root_entry_map.min.json",
+        "target_surface": "ToS/derived-exports/root_entry_map.min.json",
         "match_key": "route_id",
         "target_value": "tree-first-model",
     }
@@ -582,7 +582,7 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
     assert third_action == {
         "verb": "inspect",
         "target_repo": "Tree-of-Sophia",
-        "target_surface": "generated/root_entry_map.min.json",
+        "target_surface": "ToS/derived-exports/root_entry_map.min.json",
         "match_key": "route_id",
         "target_value": "bounded-export",
     }
@@ -595,14 +595,14 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "docs/TINY_ENTRY_ROUTE.md",
+            "target_surface": "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
             "match_key": "path",
-            "target_value": "docs/TINY_ENTRY_ROUTE.md",
+            "target_value": "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
         },
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "target_surface": "ToS/public-compatibility/tos_tiny_entry_route.example.json",
             "match_key": "route_id",
             "target_value": "tos-tiny-entry.zarathustra-prologue",
         },
@@ -614,7 +614,13 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
             "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
         },
     ]
-    assert (roots["Tree-of-Sophia"] / "docs" / "TINY_ENTRY_ROUTE.md").exists()
+    assert (
+        roots["Tree-of-Sophia"]
+        / "ToS"
+        / "zarathustra"
+        / "public-entry"
+        / "TINY_ENTRY_ROUTE.md"
+    ).exists()
 
     assert tos_root["next_hops"] == [
         {"kind": "kag_view", "id": "Tree-of-Sophia"},

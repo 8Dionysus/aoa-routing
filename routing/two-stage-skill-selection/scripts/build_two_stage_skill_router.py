@@ -113,6 +113,7 @@ def expected_stage_2_mode(
     case: dict[str, Any],
     *,
     signal_by_name: dict[str, dict[str, Any]],
+    actual_decision_mode: str | None = None,
 ) -> str | None:
     explicit_expectation = case.get("stage_2_expectation")
     if isinstance(explicit_expectation, str) and explicit_expectation:
@@ -133,7 +134,7 @@ def expected_stage_2_mode(
         expected_lead = expected_shortlist[0] if expected_shortlist else None
 
     if expected_lead is None:
-        return "no-skill"
+        return None
 
     lead_signal = signal_by_name.get(expected_lead, {})
     return (
@@ -389,6 +390,7 @@ def build_outputs(
         stage_2_expectation = expected_stage_2_mode(
             case,
             signal_by_name=signal_by_name,
+            actual_decision_mode=packet.get("suggested_decision", {}).get("decision_mode"),
         )
         expected_shortlist_includes = case.get("expected_shortlist_includes", [])
         if stage_2_expectation == "activate-candidate" and not expected_shortlist_includes:

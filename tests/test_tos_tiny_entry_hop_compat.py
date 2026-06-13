@@ -22,9 +22,9 @@ class TestTosTinyEntryHopCompatibility(unittest.TestCase):
             "root_surface": "README.md",
             "node_kind": "source_node",
             "node_id": "tos.source.thus-spoke-zarathustra.prologue",
-            "capsule_surface": "docs/ZARATHUSTRA_TRILINGUAL_ENTRY.md",
-            "authority_surface": "examples/source_node.example.json",
-            "fallback": "docs/KNOWLEDGE_MODEL.md",
+            "capsule_surface": "ToS/zarathustra/prologue-1/TRILINGUAL_ENTRY.md",
+            "authority_surface": "ToS/public-compatibility/source_node.example.json",
+            "fallback": "ToS/doctrine/KNOWLEDGE_MODEL.md",
             "non_identity_boundary": (
                 "This tiny-entry route is an orientation aid inside Tree of Sophia. "
                 "It does not replace ToS-authored authority and does not delegate "
@@ -36,30 +36,30 @@ class TestTosTinyEntryHopCompatibility(unittest.TestCase):
 
     def write_tos_root(self, tos_root: Path, payload: dict[str, str]) -> None:
         write_text(tos_root / "README.md", "# Tree-of-Sophia\n")
-        write_text(tos_root / "docs" / "ZARATHUSTRA_TRILINGUAL_ENTRY.md", "# Capsule\n")
-        write_text(tos_root / "docs" / "KNOWLEDGE_MODEL.md", "# Knowledge Model\n")
-        write_text(tos_root / "docs" / "OTHER.md", "# Other\n")
-        write_text(tos_root / "examples" / "source_node.example.json", "{}\n")
-        write_text(tos_root / "examples" / "concept_node.example.json", "{}\n")
+        write_text(tos_root / "ToS" / "zarathustra" / "prologue-1" / "TRILINGUAL_ENTRY.md", "# Capsule\n")
+        write_text(tos_root / "ToS" / "doctrine" / "KNOWLEDGE_MODEL.md", "# Knowledge Model\n")
+        write_text(tos_root / "ToS" / "doctrine" / "OTHER.md", "# Other\n")
+        write_text(tos_root / "ToS" / "public-compatibility" / "source_node.example.json", "{}\n")
+        write_text(tos_root / "ToS" / "public-compatibility" / "concept_node.example.json", "{}\n")
         write_text(
-            tos_root / "examples" / "tos_tiny_entry_route.example.json",
+            tos_root / "ToS" / "public-compatibility" / "tos_tiny_entry_route.example.json",
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n",
         )
 
     def test_accepts_bounded_hop_only(self) -> None:
-        payload = self.make_payload(bounded_hop="examples/concept_node.example.json")
+        payload = self.make_payload(bounded_hop="ToS/public-compatibility/concept_node.example.json")
         with tempfile.TemporaryDirectory() as tmpdir:
             tos_root = Path(tmpdir)
             self.write_tos_root(tos_root, payload)
             route_path, loaded = router_core.load_tos_tiny_entry_route(tos_root)
 
-        self.assertEqual(route_path, "examples/tos_tiny_entry_route.example.json")
-        self.assertEqual(loaded["bounded_hop"], "examples/concept_node.example.json")
+        self.assertEqual(route_path, "ToS/public-compatibility/tos_tiny_entry_route.example.json")
+        self.assertEqual(loaded["bounded_hop"], "ToS/public-compatibility/concept_node.example.json")
 
     def test_accepts_matching_primary_and_legacy_hops(self) -> None:
         payload = self.make_payload(
-            bounded_hop="examples/concept_node.example.json",
-            lineage_or_context_hop="examples/concept_node.example.json",
+            bounded_hop="ToS/public-compatibility/concept_node.example.json",
+            lineage_or_context_hop="ToS/public-compatibility/concept_node.example.json",
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             tos_root = Path(tmpdir)
@@ -70,8 +70,8 @@ class TestTosTinyEntryHopCompatibility(unittest.TestCase):
 
     def test_rejects_mismatched_primary_and_legacy_hops(self) -> None:
         payload = self.make_payload(
-            bounded_hop="examples/concept_node.example.json",
-            lineage_or_context_hop="docs/OTHER.md",
+            bounded_hop="ToS/public-compatibility/concept_node.example.json",
+            lineage_or_context_hop="ToS/doctrine/OTHER.md",
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             tos_root = Path(tmpdir)

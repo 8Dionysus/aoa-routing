@@ -60,7 +60,7 @@ LIVE_REQUIRED_INPUTS = {
         Path("generated/repo_doc_surface_manifest.min.json"),
         Path("generated/technique_catalog.min.json"),
     ],
-    "Tree-of-Sophia": [Path("generated/root_entry_map.min.json")],
+    "Tree-of-Sophia": [Path("ToS/derived-exports/root_entry_map.min.json")],
     "8Dionysus": [Path("generated/public_route_map.min.json")],
     "abyss-stack": [Path(ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH)],
 }
@@ -295,13 +295,15 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             ],
         )
 
-        tos_payload = load_json(LIVE_ROOTS["Tree-of-Sophia"] / "generated" / "root_entry_map.min.json")
+        tos_payload = load_json(
+            LIVE_ROOTS["Tree-of-Sophia"] / "ToS" / "derived-exports" / "root_entry_map.min.json"
+        )
         self.assertEqual(
             root_by_id["tos-root"]["capsule_surface"],
-            "Tree-of-Sophia:generated/root_entry_map.min.json",
+            "Tree-of-Sophia:ToS/derived-exports/root_entry_map.min.json",
         )
         self.assertEqual(tos_payload["schema_version"], "tos_root_entry_map_v1")
-        self.assertEqual(tos_payload["schema_ref"], "schemas/root-entry-map.schema.json")
+        self.assertEqual(tos_payload["schema_ref"], "ToS/contracts/root-entry-map.schema.json")
         self.assertEqual(tos_payload["owner_repo"], "Tree-of-Sophia")
         self.assertEqual(tos_payload["surface_kind"], "root_entry_map")
         self.assertEqual(tos_payload["authority_ref"], "CHARTER.md")
@@ -316,21 +318,21 @@ class LiveWorkspaceContractTests(unittest.TestCase):
                 {
                     "verb": "inspect",
                     "target_repo": "Tree-of-Sophia",
-                    "target_surface": "generated/root_entry_map.min.json",
+                    "target_surface": "ToS/derived-exports/root_entry_map.min.json",
                     "match_key": "route_id",
                     "target_value": "current-tiny-entry",
                 },
                 {
                     "verb": "inspect",
                     "target_repo": "Tree-of-Sophia",
-                    "target_surface": "generated/root_entry_map.min.json",
+                    "target_surface": "ToS/derived-exports/root_entry_map.min.json",
                     "match_key": "route_id",
                     "target_value": "tree-first-model",
                 },
                 {
                     "verb": "inspect",
                     "target_repo": "Tree-of-Sophia",
-                    "target_surface": "generated/root_entry_map.min.json",
+                    "target_surface": "ToS/derived-exports/root_entry_map.min.json",
                     "match_key": "route_id",
                     "target_value": "bounded-export",
                 },
@@ -360,10 +362,12 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         tos_root = root_by_id[federation_starters["tos-root"]["target_value"]]
         tos_first_action = tos_root["next_actions"][0]
         self.assertEqual(tos_first_action["target_repo"], "Tree-of-Sophia")
-        tos_capsule = load_json(LIVE_ROOTS["Tree-of-Sophia"] / "generated" / "root_entry_map.min.json")
+        tos_capsule = load_json(
+            LIVE_ROOTS["Tree-of-Sophia"] / "ToS" / "derived-exports" / "root_entry_map.min.json"
+        )
         tos_route_by_id = {route["route_id"]: route for route in tos_capsule["routes"]}
         tos_route = tos_route_by_id[tos_first_action["target_value"]]
-        self.assertEqual(tos_route["surface_ref"], "examples/tos_tiny_entry_route.example.json")
+        self.assertEqual(tos_route["surface_ref"], "ToS/public-compatibility/tos_tiny_entry_route.example.json")
         self.assertTrue((LIVE_ROOTS["Tree-of-Sophia"] / tos_route["surface_ref"]).exists())
         self.assertTrue(
             all((LIVE_ROOTS["Tree-of-Sophia"] / ref).exists() for ref in tos_route["verification_refs"])

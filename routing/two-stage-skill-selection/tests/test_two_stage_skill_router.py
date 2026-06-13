@@ -223,10 +223,10 @@ def test_expected_stage_2_mode_tracks_expected_manual_only_lead_when_no_explicit
     assert stage_2_mode == "manual-invocation-required"
 
 
-def test_expected_stage_2_mode_ignores_actual_router_output_when_contract_is_no_skill() -> None:
+def test_expected_stage_2_mode_leaves_no_lead_cases_unasserted_without_explicit_expectation() -> None:
     stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
         {
-            "case_id": "contract-empty-even-if-current-router-would-score",
+            "case_id": "target-negative-even-if-current-router-would-score",
             "expected_shortlist_includes": [],
         },
         signal_by_name={
@@ -234,6 +234,37 @@ def test_expected_stage_2_mode_ignores_actual_router_output_when_contract_is_no_
                 "manual_invocation_required": True,
             }
         },
+    )
+
+    assert stage_2_mode is None
+
+
+def test_expected_stage_2_mode_ignores_tiny_negative_neighbor_decision() -> None:
+    stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
+        {
+            "case_id": "tiny-negative-aoa-eval-apply",
+            "expected_shortlist_excludes": ["aoa-eval-apply"],
+        },
+        signal_by_name={
+            "aoa-eval-select": {
+                "manual_invocation_required": True,
+            }
+        },
+        actual_decision_mode="manual-invocation-required",
+    )
+
+    assert stage_2_mode is None
+
+
+def test_expected_stage_2_mode_preserves_explicit_no_skill_expectation() -> None:
+    stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
+        {
+            "case_id": "precision-empty-generic-bounded-change",
+            "expected_shortlist_includes": [],
+            "stage_2_expectation": "no-skill",
+        },
+        signal_by_name={},
+        actual_decision_mode="manual-invocation-required",
     )
 
     assert stage_2_mode == "no-skill"

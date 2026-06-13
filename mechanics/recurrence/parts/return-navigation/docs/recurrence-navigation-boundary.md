@@ -39,7 +39,7 @@ When a small model or bounded actor loses federation orientation, routing may po
 - one router-owned fallback card for orientation only
 
 For `tos-root`, routing may also publish one bounded secondary re-entry back into
-`Tree-of-Sophia/examples/tos_tiny_entry_route.example.json` after the root
+`Tree-of-Sophia/ToS/public-compatibility/tos_tiny_entry_route.example.json` after the root
 authority surface is restored. That secondary hop stays source-owned and must
 not jump straight to downstream `aoa-kag` adjuncts.
 

@@ -704,7 +704,7 @@ def test_build_outputs_from_fixtures() -> None:
     assert tos_root_return["secondary_action"] == {
         "verb": "inspect",
         "target_repo": "Tree-of-Sophia",
-        "target_surface": "examples/tos_tiny_entry_route.example.json",
+        "target_surface": "ToS/public-compatibility/tos_tiny_entry_route.example.json",
         "match_field": "route_id",
         "target_value": "tos-tiny-entry.zarathustra-prologue",
     }
@@ -828,14 +828,14 @@ def test_build_outputs_from_fixtures() -> None:
             "name": "tos_root_entry_map",
             "repo": "Tree-of-Sophia",
             "role": "root_capsule",
-            "ref": "generated/root_entry_map.min.json",
+            "ref": "ToS/derived-exports/root_entry_map.min.json",
         },
     ]
     assert federation["source_inputs"][4] == {
         "name": "tos_tiny_entry_route",
         "repo": "Tree-of-Sophia",
         "role": "tiny_entry_handoff",
-        "ref": "examples/tos_tiny_entry_route.example.json",
+        "ref": "ToS/public-compatibility/tos_tiny_entry_route.example.json",
     }
     assert federation["source_inputs"][5] == {
         "name": "agent_registry",
@@ -1243,27 +1243,27 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     ]
 
     tos_root = root_by_id["tos-root"]
-    assert tos_root["capsule_surface"] == "Tree-of-Sophia:generated/root_entry_map.min.json"
+    assert tos_root["capsule_surface"] == "Tree-of-Sophia:ToS/derived-exports/root_entry_map.min.json"
     assert tos_root["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
     assert tos_root["next_actions"] == [
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "generated/root_entry_map.min.json",
+            "target_surface": "ToS/derived-exports/root_entry_map.min.json",
             "match_key": "route_id",
             "target_value": "current-tiny-entry",
         },
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "generated/root_entry_map.min.json",
+            "target_surface": "ToS/derived-exports/root_entry_map.min.json",
             "match_key": "route_id",
             "target_value": "tree-first-model",
         },
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "generated/root_entry_map.min.json",
+            "target_surface": "ToS/derived-exports/root_entry_map.min.json",
             "match_key": "route_id",
             "target_value": "bounded-export",
         },
@@ -1327,14 +1327,14 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "docs/TINY_ENTRY_ROUTE.md",
+            "target_surface": "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
             "match_key": "path",
-            "target_value": "docs/TINY_ENTRY_ROUTE.md",
+            "target_value": "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
         },
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "target_surface": "ToS/public-compatibility/tos_tiny_entry_route.example.json",
             "match_key": "route_id",
             "target_value": "tos-tiny-entry.zarathustra-prologue",
         },
@@ -1409,20 +1409,20 @@ def test_build_outputs_reject_empty_kag_view_entry_surface_refs(tmp_path: Path) 
 
 def test_tos_tiny_entry_hop_surface_canonicalizes_equivalent_relative_refs(tmp_path: Path) -> None:
     tos_root = tmp_path / "Tree-of-Sophia"
-    target = tos_root / "examples" / "concept_node.example.json"
+    target = tos_root / "ToS" / "public-compatibility" / "concept_node.example.json"
     target.parent.mkdir(parents=True)
     target.write_text("{}\n", encoding="utf-8")
 
     hop = router_core.load_tos_tiny_entry_hop_surface(
         {
-            "bounded_hop": "examples/./concept_node.example.json",
-            "lineage_or_context_hop": "examples/concept_node.example.json",
+            "bounded_hop": "ToS/public-compatibility/./concept_node.example.json",
+            "lineage_or_context_hop": "ToS/public-compatibility/concept_node.example.json",
         },
         "fixture",
         tos_root=tos_root,
     )
 
-    assert hop == "examples/concept_node.example.json"
+    assert hop == "ToS/public-compatibility/concept_node.example.json"
 
 
 def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
@@ -1446,10 +1446,10 @@ def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
         {
             "repo": "Tree-of-Sophia",
             "pilot_posture": "source_owned_export_tiny",
-            "export_ref": "Tree-of-Sophia/generated/kag_export.min.json",
+            "export_ref": "Tree-of-Sophia/ToS/derived-exports/kag_export.min.json",
             "kind": "source_node",
             "object_id": "tos.source.thus-spoke-zarathustra.prologue",
-            "entry_surface_ref": "Tree-of-Sophia/examples/source_node.example.json",
+            "entry_surface_ref": "Tree-of-Sophia/ToS/public-compatibility/source_node.example.json",
             "adjunct_surfaces": [
                 {
                     "surface_id": "AOA-K-0011",
@@ -1493,14 +1493,14 @@ def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "docs/TINY_ENTRY_ROUTE.md",
+            "target_surface": "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
             "match_key": "path",
-            "target_value": "docs/TINY_ENTRY_ROUTE.md",
+            "target_value": "ToS/zarathustra/public-entry/TINY_ENTRY_ROUTE.md",
         },
         {
             "verb": "inspect",
             "target_repo": "Tree-of-Sophia",
-            "target_surface": "examples/tos_tiny_entry_route.example.json",
+            "target_surface": "ToS/public-compatibility/tos_tiny_entry_route.example.json",
             "match_key": "route_id",
             "target_value": "tos-tiny-entry.zarathustra-prologue",
         },
