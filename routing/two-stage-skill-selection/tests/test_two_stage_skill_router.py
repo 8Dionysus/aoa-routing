@@ -223,7 +223,7 @@ def test_expected_stage_2_mode_tracks_expected_manual_only_lead_when_no_explicit
     assert stage_2_mode == "manual-invocation-required"
 
 
-def test_expected_stage_2_mode_leaves_no_lead_cases_unasserted_without_explicit_expectation() -> None:
+def test_expected_stage_2_mode_defaults_no_lead_cases_to_no_skill() -> None:
     stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
         {
             "case_id": "target-negative-even-if-current-router-would-score",
@@ -236,10 +236,10 @@ def test_expected_stage_2_mode_leaves_no_lead_cases_unasserted_without_explicit_
         },
     )
 
-    assert stage_2_mode is None
+    assert stage_2_mode == "no-skill"
 
 
-def test_expected_stage_2_mode_ignores_tiny_negative_neighbor_decision() -> None:
+def test_expected_stage_2_mode_defaults_tiny_negative_neighbor_to_no_skill() -> None:
     stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
         {
             "case_id": "tiny-negative-aoa-eval-apply",
@@ -253,7 +253,7 @@ def test_expected_stage_2_mode_ignores_tiny_negative_neighbor_decision() -> None
         actual_decision_mode="manual-invocation-required",
     )
 
-    assert stage_2_mode is None
+    assert stage_2_mode == "no-skill"
 
 
 def test_expected_stage_2_mode_preserves_explicit_no_skill_expectation() -> None:
@@ -268,6 +268,80 @@ def test_expected_stage_2_mode_preserves_explicit_no_skill_expectation() -> None
     )
 
     assert stage_2_mode == "no-skill"
+
+
+def test_manual_only_token_matches_stay_below_activation_without_explicit_or_phrase_signal() -> None:
+    policy = load_fixture_json(FIXTURE_POLICY_PATH)
+    result = preselect(
+        "The selected validator command is already known and only needs to be run.",
+        {
+            "skills": [
+                {
+                    "name": "aoa-eval-apply",
+                    "band": "eval-proof-routing",
+                    "manual_invocation_required": True,
+                    "project_overlay": False,
+                    "positive_cues": [],
+                    "negative_cues": [],
+                    "cue_tokens": ["run", "selected", "validator", "command"],
+                    "negative_tokens": [],
+                    "primary_positive_prompt": "Run the selected validator command and report evidence.",
+                    "primary_negative_prompt": "",
+                    "primary_defer_prompt": "",
+                }
+            ]
+        },
+        {"bands": []},
+        policy,
+    )
+
+    assert result["shortlist"][0]["name"] == "aoa-eval-apply"
+    assert result["lead_score"] == policy["defaults"]["min_activate_score"] - 1
+    assert result["confidence"] == "weak"
+
+
+def test_source_negative_control_prompt_caps_implicit_token_only_matches() -> None:
+    policy = load_fixture_json(FIXTURE_POLICY_PATH)
+    prompt = "The source route is intentionally absent; do not invoke the target skill."
+    result = preselect(
+        prompt,
+        {
+            "skills": [
+                {
+                    "name": "aoa-eval",
+                    "band": "eval-proof-routing",
+                    "manual_invocation_required": False,
+                    "project_overlay": False,
+                    "positive_cues": [],
+                    "negative_cues": [],
+                    "cue_tokens": ["source", "route", "target", "skill"],
+                    "negative_tokens": [],
+                    "primary_positive_prompt": "Use aoa eval when the source route target skill must be selected.",
+                    "primary_negative_prompt": "",
+                    "primary_defer_prompt": "",
+                },
+                {
+                    "name": "target-skill",
+                    "band": "eval-proof-routing",
+                    "manual_invocation_required": False,
+                    "project_overlay": False,
+                    "positive_cues": [],
+                    "negative_cues": [],
+                    "cue_tokens": [],
+                    "negative_tokens": [],
+                    "primary_positive_prompt": "",
+                    "primary_negative_prompt": prompt,
+                    "primary_defer_prompt": "",
+                },
+            ]
+        },
+        {"bands": []},
+        policy,
+    )
+
+    assert result["shortlist"][0]["name"] == "aoa-eval"
+    assert result["lead_score"] == policy["defaults"]["min_activate_score"] - 1
+    assert result["confidence"] == "weak"
 
 
 def test_expected_stage_2_mode_leaves_tiny_defer_cases_stage_one_scoped_without_explicit_expectation() -> None:
