@@ -302,18 +302,6 @@ def score_skill(
         score -= len(defer_prompt_tokens) * scoring["negative_token_penalty"]
         reasons.extend(f"defer-prompt:{token}" for token in defer_prompt_tokens[:2])
 
-    capped_score = cap_token_only_score(
-        score,
-        signal,
-        policy,
-        explicit_skill_mention=explicit_skill_mention,
-        positive_phrases=positive_phrases,
-        negative_control_prompt=negative_control_prompt,
-    )
-    if capped_score != score:
-        score = capped_score
-        reasons.append("token-only-cap")
-
     if signal.get("project_overlay"):
         if resolved_repo_family:
             family_entry = (policy.get("repo_families") or {}).get(resolved_repo_family, {})
@@ -326,6 +314,18 @@ def score_skill(
         elif not explicit_skill_mention:
             score = min(score, 0)
             reasons.append("overlay-family-missing")
+
+    capped_score = cap_token_only_score(
+        score,
+        signal,
+        policy,
+        explicit_skill_mention=explicit_skill_mention,
+        positive_phrases=positive_phrases,
+        negative_control_prompt=negative_control_prompt,
+    )
+    if capped_score != score:
+        score = capped_score
+        reasons.append("token-only-cap")
 
     return score, reasons
 
