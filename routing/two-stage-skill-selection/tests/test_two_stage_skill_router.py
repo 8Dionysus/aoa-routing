@@ -344,6 +344,37 @@ def test_source_negative_control_prompt_caps_implicit_token_only_matches() -> No
     assert result["confidence"] == "weak"
 
 
+def test_overlay_family_bonus_does_not_repromote_token_only_manual_match() -> None:
+    policy = load_fixture_json(FIXTURE_POLICY_PATH)
+    result = preselect(
+        "Inside this atm10 repo, use the local route target with review notes.",
+        {
+            "skills": [
+                {
+                    "name": "atm10-local-guard",
+                    "band": "decision-doc-authority",
+                    "manual_invocation_required": True,
+                    "project_overlay": True,
+                    "positive_cues": [],
+                    "negative_cues": [],
+                    "cue_tokens": ["local", "route", "target", "review"],
+                    "negative_tokens": [],
+                    "primary_positive_prompt": "Use the atm10 local route target with review notes.",
+                    "primary_negative_prompt": "",
+                    "primary_defer_prompt": "",
+                }
+            ]
+        },
+        {"bands": []},
+        policy,
+        repo_family="atm10",
+    )
+
+    assert result["shortlist"][0]["name"] == "atm10-local-guard"
+    assert result["lead_score"] == policy["defaults"]["min_activate_score"] - 1
+    assert result["confidence"] == "weak"
+
+
 def test_expected_stage_2_mode_leaves_tiny_defer_cases_stage_one_scoped_without_explicit_expectation() -> None:
     stage_2_mode = build_two_stage_skill_router.expected_stage_2_mode(
         {
