@@ -138,6 +138,33 @@ def should_apply_prompt_penalty(
     )
 
 
+def cap_token_only_score(
+    score: int,
+    signal: dict[str, Any],
+    policy: dict[str, Any],
+    *,
+    explicit_skill_mention: bool,
+    positive_phrases: list[str],
+    negative_control_prompt: bool,
+) -> int:
+    if explicit_skill_mention or positive_phrases:
+        return score
+    if not signal.get("manual_invocation_required") and not negative_control_prompt:
+        return score
+    return min(score, int(policy["defaults"]["min_activate_score"]) - 1)
+
+
+def is_source_negative_control_prompt(
+    task_normalized: str,
+    signals_doc: dict[str, Any],
+) -> bool:
+    for signal in signals_doc.get("skills", []):
+        prompt = normalize(signal.get("primary_negative_prompt", ""))
+        if prompt and prompt == task_normalized:
+            return True
+    return False
+
+
 def resolve_repo_family(task_normalized: str, repo_family: str | None, policy: dict[str, Any]) -> str | None:
     if repo_family:
         return repo_family
@@ -186,6 +213,7 @@ def score_skill(
     top_band_ids: set[str],
     policy: dict[str, Any],
     resolved_repo_family: str | None,
+    negative_control_prompt: bool,
 ) -> tuple[int, list[str]]:
     scoring = policy["scoring"]
     score = 0
@@ -273,6 +301,18 @@ def score_skill(
     ):
         score -= len(defer_prompt_tokens) * scoring["negative_token_penalty"]
         reasons.extend(f"defer-prompt:{token}" for token in defer_prompt_tokens[:2])
+
+    capped_score = cap_token_only_score(
+        score,
+        signal,
+        policy,
+        explicit_skill_mention=explicit_skill_mention,
+        positive_phrases=positive_phrases,
+        negative_control_prompt=negative_control_prompt,
+    )
+    if capped_score != score:
+        score = capped_score
+        reasons.append("token-only-cap")
 
     if signal.get("project_overlay"):
         if resolved_repo_family:
@@ -392,6 +432,7 @@ def preselect(
     requested_top_k = policy["defaults"]["top_k"] if top_k is None else top_k
     top_k = min(max(int(requested_top_k), 1), resolve_stage_2_shortlist_limit(policy))
     resolved_repo_family = resolve_repo_family(task_normalized, repo_family, policy)
+    negative_control_prompt = is_source_negative_control_prompt(task_normalized, signals_doc)
 
     scored_bands: list[dict[str, Any]] = []
     for band in bands_doc.get("bands", []):
@@ -417,6 +458,7 @@ def preselect(
             top_band_ids,
             policy,
             resolved_repo_family,
+            negative_control_prompt,
         )
         scored_skills.append(
             {

@@ -134,7 +134,7 @@ def expected_stage_2_mode(
         expected_lead = expected_shortlist[0] if expected_shortlist else None
 
     if expected_lead is None:
-        return None
+        return "no-skill"
 
     lead_signal = signal_by_name.get(expected_lead, {})
     return (

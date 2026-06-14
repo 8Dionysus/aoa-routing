@@ -326,7 +326,7 @@
           },
           {
             "id": "decision-doc-authority",
-            "score": 8,
+            "score": 5,
             "reasons": [
               "shortlist:atm10-source-of-truth-check"
             ]
@@ -368,11 +368,12 @@
             "band": "decision-doc-authority",
             "manual_invocation_required": true,
             "project_overlay": true,
-            "score": 8,
+            "score": 5,
             "reasons": [
               "positive-prompt:explicit",
               "positive-prompt:posture",
-              "positive-prompt:relative"
+              "positive-prompt:relative",
+              "token-only-cap"
             ]
           }
         ],
@@ -465,11 +466,12 @@
           {
             "name": "atm10-source-of-truth-check",
             "band": "decision-doc-authority",
-            "score": 8,
+            "score": 5,
             "preselect_reasons": [
               "positive-prompt:explicit",
               "positive-prompt:posture",
-              "positive-prompt:relative"
+              "positive-prompt:relative",
+              "token-only-cap"
             ],
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": true,
@@ -657,11 +659,10 @@
             ]
           },
           {
-            "id": "titan-service-cohort",
-            "score": 4,
+            "id": "risk-ops-safety",
+            "score": 13,
             "reasons": [
-              "token:runtime",
-              "token:turn"
+              "shortlist:abyss-sanitized-share"
             ]
           }
         ],
@@ -682,39 +683,38 @@
             ]
           },
           {
-            "name": "aoa-session-donor-harvest",
-            "band": "quest-harvest-governance",
+            "name": "abyss-sanitized-share",
+            "band": "risk-ops-safety",
             "manual_invocation_required": true,
-            "project_overlay": false,
-            "score": 19,
+            "project_overlay": true,
+            "score": 13,
             "reasons": [
-              "band:quest-harvest-governance",
-              "token:artifact",
-              "token:reviewed",
-              "token:session",
-              "positive-prompt:artifact",
-              "positive-prompt:bounded"
+              "positive:abyss",
+              "token:abyss",
+              "token:relative",
+              "positive-prompt:abyss",
+              "positive-prompt:relative"
             ]
           },
           {
-            "name": "aoa-session-progression-lift",
-            "band": "quest-harvest-governance",
+            "name": "abyss-safe-infra-change",
+            "band": "risk-ops-safety",
             "manual_invocation_required": true,
-            "project_overlay": false,
-            "score": 17,
+            "project_overlay": true,
+            "score": 11,
             "reasons": [
-              "band:quest-harvest-governance",
-              "token:evidence",
-              "token:reviewed",
-              "token:session",
-              "positive-prompt:bounded",
-              "positive-prompt:evidence"
+              "positive:abyss",
+              "token:abyss",
+              "token:relative",
+              "positive-prompt:abyss",
+              "positive-prompt:relative",
+              "negative-token:artifact"
             ]
           }
         ],
         "confidence": "strong",
         "lead_score": 81,
-        "lead_gap": 62,
+        "lead_gap": 68,
         "fallback_candidates": [
           {
             "name": "aoa-change-protocol",
@@ -741,7 +741,7 @@
       "decision_packet": {
         "confidence": "strong",
         "lead_score": 81,
-        "lead_gap": 62,
+        "lead_gap": 68,
         "candidate_count": 3,
         "fallback_candidates": [
           {
@@ -783,36 +783,35 @@
             "activation_hint": "$abyss-self-diagnostic-spine"
           },
           {
-            "name": "aoa-session-donor-harvest",
-            "band": "quest-harvest-governance",
-            "score": 19,
+            "name": "abyss-sanitized-share",
+            "band": "risk-ops-safety",
+            "score": 13,
             "preselect_reasons": [
-              "band:quest-harvest-governance",
-              "token:artifact",
-              "token:reviewed",
-              "token:session",
-              "positive-prompt:artifact",
-              "positive-prompt:bounded"
+              "positive:abyss",
+              "token:abyss",
+              "token:relative",
+              "positive-prompt:abyss",
+              "positive-prompt:relative"
             ],
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-session-donor-harvest"
+            "activation_hint": "$abyss-sanitized-share"
           },
           {
-            "name": "aoa-session-progression-lift",
-            "band": "quest-harvest-governance",
-            "score": 17,
+            "name": "abyss-safe-infra-change",
+            "band": "risk-ops-safety",
+            "score": 11,
             "preselect_reasons": [
-              "band:quest-harvest-governance",
-              "token:evidence",
-              "token:reviewed",
-              "token:session",
-              "positive-prompt:bounded",
-              "positive-prompt:evidence"
+              "positive:abyss",
+              "token:abyss",
+              "token:relative",
+              "positive-prompt:abyss",
+              "positive-prompt:relative",
+              "negative-token:artifact"
             ],
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
-            "activation_hint": "$aoa-session-progression-lift"
+            "activation_hint": "$abyss-safe-infra-change"
           }
         ],
         "decision_reason": "lead candidate is explicit-only even though the shortlist is strong",
@@ -1001,9 +1000,9 @@
         "top_bands": [
           {
             "id": "decision-doc-authority",
-            "score": 11,
+            "score": 9,
             "reasons": [
-              "shortlist:aoa-decision-create"
+              "shortlist:aoa-adr-write"
             ]
           },
           {
@@ -1017,19 +1016,6 @@
           }
         ],
         "shortlist": [
-          {
-            "name": "aoa-decision-create",
-            "band": "decision-doc-authority",
-            "manual_invocation_required": true,
-            "project_overlay": false,
-            "score": 11,
-            "reasons": [
-              "band:decision-doc-authority",
-              "token:authoritative",
-              "token:canonical",
-              "token:file"
-            ]
-          },
           {
             "name": "aoa-adr-write",
             "band": "decision-doc-authority",
@@ -1058,11 +1044,24 @@
               "positive-prompt:authoritative",
               "positive-prompt:guidance"
             ]
+          },
+          {
+            "name": "aoa-decision-correct",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": true,
+            "project_overlay": false,
+            "score": 5,
+            "reasons": [
+              "band:decision-doc-authority",
+              "token:canonical",
+              "token:note",
+              "token-only-cap"
+            ]
           }
         ],
         "confidence": "weak",
-        "lead_score": 11,
-        "lead_gap": 2,
+        "lead_score": 9,
+        "lead_gap": 0,
         "fallback_candidates": [
           {
             "name": "aoa-change-protocol",
@@ -1078,8 +1077,8 @@
       },
       "decision_packet": {
         "confidence": "weak",
-        "lead_score": 11,
-        "lead_gap": 2,
+        "lead_score": 9,
+        "lead_gap": 0,
         "candidate_count": 3,
         "fallback_candidates": [
           {
@@ -1094,20 +1093,6 @@
           }
         ],
         "candidates": [
-          {
-            "name": "aoa-decision-create",
-            "band": "decision-doc-authority",
-            "score": 11,
-            "preselect_reasons": [
-              "band:decision-doc-authority",
-              "token:authoritative",
-              "token:canonical",
-              "token:file"
-            ],
-            "invocation_mode": "explicit-preferred",
-            "manual_invocation_required": true,
-            "activation_hint": "$aoa-decision-create"
-          },
           {
             "name": "aoa-adr-write",
             "band": "decision-doc-authority",
@@ -1138,6 +1123,20 @@
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": false,
             "activation_hint": "implicit-ok"
+          },
+          {
+            "name": "aoa-decision-correct",
+            "band": "decision-doc-authority",
+            "score": 5,
+            "preselect_reasons": [
+              "band:decision-doc-authority",
+              "token:canonical",
+              "token:note",
+              "token-only-cap"
+            ],
+            "invocation_mode": "explicit-preferred",
+            "manual_invocation_required": true,
+            "activation_hint": "$aoa-decision-correct"
           }
         ],
         "decision_reason": "shortlist stayed below the precision-first activation thresholds",
