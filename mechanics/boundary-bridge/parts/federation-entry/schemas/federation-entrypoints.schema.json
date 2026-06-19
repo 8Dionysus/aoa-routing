@@ -9,6 +9,7 @@
     "schema_ref",
     "owner_repo",
     "surface_kind",
+    "artifact_identity",
     "source_inputs",
     "root_entries",
     "active_entry_kinds",
@@ -27,6 +28,9 @@
     },
     "surface_kind": {
       "const": "federation_entrypoints"
+    },
+    "artifact_identity": {
+      "$ref": "#/$defs/artifactIdentity"
     },
     "source_inputs": {
       "type": "array",
@@ -69,6 +73,79 @@
     "nonEmptyString": {
       "type": "string",
       "minLength": 1
+    },
+    "artifactIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_class",
+        "surface_state",
+        "owner_repo",
+        "authority_ref",
+        "producer",
+        "consumer_expectation",
+        "privacy_boundary",
+        "content_identity",
+        "abi_epoch",
+        "contract_version",
+        "trust_layer",
+        "verification",
+        "action"
+      ],
+      "properties": {
+        "artifact_class": {
+          "const": "generated_readmodel"
+        },
+        "surface_state": {
+          "const": "public_generated_navigation_surface"
+        },
+        "owner_repo": {
+          "const": "aoa-routing"
+        },
+        "authority_ref": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "producer": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "consumer_expectation": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "privacy_boundary": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "content_identity": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "abi_epoch": {
+          "const": "aoa_routing_federation_entrypoints_v2"
+        },
+        "contract_version": {
+          "const": "federation-entrypoints.schema.json@aoa_routing_federation_entrypoints_v2#artifact_identity"
+        },
+        "trust_layer": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "abi_contract_signature"
+            ]
+          }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/nonEmptyString"
+          }
+        },
+        "action": {
+          "const": "ADD_CONSUMER_EXPECTATION"
+        }
+      }
     },
     "repoName": {
       "type": "string",

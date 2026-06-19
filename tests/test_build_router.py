@@ -649,6 +649,21 @@ def test_build_outputs_from_fixtures() -> None:
     )
     assert federation["owner_repo"] == "aoa-routing"
     assert federation["surface_kind"] == "federation_entrypoints"
+    assert federation["artifact_identity"] == {
+        "artifact_class": "generated_readmodel",
+        "surface_state": "public_generated_navigation_surface",
+        "owner_repo": "aoa-routing",
+        "authority_ref": "mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md",
+        "producer": "scripts/build_router.py from sibling owner-generated source inputs",
+        "consumer_expectation": "consumers verify schema_version, schema_ref, source_inputs, owner authority refs, and validate_router/build_router --check before treating entry cards as usable orientation",
+        "privacy_boundary": "public route references only; no copied owner payloads, private state, source corpora, or runtime secrets",
+        "content_identity": "generated/federation_entrypoints.min.json rebuilt from declared source_inputs and compared by build_router --check",
+        "abi_epoch": "aoa_routing_federation_entrypoints_v2",
+        "contract_version": "federation-entrypoints.schema.json@aoa_routing_federation_entrypoints_v2#artifact_identity",
+        "trust_layer": ["abi_contract_signature"],
+        "verification": ["python scripts/validate_router.py", "python scripts/build_router.py --check"],
+        "action": "ADD_CONSUMER_EXPECTATION",
+    }
     assert federation["active_entry_kinds"] == [
         "agent",
         "tier",

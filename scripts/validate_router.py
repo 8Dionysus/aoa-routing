@@ -258,6 +258,24 @@ CATALOG_CAPSULE_EXPECTATIONS = {
     },
 }
 FOUNDATION_ROUTING_QUEST_IDS = ("AOA-RT-Q-0001", "AOA-RT-Q-0002")
+FEDERATION_ARTIFACT_IDENTITY_REQUIRED_KEYS = (
+    "artifact_class",
+    "surface_state",
+    "owner_repo",
+    "authority_ref",
+    "producer",
+    "consumer_expectation",
+    "privacy_boundary",
+    "content_identity",
+    "abi_epoch",
+    "contract_version",
+    "trust_layer",
+    "verification",
+    "action",
+)
+FEDERATION_ARTIFACT_IDENTITY_TRUST_LAYERS = {
+    "abi_contract_signature",
+}
 REQUIRED_ROUTING_QUEST_IDS = FOUNDATION_ROUTING_QUEST_IDS
 QUESTBOOK_SOURCE_CONTRACT_ROOT = Path("mechanics") / "questbook" / "parts" / "source-contract"
 QUESTBOOK_PATH = Path("QUESTBOOK.md")
@@ -2148,6 +2166,10 @@ def validate_federation_entrypoints(
     }
 
     try:
+        artifact_identity = ensure_mapping(
+            federation_payload.get("artifact_identity"),
+            "federation_entrypoints.min.json.artifact_identity",
+        )
         source_inputs = ensure_list(
             federation_payload.get("source_inputs"),
             "federation_entrypoints.min.json.source_inputs",
@@ -2184,6 +2206,53 @@ def validate_federation_entrypoints(
             ValidationIssue(
                 "federation_entrypoints.min.json",
                 "declared_entry_kinds must match the published declared federation entry kinds",
+            )
+        )
+
+    missing_identity_keys = [
+        key for key in FEDERATION_ARTIFACT_IDENTITY_REQUIRED_KEYS if key not in artifact_identity
+    ]
+    if missing_identity_keys:
+        issues.append(
+            ValidationIssue(
+                "federation_entrypoints.min.json",
+                "artifact_identity missing keys: " + ", ".join(missing_identity_keys),
+            )
+        )
+    expected_identity_values = {
+        "artifact_class": "generated_readmodel",
+        "surface_state": "public_generated_navigation_surface",
+        "owner_repo": "aoa-routing",
+        "authority_ref": "mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md",
+        "abi_epoch": "aoa_routing_federation_entrypoints_v2",
+        "contract_version": "federation-entrypoints.schema.json@aoa_routing_federation_entrypoints_v2#artifact_identity",
+        "action": "ADD_CONSUMER_EXPECTATION",
+    }
+    for key, expected_value in expected_identity_values.items():
+        if artifact_identity.get(key) != expected_value:
+            issues.append(
+                ValidationIssue(
+                    "federation_entrypoints.min.json",
+                    f"artifact_identity.{key} must stay {expected_value!r}",
+                )
+            )
+    identity_layers = artifact_identity.get("trust_layer")
+    if identity_layers != sorted(FEDERATION_ARTIFACT_IDENTITY_TRUST_LAYERS):
+        issues.append(
+            ValidationIssue(
+                "federation_entrypoints.min.json",
+                "artifact_identity.trust_layer must be ['abi_contract_signature']",
+            )
+        )
+    identity_verification = artifact_identity.get("verification")
+    if not isinstance(identity_verification, list) or not {
+        "python scripts/validate_router.py",
+        "python scripts/build_router.py --check",
+    } <= set(identity_verification):
+        issues.append(
+            ValidationIssue(
+                "federation_entrypoints.min.json",
+                "artifact_identity.verification must include validate_router and build_router --check",
             )
         )
 

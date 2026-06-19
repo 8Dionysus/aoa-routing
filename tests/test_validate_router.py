@@ -2019,6 +2019,22 @@ def test_validate_generated_outputs_rejects_federation_entry_missing_risk(tmp_pa
     )
 
 
+def test_validate_generated_outputs_rejects_federation_artifact_identity_drift(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    federation_path = generated_dir / "federation_entrypoints.min.json"
+    payload = json.loads(federation_path.read_text(encoding="utf-8"))
+    payload["artifact_identity"]["consumer_expectation"] = ""
+    write_json(federation_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        "schema violation" in issue.message and "consumer_expectation" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_declared_kind_in_federation_entrypoints(
     tmp_path: Path,
 ) -> None:

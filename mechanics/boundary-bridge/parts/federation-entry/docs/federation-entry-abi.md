@@ -57,6 +57,14 @@ The emitted federation-facing routing family now uses normalized v2 envelopes
 with `schema_version`, `schema_ref`, `owner_repo`, and `surface_kind` at the
 top level.
 
+The federation surface also publishes `artifact_identity` for the generated
+read-model itself. That identity is not a release signature. It tells consumers
+that `generated/federation_entrypoints.min.json` is a public generated
+navigation surface with an explicit ABI epoch and contract version, owned by
+`aoa-routing`, produced from sibling owner surfaces, and safe to trust only
+after schema validation and `build_router --check` agree with the current
+source inputs.
+
 The thin router core remains the same:
 
 - `aoa_router.min.json`
