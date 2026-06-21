@@ -9,6 +9,7 @@ import validate_router
 from _two_stage_router_lib import build_decision_packet, preselect
 from router_core import (
     ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
+    FEDERATION_SPINE_PATH,
     default_dependency_root,
 )
 
@@ -40,7 +41,7 @@ LIVE_REQUIRED_INPUTS = {
         Path("generated/model_tier_registry.json"),
     ],
     "aoa-evals": [Path("generated/eval_capsules.json")],
-    "aoa-kag": [Path("generated/federation_spine.min.json")],
+    "aoa-kag": [Path(FEDERATION_SPINE_PATH)],
     "aoa-memo": [
         Path("generated/memory/memory_catalog.min.json"),
         Path("generated/memory/memory_capsules.json"),

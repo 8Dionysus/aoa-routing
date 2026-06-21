@@ -1209,6 +1209,23 @@ def test_validate_generated_outputs_rejects_router_projection_shape_drift_via_sc
     )
 
 
+def test_validate_generated_outputs_rejects_router_artifact_identity_drift(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    router_path = generated_dir / "aoa_router.min.json"
+    payload = json.loads(router_path.read_text(encoding="utf-8"))
+    payload["artifact_identity"]["artifact_class"] = "routing_truth"
+    write_json(router_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+    assert any(
+        issue.location == "aoa_router.min.json"
+        and "schema violation" in issue.message
+        and "artifact_identity.artifact_class" in issue.message
+        and "thin_routing_readmodel_bundle" in issue.message
+        for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_registry_entry_missing_kind_without_crashing(
     tmp_path: Path,
 ) -> None:
@@ -2191,14 +2208,14 @@ def test_validate_generated_outputs_rejects_tos_kag_view_entry_surface_drift(
     tmp_path: Path,
 ) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    spine_path = roots["aoa-kag"] / "generated" / "federation_spine.min.json"
+    spine_path = roots["aoa-kag"] / router_core.FEDERATION_SPINE_PATH
     payload = json.loads(spine_path.read_text(encoding="utf-8"))
-    payload["repos"][1]["current_entry_surface_refs"] = ["Tree-of-Sophia/README.md"]
+    payload["repos"][1]["entry_surface_ref"] = "Tree-of-Sophia/README.md"
     write_json(spine_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "current_entry_surface_refs must stay" in issue.message
+        "entry_surface_ref must stay" in issue.message
         for issue in issues
     )
 
@@ -2207,14 +2224,14 @@ def test_validate_generated_outputs_rejects_tos_kag_view_route_id_drift(
     tmp_path: Path,
 ) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    spine_path = roots["aoa-kag"] / "generated" / "federation_spine.min.json"
+    spine_path = roots["aoa-kag"] / router_core.FEDERATION_SPINE_PATH
     payload = json.loads(spine_path.read_text(encoding="utf-8"))
-    payload["repos"][1]["example_object_ids"] = ["tos-tiny-entry.drifted"]
+    payload["repos"][1]["object_id"] = "tos.source.drifted"
     write_json(spine_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        "example_object_ids must stay ['tos-tiny-entry.zarathustra-prologue']" in issue.message
+        "object_id must stay 'tos.source.thus-spoke-zarathustra.prologue'" in issue.message
         for issue in issues
     )
 
@@ -2223,7 +2240,7 @@ def test_validate_generated_outputs_rejects_tos_kag_view_adjunct_drift(
     tmp_path: Path,
 ) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    spine_path = roots["aoa-kag"] / "generated" / "federation_spine.min.json"
+    spine_path = roots["aoa-kag"] / router_core.FEDERATION_SPINE_PATH
     payload = json.loads(spine_path.read_text(encoding="utf-8"))
     payload["repos"][1]["adjunct_surfaces"][0]["target_value"] = "AOA-K-0011::drifted"
     write_json(spine_path, payload)

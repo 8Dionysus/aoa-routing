@@ -3,15 +3,95 @@
   "$id": "https://aoa-routing/routing/core/schemas/aoa-router.schema.json",
   "title": "aoa-routing thin router projection",
   "type": "object",
-  "additionalProperties": false,
-  "required": [
-    "router_version",
-    "entries"
-  ],
-  "properties": {
-    "router_version": {
-      "const": 1
-    },
+    "additionalProperties": false,
+    "required": [
+        "artifact_identity",
+        "router_version",
+        "entries"
+    ],
+    "properties": {
+        "artifact_identity": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+                "artifact_class",
+                "surface_state",
+                "owner_repo",
+                "authority_ref",
+                "producer",
+                "consumer_expectation",
+                "privacy_boundary",
+                "content_identity",
+                "abi_epoch",
+                "contract_version",
+                "trust_layer",
+                "verification"
+            ],
+            "properties": {
+                "artifact_class": {
+                    "const": "thin_routing_readmodel_bundle"
+                },
+                "surface_state": {
+                    "const": "public_generated_routing_surfaces"
+                },
+                "owner_repo": {
+                    "const": "aoa-routing"
+                },
+                "authority_ref": {
+                    "const": "README.md#generated-outputs"
+                },
+                "producer": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "consumer_expectation": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "privacy_boundary": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "content_identity": {
+                    "type": "string",
+                    "minLength": 1
+                },
+                "abi_epoch": {
+                    "const": "aoa_routing_thin_router_v1"
+                },
+                "contract_version": {
+                    "const": "routing/core/schemas/aoa-router.schema.json@aoa_routing_thin_router_v1#artifact_identity"
+                },
+                "trust_layer": {
+                    "type": "array",
+                    "prefixItems": [
+                        {
+                            "const": "abi_contract_signature"
+                        },
+                        {
+                            "const": "sbom"
+                        },
+                        {
+                            "const": "slsa_in_toto"
+                        }
+                    ],
+                    "items": false,
+                    "minItems": 3,
+                    "maxItems": 3
+                },
+                "verification": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1
+                    },
+                    "minItems": 3
+                }
+            }
+        },
+        "router_version": {
+            "const": 1
+        },
     "entries": {
       "type": "array",
         "items": {

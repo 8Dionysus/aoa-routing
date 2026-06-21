@@ -61,8 +61,12 @@ PLAYBOOK_STRESS_LANE_FILE = (
 PLAYBOOK_REENTRY_GATE_FILE = (
     "mechanics/antifragility/parts/reentry-gates/examples/playbook_reentry_gate.example.json"
 )
-KAG_PROJECTION_HEALTH_FILE = "examples/projection_health_receipt.example.json"
-KAG_REGROUNDING_TICKET_FILE = "examples/regrounding_ticket.example.json"
+KAG_PROJECTION_HEALTH_FILE = (
+    "mechanics/antifragility/parts/projection-health/examples/projection_health_receipt.example.json"
+)
+KAG_REGROUNDING_TICKET_FILE = (
+    "mechanics/antifragility/parts/retrieval-outage-regrounding/examples/regrounding_ticket.example.json"
+)
 MEMO_OBJECT_CATALOG_FILE = MEMO_OBJECT_INSPECT_SURFACE_FILE
 MEMO_RECOVERY_PATTERN_MARKERS = (
     "stress-recovery-window",

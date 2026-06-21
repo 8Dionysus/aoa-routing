@@ -1,0 +1,132 @@
+{
+  "schema": "abyss_machine_artifact_bundle_manifest_v1",
+  "id": "aoa-routing-thin-router-readmodel",
+  "artifact_class": "thin_routing_readmodel_bundle",
+  "owner_repo": "aoa-routing",
+  "policy_ref": "repo:abyss-machine/manifests/artifact_signature_policy.manifest.json",
+  "mode": "os_abyss_local",
+  "public_safe": true,
+  "purpose": "Repo-local OS Abyss artifact bundle input for generated routing readmodels.",
+  "subject_repo_root": "../..",
+  "artifact_source": {
+    "kind": "generated_thin_routing_readmodel_family",
+    "content_identity_ref": "generated/aoa_router.min.json",
+    "artifact_identity_ref": "generated/aoa_router.min.json#/artifact_identity"
+  },
+  "artifact_identity": {
+    "artifact_class": "thin_routing_readmodel_bundle",
+    "abi_epoch": "aoa_routing_thin_router_v1"
+  },
+  "abi_subject": {
+    "path": "generated/aoa_router.min.json",
+    "artifact_identity_pointer": "/artifact_identity"
+  },
+  "artifact_subjects": [
+    {
+      "path": "generated/aoa_router.min.json",
+      "role": "thin_router"
+    },
+    {
+      "path": "generated/cross_repo_registry.min.json",
+      "role": "cross_repo_registry"
+    },
+    {
+      "path": "generated/task_to_surface_hints.json",
+      "role": "surface_hints"
+    },
+    {
+      "path": "generated/task_to_tier_hints.json",
+      "role": "tier_hints"
+    },
+    {
+      "path": "generated/recommended_paths.min.json",
+      "role": "recommended_paths"
+    },
+    {
+      "path": "generated/federation_entrypoints.min.json",
+      "role": "federation_entrypoints"
+    },
+    {
+      "path": "generated/return_navigation_hints.min.json",
+      "role": "return_navigation"
+    },
+    {
+      "path": "generated/composite_stress_route_hints.min.json",
+      "role": "stress_route_hints"
+    },
+    {
+      "path": "generated/stats_regrounding_hints.min.json",
+      "role": "stats_regrounding_hints"
+    },
+    {
+      "path": "generated/tiny_model_entrypoints.json",
+      "role": "tiny_model_entrypoints"
+    },
+    {
+      "path": "routing/core/schemas/aoa-router.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/core/schemas/router-entry.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "scripts/build_router.py",
+      "role": "builder"
+    },
+    {
+      "path": "scripts/router_core.py",
+      "role": "builder_core"
+    },
+    {
+      "path": "scripts/validate_router.py",
+      "role": "validator"
+    },
+    {
+      "path": "README.md",
+      "role": "authority_doc"
+    },
+    {
+      "path": "generated/AGENTS.md",
+      "role": "generated_route_card"
+    }
+  ],
+  "build_type": "urn:abyssos:buildtype:aoa-routing-thin-router:v1",
+  "package": {
+    "ecosystem": "generated-readmodel",
+    "name": "aoa-routing-thin-router-readmodel",
+    "purl": "pkg:generic/aoa-routing-thin-router-readmodel@0"
+  },
+  "lifecycle": {
+    "initial_state": "candidate",
+    "promotion_path": [
+      "candidate",
+      "built-local",
+      "manually-verified",
+      "release-ready",
+      "published",
+      "superseded",
+      "revoked"
+    ],
+    "latest_eligible_states": [
+      "manually-verified",
+      "release-ready",
+      "published"
+    ]
+  },
+  "consumer_contract": {
+    "stable_interface": "python scripts/validate_abyss_machine_routing_bundle.py",
+    "consumer_expectation": "Routing consumers select a thin_routing_readmodel_bundle from the registry latest read-model only after ABI verification, SBOM-lite subject inventory, SLSA/in-toto generation provenance, build_router --check, validate_router, and source-owned next-hop checks pass.",
+    "registry_required": true
+  },
+  "consumer_command": [
+    "abyss-machine artifacts build-sidecars --manifest docs/artifact-bundles/thin_router.bundle.json --bundle-dir BUNDLE_DIR",
+    "abyss-machine artifacts sign BUNDLE_DIR",
+    "abyss-machine artifacts verify BUNDLE_DIR",
+    "abyss-machine artifacts release-check BUNDLE_DIR",
+    "abyss-machine artifacts bundle-register BUNDLE_DIR --registry-dir REGISTRY_DIR --lifecycle-state release-ready --consumer aoa-routing:thin-router-readmodel --json",
+    "abyss-machine artifacts materialize-subjects BUNDLE_DIR --registry-dir REGISTRY_DIR --manifest docs/artifact-bundles/thin_router.bundle.json --consumer-intent agent --expected-source-repo aoa-routing --json",
+    "abyss-machine artifacts trust-gate --registry-dir REGISTRY_DIR --artifact-class thin_routing_readmodel_bundle --consumer-intent agent --source-repo aoa-routing --subject-digest SUBJECT_DIGEST --json",
+    "abyss-machine artifacts registry-latest --registry-dir REGISTRY_DIR --artifact-class thin_routing_readmodel_bundle --source-repo aoa-routing --json"
+  ]
+}

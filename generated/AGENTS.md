@@ -11,7 +11,8 @@ They are not a second canon and they do not own upstream meaning.
 The current generated set includes:
 
 - `cross_repo_registry.min.json` as the normalized registry of routeable objects
-- `aoa_router.min.json` as the thin projection surface
+- `aoa_router.min.json` as the thin projection surface and ABI-bearing root of
+  the OS Abyss routing readmodel bundle
 - `task_to_surface_hints.json` as inspect, expand, pair, and recall dispatch hints
 - `task_to_tier_hints.json` as task-family dispatch hints derived from `aoa-agents`
 - `quest_dispatch_hints.min.json` as the first live source-only quest inspect, expand, and handoff routing surface
@@ -34,6 +35,9 @@ Keep every generated file:
 - explicit about repo refs and next hops
 - free of copied capsule text, section text, or other source-owned payload bodies
 - bounded enough that routing still acts like navigation rather than meaning-authoring
+- aligned with `docs/artifact-bundles/thin_router.bundle.json` when
+  `aoa_router.min.json` artifact identity, subject set, or consumer expectation
+  changes
 
 If a task really requires an intentional generated change, report which file changed and whether its output shape changed.
 
@@ -45,6 +49,7 @@ After changing generation logic or any upstream routing contract, run:
 python scripts/build_router.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/validate_abyss_machine_routing_bundle.py
 python mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py --check
 python mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py
 python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check

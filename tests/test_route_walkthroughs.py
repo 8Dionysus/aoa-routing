@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 import build_router
+import router_core
 from _two_stage_router_lib import build_decision_packet, preselect
 
 
@@ -416,8 +417,8 @@ def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> Non
     assert starters["checkpoint-root"]["target_value"] in entry_by_id
 
     assert entry_by_id["router"]["authority_surface"] == "aoa-agents:agents/operating-model/tiers/router.tier.json"
-    assert entry_by_id["aoa-techniques"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
-    assert entry_by_id["Tree-of-Sophia"]["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
+    assert entry_by_id["aoa-techniques"]["authority_surface"] == f"aoa-kag:{router_core.FEDERATION_SPINE_AUTHORITY_PATH}"
+    assert entry_by_id["Tree-of-Sophia"]["authority_surface"] == f"aoa-kag:{router_core.FEDERATION_SPINE_AUTHORITY_PATH}"
     assert root_by_id["tos-root"]["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
 
 
@@ -609,7 +610,7 @@ def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path
         {
             "verb": "inspect",
             "target_repo": "aoa-kag",
-            "target_surface": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+            "target_surface": router_core.TOS_ROUTE_RETRIEVAL_SURFACE_REF,
             "match_key": "retrieval_id",
             "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
         },
