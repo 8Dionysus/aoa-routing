@@ -103,6 +103,7 @@ EXCLUDED_PREFIXES: tuple[Path, ...] = tuple(
         "Agents-of-Abyss",
         "Dionysus",
         "Tree-of-Sophia",
+        "abyss-machine",
         "abyss-stack",
         "aoa-agents",
         "aoa-evals",
