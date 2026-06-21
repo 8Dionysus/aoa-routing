@@ -106,7 +106,9 @@ PLAYBOOK_REGISTRY_PATH = "generated/playbook_registry.min.json"
 PLAYBOOK_PORTFOLIO_PATH = (
     "mechanics/portfolio-governance/parts/lifecycle-and-portfolio/docs/playbook-portfolio.md"
 )
-FEDERATION_SPINE_PATH = "generated/federation_spine.min.json"
+FEDERATION_SPINE_ROOT = "mechanics/boundary-bridge/parts/federation-spine"
+FEDERATION_SPINE_PATH = f"{FEDERATION_SPINE_ROOT}/generated/federation_spine.min.json"
+FEDERATION_SPINE_AUTHORITY_PATH = f"{FEDERATION_SPINE_ROOT}/docs/federation-spine.md"
 AOA_ECOSYSTEM_REGISTRY_PATH = "generated/ecosystem_registry.min.json"
 AOA_CENTER_ENTRY_MAP_PATH = "generated/center_entry_map.min.json"
 PAIRING_SURFACE_REPO = "aoa-routing"
@@ -179,6 +181,10 @@ AOA_TECHNIQUES_KAG_VIEW_ENTRY_SURFACE_REF = (
 )
 AOA_TECHNIQUES_KAG_VIEW_OBJECT_SURFACE_REF = "aoa-techniques/generated/technique_catalog.min.json"
 AOA_TECHNIQUES_KAG_VIEW_EXAMPLE_OBJECT_IDS = ("AOA-T-0001", "AOA-T-0002", "AOA-T-0003")
+AOA_TECHNIQUES_KAG_EXPORT_REF = "aoa-techniques/generated/kag_export.min.json"
+AOA_TECHNIQUES_KAG_COMPACT_KIND = "technique"
+AOA_TECHNIQUES_KAG_COMPACT_ENTRY_SURFACE_REF = "aoa-techniques/generated/technique_capsules.json"
+AOA_TECHNIQUES_KAG_COMPACT_OBJECT_ID = "AOA-T-0043"
 TECHNIQUE_KIND_SECOND_CUT_SOURCE_REPO = "aoa-techniques"
 TECHNIQUE_KIND_SECOND_CUT_SURFACE_FILE = "generated/technique_kind_manifest.min.json"
 TECHNIQUE_KIND_SECOND_CUT_COLLECTION_KEY = "kinds"
@@ -193,10 +199,17 @@ TOS_KAG_VIEW_ENTRY_SURFACE_REFS = (
 TOS_KAG_VIEW_OBJECT_SURFACE_REF = (
     "Tree-of-Sophia/ToS/public-compatibility/tos_tiny_entry_route.example.json"
 )
+TOS_KAG_EXPORT_REF = "Tree-of-Sophia/ToS/derived-exports/kag_export.min.json"
+TOS_KAG_COMPACT_KIND = "source_node"
+TOS_KAG_COMPACT_ENTRY_SURFACE_REF = "Tree-of-Sophia/ToS/public-compatibility/source_node.example.json"
+TOS_KAG_COMPACT_OBJECT_ID = "tos.source.thus-spoke-zarathustra.prologue"
 TOS_KAG_VIEW_PLAYBOOK_ENTRY_ID = "AOA-P-0009"
 TOS_ROUTE_RETRIEVAL_SURFACE_ID = "AOA-K-0011"
 TOS_ROUTE_RETRIEVAL_SURFACE_NAME = "tos-zarathustra-route-retrieval-surface"
-TOS_ROUTE_RETRIEVAL_SURFACE_REF = "generated/tos_zarathustra_route_retrieval_pack.min.json"
+TOS_ROUTE_RETRIEVAL_SURFACE_REF = (
+    "mechanics/boundary-bridge/parts/tos-retrieval-axis/generated/"
+    "tos_zarathustra_route_retrieval_pack.min.json"
+)
 TOS_ROUTE_RETRIEVAL_MATCH_KEY = "retrieval_id"
 TOS_ROUTE_RETRIEVAL_ID = "AOA-K-0011::thus-spoke-zarathustra/prologue-1"
 TOS_ROUTE_RETRIEVAL_ROUTE_ID = "thus-spoke-zarathustra/prologue-1"
@@ -257,6 +270,31 @@ TIER_PHASE_ORDER = (
     "deep",
     "distill",
 )
+ROUTING_READMODEL_ARTIFACT_IDENTITY = {
+    "artifact_class": "thin_routing_readmodel_bundle",
+    "surface_state": "public_generated_routing_surfaces",
+    "owner_repo": "aoa-routing",
+    "authority_ref": "README.md#generated-outputs",
+    "producer": "scripts/build_router.py from sibling generated catalogs, routing schemas, and bounded route mechanics",
+    "consumer_expectation": (
+        "Consumers verify artifact_identity, router_version, schema conformance, build_router --check, "
+        "validate_router, and source-owned next-hop refs before using routing surfaces for dispatch."
+    ),
+    "privacy_boundary": "public route refs and compact summaries only; no private source payloads, secrets, live runtime state, or owner-corpus copies",
+    "content_identity": "generated routing family rooted at generated/aoa_router.min.json and rebuilt by scripts/build_router.py",
+    "abi_epoch": "aoa_routing_thin_router_v1",
+    "contract_version": "routing/core/schemas/aoa-router.schema.json@aoa_routing_thin_router_v1#artifact_identity",
+    "trust_layer": [
+        "abi_contract_signature",
+        "sbom",
+        "slsa_in_toto",
+    ],
+    "verification": [
+        "python scripts/validate_router.py",
+        "python scripts/build_router.py --check",
+        "python scripts/release_check.py",
+    ],
+}
 QUEST_ROUTING_SOURCE_REPOS = (
     "aoa-techniques",
     "aoa-skills",
@@ -852,9 +890,10 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
         pilot_posture = ensure_string(
             repo_entry["pilot_posture"], f"{repo_location}.pilot_posture"
         )
-        ensure_string(repo_entry["entry_surface_ref"], f"{repo_location}.entry_surface_ref")
-        ensure_string(repo_entry["export_ref"], f"{repo_location}.export_ref")
-        ensure_string(repo_entry["object_id"], f"{repo_location}.object_id")
+        entry_surface_ref = ensure_string(repo_entry["entry_surface_ref"], f"{repo_location}.entry_surface_ref")
+        export_ref = ensure_string(repo_entry["export_ref"], f"{repo_location}.export_ref")
+        object_id = ensure_string(repo_entry["object_id"], f"{repo_location}.object_id")
+        compact_kind = ensure_string(repo_entry.get("kind"), f"{repo_location}.kind")
         adjunct_surfaces = normalize_adjunct_surfaces(
             repo_name,
             repo_entry["adjunct_surfaces"],
@@ -866,6 +905,23 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
             )
 
         if repo_name == FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID:
+            expected = {
+                "export_ref": AOA_TECHNIQUES_KAG_EXPORT_REF,
+                "kind": AOA_TECHNIQUES_KAG_COMPACT_KIND,
+                "entry_surface_ref": AOA_TECHNIQUES_KAG_COMPACT_ENTRY_SURFACE_REF,
+                "object_id": AOA_TECHNIQUES_KAG_COMPACT_OBJECT_ID,
+            }
+            actual = {
+                "export_ref": export_ref,
+                "kind": compact_kind,
+                "entry_surface_ref": entry_surface_ref,
+                "object_id": object_id,
+            }
+            for key, expected_value in expected.items():
+                if actual[key] != expected_value:
+                    raise RouterError(
+                        f"{repo_location}.{key} must stay '{expected_value}' in the compact federation spine format"
+                    )
             return {
                 **repo_entry,
                 "pilot_posture": "existing_generated_surfaces",
@@ -877,6 +933,23 @@ def load_federation_spine_entries(kag_root: Path) -> tuple[str, list[dict[str, A
                 "adjunct_surfaces": adjunct_surfaces,
             }
         if repo_name == TOS_KAG_VIEW_ENTRY_ID:
+            expected = {
+                "export_ref": TOS_KAG_EXPORT_REF,
+                "kind": TOS_KAG_COMPACT_KIND,
+                "entry_surface_ref": TOS_KAG_COMPACT_ENTRY_SURFACE_REF,
+                "object_id": TOS_KAG_COMPACT_OBJECT_ID,
+            }
+            actual = {
+                "export_ref": export_ref,
+                "kind": compact_kind,
+                "entry_surface_ref": entry_surface_ref,
+                "object_id": object_id,
+            }
+            for key, expected_value in expected.items():
+                if actual[key] != expected_value:
+                    raise RouterError(
+                        f"{repo_location}.{key} must stay '{expected_value}' in the compact federation spine format"
+                    )
             return {
                 **repo_entry,
                 "pilot_posture": "source_owned_tiny_entry_route",
@@ -1474,6 +1547,7 @@ def build_router_payload(registry_entries: list[dict[str, Any]]) -> dict[str, An
         for entry in sort_registry_entries(list(registry_entries))
     ]
     return {
+        "artifact_identity": ROUTING_READMODEL_ARTIFACT_IDENTITY,
         "router_version": 1,
         "entries": projection,
     }
@@ -1515,8 +1589,8 @@ def build_federation_entrypoints_payload(
         f"{TOS_REPO}/{TOS_TINY_ENTRY_DOCTRINE_PATH}",
     )
     ensure_markdown_file(
-        kag_root / "docs" / "FEDERATION_SPINE.md",
-        f"{KAG_REPO}/docs/FEDERATION_SPINE.md",
+        kag_root / FEDERATION_SPINE_AUTHORITY_PATH,
+        f"{KAG_REPO}/{FEDERATION_SPINE_AUTHORITY_PATH}",
     )
     ensure_markdown_file(
         source_route_root / DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
@@ -2050,9 +2124,7 @@ def build_federation_entrypoints_payload(
                 "owner_repo": KAG_REPO,
                 "title": title,
                 "capsule_surface": make_repo_qualified_ref(KAG_REPO, FEDERATION_SPINE_PATH),
-                "authority_surface": make_repo_qualified_ref(
-                    KAG_REPO, "docs/FEDERATION_SPINE.md"
-                ),
+                "authority_surface": make_repo_qualified_ref(KAG_REPO, FEDERATION_SPINE_AUTHORITY_PATH),
                 "next_actions": next_actions,
                 "fallback": build_entry_action(
                     verb="inspect",

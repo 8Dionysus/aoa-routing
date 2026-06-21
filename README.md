@@ -120,6 +120,12 @@ The tracked outputs under `generated/` are grouped into six families:
 - Agon gate routing: `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`
 - low-context routing: `tiny_model_entrypoints.json` plus the `two_stage_*` family for the optional two-stage seam
 
+`generated/aoa_router.min.json` carries the stable artifact identity for the
+OS Abyss routing readmodel bundle. The bundle manifest lives at
+`docs/artifact-bundles/thin_router.bundle.json` and covers ABI, SBOM-lite
+subject inventory, and SLSA/in-toto provenance for the generated routing
+family.
+
 One adjunct example surface also lives here:
 
 - `mechanics/questbook/parts/quest-board-seam/generated/quest_board.min.example.json`

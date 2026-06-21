@@ -379,6 +379,7 @@ def test_build_outputs_from_fixtures() -> None:
         "memo",
         "memo",
     ]
+    assert router["artifact_identity"] == router_core.ROUTING_READMODEL_ARTIFACT_IDENTITY
     assert {entry["source_type"] for entry in registry["entries"]} == {"generated-catalog"}
     assert relation_hints == {
         "version": 1,
@@ -1312,8 +1313,8 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     assert router_tier["next_hops"] == [{"kind": "agent", "id": "AOA-A-0001"}]
 
     kag_view = entry_by_key[("kag_view", "aoa-techniques")]
-    assert kag_view["capsule_surface"] == "aoa-kag:generated/federation_spine.min.json"
-    assert kag_view["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
+    assert kag_view["capsule_surface"] == f"aoa-kag:{router_core.FEDERATION_SPINE_PATH}"
+    assert kag_view["authority_surface"] == f"aoa-kag:{router_core.FEDERATION_SPINE_AUTHORITY_PATH}"
     assert kag_view["next_actions"] == [
         {
             "verb": "inspect",
@@ -1336,8 +1337,8 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     ]
 
     tos_kag_view = entry_by_key[("kag_view", "Tree-of-Sophia")]
-    assert tos_kag_view["capsule_surface"] == "aoa-kag:generated/federation_spine.min.json"
-    assert tos_kag_view["authority_surface"] == "aoa-kag:docs/FEDERATION_SPINE.md"
+    assert tos_kag_view["capsule_surface"] == f"aoa-kag:{router_core.FEDERATION_SPINE_PATH}"
+    assert tos_kag_view["authority_surface"] == f"aoa-kag:{router_core.FEDERATION_SPINE_AUTHORITY_PATH}"
     assert tos_kag_view["next_actions"] == [
         {
             "verb": "inspect",
@@ -1356,7 +1357,7 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
         {
             "verb": "inspect",
             "target_repo": "aoa-kag",
-            "target_surface": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+            "target_surface": router_core.TOS_ROUTE_RETRIEVAL_SURFACE_REF,
             "match_key": "retrieval_id",
             "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
         },
@@ -1401,24 +1402,24 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
 def test_build_outputs_reject_tos_kag_view_spine_drift(tmp_path: Path) -> None:
     kag_root = tmp_path / "aoa-kag"
     shutil.copytree(FIXTURES_ROOT / "aoa-kag", kag_root)
-    spine_path = kag_root / "generated" / "federation_spine.min.json"
+    spine_path = kag_root / router_core.FEDERATION_SPINE_PATH
     payload = json.loads(spine_path.read_text(encoding="utf-8"))
-    payload["repos"][1]["current_entry_surface_refs"] = ["Tree-of-Sophia/README.md"]
+    payload["repos"][1]["entry_surface_ref"] = "Tree-of-Sophia/README.md"
     write_json(spine_path, payload)
 
-    with pytest.raises(build_router.RouterError, match="current_entry_surface_refs must stay"):
+    with pytest.raises(build_router.RouterError, match="entry_surface_ref must stay"):
         build_fixture_outputs(kag_root=kag_root)
 
 
-def test_build_outputs_reject_empty_kag_view_entry_surface_refs(tmp_path: Path) -> None:
+def test_build_outputs_reject_kag_view_export_object_drift(tmp_path: Path) -> None:
     kag_root = tmp_path / "aoa-kag"
     shutil.copytree(FIXTURES_ROOT / "aoa-kag", kag_root)
-    spine_path = kag_root / "generated" / "federation_spine.min.json"
+    spine_path = kag_root / router_core.FEDERATION_SPINE_PATH
     payload = json.loads(spine_path.read_text(encoding="utf-8"))
-    payload["repos"][0]["current_entry_surface_refs"] = []
+    payload["repos"][0]["object_id"] = "AOA-T-DRIFTED"
     write_json(spine_path, payload)
 
-    with pytest.raises(build_router.RouterError, match="must include at least one current entry surface"):
+    with pytest.raises(build_router.RouterError, match="object_id must stay"):
         build_fixture_outputs(kag_root=kag_root)
 
 
@@ -1443,7 +1444,7 @@ def test_tos_tiny_entry_hop_surface_canonicalizes_equivalent_relative_refs(tmp_p
 def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
     kag_root = tmp_path / "aoa-kag"
     shutil.copytree(FIXTURES_ROOT / "aoa-kag", kag_root)
-    spine_path = kag_root / "generated" / "federation_spine.min.json"
+    spine_path = kag_root / router_core.FEDERATION_SPINE_PATH
     payload = json.loads(spine_path.read_text(encoding="utf-8"))
     payload["repos"] = [
         {
@@ -1469,7 +1470,7 @@ def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
                 {
                     "surface_id": "AOA-K-0011",
                     "surface_name": "tos-zarathustra-route-retrieval-surface",
-                    "surface_ref": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+                    "surface_ref": router_core.TOS_ROUTE_RETRIEVAL_SURFACE_REF,
                     "match_key": "retrieval_id",
                     "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
                     "route_id": "thus-spoke-zarathustra/prologue-1",
@@ -1522,7 +1523,7 @@ def test_build_outputs_accept_compact_kag_spine_entries(tmp_path: Path) -> None:
         {
             "verb": "inspect",
             "target_repo": "aoa-kag",
-            "target_surface": "generated/tos_zarathustra_route_retrieval_pack.min.json",
+            "target_surface": router_core.TOS_ROUTE_RETRIEVAL_SURFACE_REF,
             "match_key": "retrieval_id",
             "target_value": "AOA-K-0011::thus-spoke-zarathustra/prologue-1",
         },

@@ -9,6 +9,9 @@ This file applies to Python tooling under `scripts/`.
 - `build_router.py` writes the derived routing surfaces
 - `router_core.py` holds shared constants, loaders, and derivation helpers
 - `validate_router.py` enforces schema integrity, rebuild parity, and bounded cross-repo routing rules
+- `validate_abyss_machine_routing_bundle.py` validates the OS Abyss ABI,
+  SBOM-lite, SLSA/in-toto, and registry envelope for the generated routing
+  readmodel family
 - `validate_active_legacy_names.py` keeps old route names out of active path
   topology while allowing package-local legacy archives
 - `build_agon_gate_routing_registry.py` launches the active Agon part builder
@@ -52,6 +55,7 @@ python scripts/build_router.py
 python scripts/validate_active_legacy_names.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
+python scripts/validate_abyss_machine_routing_bundle.py
 python scripts/generate_decision_indexes.py --check
 python scripts/validate_decision_records.py
 python mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py --check

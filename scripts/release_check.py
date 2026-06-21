@@ -139,6 +139,10 @@ COMMANDS = [
     ("validate active legacy names", [sys.executable, "scripts/validate_active_legacy_names.py"]),
     ("validate routing surfaces", "validate_router"),
     ("check rebuild parity", "build_router_check"),
+    (
+        "validate OS Abyss routing artifact bundle",
+        [sys.executable, "scripts/validate_abyss_machine_routing_bundle.py"],
+    ),
     ("check decision indexes", [sys.executable, "scripts/generate_decision_indexes.py", "--check"]),
     ("validate decision records", [sys.executable, "scripts/validate_decision_records.py"]),
     ("run tests", [sys.executable, "-m", "pytest", "-q", "tests"]),
