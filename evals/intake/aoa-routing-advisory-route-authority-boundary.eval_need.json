@@ -1,0 +1,50 @@
+{
+  "schema_version": "eval_need_v1",
+  "name": "aoa-routing-advisory-route-authority-boundary",
+  "proof_question": "Can aoa-routing's two-stage skill routing and owner-layer shortlist hints remain advisory, without becoming skill activation authority, proof authority, or central eval verdict authority?",
+  "origin_need": "The routing repo exposes generated owner-layer shortlist hints and optional two-stage skill-selection surfaces. These are useful for agent routing, but repeated OS Abyss work depends on them staying advisory rather than becoming activation, proof, scoring, or verdict authority.",
+  "summary": "Capture routing-local eval pressure for checking that generated route hints and two-stage skill-routing outputs preserve owner boundaries and route to stronger owners for proof, skill meaning, and activation decisions.",
+  "object_under_evaluation": "aoa-routing generated route hints and two-stage skill selection surfaces",
+  "category": "boundary",
+  "claim_type": "bounded",
+  "baseline_mode": "none",
+  "report_format": "summary-with-breakdown",
+  "authoring_route": "candidate_evidence_packet",
+  "expected_use_when": [
+    "an agent relies on generated owner-layer shortlist hints to choose an owner repo",
+    "an agent uses two-stage skill routing outputs before deciding whether to activate a skill",
+    "routing outputs mention aoa-evals, aoa-skills, or other stronger owners and must remain advisory"
+  ],
+  "blind_spot_notes": [
+    "does not prove the generated router is globally correct",
+    "does not decide a central aoa-evals verdict or regression status",
+    "does not grant skill activation authority to aoa-routing",
+    "does not replace aoa-skills source meaning or central aoa-evals proof doctrine"
+  ],
+  "verdict_shape": "categorical",
+  "related_eval_refs": [
+    "aoa-approval-boundary-adherence",
+    "aoa-experience-protocol-integrity",
+    "aoa-stats-regrounding-boundary-integrity"
+  ],
+  "candidate_evidence_refs": [
+    "generated/owner_layer_shortlist.min.json",
+    "generated/two_stage_router_eval_cases.jsonl",
+    "generated/two_stage_router_manifest.json",
+    "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
+    "routing/two-stage-skill-selection/docs/two-stage-skill-selection.md"
+  ],
+  "source_refs": [
+    "AGENTS.md",
+    "README.md",
+    "evals/README.md",
+    "repo:aoa-evals/evals/boundary/aoa-approval-boundary-adherence/EVAL.md",
+    "repo:aoa-evals/evals/boundary/aoa-experience-protocol-integrity/EVAL.md",
+    "repo:aoa-evals/evals/boundary/aoa-stats-regrounding-boundary-integrity/EVAL.md",
+    "routing/README.md",
+    "routing/two-stage-skill-selection/README.md",
+    "tests/test_build_router.py",
+    "tests/test_live_workspace_contracts.py"
+  ],
+  "comparison_surface": null
+}
