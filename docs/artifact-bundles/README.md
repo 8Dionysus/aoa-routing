@@ -16,9 +16,10 @@ of Sophia meaning.
 ## Consumer path
 
 The validator rehearses the OS consumer path: build/sign/verify/release-check,
-register the release-ready bundle, materialize the routing subjects into an
-isolated subject store, run an agent-intent trust gate for `aoa-routing`, and
-read the source-filtered registry latest record.
+promote durable release-ready evidence with source and host-managed trust-root
+metadata, materialize the routing subjects into an isolated subject store, run
+an agent-intent trust gate for `aoa-routing`, and read the source-filtered
+registry latest record.
 
 Negative checks cover missing ABI, missing SBOM-lite, missing SLSA/in-toto,
 wrong external subject digest, private readmodel markers, unverified latest
