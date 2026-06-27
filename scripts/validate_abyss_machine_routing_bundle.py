@@ -25,6 +25,7 @@ CONSUMER_REF = "aoa-routing:thin-router-readmodel"
 TRUST_ROOT_MODE = "host_managed"
 PRODUCER = "aoa-routing thin router readmodel builder"
 EXPECTED_REQUIRED_CONTROLS = ["abi_signature", "sbom", "slsa_in_toto"]
+REQUIRED_SUBJECT_STORE_BLOCKER = "required_artifact_subject_store_not_verified"
 
 
 def _candidate_abyss_machine_roots() -> list[Path]:
@@ -371,6 +372,49 @@ def _trust_gate_allow_latest(
     return payload
 
 
+def _trust_gate_pre_materialization_state(
+    artifact_bundles: Any,
+    registry_dir: Path,
+    registry: dict[str, Any],
+) -> dict[str, Any]:
+    gate_check = _trust_gate_allow_latest(
+        artifact_bundles,
+        registry_dir,
+        registry,
+        require_subject_store=False,
+    )
+    trust_gate = gate_check.get("trust_gate", {})
+    inspected_claims = trust_gate.get("inspected_claims") if isinstance(trust_gate, dict) else {}
+    inspected_claims = inspected_claims if isinstance(inspected_claims, dict) else {}
+    subject_store = inspected_claims.get("artifact_subject_store")
+    subject_store = subject_store if isinstance(subject_store, dict) else {}
+    decision = trust_gate.get("decision") if isinstance(trust_gate, dict) else {}
+    decision = decision if isinstance(decision, dict) else {}
+    blockers = set(trust_gate.get("blockers") or []) | set(decision.get("blockers") or [])
+    missing_subject_store = bool(
+        REQUIRED_SUBJECT_STORE_BLOCKER in blockers
+        and trust_gate.get("verdict") == "deny"
+        and decision.get("model") == "fail_closed_consumer_admission"
+        and decision.get("allow") is False
+        and inspected_claims.get("registry_latest", {}).get("selected_record_is_latest") is True
+        and inspected_claims.get("controls", {}).get("required_controls_missing") == []
+        and inspected_claims.get("source", {}).get("source_repo_matched") is True
+        and inspected_claims.get("trust_root", {}).get("trust_root_mode_matched") is True
+        and subject_store.get("required") is True
+        and subject_store.get("ok") is False
+    )
+    return {
+        "ok": bool(gate_check.get("ok") or missing_subject_store),
+        "mode": (
+            "allow_existing_subject_store"
+            if gate_check.get("ok")
+            else "deny_until_subject_store_materialized"
+        ),
+        "expected_pre_materialization_deny": bool(missing_subject_store),
+        "trust_gate": trust_gate,
+    }
+
+
 def _verify_missing_sidecar(
     artifact_bundles: Any,
     abyss_repo_root: Path,
@@ -677,11 +721,10 @@ def _validate_in_bundle_dir(
         manifest=manifest,
         abyss_repo_root=abyss_repo_root,
     )
-    pre_materialization_gate = _trust_gate_allow_latest(
+    pre_materialization_gate = _trust_gate_pre_materialization_state(
         artifact_bundles,
         registry_dir,
         registry,
-        require_subject_store=False,
     )
     materialized = artifact_bundles.materialize_artifact_subjects(
         bundle_dir,
