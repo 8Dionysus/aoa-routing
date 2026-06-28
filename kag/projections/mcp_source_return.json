@@ -1,0 +1,73 @@
+{
+  "schema_version": "aoa-local-kag-record-v1",
+  "repo": "aoa-routing",
+  "local_id": "projection:mcp:routing-source-return",
+  "record_class": "projection",
+  "source_refs": [
+    {
+      "repo": "aoa-routing",
+      "path": "routing/source_home.manifest.json",
+      "source_class": "route_source",
+      "role": "primary",
+      "authority": "authored_source"
+    },
+    {
+      "repo": "aoa-routing",
+      "path": "routing/README.md",
+      "source_class": "route_source",
+      "role": "owner_route",
+      "authority": "authored_source"
+    },
+    {
+      "repo": "aoa-routing",
+      "path": "generated/cross_repo_registry.min.json",
+      "source_class": "route_source",
+      "role": "supporting",
+      "authority": "derived_readmodel"
+    },
+    {
+      "repo": "aoa-routing",
+      "path": "generated/aoa_router.min.json",
+      "source_class": "route_source",
+      "role": "supporting",
+      "authority": "derived_readmodel"
+    }
+  ],
+  "source_owner": "aoa-routing",
+  "provenance_mode": "strict_source_linked",
+  "derived_method": "source-linked local KAG projection over routing source home and cross-repo route registry",
+  "generated_or_authored": "generated_from_source",
+  "status": "active",
+  "owner_return_route": {
+    "repo": "aoa-routing",
+    "surface": "routing/README.md",
+    "route_kind": "routing"
+  },
+  "freshness": {
+    "mode": "source_snapshot",
+    "state": "current",
+    "checked_ref": "routing/source_home.manifest.json"
+  },
+  "builder": {
+    "route": "router builders",
+    "surface": "scripts/build_router.py"
+  },
+  "validator": {
+    "route": "scripts/validate_source_home.py",
+    "lane": "owner-local"
+  },
+  "storage_posture": {
+    "git_surface": "compact_readmodel",
+    "payload_class": "projection",
+    "runtime_route": "source-repo"
+  },
+  "consumer_route": "aoa-kag-mcp resource",
+  "projection_kind": "source_return_view",
+  "source_record_ids": [
+    "node:routing:routing-source-home",
+    "node:routing:routing-source-route",
+    "edge:routing:source-returns-to-owner",
+    "index:routing:source-surfaces"
+  ],
+  "consumer_shape": "resources expose route registry rows, dispatch surface handles, and source-return routes; tools keep navigation below source meaning"
+}
