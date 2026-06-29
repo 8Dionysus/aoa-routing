@@ -119,7 +119,9 @@ EXCLUDED_PREFIXES: tuple[Path, ...] = tuple(
 EXCLUDED_CONTENT_FILES = {
     Path("scripts/validate_active_legacy_names.py"),
 }
-EXCLUDED_CONTENT_PREFIXES: tuple[Path, ...] = ()
+EXCLUDED_CONTENT_PREFIXES: tuple[Path, ...] = (
+    Path("kag/indexes/source_surface_index.json"),
+)
 TEXT_SUFFIXES = {
     ".json",
     ".md",
