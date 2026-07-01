@@ -17,7 +17,7 @@ def test_stress_navigation_example_validates_against_schema() -> None:
     schema = load_json("mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json")
     example = load_json("mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.example.json")
 
-    assert schema["$id"] == "https://aoa-routing/mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json"
+    assert schema["$id"] == "https://aoa-routing/schemas/stress_navigation_hint_v1.json"
     Draft202012Validator(schema).validate(example)
 
 
