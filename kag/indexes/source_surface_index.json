@@ -81,7 +81,7 @@
   },
   "index_identity": {
     "artifact_kind": "source_surface_index",
-    "content_digest": "3be46903e0615ae638dff984a3d5054c5f61f4b4c9586c6a306d82a16092a4a3",
+    "content_digest": "b24878797a2a2e4bb6fcfb818582ba50825ec3518e15348bf8b5b40a7ea44712",
     "local_id": "index:repo-local:source-surfaces",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-index.schema.json"
   },
@@ -24078,7 +24078,7 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "fbfb1487d310c5cf453201c69bb62f0ca1c6f7b90b03165c836b912f791a2106",
+        "content_hash": "53608f89d51c8129e17aeec78765644f1c6cca983aa8535b1e68b7f6db2b106f",
         "git_ref": "git-index-source-tree",
         "id": "file:.github/workflows/repo-validation.yml:3affb923d0",
         "mime": "application/yaml",
@@ -24117,7 +24117,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "fbfb1487d310c5cf453201c69bb62f0ca1c6f7b90b03165c836b912f791a2106",
+        "digest": "53608f89d51c8129e17aeec78765644f1c6cca983aa8535b1e68b7f6db2b106f",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -30074,13 +30074,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "1a88067baf838ebcc3229f8c87756e7c1c9f1de357c6d39fa7ad16232cce35d0",
+        "content_hash": "ce544c2fac633126d8b6f40e87df5668860656d877e15d5b9351a3cc1f1d3ab2",
         "git_ref": "git-index-source-tree",
         "id": "file:generated/stats_regrounding_hints.min.json:cc26be18ed",
         "mime": "application/json",
         "path": "generated/stats_regrounding_hints.min.json",
         "repo": "aoa-routing",
-        "size_bytes": 25973
+        "size_bytes": 26608
       },
       "mechanics_role": "none",
       "observed_form": "generated_output",
@@ -30113,7 +30113,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "1a88067baf838ebcc3229f8c87756e7c1c9f1de357c6d39fa7ad16232cce35d0",
+        "digest": "ce544c2fac633126d8b6f40e87df5668860656d877e15d5b9351a3cc1f1d3ab2",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -85555,13 +85555,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "5b631e88fb181197f1b6d77f14b699bc9db351340bb03c1adf754f312e210c6a",
+        "content_hash": "7987121cdc893e241337c527f76d6476c77aab43bfa710b5336281892495ba2c",
         "git_ref": "git-index-source-tree",
         "id": "file:tests/test_build_router.py:969a1e055b",
         "mime": "text/x-python",
         "path": "tests/test_build_router.py",
         "repo": "aoa-routing",
-        "size_bytes": 87100
+        "size_bytes": 90039
       },
       "mechanics_role": "none",
       "observed_form": "command",
@@ -85594,7 +85594,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "5b631e88fb181197f1b6d77f14b699bc9db351340bb03c1adf754f312e210c6a",
+        "digest": "7987121cdc893e241337c527f76d6476c77aab43bfa710b5336281892495ba2c",
         "signature_ref": "",
         "verification_state": "digest-only"
       },

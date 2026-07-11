@@ -1956,6 +1956,73 @@ def test_stats_regrounding_routes_progression_snapshot_to_current_owner_truth(
         assert committed_hint[field] == derived_hint[field]
 
 
+def test_stats_regrounding_routes_runtime_closeout_to_current_owner_truth(
+    tmp_path: Path,
+) -> None:
+    stats_root = tmp_path / "aoa-stats"
+    shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)
+    catalog_path = stats_root / "generated" / "summary_surface_catalog.min.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    owner_truth_inputs = [
+        "abyss-stack/mechanics/inference-pilots/parts/local-trials/compatibility-runners/aoa-local-ai-trials current runtime_trial_closeout_receipt producer",
+        "abyss-stack@27b8035:scripts/aoa-local-ai-trials historical runtime_wave_closeout_receipt producer contract",
+        "Agents-of-Abyss/mechanics/checkpoint/README.md closeout vocabulary and authority stop-lines",
+        "aoa-sdk/src/aoa_sdk/a2a/rebase/closeout.py separate runtime_return_closeout_receipt transport contract",
+    ]
+    source_authority_note = (
+        "Weaker than Checkpoint center law, historical owner "
+        f"{build_router.OLD_STAGE_ROUTE_LABEL} records, and "
+        "current trial or return contracts; this compatibility snapshot does not "
+        "describe current runtime closeout state."
+    )
+    routed_authority_note = (
+        "Weaker than Checkpoint center law, historical owner contour records, and "
+        "current trial or return contracts; this compatibility snapshot does not "
+        "describe current runtime closeout state."
+    )
+    catalog["surfaces"].append(
+        {
+            "name": "runtime_closeout_summary",
+            "surface_ref": "generated/runtime_closeout_summary.min.json",
+            "input_posture": "committed_historical_wave_receipt_snapshot",
+            "owner_truth_inputs": owner_truth_inputs,
+            "authority_ceiling": source_authority_note,
+            "consumer_risk": "high",
+            "live_state_capable": False,
+        }
+    )
+    write_json(catalog_path, catalog)
+
+    payload = build_router.build_stats_regrounding_hints_payload(stats_root)
+    derived_hint = next(
+        item
+        for item in payload["hints"]
+        if item["surface_name"] == "runtime_closeout_summary"
+    )
+    committed_payload = json.loads(
+        (
+            Path(__file__).resolve().parents[1]
+            / "generated"
+            / "stats_regrounding_hints.min.json"
+        ).read_text(encoding="utf-8")
+    )
+    committed_hint = next(
+        item
+        for item in committed_payload["hints"]
+        if item["surface_name"] == "runtime_closeout_summary"
+    )
+
+    assert derived_hint["owner_truth_inputs"] == owner_truth_inputs
+    assert derived_hint["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "abyss-stack",
+        "target_ref": owner_truth_inputs[0],
+    }
+    assert derived_hint["authority_note"] == routed_authority_note
+    for field in ("owner_truth_inputs", "primary_action", "authority_note"):
+        assert committed_hint[field] == derived_hint[field]
+
+
 def test_stats_regrounding_hints_require_summary_surfaces_key(tmp_path: Path) -> None:
     stats_root = tmp_path / "aoa-stats"
     shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)
