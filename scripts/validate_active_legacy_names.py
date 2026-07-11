@@ -121,6 +121,9 @@ EXCLUDED_CONTENT_FILES = {
 }
 EXCLUDED_CONTENT_PREFIXES: tuple[Path, ...] = (
     Path("kag/indexes/source_surface_index.json"),
+    Path("kag/indexes/repo_entity_index.json"),
+    Path("kag/indexes/repo_artifact_index.json"),
+    Path("kag/indexes/repo_event_index.json"),
 )
 TEXT_SUFFIXES = {
     ".json",
