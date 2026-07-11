@@ -7,6 +7,12 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [Unreleased]
 
+### Changed
+
+- Pinned validation to the aoa-stats owner ref that retires the unsupported
+  Titan Summon surface, then removed its derived re-grounding hint while
+  preserving the active Titan Incarnation owner route.
+
 ## [0.2.2] - 2026-04-23
 
 ### Summary

@@ -7,6 +7,11 @@ It reads the `aoa-stats` summary surface catalog and source coverage summary so
 low-context consumers can see when a stats summary should send them back to
 stronger owner truth before use.
 
+Catalog membership is the lifecycle boundary. When aoa-stats retires a surface,
+the router removes the corresponding hint instead of preserving a routing-side
+compatibility tombstone. Retirement provenance and stale-output cleanup remain
+with the stats owner.
+
 ## Boundary
 
 This surface is advisory only.

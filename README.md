@@ -167,6 +167,8 @@ Stats re-grounding hints are additive in the same way.
 and source coverage summary, then points consumers back to owner truth before
 they rely on high-risk or thinly grounded stats surfaces. It does not decide
 the re-grounding policy itself; that remains an `aoa-sdk` control-plane concern.
+Only owner-cataloged surfaces receive hints: a retired stats surface disappears
+from routing rather than becoming a routing-owned compatibility record.
 
 Agon gate routing stays additive too. `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`
 may emit pre-protocol gate candidates, missing-context hints, owner-review
