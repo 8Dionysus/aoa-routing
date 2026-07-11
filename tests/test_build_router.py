@@ -1894,6 +1894,68 @@ def test_build_outputs_adds_stats_regrounding_advisory_hints() -> None:
     assert "coverage_owner_share_dominant" in hint["reason_codes"]
 
 
+def test_stats_regrounding_routes_progression_snapshot_to_current_owner_truth(
+    tmp_path: Path,
+) -> None:
+    stats_root = tmp_path / "aoa-stats"
+    shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)
+    catalog_path = stats_root / "generated" / "summary_surface_catalog.min.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    owner_truth_inputs = [
+        "aoa-skills/skills/core/session-growth/aoa-session-progression-lift/references/progression-delta-receipt-schema.yaml",
+        "aoa-skills/mechanics/growth-cycle/examples/session-growth-artifacts/progression_delta_receipt.kernel-maturity.json",
+        "Agents-of-Abyss RPG center progression vocabulary and stop-lines",
+        "aoa-agents agent-layer seven-axis progression-model contract",
+        "aoa-sdk typed progression and checkpoint-carry contracts",
+    ]
+    authority_note = (
+        "Weaker than current aoa-skills semantic receipts, the RPG center vocabulary, "
+        "aoa-agents progression meaning, aoa-sdk contracts, and owner-local route "
+        "decisions; this legacy numeric snapshot is not live progression truth."
+    )
+    catalog["surfaces"].append(
+        {
+            "name": "route_progression_summary",
+            "surface_ref": "generated/route_progression_summary.min.json",
+            "input_posture": "committed_legacy_numeric_receipt_snapshot",
+            "owner_truth_inputs": owner_truth_inputs,
+            "authority_ceiling": authority_note,
+            "consumer_risk": "high",
+            "live_state_capable": False,
+        }
+    )
+    write_json(catalog_path, catalog)
+
+    payload = build_router.build_stats_regrounding_hints_payload(stats_root)
+    derived_hint = next(
+        item
+        for item in payload["hints"]
+        if item["surface_name"] == "route_progression_summary"
+    )
+    committed_payload = json.loads(
+        (
+            Path(__file__).resolve().parents[1]
+            / "generated"
+            / "stats_regrounding_hints.min.json"
+        ).read_text(encoding="utf-8")
+    )
+    committed_hint = next(
+        item
+        for item in committed_payload["hints"]
+        if item["surface_name"] == "route_progression_summary"
+    )
+
+    assert derived_hint["owner_truth_inputs"] == owner_truth_inputs
+    assert derived_hint["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-skills",
+        "target_ref": owner_truth_inputs[0],
+    }
+    assert derived_hint["authority_note"] == authority_note
+    for field in ("owner_truth_inputs", "primary_action", "authority_note"):
+        assert committed_hint[field] == derived_hint[field]
+
+
 def test_stats_regrounding_hints_require_summary_surfaces_key(tmp_path: Path) -> None:
     stats_root = tmp_path / "aoa-stats"
     shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)

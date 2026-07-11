@@ -1730,7 +1730,7 @@
     },
     {
       "artifact_kind": "config",
-      "content_hash": "e41b369bd7d83e0b449a941440be2a6c67d699d8876cca0dc141b25bc84fe68a",
+      "content_hash": "fbfb1487d310c5cf453201c69bb62f0ca1c6f7b90b03165c836b912f791a2106",
       "id": "artifact:file:.github/workflows/repo-validation.yml:3affb923d0",
       "path": ".github/workflows/repo-validation.yml",
       "source_record_id": "file:.github/workflows/repo-validation.yml:3affb923d0",
@@ -2130,7 +2130,7 @@
     },
     {
       "artifact_kind": "generated_readmodel",
-      "content_hash": "38654977388e9ab360d74cd4922649c800caa213f4f1ce6349402cf16309e994",
+      "content_hash": "1a88067baf838ebcc3229f8c87756e7c1c9f1de357c6d39fa7ad16232cce35d0",
       "id": "artifact:file:generated/stats_regrounding_hints.min.json:cc26be18ed",
       "path": "generated/stats_regrounding_hints.min.json",
       "source_record_id": "file:generated/stats_regrounding_hints.min.json:cc26be18ed",
@@ -6674,7 +6674,7 @@
     },
     {
       "artifact_kind": "test",
-      "content_hash": "fc75e75c78cc2199670d7fc376ea059f5023a60d4eeab06e211067c25f2809a5",
+      "content_hash": "5b631e88fb181197f1b6d77f14b699bc9db351340bb03c1adf754f312e210c6a",
       "id": "artifact:file:tests/test_build_router.py:969a1e055b",
       "path": "tests/test_build_router.py",
       "source_record_id": "file:tests/test_build_router.py:969a1e055b",
@@ -6811,7 +6811,7 @@
   ],
   "index_identity": {
     "artifact_kind": "repository_artifact_index",
-    "content_digest": "3b97c1254b3c84a50843b476655a62561d43e6443a66edc45d11fa10fb39a73c",
+    "content_digest": "9713a62e11fe447283737794cc3193cae4b5b73649a2d8c0c0e7be251b171d8b",
     "index_kind": "artifact",
     "local_id": "index:repo-local:artifacts",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-repository-index.schema.json"
@@ -6835,7 +6835,7 @@
   },
   "schema_version": "aoa-repo-local-kag-repository-index-v1",
   "source_index": {
-    "content_digest": "a9765ebc73572858e540479e65bed825ae8bca8469155562f51067b74dac129e",
+    "content_digest": "3be46903e0615ae638dff984a3d5054c5f61f4b4c9586c6a306d82a16092a4a3",
     "local_id": "index:repo-local:source-surfaces",
     "path": "kag/indexes/source_surface_index.json"
   },
