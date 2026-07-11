@@ -12,7 +12,10 @@ def test_repository_kag_readmodels_are_outside_authored_content_checks(tmp_path:
         "source_surface_index.json",
         "repo_entity_index.json",
         "repo_artifact_index.json",
+        "repo_anchor_index.json",
         "repo_event_index.json",
+        "repo_assertion_index.json",
+        "repo_relation_index.json",
     ):
         index_path = tmp_path / "kag" / "indexes" / filename
         index_path.parent.mkdir(parents=True, exist_ok=True)
