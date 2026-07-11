@@ -81,7 +81,7 @@
   },
   "index_identity": {
     "artifact_kind": "source_surface_index",
-    "content_digest": "793d1c445d453eb51171a01262a788be09dcbacab18b228abccac9b0347bad1a",
+    "content_digest": "a9765ebc73572858e540479e65bed825ae8bca8469155562f51067b74dac129e",
     "local_id": "index:repo-local:source-surfaces",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-index.schema.json"
   },
@@ -73447,13 +73447,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "9f097138f22f947e1b4e4335a65eab6287820c2612c14d284896f8872a1bdc03",
+        "content_hash": "0594912026c401cd9591da17887ca37f20acd55625ab7412890bd795ffb0594b",
         "git_ref": "git-index-source-tree",
         "id": "file:scripts/validate_active_legacy_names.py:d46111ffa7",
         "mime": "text/x-python",
         "path": "scripts/validate_active_legacy_names.py",
         "repo": "aoa-routing",
-        "size_bytes": 5702
+        "size_bytes": 5847
       },
       "mechanics_role": "none",
       "observed_form": "command",
@@ -73486,7 +73486,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "9f097138f22f947e1b4e4335a65eab6287820c2612c14d284896f8872a1bdc03",
+        "digest": "0594912026c401cd9591da17887ca37f20acd55625ab7412890bd795ffb0594b",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -85282,13 +85282,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "e54469a2696ff86a536e2b74d75ad93b160c5051bef676b8b75582b6c8af1cdc",
+        "content_hash": "123f9babd3adc8541411d7a73cc6c4e283a1517faf051e800051da460628db9f",
         "git_ref": "git-index-source-tree",
         "id": "file:tests/test_active_legacy_name_noise.py:b0fdc928fe",
         "mime": "text/x-python",
         "path": "tests/test_active_legacy_name_noise.py",
         "repo": "aoa-routing",
-        "size_bytes": 884
+        "size_bytes": 1402
       },
       "mechanics_role": "none",
       "observed_form": "command",
@@ -85321,7 +85321,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "e54469a2696ff86a536e2b74d75ad93b160c5051bef676b8b75582b6c8af1cdc",
+        "digest": "123f9babd3adc8541411d7a73cc6c4e283a1517faf051e800051da460628db9f",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
