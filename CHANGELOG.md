@@ -12,6 +12,10 @@ Tracking starts with the community-docs baseline for this repository.
 - Pinned validation to the aoa-stats owner ref that retires the unsupported
   Titan Summon surface, then removed its derived re-grounding hint while
   preserving the active Titan Incarnation owner route.
+- Pinned validation to the aoa-stats owner ref that retires the example-only
+  Owner Landing aggregate, removed its derived re-grounding hint, and
+  preserved the active Supersession Drop hint plus its aoa-skills and Dionysus
+  owner-return routes.
 
 ## [0.2.2] - 2026-04-23
 

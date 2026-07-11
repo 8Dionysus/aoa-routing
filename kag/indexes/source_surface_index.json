@@ -81,7 +81,7 @@
   },
   "index_identity": {
     "artifact_kind": "source_surface_index",
-    "content_digest": "27dfb2797f03a762690f85c405303730666abb2e633571b96863075156c05a24",
+    "content_digest": "4b6038b8de06383119e0cc03d77468378935acdfa77b063ec81005616d0ce922",
     "local_id": "index:repo-local:source-surfaces",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-index.schema.json"
   },
@@ -24078,7 +24078,7 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "7d16400df013741317566c4820720dd1818c1707d7314d32c21a230ec8b9d973",
+        "content_hash": "51cff5a44dd0fcbc1f5a120aa1a59c9e939d593745610b8000dee78ff7664e30",
         "git_ref": "git-index-source-tree",
         "id": "file:.github/workflows/repo-validation.yml:3affb923d0",
         "mime": "application/yaml",
@@ -24117,7 +24117,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "7d16400df013741317566c4820720dd1818c1707d7314d32c21a230ec8b9d973",
+        "digest": "51cff5a44dd0fcbc1f5a120aa1a59c9e939d593745610b8000dee78ff7664e30",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -24419,13 +24419,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "164707e84b7827961385545d8146ece74e5494e35b54722532cd26ea3c25781c",
+        "content_hash": "c9c3096e7b88095a84df217ee8900eadfc7bf8de60faca64a5b3a0f5d96656eb",
         "git_ref": "git-index-source-tree",
         "id": "file:changelog.md:06572a96a5",
         "mime": "text/markdown",
         "path": "CHANGELOG.md",
         "repo": "aoa-routing",
-        "size_bytes": 9024
+        "size_bytes": 9273
       },
       "mechanics_role": "none",
       "observed_form": "file",
@@ -24475,182 +24475,182 @@
           {
             "anchor": "022-2026-04-23",
             "level": 2,
-            "line": 16,
+            "line": 20,
             "ref": "CHANGELOG.md#022-2026-04-23",
             "title": "[0.2.2] - 2026-04-23"
           },
           {
             "anchor": "summary",
             "level": 3,
-            "line": 18,
+            "line": 22,
             "ref": "CHANGELOG.md#summary",
             "title": "Summary"
           },
           {
             "anchor": "added",
             "level": 3,
-            "line": 29,
+            "line": 33,
             "ref": "CHANGELOG.md#added",
             "title": "Added"
           },
           {
             "anchor": "changed-1",
             "level": 3,
-            "line": 40,
+            "line": 44,
             "ref": "CHANGELOG.md#changed-1",
             "title": "Changed"
           },
           {
             "anchor": "validation",
             "level": 3,
-            "line": 48,
+            "line": 52,
             "ref": "CHANGELOG.md#validation",
             "title": "Validation"
           },
           {
             "anchor": "notes",
             "level": 3,
-            "line": 55,
+            "line": 59,
             "ref": "CHANGELOG.md#notes",
             "title": "Notes"
           },
           {
             "anchor": "021-2026-04-19",
             "level": 2,
-            "line": 60,
+            "line": 64,
             "ref": "CHANGELOG.md#021-2026-04-19",
             "title": "[0.2.1] - 2026-04-19"
           },
           {
             "anchor": "summary-1",
             "level": 3,
-            "line": 62,
+            "line": 66,
             "ref": "CHANGELOG.md#summary-1",
             "title": "Summary"
           },
           {
             "anchor": "added-1",
             "level": 3,
-            "line": 72,
+            "line": 76,
             "ref": "CHANGELOG.md#added-1",
             "title": "Added"
           },
           {
             "anchor": "changed-2",
             "level": 3,
-            "line": 79,
+            "line": 83,
             "ref": "CHANGELOG.md#changed-2",
             "title": "Changed"
           },
           {
             "anchor": "validation-1",
             "level": 3,
-            "line": 85,
+            "line": 89,
             "ref": "CHANGELOG.md#validation-1",
             "title": "Validation"
           },
           {
             "anchor": "notes-1",
             "level": 3,
-            "line": 89,
+            "line": 93,
             "ref": "CHANGELOG.md#notes-1",
             "title": "Notes"
           },
           {
             "anchor": "020-2026-04-10",
             "level": 2,
-            "line": 94,
+            "line": 98,
             "ref": "CHANGELOG.md#020-2026-04-10",
             "title": "[0.2.0] - 2026-04-10"
           },
           {
             "anchor": "summary-2",
             "level": 3,
-            "line": 96,
+            "line": 100,
             "ref": "CHANGELOG.md#summary-2",
             "title": "Summary"
           },
           {
             "anchor": "validation-2",
             "level": 3,
-            "line": 102,
+            "line": 106,
             "ref": "CHANGELOG.md#validation-2",
             "title": "Validation"
           },
           {
             "anchor": "notes-2",
             "level": 3,
-            "line": 106,
+            "line": 110,
             "ref": "CHANGELOG.md#notes-2",
             "title": "Notes"
           },
           {
             "anchor": "added-2",
             "level": 3,
-            "line": 110,
+            "line": 114,
             "ref": "CHANGELOG.md#added-2",
             "title": "Added"
           },
           {
             "anchor": "changed-3",
             "level": 3,
-            "line": 117,
+            "line": 121,
             "ref": "CHANGELOG.md#changed-3",
             "title": "Changed"
           },
           {
             "anchor": "included-in-this-release",
             "level": 3,
-            "line": 132,
+            "line": 136,
             "ref": "CHANGELOG.md#included-in-this-release",
             "title": "Included in this release"
           },
           {
             "anchor": "010-2026-04-01",
             "level": 2,
-            "line": 143,
+            "line": 147,
             "ref": "CHANGELOG.md#010-2026-04-01",
             "title": "[0.1.0] - 2026-04-01"
           },
           {
             "anchor": "summary-3",
             "level": 3,
-            "line": 149,
+            "line": 153,
             "ref": "CHANGELOG.md#summary-3",
             "title": "Summary"
           },
           {
             "anchor": "added-3",
             "level": 3,
-            "line": 155,
+            "line": 159,
             "ref": "CHANGELOG.md#added-3",
             "title": "Added"
           },
           {
             "anchor": "changed-4",
             "level": 3,
-            "line": 165,
+            "line": 169,
             "ref": "CHANGELOG.md#changed-4",
             "title": "Changed"
           },
           {
             "anchor": "included-in-this-release-1",
             "level": 3,
-            "line": 173,
+            "line": 177,
             "ref": "CHANGELOG.md#included-in-this-release-1",
             "title": "Included in this release"
           },
           {
             "anchor": "validation-3",
             "level": 3,
-            "line": 179,
+            "line": 183,
             "ref": "CHANGELOG.md#validation-3",
             "title": "Validation"
           },
           {
             "anchor": "notes-3",
             "level": 3,
-            "line": 187,
+            "line": 191,
             "ref": "CHANGELOG.md#notes-3",
             "title": "Notes"
           }
@@ -24662,7 +24662,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "164707e84b7827961385545d8146ece74e5494e35b54722532cd26ea3c25781c",
+        "digest": "c9c3096e7b88095a84df217ee8900eadfc7bf8de60faca64a5b3a0f5d96656eb",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -25159,13 +25159,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "c9164b137cdecf3ff8d46a8207e9fd2ed7d1ec1409155a6bf4cd98a726b6ab2b",
+        "content_hash": "be72220fae6f5d09be6854d16a4bb28724ebe8bea1089725d67ce559668b32a8",
         "git_ref": "git-index-source-tree",
         "id": "file:readme.md:b335630551",
         "mime": "text/markdown",
         "path": "README.md",
         "repo": "aoa-routing",
-        "size_bytes": 22919
+        "size_bytes": 23101
       },
       "mechanics_role": "none",
       "observed_form": "file",
@@ -25250,35 +25250,35 @@
           {
             "anchor": "repository-layout",
             "level": 2,
-            "line": 185,
+            "line": 188,
             "ref": "README.md#repository-layout",
             "title": "Repository layout"
           },
           {
             "anchor": "build-and-validate",
             "level": 2,
-            "line": 194,
+            "line": 197,
             "ref": "README.md#build-and-validate",
             "title": "Build and validate"
           },
           {
             "anchor": "go-elsewhere-when",
             "level": 2,
-            "line": 242,
+            "line": 245,
             "ref": "README.md#go-elsewhere-when",
             "title": "Go elsewhere when..."
           },
           {
             "anchor": "deferred-in-v01",
             "level": 2,
-            "line": 250,
+            "line": 253,
             "ref": "README.md#deferred-in-v01",
             "title": "Deferred in v0.1"
           },
           {
             "anchor": "license",
             "level": 2,
-            "line": 259,
+            "line": 262,
             "ref": "README.md#license",
             "title": "License"
           }
@@ -25290,7 +25290,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "c9164b137cdecf3ff8d46a8207e9fd2ed7d1ec1409155a6bf4cd98a726b6ab2b",
+        "digest": "be72220fae6f5d09be6854d16a4bb28724ebe8bea1089725d67ce559668b32a8",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -30081,13 +30081,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "e8912cf4f7895cbb236aab9ae28927d9f413cb93cd6ceb1c5d87143855f30f5d",
+        "content_hash": "ce61443373d4d9e48c40a548bf04b7e2f4edf946c8671db49a40ba589f016bc5",
         "git_ref": "git-index-source-tree",
         "id": "file:generated/stats_regrounding_hints.min.json:cc26be18ed",
         "mime": "application/json",
         "path": "generated/stats_regrounding_hints.min.json",
         "repo": "aoa-routing",
-        "size_bytes": 25971
+        "size_bytes": 24794
       },
       "mechanics_role": "none",
       "observed_form": "generated_output",
@@ -30120,7 +30120,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "e8912cf4f7895cbb236aab9ae28927d9f413cb93cd6ceb1c5d87143855f30f5d",
+        "digest": "ce61443373d4d9e48c40a548bf04b7e2f4edf946c8671db49a40ba589f016bc5",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -43211,13 +43211,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "dca32abe9cd3fc9deb8d8e0b342cc13f09ea099b61fae47ac6f3cb78ae44b4a3",
+        "content_hash": "75b1f49ed8a0ec43c068d4bcfe69a10f5368b0ee68da1f1cf6906ebf4e994d07",
         "git_ref": "git-index-source-tree",
         "id": "file:mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md:4005f4ccc2",
         "mime": "text/markdown",
         "path": "mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md",
         "repo": "aoa-routing",
-        "size_bytes": 1353
+        "size_bytes": 1701
       },
       "mechanics_role": "part_doc",
       "observed_form": "file",
@@ -43253,14 +43253,14 @@
           {
             "anchor": "boundary",
             "level": 2,
-            "line": 15,
+            "line": 21,
             "ref": "mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md#boundary",
             "title": "Boundary"
           },
           {
             "anchor": "consumer-posture",
             "level": 2,
-            "line": 33,
+            "line": 39,
             "ref": "mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md#consumer-posture",
             "title": "Consumer Posture"
           }
@@ -43272,7 +43272,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "dca32abe9cd3fc9deb8d8e0b342cc13f09ea099b61fae47ac6f3cb78ae44b4a3",
+        "digest": "75b1f49ed8a0ec43c068d4bcfe69a10f5368b0ee68da1f1cf6906ebf4e994d07",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -85562,13 +85562,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "89d2693872ba08ecc3b6ca2fa32bfd6ac17a95112b8f76c43868977524896498",
+        "content_hash": "598f5fc09114eb441282d2db2ac0d8a353167ceb55867d1ed2434ba86a3a4da8",
         "git_ref": "git-index-source-tree",
         "id": "file:tests/test_build_router.py:969a1e055b",
         "mime": "text/x-python",
         "path": "tests/test_build_router.py",
         "repo": "aoa-routing",
-        "size_bytes": 93009
+        "size_bytes": 95408
       },
       "mechanics_role": "none",
       "observed_form": "command",
@@ -85601,7 +85601,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "89d2693872ba08ecc3b6ca2fa32bfd6ac17a95112b8f76c43868977524896498",
+        "digest": "598f5fc09114eb441282d2db2ac0d8a353167ceb55867d1ed2434ba86a3a4da8",
         "signature_ref": "",
         "verification_state": "digest-only"
       },

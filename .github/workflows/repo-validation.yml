@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-stats
-          ref: 34b0973a9c27f6edbff08d3df30fc6fa179fcbd6
+          ref: d549bca4a9857837ad6bd53fb7941c83072fda52
           path: aoa-stats
 
       - name: Checkout aoa-memo
