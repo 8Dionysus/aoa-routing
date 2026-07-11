@@ -2088,6 +2088,68 @@ def test_stats_regrounding_routes_active_titan_and_omits_retired_summon(
     )
 
 
+def test_stats_regrounding_omits_retired_owner_landing_and_keeps_turnover_routes(
+    tmp_path: Path,
+) -> None:
+    stats_root = tmp_path / "aoa-stats"
+    shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)
+    catalog_path = stats_root / "generated" / "summary_surface_catalog.min.json"
+    catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
+    owner_truth_inputs = [
+        "aoa-skills reviewed harvest receipts",
+        "aoa-skills reviewed owner landing receipts",
+        "Dionysus source-route owner landing traces",
+    ]
+    authority_note = (
+        "Weaker than reviewed turnover records and any owner-local acceptance or "
+        "rejection rationale."
+    )
+    catalog["surfaces"].append(
+        {
+            "name": "supersession_drop_summary",
+            "surface_ref": "generated/supersession_drop_summary.min.json",
+            "input_posture": "receipt_backed_live",
+            "owner_truth_inputs": owner_truth_inputs,
+            "authority_ceiling": authority_note,
+            "consumer_risk": "high",
+            "live_state_capable": True,
+        }
+    )
+    write_json(catalog_path, catalog)
+
+    payload = build_router.build_stats_regrounding_hints_payload(stats_root)
+    derived_hints = {item["surface_name"]: item for item in payload["hints"]}
+    committed_payload = json.loads(
+        (
+            Path(__file__).resolve().parents[1]
+            / "generated"
+            / "stats_regrounding_hints.min.json"
+        ).read_text(encoding="utf-8")
+    )
+    committed_hints = {
+        item["surface_name"]: item for item in committed_payload["hints"]
+    }
+
+    assert "owner_landing_summary" not in derived_hints
+    assert "owner_landing_summary" not in committed_hints
+    assert "generated/owner_landing_summary.min.json" not in json.dumps(
+        committed_payload, sort_keys=True
+    )
+
+    derived_hint = derived_hints["supersession_drop_summary"]
+    assert derived_hint["owner_truth_inputs"] == owner_truth_inputs
+    assert derived_hint["primary_action"] == {
+        "verb": "inspect",
+        "target_repo": "aoa-skills",
+        "target_ref": owner_truth_inputs[0],
+    }
+    assert derived_hint["authority_note"] == authority_note
+    for field in ("owner_truth_inputs", "primary_action", "authority_note"):
+        assert committed_hints["supersession_drop_summary"][field] == derived_hint[
+            field
+        ]
+
+
 def test_stats_regrounding_hints_require_summary_surfaces_key(tmp_path: Path) -> None:
     stats_root = tmp_path / "aoa-stats"
     shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)

@@ -12,6 +12,12 @@ the router removes the corresponding hint instead of preserving a routing-side
 compatibility tombstone. Retirement provenance and stale-output cleanup remain
 with the stats owner.
 
+The retired Owner Landing aggregate therefore has no routing hint. Its landing
+receipt kinds still feed the active Supersession Drop surface, whose hint keeps
+the reviewed `aoa-skills` harvest/landing routes and Dionysus source-route
+trace. Removing a retired aggregate must not erase owner-return routes used by
+a different active stats surface.
+
 ## Boundary
 
 This surface is advisory only.
