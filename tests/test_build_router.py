@@ -2023,54 +2023,38 @@ def test_stats_regrounding_routes_runtime_closeout_to_current_owner_truth(
         assert committed_hint[field] == derived_hint[field]
 
 
-def test_stats_regrounding_routes_titan_references_to_real_owner_contracts(
+def test_stats_regrounding_routes_active_titan_and_omits_retired_summon(
     tmp_path: Path,
 ) -> None:
     stats_root = tmp_path / "aoa-stats"
     shutil.copytree(FIXTURES_ROOT / "aoa-stats", stats_root)
     catalog_path = stats_root / "generated" / "summary_surface_catalog.min.json"
     catalog = json.loads(catalog_path.read_text(encoding="utf-8"))
-    titan_contracts = {
-        "titan_incarnation_summary": {
-            "surface_ref": "generated/titan_incarnation_summary.min.json",
-            "owner_truth_inputs": [
-                "aoa-agents/mechanics/titan/parts/incarnation-spine/examples/operator-console-roster.v0.json",
-                "aoa-agents/mechanics/titan/parts/runtime-roster/examples/runtime-roster.v0.json",
-                "aoa-sdk/mechanics/titan/parts/incarnation-identity-runtime-helper-contracts/examples/titan_session_receipt.v2.example.json",
-            ],
-            "primary_action": {
-                "verb": "inspect",
-                "target_repo": "aoa-agents",
-                "target_ref": "aoa-agents/mechanics/titan/parts/incarnation-spine/examples/operator-console-roster.v0.json",
-            },
-            "authority_note": "Weaker than current aoa-agents Titan identity and gate state, aoa-sdk runtime state, any owner-local session receipt, and operator review evidence.",
+    incarnation_contract = {
+        "surface_ref": "generated/titan_incarnation_summary.min.json",
+        "owner_truth_inputs": [
+            "aoa-agents/mechanics/titan/parts/incarnation-spine/examples/operator-console-roster.v0.json",
+            "aoa-agents/mechanics/titan/parts/runtime-roster/examples/runtime-roster.v0.json",
+            "aoa-sdk/mechanics/titan/parts/incarnation-identity-runtime-helper-contracts/examples/titan_session_receipt.v2.example.json",
+        ],
+        "primary_action": {
+            "verb": "inspect",
+            "target_repo": "aoa-agents",
+            "target_ref": "aoa-agents/mechanics/titan/parts/incarnation-spine/examples/operator-console-roster.v0.json",
         },
-        "titan_summon_summary": {
-            "surface_ref": "generated/titan_summon_summary.min.json",
-            "owner_truth_inputs": [
-                "aoa-sdk/mechanics/titan/parts/swarm-ledger-closeout-helper-contracts/schemas/titan_swarm_ledger.schema.json",
-                "aoa-sdk/mechanics/titan/parts/swarm-ledger-closeout-helper-contracts/docs/swarm-ledger.md",
-            ],
-            "primary_action": {
-                "verb": "inspect",
-                "target_repo": "aoa-sdk",
-                "target_ref": "aoa-sdk/mechanics/titan/parts/swarm-ledger-closeout-helper-contracts/schemas/titan_swarm_ledger.schema.json",
-            },
-            "authority_note": "Weaker than any owner-local Titan swarm ledger, closeout audit, report, finding, memory candidate, and bounded eval verdict; this surface is a compatibility baseline only.",
-        },
+        "authority_note": "Weaker than current aoa-agents Titan identity and gate state, aoa-sdk runtime state, any owner-local session receipt, and operator review evidence.",
     }
-    for surface_name, contract in titan_contracts.items():
-        catalog["surfaces"].append(
-            {
-                "name": surface_name,
-                "surface_ref": contract["surface_ref"],
-                "input_posture": "reference_only",
-                "owner_truth_inputs": contract["owner_truth_inputs"],
-                "authority_ceiling": contract["authority_note"],
-                "consumer_risk": "high",
-                "live_state_capable": False,
-            }
-        )
+    catalog["surfaces"].append(
+        {
+            "name": "titan_incarnation_summary",
+            "surface_ref": incarnation_contract["surface_ref"],
+            "input_posture": "reference_only",
+            "owner_truth_inputs": incarnation_contract["owner_truth_inputs"],
+            "authority_ceiling": incarnation_contract["authority_note"],
+            "consumer_risk": "high",
+            "live_state_capable": False,
+        }
+    )
     write_json(catalog_path, catalog)
 
     payload = build_router.build_stats_regrounding_hints_payload(stats_root)
@@ -2086,19 +2070,22 @@ def test_stats_regrounding_routes_titan_references_to_real_owner_contracts(
         item["surface_name"]: item for item in committed_payload["hints"]
     }
 
-    for surface_name, contract in titan_contracts.items():
-        derived_hint = derived_hints[surface_name]
-        assert derived_hint["owner_truth_inputs"] == contract["owner_truth_inputs"]
-        assert derived_hint["primary_action"] == contract["primary_action"]
-        assert derived_hint["authority_note"] == contract["authority_note"]
-        for field in ("owner_truth_inputs", "primary_action", "authority_note"):
-            assert committed_hints[surface_name][field] == derived_hint[field]
+    derived_hint = derived_hints["titan_incarnation_summary"]
+    assert derived_hint["owner_truth_inputs"] == incarnation_contract[
+        "owner_truth_inputs"
+    ]
+    assert derived_hint["primary_action"] == incarnation_contract["primary_action"]
+    assert derived_hint["authority_note"] == incarnation_contract["authority_note"]
+    for field in ("owner_truth_inputs", "primary_action", "authority_note"):
+        assert committed_hints["titan_incarnation_summary"][field] == derived_hint[
+            field
+        ]
 
-    serialized_hints = json.dumps(
-        [committed_hints[name] for name in titan_contracts], sort_keys=True
+    assert "titan_summon_summary" not in derived_hints
+    assert "titan_summon_summary" not in committed_hints
+    assert "generated/titan_summon_summary.min.json" not in json.dumps(
+        committed_payload, sort_keys=True
     )
-    assert "Dionysus fifteenth manifest" not in serialized_hints
-    assert "Dionysus sixteenth manifest" not in serialized_hints
 
 
 def test_stats_regrounding_hints_require_summary_surfaces_key(tmp_path: Path) -> None:
