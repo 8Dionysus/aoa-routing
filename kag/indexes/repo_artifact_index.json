@@ -1754,7 +1754,7 @@
     },
     {
       "artifact_kind": "document",
-      "content_hash": "c384fbbb51b03b54abf3da82c7476455e257cc37bfea2097a810ae1fcc2cbaa8",
+      "content_hash": "0716d1c2fc7a76d2a9736a1c1b6c9091c80aeb1917cc7fe8997a0bb69378aa3e",
       "id": "artifact:file:changelog.md:06572a96a5",
       "path": "CHANGELOG.md",
       "source_record_id": "file:changelog.md:06572a96a5",
@@ -2746,7 +2746,7 @@
     },
     {
       "artifact_kind": "config",
-      "content_hash": "2d7b005d9cef2f15097d1c306e86a25980108726b71737673ff913117e0c5770",
+      "content_hash": "9500b60d7472dc5fd128f2edfac121a4da689d6e9c0651125ce0802027d69ab8",
       "id": "artifact:file:mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json:612b53555e",
       "path": "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json",
       "source_record_id": "file:mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json:612b53555e",
@@ -2754,7 +2754,7 @@
     },
     {
       "artifact_kind": "config",
-      "content_hash": "3f8ef2a3697615c1674926ea34ca15ff5762c40be945c0607fb185fda872fe36",
+      "content_hash": "9cae7cfc300c5386321265d9f31ad16d958fe522692ef042bb9835c1a846abf9",
       "id": "artifact:file:mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json:39cd71fd31",
       "path": "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json",
       "source_record_id": "file:mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json:39cd71fd31",
@@ -6666,7 +6666,7 @@
     },
     {
       "artifact_kind": "test",
-      "content_hash": "94aa88b6bb41114357727f0e6cf41d207f1b8d0feb01aab9a4165701a33448dc",
+      "content_hash": "dc7e5d989100fa9692a6b35af8b918c6755490cda728910a262bce62e17974f8",
       "id": "artifact:file:tests/test_antifragility_public_surface.py:5c53b98670",
       "path": "tests/test_antifragility_public_surface.py",
       "source_record_id": "file:tests/test_antifragility_public_surface.py:5c53b98670",
@@ -6811,7 +6811,7 @@
   ],
   "index_identity": {
     "artifact_kind": "repository_artifact_index",
-    "content_digest": "371c63e3ddff1c435a703e253c68d2246aae770626403709e5f5d2b724cb0f3c",
+    "content_digest": "554dd42bd8edd713402e10bea74a099d5d6a8a3378cfded4ed8f6b5c0543f510",
     "index_kind": "artifact",
     "local_id": "index:repo-local:artifacts",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-repository-index.schema.json"
@@ -6835,7 +6835,7 @@
   },
   "schema_version": "aoa-repo-local-kag-repository-index-v1",
   "source_index": {
-    "content_digest": "660d229006f67db067e35d06e52ee5c3ea50e8bb56fea9d4b86dc300378c88c3",
+    "content_digest": "d360e64df950bc5ffd48a5c7ab2b696c695bf50a75b5c90c77d8b4c85bd60fea",
     "local_id": "index:repo-local:source-surfaces",
     "path": "kag/indexes/source_surface_index.json"
   },

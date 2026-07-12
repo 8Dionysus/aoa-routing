@@ -49,6 +49,32 @@ def test_retrieval_outage_honesty_composite_example_validates_against_schema() -
     Draft202012Validator(schema).validate(example)
 
 
+def test_composite_stress_examples_route_to_current_owner_paths() -> None:
+    examples = (
+        load_json(
+            "mechanics/antifragility/parts/composite-stress-routing/examples/"
+            "composite_stress_route_hint.example.json"
+        ),
+        load_json(
+            "mechanics/antifragility/parts/composite-stress-routing/examples/"
+            "composite_stress_route_hint.retrieval-outage-honesty.example.json"
+        ),
+    )
+    required_route_fragments = (
+        "aoa-playbooks:mechanics/antifragility/parts/",
+        "aoa-kag:mechanics/antifragility/parts/",
+        "aoa-memo:mechanics/antifragility/parts/recovery-pattern-memory/",
+        "repo:aoa-evals/evals/comparison/longitudinal-window/"
+        "aoa-stress-recovery-window/",
+    )
+
+    for example in examples:
+        serialized = json.dumps(example, sort_keys=True)
+        for fragment in required_route_fragments:
+            assert fragment in serialized
+        assert "repo:aoa-evals/bundles/aoa-stress-recovery-window/" not in serialized
+
+
 def test_antifragility_surfaces_are_discoverable_and_keep_routing_thin() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     routing_doc = (
