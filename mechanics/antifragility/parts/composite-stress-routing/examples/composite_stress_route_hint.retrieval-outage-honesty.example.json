@@ -10,12 +10,12 @@
   "preferred_posture": "source_first_until_pass",
   "input_refs": {
     "stats_summary_ref": "aoa-stats:generated/stress_recovery_window_summary.min.json",
-    "playbook_lane_ref": "aoa-playbooks:examples/playbook_stress_lane.retrieval-outage-honesty.example.json",
-    "reentry_gate_ref": "aoa-playbooks:examples/playbook_reentry_gate.retrieval-outage-honesty.example.json",
-    "projection_health_ref": "aoa-kag:examples/projection_health_receipt.retrieval-outage-honesty.example.json",
-    "regrounding_ticket_ref": "aoa-kag:examples/regrounding_ticket.retrieval-outage-honesty.example.json",
+    "playbook_lane_ref": "aoa-playbooks:mechanics/antifragility/parts/stress-lanes/examples/playbook_stress_lane.retrieval-outage-honesty.example.json",
+    "reentry_gate_ref": "aoa-playbooks:mechanics/antifragility/parts/reentry-gates/examples/playbook_reentry_gate.retrieval-outage-honesty.example.json",
+    "projection_health_ref": "aoa-kag:mechanics/antifragility/parts/projection-health/examples/projection_health_receipt.retrieval-outage-honesty.example.json",
+    "regrounding_ticket_ref": "aoa-kag:mechanics/antifragility/parts/retrieval-outage-regrounding/examples/regrounding_ticket.retrieval-outage-honesty.example.json",
     "memo_pattern_refs": [
-      "aoa-memo:examples/pattern.antifragility-stress-recovery-window.example.json"
+      "aoa-memo:mechanics/antifragility/parts/recovery-pattern-memory/examples/pattern.antifragility-stress-recovery-window.example.json"
     ]
   },
   "route_status": {
@@ -39,7 +39,7 @@
     ],
     "proof_refs": [
       "repo:aoa-evals/mechanics/audit/parts/artifact-verdict-hooks/docs/TRACE_EVAL_BRIDGE.md",
-      "repo:aoa-evals/bundles/aoa-stress-recovery-window/EVAL.md"
+      "repo:aoa-evals/evals/comparison/longitudinal-window/aoa-stress-recovery-window/EVAL.md"
     ],
     "adjacent_source_refs": [
       "aoa-playbooks:playbook_stress_lane_v1#playbook:stress-lane:runtime-chaos-recovery:retrieval-outage-honesty",
@@ -59,35 +59,35 @@
     {
       "kind": "playbook_lane",
       "target_repo": "aoa-playbooks",
-      "target_surface": "examples/playbook_stress_lane.retrieval-outage-honesty.example.json",
+      "target_surface": "mechanics/antifragility/parts/stress-lanes/examples/playbook_stress_lane.retrieval-outage-honesty.example.json",
       "reason": "Use the structured degraded lane instead of reparsing prose.",
       "bounded": true
     },
     {
       "kind": "reentry_gate",
       "target_repo": "aoa-playbooks",
-      "target_surface": "examples/playbook_reentry_gate.retrieval-outage-honesty.example.json",
+      "target_surface": "mechanics/antifragility/parts/reentry-gates/examples/playbook_reentry_gate.retrieval-outage-honesty.example.json",
       "reason": "Re-entry remains source-owned by the explicit gate.",
       "bounded": true
     },
     {
       "kind": "projection_health",
       "target_repo": "aoa-kag",
-      "target_surface": "examples/projection_health_receipt.retrieval-outage-honesty.example.json",
+      "target_surface": "mechanics/antifragility/parts/projection-health/examples/projection_health_receipt.retrieval-outage-honesty.example.json",
       "reason": "Read the derived-surface outage from the KAG-owned health receipt.",
       "bounded": true
     },
     {
       "kind": "regrounding_ticket",
       "target_repo": "aoa-kag",
-      "target_surface": "examples/regrounding_ticket.retrieval-outage-honesty.example.json",
+      "target_surface": "mechanics/antifragility/parts/retrieval-outage-regrounding/examples/regrounding_ticket.retrieval-outage-honesty.example.json",
       "reason": "Reground through the bounded KAG repair plan instead of inventing a repair inside routing.",
       "bounded": true
     },
     {
       "kind": "memo_pattern",
       "target_repo": "aoa-memo",
-      "target_surface": "examples/pattern.antifragility-stress-recovery-window.example.json",
+      "target_surface": "mechanics/antifragility/parts/recovery-pattern-memory/examples/pattern.antifragility-stress-recovery-window.example.json",
       "reason": "Optional reviewed recovery context may come last, after owner receipts and gates.",
       "bounded": true
     }
@@ -96,7 +96,7 @@
     {
       "memory_id": "memo.pattern.2026-04-13.retrieval-outage-honesty",
       "title": "Retrieval outage honesty keeps source-first posture until derived surfaces validate again.",
-      "source_path": "examples/pattern.antifragility-stress-recovery-window.example.json",
+      "source_path": "mechanics/antifragility/parts/recovery-pattern-memory/examples/pattern.antifragility-stress-recovery-window.example.json",
       "review_state": "confirmed",
       "current_recall_status": "preferred"
     }

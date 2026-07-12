@@ -81,7 +81,7 @@
   },
   "index_identity": {
     "artifact_kind": "source_surface_index",
-    "content_digest": "660d229006f67db067e35d06e52ee5c3ea50e8bb56fea9d4b86dc300378c88c3",
+    "content_digest": "d360e64df950bc5ffd48a5c7ab2b696c695bf50a75b5c90c77d8b4c85bd60fea",
     "local_id": "index:repo-local:source-surfaces",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-index.schema.json"
   },
@@ -24419,13 +24419,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "c384fbbb51b03b54abf3da82c7476455e257cc37bfea2097a810ae1fcc2cbaa8",
+        "content_hash": "0716d1c2fc7a76d2a9736a1c1b6c9091c80aeb1917cc7fe8997a0bb69378aa3e",
         "git_ref": "git-index-source-tree",
         "id": "file:changelog.md:06572a96a5",
         "mime": "text/markdown",
         "path": "CHANGELOG.md",
         "repo": "aoa-routing",
-        "size_bytes": 9530
+        "size_bytes": 9752
       },
       "mechanics_role": "none",
       "observed_form": "file",
@@ -24475,182 +24475,182 @@
           {
             "anchor": "022-2026-04-23",
             "level": 2,
-            "line": 24,
+            "line": 27,
             "ref": "CHANGELOG.md#022-2026-04-23",
             "title": "[0.2.2] - 2026-04-23"
           },
           {
             "anchor": "summary",
             "level": 3,
-            "line": 26,
+            "line": 29,
             "ref": "CHANGELOG.md#summary",
             "title": "Summary"
           },
           {
             "anchor": "added",
             "level": 3,
-            "line": 37,
+            "line": 40,
             "ref": "CHANGELOG.md#added",
             "title": "Added"
           },
           {
             "anchor": "changed-1",
             "level": 3,
-            "line": 48,
+            "line": 51,
             "ref": "CHANGELOG.md#changed-1",
             "title": "Changed"
           },
           {
             "anchor": "validation",
             "level": 3,
-            "line": 56,
+            "line": 59,
             "ref": "CHANGELOG.md#validation",
             "title": "Validation"
           },
           {
             "anchor": "notes",
             "level": 3,
-            "line": 63,
+            "line": 66,
             "ref": "CHANGELOG.md#notes",
             "title": "Notes"
           },
           {
             "anchor": "021-2026-04-19",
             "level": 2,
-            "line": 68,
+            "line": 71,
             "ref": "CHANGELOG.md#021-2026-04-19",
             "title": "[0.2.1] - 2026-04-19"
           },
           {
             "anchor": "summary-1",
             "level": 3,
-            "line": 70,
+            "line": 73,
             "ref": "CHANGELOG.md#summary-1",
             "title": "Summary"
           },
           {
             "anchor": "added-1",
             "level": 3,
-            "line": 80,
+            "line": 83,
             "ref": "CHANGELOG.md#added-1",
             "title": "Added"
           },
           {
             "anchor": "changed-2",
             "level": 3,
-            "line": 87,
+            "line": 90,
             "ref": "CHANGELOG.md#changed-2",
             "title": "Changed"
           },
           {
             "anchor": "validation-1",
             "level": 3,
-            "line": 93,
+            "line": 96,
             "ref": "CHANGELOG.md#validation-1",
             "title": "Validation"
           },
           {
             "anchor": "notes-1",
             "level": 3,
-            "line": 97,
+            "line": 100,
             "ref": "CHANGELOG.md#notes-1",
             "title": "Notes"
           },
           {
             "anchor": "020-2026-04-10",
             "level": 2,
-            "line": 102,
+            "line": 105,
             "ref": "CHANGELOG.md#020-2026-04-10",
             "title": "[0.2.0] - 2026-04-10"
           },
           {
             "anchor": "summary-2",
             "level": 3,
-            "line": 104,
+            "line": 107,
             "ref": "CHANGELOG.md#summary-2",
             "title": "Summary"
           },
           {
             "anchor": "validation-2",
             "level": 3,
-            "line": 110,
+            "line": 113,
             "ref": "CHANGELOG.md#validation-2",
             "title": "Validation"
           },
           {
             "anchor": "notes-2",
             "level": 3,
-            "line": 114,
+            "line": 117,
             "ref": "CHANGELOG.md#notes-2",
             "title": "Notes"
           },
           {
             "anchor": "added-2",
             "level": 3,
-            "line": 118,
+            "line": 121,
             "ref": "CHANGELOG.md#added-2",
             "title": "Added"
           },
           {
             "anchor": "changed-3",
             "level": 3,
-            "line": 125,
+            "line": 128,
             "ref": "CHANGELOG.md#changed-3",
             "title": "Changed"
           },
           {
             "anchor": "included-in-this-release",
             "level": 3,
-            "line": 140,
+            "line": 143,
             "ref": "CHANGELOG.md#included-in-this-release",
             "title": "Included in this release"
           },
           {
             "anchor": "010-2026-04-01",
             "level": 2,
-            "line": 151,
+            "line": 154,
             "ref": "CHANGELOG.md#010-2026-04-01",
             "title": "[0.1.0] - 2026-04-01"
           },
           {
             "anchor": "summary-3",
             "level": 3,
-            "line": 157,
+            "line": 160,
             "ref": "CHANGELOG.md#summary-3",
             "title": "Summary"
           },
           {
             "anchor": "added-3",
             "level": 3,
-            "line": 163,
+            "line": 166,
             "ref": "CHANGELOG.md#added-3",
             "title": "Added"
           },
           {
             "anchor": "changed-4",
             "level": 3,
-            "line": 173,
+            "line": 176,
             "ref": "CHANGELOG.md#changed-4",
             "title": "Changed"
           },
           {
             "anchor": "included-in-this-release-1",
             "level": 3,
-            "line": 181,
+            "line": 184,
             "ref": "CHANGELOG.md#included-in-this-release-1",
             "title": "Included in this release"
           },
           {
             "anchor": "validation-3",
             "level": 3,
-            "line": 187,
+            "line": 190,
             "ref": "CHANGELOG.md#validation-3",
             "title": "Validation"
           },
           {
             "anchor": "notes-3",
             "level": 3,
-            "line": 195,
+            "line": 198,
             "ref": "CHANGELOG.md#notes-3",
             "title": "Notes"
           }
@@ -24662,7 +24662,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "c384fbbb51b03b54abf3da82c7476455e257cc37bfea2097a810ae1fcc2cbaa8",
+        "digest": "0716d1c2fc7a76d2a9736a1c1b6c9091c80aeb1917cc7fe8997a0bb69378aa3e",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -37661,13 +37661,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "2d7b005d9cef2f15097d1c306e86a25980108726b71737673ff913117e0c5770",
+        "content_hash": "9500b60d7472dc5fd128f2edfac121a4da689d6e9c0651125ce0802027d69ab8",
         "git_ref": "git-index-source-tree",
         "id": "file:mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json:612b53555e",
         "mime": "application/json",
         "path": "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json",
         "repo": "aoa-routing",
-        "size_bytes": 4435
+        "size_bytes": 5014
       },
       "mechanics_role": "mechanic_part",
       "observed_form": "file",
@@ -37700,7 +37700,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "2d7b005d9cef2f15097d1c306e86a25980108726b71737673ff913117e0c5770",
+        "digest": "9500b60d7472dc5fd128f2edfac121a4da689d6e9c0651125ce0802027d69ab8",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -37750,13 +37750,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "3f8ef2a3697615c1674926ea34ca15ff5762c40be945c0607fb185fda872fe36",
+        "content_hash": "9cae7cfc300c5386321265d9f31ad16d958fe522692ef042bb9835c1a846abf9",
         "git_ref": "git-index-source-tree",
         "id": "file:mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json:39cd71fd31",
         "mime": "application/json",
         "path": "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json",
         "repo": "aoa-routing",
-        "size_bytes": 4545
+        "size_bytes": 5124
       },
       "mechanics_role": "mechanic_part",
       "observed_form": "file",
@@ -37789,7 +37789,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "3f8ef2a3697615c1674926ea34ca15ff5762c40be945c0607fb185fda872fe36",
+        "digest": "9cae7cfc300c5386321265d9f31ad16d958fe522692ef042bb9835c1a846abf9",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
@@ -85471,13 +85471,13 @@
         "state": "current"
       },
       "identity": {
-        "content_hash": "94aa88b6bb41114357727f0e6cf41d207f1b8d0feb01aab9a4165701a33448dc",
+        "content_hash": "dc7e5d989100fa9692a6b35af8b918c6755490cda728910a262bce62e17974f8",
         "git_ref": "git-index-source-tree",
         "id": "file:tests/test_antifragility_public_surface.py:5c53b98670",
         "mime": "text/x-python",
         "path": "tests/test_antifragility_public_surface.py",
         "repo": "aoa-routing",
-        "size_bytes": 5656
+        "size_bytes": 6696
       },
       "mechanics_role": "none",
       "observed_form": "command",
@@ -85510,7 +85510,7 @@
       },
       "signs": {
         "attestation_ref": "",
-        "digest": "94aa88b6bb41114357727f0e6cf41d207f1b8d0feb01aab9a4165701a33448dc",
+        "digest": "dc7e5d989100fa9692a6b35af8b918c6755490cda728910a262bce62e17974f8",
         "signature_ref": "",
         "verification_state": "digest-only"
       },
