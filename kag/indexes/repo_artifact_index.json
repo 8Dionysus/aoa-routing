@@ -1730,7 +1730,7 @@
     },
     {
       "artifact_kind": "config",
-      "content_hash": "51cff5a44dd0fcbc1f5a120aa1a59c9e939d593745610b8000dee78ff7664e30",
+      "content_hash": "2337b41c6c3af5a5c51533d2607c6b1291a810a42b4cca683beebc5827914b8e",
       "id": "artifact:file:.github/workflows/repo-validation.yml:3affb923d0",
       "path": ".github/workflows/repo-validation.yml",
       "source_record_id": "file:.github/workflows/repo-validation.yml:3affb923d0",
@@ -1754,7 +1754,7 @@
     },
     {
       "artifact_kind": "document",
-      "content_hash": "c9c3096e7b88095a84df217ee8900eadfc7bf8de60faca64a5b3a0f5d96656eb",
+      "content_hash": "c384fbbb51b03b54abf3da82c7476455e257cc37bfea2097a810ae1fcc2cbaa8",
       "id": "artifact:file:changelog.md:06572a96a5",
       "path": "CHANGELOG.md",
       "source_record_id": "file:changelog.md:06572a96a5",
@@ -1794,7 +1794,7 @@
     },
     {
       "artifact_kind": "document",
-      "content_hash": "be72220fae6f5d09be6854d16a4bb28724ebe8bea1089725d67ce559668b32a8",
+      "content_hash": "47964eeba359baed1f569d5e2dc05b8e8ef9cd9f01a115a2b1dff05edb2678a8",
       "id": "artifact:file:readme.md:b335630551",
       "path": "README.md",
       "source_record_id": "file:readme.md:b335630551",
@@ -2130,7 +2130,7 @@
     },
     {
       "artifact_kind": "generated_readmodel",
-      "content_hash": "ce61443373d4d9e48c40a548bf04b7e2f4edf946c8671db49a40ba589f016bc5",
+      "content_hash": "ddb271de50f32a861fa62b3e470532bbe8667af7393860e9f497989d208cb4dd",
       "id": "artifact:file:generated/stats_regrounding_hints.min.json:cc26be18ed",
       "path": "generated/stats_regrounding_hints.min.json",
       "source_record_id": "file:generated/stats_regrounding_hints.min.json:cc26be18ed",
@@ -3178,7 +3178,7 @@
     },
     {
       "artifact_kind": "document",
-      "content_hash": "75b1f49ed8a0ec43c068d4bcfe69a10f5368b0ee68da1f1cf6906ebf4e994d07",
+      "content_hash": "5a7b8c9c1b7c1d004164d1a237e46f6225fbf19b8f5e98871c5b319d6064d7ff",
       "id": "artifact:file:mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md:4005f4ccc2",
       "path": "mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md",
       "source_record_id": "file:mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md:4005f4ccc2",
@@ -6674,7 +6674,7 @@
     },
     {
       "artifact_kind": "test",
-      "content_hash": "598f5fc09114eb441282d2db2ac0d8a353167ceb55867d1ed2434ba86a3a4da8",
+      "content_hash": "f4556e04ddb9c23640c07e0b07398b5438ad62555c5dc889f284e3bfebbc60b8",
       "id": "artifact:file:tests/test_build_router.py:969a1e055b",
       "path": "tests/test_build_router.py",
       "source_record_id": "file:tests/test_build_router.py:969a1e055b",
@@ -6811,7 +6811,7 @@
   ],
   "index_identity": {
     "artifact_kind": "repository_artifact_index",
-    "content_digest": "b69b438cc4e3ca6eaa124c83daca9df122ca9f2866a43fb2d1d9f48da5ee5ca1",
+    "content_digest": "371c63e3ddff1c435a703e253c68d2246aae770626403709e5f5d2b724cb0f3c",
     "index_kind": "artifact",
     "local_id": "index:repo-local:artifacts",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-repository-index.schema.json"
@@ -6835,7 +6835,7 @@
   },
   "schema_version": "aoa-repo-local-kag-repository-index-v1",
   "source_index": {
-    "content_digest": "4b6038b8de06383119e0cc03d77468378935acdfa77b063ec81005616d0ce922",
+    "content_digest": "660d229006f67db067e35d06e52ee5c3ea50e8bb56fea9d4b86dc300378c88c3",
     "local_id": "index:repo-local:source-surfaces",
     "path": "kag/indexes/source_surface_index.json"
   },

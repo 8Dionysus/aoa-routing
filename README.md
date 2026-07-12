@@ -169,9 +169,10 @@ they rely on high-risk or thinly grounded stats surfaces. It does not decide
 the re-grounding policy itself; that remains an `aoa-sdk` control-plane concern.
 Only owner-cataloged surfaces receive hints: a retired stats surface disappears
 from routing rather than becoming a routing-owned compatibility record.
-Owner Landing now follows that lifecycle rule alongside Titan Summon, while
-the still-cataloged Supersession Drop hint retains the landing receipt owner
-routes it actually consumes.
+Runtime Closeout and Owner Landing now follow that lifecycle rule alongside
+Titan Summon. The generic Object, Repeated Window, and Source Coverage hints
+still route consumers toward the receipt feed, while the still-cataloged
+Supersession Drop hint retains the landing receipt owner routes it consumes.
 
 Agon gate routing stays additive too. `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`
 may emit pre-protocol gate candidates, missing-context hints, owner-review
