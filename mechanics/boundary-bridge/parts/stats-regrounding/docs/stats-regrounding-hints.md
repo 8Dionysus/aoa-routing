@@ -18,6 +18,12 @@ the reviewed `aoa-skills` harvest/landing routes and Dionysus source-route
 trace. Removing a retired aggregate must not erase owner-return routes used by
 a different active stats surface.
 
+The historical Runtime Closeout snapshot follows the same rule. Its retired
+surface has no routing hint, while historical compatibility receipts may still
+enter the stats owner's generic Object, Repeated Window, and Source Coverage
+surfaces. Routing keeps those cataloged receipt routes and does not promote the
+old snapshot into current runtime-closeout truth.
+
 ## Boundary
 
 This surface is advisory only.

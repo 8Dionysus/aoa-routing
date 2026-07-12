@@ -9,6 +9,10 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Changed
 
+- Pinned validation to the aoa-stats owner ref that classifies the historical
+  Runtime Closeout snapshot as contract history, removed its derived
+  re-grounding hint, and preserved the generic Object, Repeated Window, and
+  Source Coverage receipt routes.
 - Pinned validation to the aoa-stats owner ref that retires the unsupported
   Titan Summon surface, then removed its derived re-grounding hint while
   preserving the active Titan Incarnation owner route.
