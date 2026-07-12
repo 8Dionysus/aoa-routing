@@ -75,6 +75,33 @@ def test_composite_stress_examples_route_to_current_owner_paths() -> None:
         assert "repo:aoa-evals/bundles/aoa-stress-recovery-window/" not in serialized
 
 
+def test_generated_stress_routes_use_current_stats_owner_refs() -> None:
+    composite = load_json("generated/composite_stress_route_hints.min.json")
+    stats_regrounding = load_json("generated/stats_regrounding_hints.min.json")
+
+    hint = composite["hints"][0]
+    assert hint["source_priority"]["owner_receipt_refs"] == [
+        "repo:ATM10-Agent/examples/stressor_receipt.retrieval_only_fallback.example.json"
+    ]
+    assert hint["source_priority"]["proof_refs"] == [
+        "repo:aoa-evals/evals/comparison/longitudinal-window/"
+        "aoa-stress-recovery-window/reports/example-report.json"
+    ]
+
+    regrounding_hint = next(
+        item
+        for item in stats_regrounding["hints"]
+        if item["surface_name"] == "stress_recovery_window_summary"
+    )
+    assert regrounding_hint["owner_truth_inputs"][:2] == [
+        "aoa-evals/evals/comparison/longitudinal-window/"
+        "aoa-stress-recovery-window/EVAL.md",
+        "aoa-evals/evals/comparison/longitudinal-window/"
+        "aoa-stress-recovery-window/reports/example-report.json",
+    ]
+    assert "future activated" not in json.dumps(regrounding_hint)
+
+
 def test_antifragility_surfaces_are_discoverable_and_keep_routing_thin() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     routing_doc = (

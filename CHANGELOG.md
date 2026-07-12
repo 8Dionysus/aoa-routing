@@ -9,9 +9,11 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Changed
 
-- Re-ground the authored composite stress-route examples on current mechanic-
-  owned playbook, KAG, memo, and eval paths without changing advisory route
-  verdicts or prematurely refreshing the stats-derived public hint.
+- Re-grounded the authored composite stress-route examples on current
+  mechanic-owned playbook, KAG, memo, and eval paths, then refreshed the
+  stats-derived public hints after `aoa-stats` published the canonical proof
+  and sibling refs. Validation now pins that owner revision; the advisory route
+  verdict and routing authority ceiling are unchanged.
 - Pinned validation to the aoa-stats owner ref that classifies the historical
   Runtime Closeout snapshot as contract history, removed its derived
   re-grounding hint, and preserved the generic Object, Repeated Window, and
