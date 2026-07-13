@@ -14,7 +14,7 @@ boundary that `aoa-routing` only points, ranks, and hands off.
 | Owner | `aoa-routing` owns the route hint; `Agents-of-Abyss` owns Agon sovereignty. |
 | Next route | Center review, owner repo review, or ordinary service route depending on trigger state. |
 | Tools | Part-local builder, validator, and tests under `parts/gate-routing/`. |
-| Verification | `python mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py` and part tests. |
+| Verification | executable route in root `AGENTS.md` and the gate-routing part tests |
 
 ## Parts
 

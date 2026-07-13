@@ -20,11 +20,8 @@ Wave V lands Agon gate routing in `aoa-routing`.
 
 ## Verify
 
-```bash
-python scripts/build_agon_gate_routing_registry.py --check
-python scripts/validate_agon_gate_routing.py
-python -m pytest -q tests/test_agon_gate_routing.py
-```
+Historical validation completed through the gate-routing builder, validator,
+and focused tests. Current executable routes live in root `AGENTS.md`.
 
 ## Status
 

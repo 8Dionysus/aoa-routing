@@ -32,7 +32,8 @@ It is an `aoa-routing` local report note. It is not a central `aoa-evals` verdic
 4. Reviewed nearest central eval refs before accepting a local intake path.
 5. Ran `aoa_evals_write_local_intake` with `apply=false` and confirmed schema-valid dry-run output.
 6. Applied the same packet with `apply=true`, writing one local intake packet and activating `evals/PORT.yaml`.
-7. Re-inspected the port through MCP and ran `python /srv/AbyssOS/aoa-evals/scripts/validate_local_eval_port.py --target-root /srv/AbyssOS/aoa-routing --json`.
+7. Re-inspected the port through MCP and ran the owning `aoa-evals` local-port
+   validator against `aoa-routing`.
 
 ## Observed Result
 

@@ -15,6 +15,7 @@ This repository owns:
 - routing projections, registries, dispatch hints, and recommended paths
 - advisory owner-layer shortlist hints and bounded return-navigation seams
 - optional two-stage routing policy and tool/prompt surfaces
+- owner-local statistical questions about routing-owned surfaces under `stats/`
 - local schemas, build scripts, validators, and routing integrity checks
 
 It does not own:
@@ -31,8 +32,9 @@ It does not own:
 5. `generated/owner_layer_shortlist.min.json`
 6. `generated/recommended_paths.min.json`
 7. affected source catalogs or upstream generated surfaces
-8. `docs/decisions/README.md` when durable route, boundary, generated-output, validator, or source-lane rationale is in scope
-9. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
+8. `stats/README.md` when routing-owned statistical questions or reference packets change
+9. `docs/decisions/README.md` when durable route, boundary, generated-output, validator, or source-lane rationale is in scope
+10. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
 
 
 ## AGENTS stack law
@@ -81,6 +83,7 @@ For routing logic changes:
 ```bash
 python scripts/build_router.py
 python scripts/validate_active_legacy_names.py
+python scripts/validate_local_stats_port.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
 python scripts/generate_decision_indexes.py --check

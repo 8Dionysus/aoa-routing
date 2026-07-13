@@ -10,7 +10,7 @@ This part owns the pre-protocol Agon gate-routing surface for `aoa-routing`.
 | Owner | `aoa-routing` for route hints; `Agents-of-Abyss` for Agon law. |
 | Next route | `Agents-of-Abyss`, `aoa-agents`, `aoa-evals`, `aoa-memo`, or ordinary service routes named by the hint. |
 | Tools | `scripts/build_agon_gate_routing_registry.py`, `scripts/validate_agon_gate_routing.py`. |
-| Verification | `python scripts/validate_agon_gate_routing.py` from this part or the root compatibility launcher. |
+| Verification | gate-routing validator and focused tests through root `AGENTS.md` |
 
 ## Payload
 

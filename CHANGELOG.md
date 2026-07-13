@@ -7,6 +7,13 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [Unreleased]
 
+### Added
+
+- Added a root `stats/` port for the routing-owned question of how often
+  current stats re-grounding hints send their primary inspect action directly
+  to a non-stats owner, while keeping dispatch and owner truth outside the
+  statistical packet.
+
 ### Changed
 
 - Re-grounded the copied aoa-stats catalog fixture and CI owner pin on the
@@ -63,10 +70,8 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Validation
 
-- `python scripts/release_check.py`
-- `python mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py --check`
-- `python mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py`
-- `python -m pytest -q mechanics/agon/parts/gate-routing/tests/test_agon_gate_routing.py`
+- Release and focused Agon validation completed through the executable owner
+  routes recorded in Git and CI history.
 
 ### Notes
 
@@ -100,7 +105,8 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Validation
 
-- `python scripts/release_check.py`
+- Release validation completed through the executable owner route recorded in
+  Git and CI history.
 
 ### Notes
 
@@ -117,7 +123,8 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Validation
 
-- `python scripts/release_check.py`
+- Release validation completed through the executable owner route recorded in
+  Git and CI history.
 
 ### Notes
 
@@ -194,11 +201,8 @@ This changelog entry uses the release-prep merge date.
 
 ### Validation
 
-- `python scripts/build_router.py --check`
-- `python scripts/validate_router.py`
-- `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`
-- `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`
-- `pytest -q`
+- Routing, rebuild-parity, two-stage, and test validation completed through the
+  executable owner routes recorded in Git and CI history.
 
 ### Notes
 

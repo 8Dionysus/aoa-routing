@@ -14,6 +14,8 @@ This file applies to Python tooling under `scripts/`.
   readmodel family
 - `validate_active_legacy_names.py` keeps old route names out of active path
   topology while allowing package-local legacy archives
+- `validate_local_stats_port.py` delegates routing-local measurement and packet
+  validation to the pinned `aoa-stats` contract owner
 - `build_agon_gate_routing_registry.py` launches the active Agon part builder
 - `validate_agon_gate_routing.py` launches the active Agon part validator
 - `generate_decision_indexes.py` and `validate_decision_records.py` keep decision-rationale lookup surfaces derived and bounded
@@ -53,6 +55,7 @@ After script changes, run the normal build and validation path:
 ```bash
 python scripts/build_router.py
 python scripts/validate_active_legacy_names.py
+python scripts/validate_local_stats_port.py
 python scripts/validate_router.py
 python scripts/build_router.py --check
 python scripts/validate_abyss_machine_routing_bundle.py

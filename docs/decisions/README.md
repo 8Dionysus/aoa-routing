@@ -15,7 +15,7 @@ Ordinary implementation notes, generated output, runtime logs, private evidence,
 | output | canonical decision note, generated lookup indexes, and route back to the owning source surface |
 | owner | `docs/decisions/AGENTS.md` for lane law; decision notes for rationale; generated indexes for lookup only |
 | next route | owning generated/schema/example/script/test surface first, then nearest route card, `README.md`, `ROADMAP.md`, generated lookup indexes, or the affected sibling owner |
-| validation | `python scripts/generate_decision_indexes.py --check` and `python scripts/validate_decision_records.py`, plus the owning validator for the changed surface |
+| validation | executable decision-lane checks in `docs/decisions/AGENTS.md`, plus the owning validator for the changed surface |
 
 ## Authority
 
@@ -50,17 +50,8 @@ The lookup indexes under [indexes](indexes/README.md) are generated from that me
 - [Decisions by source lane](indexes/by-source-lane.md)
 - [Decisions by validation or guard family](indexes/by-guard.md)
 
-Regenerate the read models after decision metadata changes:
-
-```bash
-python scripts/generate_decision_indexes.py
-```
-
-Check generated parity before closeout:
-
-```bash
-python scripts/generate_decision_indexes.py --check
-```
+After decision metadata changes, use the generation and parity route in
+`docs/decisions/AGENTS.md`; generated indexes remain builder-owned.
 
 ## Lookup Route
 

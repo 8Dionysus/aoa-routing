@@ -42,12 +42,5 @@ Name what becomes easier, what remains constrained, and what future contributors
 
 ## Validation
 
-Run:
-
-```bash
-python scripts/generate_decision_indexes.py
-python scripts/generate_decision_indexes.py --check
-python scripts/validate_decision_records.py
-```
-
-Also run the validator for the owning surface the decision describes.
+Use the executable decision-lane checks in `docs/decisions/AGENTS.md`, then run
+the validator for the owning surface this decision describes.

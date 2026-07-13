@@ -67,13 +67,6 @@ Generated indexes must stay derived from decision metadata and must not be hand-
 
 ## Validation
 
-Run:
-
-```bash
-python scripts/generate_decision_indexes.py
-python scripts/generate_decision_indexes.py --check
-python scripts/validate_decision_records.py
-python -m pytest -q tests/test_decision_indexes.py tests/test_nested_agents_docs.py tests/test_docs_verify_routes.py
-```
-
-For this first landing, also run the repo-level verifier because the lane adds route-law and validation surfaces.
+Current executable checks are owned by `docs/decisions/AGENTS.md`, root
+`AGENTS.md`, and the decision-index scripts. The original landing also used the
+repo-level verifier because the lane added route-law and validation surfaces.

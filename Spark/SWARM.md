@@ -82,10 +82,7 @@ Rules:
 ```text
 Run the repo validation loop and report actual results.
 Required:
-- python -m pip install -r requirements-dev.txt
-- python scripts/build_router.py
-- python scripts/validate_router.py
-- pytest
+- use the executable route in root AGENTS.md and the nearest local route card
 Return:
 - commands run
 - whether generated outputs changed
@@ -105,12 +102,9 @@ Check:
 ```
 
 ## Verify
-```bash
-python -m pip install -r requirements-dev.txt
-python scripts/build_router.py
-python scripts/validate_router.py
-pytest
-```
+
+Use the executable validation route owned by root `AGENTS.md` and the nearest
+local route card.
 
 ## Done when
 - один invariant tightened

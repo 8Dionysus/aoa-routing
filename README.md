@@ -36,6 +36,7 @@ Use the shortest route by need:
 - additive stress-routing contract surfaces: [mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md](mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md), [mechanics/antifragility/parts/degraded-route-hints/docs/degraded-route-hints.md](mechanics/antifragility/parts/degraded-route-hints/docs/degraded-route-hints.md), [mechanics/antifragility/parts/stress-routing/docs/routing-stress-chaos.md](mechanics/antifragility/parts/stress-routing/docs/routing-stress-chaos.md), `mechanics/antifragility/parts/degraded-route-hints/schemas/stress_navigation_hint_v1.json`, `mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.example.json`, `mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.timeout-chaos.example.json`, and `mechanics/antifragility/parts/degraded-route-hints/examples/stress_navigation_hint.skill-collision-chaos.example.json`
 - additive composite stress-route family: `generated/composite_stress_route_hints.min.json`, [mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md](mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md), [mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md](mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md), `mechanics/antifragility/parts/composite-stress-routing/schemas/composite_stress_route_hint_v1.json`, `mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json`, and `mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json`
 - boundary advisory routes: `generated/owner_layer_shortlist.min.json`, `generated/stats_regrounding_hints.min.json`, [mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md](mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md), `mechanics/boundary-bridge/parts/owner-layer-shortlist/schemas/owner-layer-shortlist.schema.json`, `mechanics/boundary-bridge/parts/stats-regrounding/schemas/stats-regrounding-hints.schema.json`, and `mechanics/boundary-bridge/parts/stats-regrounding/examples/stats_regrounding_hint.example.json`
+- routing-owned statistical questions and evidence-linked reference packets: [stats](stats/README.md)
 - Agon gate routing: `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`, [mechanics/agon/parts/gate-routing/docs/gate-routing.md](mechanics/agon/parts/gate-routing/docs/gate-routing.md), [mechanics/agon/parts/gate-routing/docs/trigger-model.md](mechanics/agon/parts/gate-routing/docs/trigger-model.md), [mechanics/agon/parts/gate-routing/docs/decision-boundary.md](mechanics/agon/parts/gate-routing/docs/decision-boundary.md), [mechanics/agon/parts/gate-routing/docs/assistant-escalation.md](mechanics/agon/parts/gate-routing/docs/assistant-escalation.md), and [mechanics/agon/parts/gate-routing/docs/owner-handoffs.md](mechanics/agon/parts/gate-routing/docs/owner-handoffs.md)
 - optional two-stage seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, `routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl`, and [routing/two-stage-skill-selection/docs/two-stage-skill-selection.md](routing/two-stage-skill-selection/docs/two-stage-skill-selection.md)
 - durable routing rationale: [docs/decisions](docs/decisions/README.md)
@@ -45,16 +46,10 @@ If the task affects ingestion contracts, inspect the relevant upstream generated
 
 ## Verify current outputs
 
-Use this order for the current promoted routing contour:
-
-1. `python scripts/validate_active_legacy_names.py`
-2. `python scripts/validate_router.py`
-3. `python scripts/build_router.py --check`
-4. `python scripts/generate_decision_indexes.py --check`
-5. `python scripts/validate_decision_records.py`
-6. `python -m pytest -q tests`
-7. `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`
-8. `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`
+Executable build, validation, and test routes are owned by
+[AGENTS.md](AGENTS.md#verify) and the nearest nested route card.
+`scripts/release_check.py` composes the repository-wide gate; this README
+keeps the public surface map rather than a second command catalog.
 
 ## Route by need
 
@@ -68,7 +63,7 @@ Use this order for the current promoted routing contour:
 - via negativa pruning checklist: [mechanics/antifragility/parts/via-negativa/docs/via-negativa-checklist](mechanics/antifragility/parts/via-negativa/docs/via-negativa-checklist.md)
 - additive composite stress-route overlays: `generated/composite_stress_route_hints.min.json`, [mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption](mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md), [mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints](mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md), `mechanics/antifragility/parts/composite-stress-routing/schemas/composite_stress_route_hint_v1.json`, `mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json`, and `mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json`
 - Agon gate routing surfaces: `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`, [gate routing](mechanics/agon/parts/gate-routing/docs/gate-routing.md), [trigger model](mechanics/agon/parts/gate-routing/docs/trigger-model.md), [decision boundary](mechanics/agon/parts/gate-routing/docs/decision-boundary.md), [assistant escalation](mechanics/agon/parts/gate-routing/docs/assistant-escalation.md), `mechanics/agon/parts/gate-routing/schemas/agon-gate-routing-registry.schema.json`, `mechanics/agon/parts/gate-routing/schemas/agon-gate-trigger.schema.json`, `mechanics/agon/parts/gate-routing/schemas/agon-gate-route-hint.schema.json`, and `mechanics/agon/parts/gate-routing/examples/agon_gate_route_hint.example.json`
-- local build, schema, decision, and validation path: `routing/core/schemas/`, `routing/two-stage-skill-selection/schemas/`, owning `mechanics/<head>/parts/<part>/schemas/`, [docs/decisions](docs/decisions/README.md), `python scripts/build_router.py`, `python scripts/build_router.py --check`, `python scripts/validate_active_legacy_names.py`, `python scripts/validate_router.py`, `python scripts/generate_decision_indexes.py --check`, `python scripts/validate_decision_records.py`, `python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check`, `python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills`, and `python -m pytest -q tests`
+- local build, schema, decision, and validation path: `routing/core/schemas/`, `routing/two-stage-skill-selection/schemas/`, owning `mechanics/<head>/parts/<part>/schemas/`, [docs/decisions](docs/decisions/README.md), [AGENTS.md](AGENTS.md#verify), and the nearest nested route card
 
 ## What `aoa-routing` owns
 
@@ -80,6 +75,7 @@ This repository is the source of truth for:
 - bounded pairing and return-navigation hints
 - optional two-stage routing policy and tool/prompt surfaces
 - an explicit additive handoff from `skill-root` into the optional two-stage skill seam
+- routing-local measurement meaning under `stats/`, without cross-owner statistical authority
 - local schemas, builders, validators, and routing integrity checks
 
 ## What it reads
@@ -193,55 +189,15 @@ The optional two-stage seam stays additive beside that core. It may help with sm
 - `QUESTBOOK.md` and `quests/` for durable routing quest records and their human open-obligation index
 - `mechanics/<head>/parts/<part>/` for mechanic-owned docs, schemas, examples, generated companions, scripts, and tests
 - `generated/` for committed derived routing surfaces
+- `stats/` for routing-owned measurement questions, contracts, and reference packets
 - `tests/` for unit and integration coverage
 
 ## Build and validate
 
-Install local dependencies:
-
-```bash
-python -m pip install -r requirements-dev.txt
-```
-
-For a read-only current-state verify pass:
-
-```bash
-python scripts/validate_active_legacy_names.py
-python scripts/validate_router.py
-python scripts/build_router.py --check
-python scripts/generate_decision_indexes.py --check
-python scripts/validate_decision_records.py
-python -m pytest -q tests
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-```
-
-Refresh the tracked routing surfaces:
-
-```bash
-python scripts/build_router.py
-```
-
-Validate the refreshed outputs:
-
-```bash
-python scripts/validate_active_legacy_names.py
-python scripts/validate_router.py
-python scripts/build_router.py --check
-python scripts/generate_decision_indexes.py --check
-python scripts/validate_decision_records.py
-python -m pytest -q tests
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-```
-
-The optional two-stage seam can also be refreshed directly when you need a targeted stage-wiring update:
-
-```bash
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-python scripts/two_stage_skill_router.py route --routing-root . --skills-root ../aoa-skills --task "Make a bounded repository change with a clear verification step and a final report."
-```
+Use [AGENTS.md](AGENTS.md#verify) for the repository-wide executable route and
+the nearest nested `AGENTS.md` for focused generation or validation. Generated
+surfaces stay builder-owned; refresh only the family whose source meaning
+changed, then run its owner check and the composed release gate.
 
 ## Go elsewhere when...
 

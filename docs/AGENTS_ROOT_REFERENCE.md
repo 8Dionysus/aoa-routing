@@ -157,20 +157,9 @@ for repository integrity.
 
 ### VERIFY
 
-Run the documented commands from `README.md`.
-
-For routing logic changes, rebuild generated outputs and run tests before
-finishing:
-
-```bash
-python scripts/build_router.py
-python scripts/validate_active_legacy_names.py
-python scripts/validate_router.py
-python scripts/build_router.py --check
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-python -m pytest -q tests
-```
+Use the current executable routes from root `AGENTS.md` and the nearest nested
+route card. For routing logic changes, rebuild the affected generated family
+and run its owner checks before finishing.
 
 Confirm that:
 

@@ -137,6 +137,7 @@ COMMANDS = [
     ("validate source-home topology", [sys.executable, "scripts/validate_source_home.py"]),
     ("validate mechanics topology", [sys.executable, "scripts/validate_mechanics_topology.py"]),
     ("validate active legacy names", [sys.executable, "scripts/validate_active_legacy_names.py"]),
+    ("validate owner-local stats port", [sys.executable, "scripts/validate_local_stats_port.py"]),
     ("validate routing surfaces", "validate_router"),
     ("check rebuild parity", "build_router_check"),
     (

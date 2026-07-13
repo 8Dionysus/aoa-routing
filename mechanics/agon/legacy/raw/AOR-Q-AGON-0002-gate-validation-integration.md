@@ -8,11 +8,9 @@
 
 Integrate Wave V validation into the repo-local verification contour when owner review is ready.
 
-## Candidate command
+## Candidate route
 
-```bash
-python mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py
-```
+Use the gate-routing validation route owned by root `AGENTS.md`.
 
 ## Acceptance
 
