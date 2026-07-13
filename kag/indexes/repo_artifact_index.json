@@ -1730,7 +1730,7 @@
     },
     {
       "artifact_kind": "config",
-      "content_hash": "1c5a999cd697cafe7f41d37781002279bf370fa38b9db09c6616cfd8496a1be7",
+      "content_hash": "b1b87c8909d2f2aba4939754c177fbeeeb65267ab3560337fe2af022ca271b96",
       "id": "artifact:file:.github/workflows/repo-validation.yml:3affb923d0",
       "path": ".github/workflows/repo-validation.yml",
       "source_record_id": "file:.github/workflows/repo-validation.yml:3affb923d0",
@@ -1754,7 +1754,7 @@
     },
     {
       "artifact_kind": "document",
-      "content_hash": "f0be47274510e8c01dd00be092de68aea5da8c4e4c4e601e0c64cb93e599e3bb",
+      "content_hash": "e59a4db5ee21a179ed9e31fb631dd64c07998397e91d694518b76f47b0d9a569",
       "id": "artifact:file:changelog.md:06572a96a5",
       "path": "CHANGELOG.md",
       "source_record_id": "file:changelog.md:06572a96a5",
@@ -6562,7 +6562,7 @@
     },
     {
       "artifact_kind": "generated_readmodel",
-      "content_hash": "adbdb21802b5a17260286c141d698c36d68b36c1cf6cbdf59d8ca5ced18f3fbf",
+      "content_hash": "df76e41b6d995c2c2887cb7b6196f2b0e1094dbba3aeb598ccde19871acab161",
       "id": "artifact:file:tests/fixtures/aoa-stats/generated/summary_surface_catalog.min.json:ec1d7010c3",
       "path": "tests/fixtures/aoa-stats/generated/summary_surface_catalog.min.json",
       "source_record_id": "file:tests/fixtures/aoa-stats/generated/summary_surface_catalog.min.json:ec1d7010c3",
@@ -6794,7 +6794,7 @@
     },
     {
       "artifact_kind": "test",
-      "content_hash": "0c1bade1dbac652cdbda0c9bbfb73aefa599ff06a1488c380096f06fd8f4a1c3",
+      "content_hash": "c0a54a2e8b0378af2b12d7f7775b3d66455ad1010db7f1031c1af6452e3326a8",
       "id": "artifact:file:tests/test_validate_router.py:acc485d8b0",
       "path": "tests/test_validate_router.py",
       "source_record_id": "file:tests/test_validate_router.py:acc485d8b0",
@@ -6811,7 +6811,7 @@
   ],
   "index_identity": {
     "artifact_kind": "repository_artifact_index",
-    "content_digest": "5920af0f1fd444d209f8928c503bcf6789d4ed8fa5b0f0023ad06037249a2108",
+    "content_digest": "077857cba66075dcb9f653b229fe7ace3cefcb69928bf3c45f7c782d9915e1a8",
     "index_kind": "artifact",
     "local_id": "index:repo-local:artifacts",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-repository-index.schema.json"
@@ -6835,7 +6835,7 @@
   },
   "schema_version": "aoa-repo-local-kag-repository-index-v1",
   "source_index": {
-    "content_digest": "2a87f01e59452df98372bc38994d951fc522cc4e30f34d2b17dbc5a62e85f1df",
+    "content_digest": "25dfcb97f78abebbb2b116d01bebeaa575f21df9dbeb853d1a1982484fe703a4",
     "local_id": "index:repo-local:source-surfaces",
     "path": "kag/indexes/source_surface_index.json"
   },
