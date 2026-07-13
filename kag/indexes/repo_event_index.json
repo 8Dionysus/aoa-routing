@@ -78,7 +78,7 @@
       "heading_ref": {
         "anchor": "010-2026-04-01",
         "level": 2,
-        "line": 156,
+        "line": 159,
         "ref": "CHANGELOG.md#010-2026-04-01",
         "title": "[0.1.0] - 2026-04-01"
       },
@@ -93,7 +93,7 @@
       "heading_ref": {
         "anchor": "021-2026-04-19",
         "level": 2,
-        "line": 73,
+        "line": 76,
         "ref": "CHANGELOG.md#021-2026-04-19",
         "title": "[0.2.1] - 2026-04-19"
       },
@@ -108,7 +108,7 @@
       "heading_ref": {
         "anchor": "020-2026-04-10",
         "level": 2,
-        "line": 107,
+        "line": 110,
         "ref": "CHANGELOG.md#020-2026-04-10",
         "title": "[0.2.0] - 2026-04-10"
       },
@@ -123,7 +123,7 @@
       "heading_ref": {
         "anchor": "022-2026-04-23",
         "level": 2,
-        "line": 29,
+        "line": 32,
         "ref": "CHANGELOG.md#022-2026-04-23",
         "title": "[0.2.2] - 2026-04-23"
       },
@@ -663,7 +663,7 @@
   ],
   "index_identity": {
     "artifact_kind": "repository_event_index",
-    "content_digest": "c2734cda3ee9ed2816b71bebf7040fa5dcad389d3fbb120343124df0d12ba21c",
+    "content_digest": "a5539f51bed72a6f19e9a7884d334b79aaab7cabfe08af1dc6ac3e8a7f1e9ab9",
     "index_kind": "event",
     "local_id": "index:repo-local:events",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-repository-index.schema.json"
@@ -688,7 +688,7 @@
   },
   "schema_version": "aoa-repo-local-kag-repository-index-v1",
   "source_index": {
-    "content_digest": "2a87f01e59452df98372bc38994d951fc522cc4e30f34d2b17dbc5a62e85f1df",
+    "content_digest": "25dfcb97f78abebbb2b116d01bebeaa575f21df9dbeb853d1a1982484fe703a4",
     "local_id": "index:repo-local:source-surfaces",
     "path": "kag/indexes/source_surface_index.json"
   },

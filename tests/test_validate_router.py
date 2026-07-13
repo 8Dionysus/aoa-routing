@@ -147,6 +147,9 @@ def hydrate_catalog_fixture(roots: dict[str, Path], repo_name: str, relative_pat
     authority_ref = payload.get("authority_ref")
     if isinstance(authority_ref, str):
         ensure_local_ref_placeholder(roots[repo_name], authority_ref)
+    strength_model_ref = payload.get("surface_strength_model_ref")
+    if isinstance(strength_model_ref, str):
+        ensure_local_ref_placeholder(roots[repo_name], strength_model_ref)
     for ref in payload.get("validation_refs", []):
         ensure_local_ref_placeholder(roots[repo_name], ref)
     for entry in payload.get("surfaces", []):
@@ -177,6 +180,23 @@ def copy_fixture_roots(tmp_path: Path) -> dict[str, Path]:
         roots[repo_name] = target
     hydrate_capsule_fixture_roots(roots)
     return roots
+
+
+def test_stats_catalog_fixture_hydrates_source_owned_strength_model(
+    tmp_path: Path,
+) -> None:
+    roots = copy_fixture_roots(tmp_path)
+    catalog = json.loads(
+        (
+            roots["aoa-stats"] / "generated/summary_surface_catalog.min.json"
+        ).read_text(encoding="utf-8")
+    )
+
+    assert catalog["surface_strength_model_ref"] == (
+        "stats/surface-catalog/SURFACE_STRENGTH_MODEL.md"
+    )
+    assert (roots["aoa-stats"] / catalog["surface_strength_model_ref"]).is_file()
+    assert not (roots["aoa-stats"] / "docs/SURFACE_STRENGTH_MODEL.md").exists()
 
 
 def build_outputs_from_roots(roots: dict[str, Path]) -> dict[str, dict[str, object]]:

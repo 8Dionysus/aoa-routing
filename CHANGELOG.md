@@ -9,6 +9,9 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Changed
 
+- Re-grounded the copied aoa-stats catalog fixture and CI owner pin on the
+  source-owned Surface Strength vocabulary route, and made fixture hydration
+  resolve that catalog-declared authority ref instead of ignoring it.
 - Re-grounded the authored composite stress-route examples on current
   mechanic-owned playbook, KAG, memo, and eval paths, then refreshed the
   stats-derived public hints after `aoa-stats` published the canonical proof
