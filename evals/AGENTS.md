@@ -6,7 +6,7 @@ This card applies to `aoa-routing/evals/` and every file below it.
 
 ## Role
 
-This skeleton port captures routing-layer eval pressure before it is accepted,
+This active local port captures routing-layer eval pressure before it is accepted,
 rejected, or normalized by `aoa-evals`.
 
 `aoa-evals` owns central verdict, scoring, regression, and proof doctrine

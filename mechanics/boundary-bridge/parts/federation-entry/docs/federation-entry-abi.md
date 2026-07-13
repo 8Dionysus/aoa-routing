@@ -226,7 +226,7 @@ This landing reads sibling source and capsule surfaces:
 - `aoa-agents/generated/model_tier_registry.json`
 - `aoa-agents/generated/runtime_seam_bindings.json`
 - `aoa-playbooks/generated/playbook_registry.min.json`
-- `aoa-kag/generated/federation_spine.min.json`
+- `aoa-kag/mechanics/boundary-bridge/parts/federation-spine/generated/federation_spine.min.json`
 - `Dionysus/docs/codex/planting-protocol.md`
 - `Dionysus/source_route-registry.yaml`
 - `aoa-sdk/generated/workspace_control_plane.min.json`
@@ -266,7 +266,7 @@ The current KAG-view layer now publishes two live derived entries:
 This does not widen the thin router taxonomy.
 It only lets `tos-root` hand off to a ToS-shaped derived readiness card after the source-owned tiny-entry route.
 In the current contour, that ToS-specific `kag_view` may also advertise one bounded
-`aoa-kag/generated/tos_zarathustra_route_retrieval_pack.min.json` adjunct.
+`aoa-kag/mechanics/boundary-bridge/parts/tos-retrieval-axis/generated/tos_zarathustra_route_retrieval_pack.min.json` adjunct.
 That adjunct is handles-only, appears only inside the ToS `kag_view`, and does
 not replace `Tree-of-Sophia` authority or grant routing ownership over ToS
 meaning.
