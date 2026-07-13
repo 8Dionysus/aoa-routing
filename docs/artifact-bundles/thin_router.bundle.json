@@ -39,6 +39,10 @@
       "role": "tier_hints"
     },
     {
+      "path": "generated/quest_dispatch_hints.min.json",
+      "role": "quest_dispatch_hints"
+    },
+    {
       "path": "generated/recommended_paths.min.json",
       "role": "recommended_paths"
     },
@@ -59,8 +63,44 @@
       "role": "stats_regrounding_hints"
     },
     {
+      "path": "generated/owner_layer_shortlist.min.json",
+      "role": "owner_layer_shortlist"
+    },
+    {
+      "path": "generated/kag_source_lift_relation_hints.min.json",
+      "role": "kag_source_lift_relation_hints"
+    },
+    {
+      "path": "generated/pairing_hints.min.json",
+      "role": "pairing_hints"
+    },
+    {
       "path": "generated/tiny_model_entrypoints.json",
       "role": "tiny_model_entrypoints"
+    },
+    {
+      "path": "generated/two_stage_skill_entrypoints.json",
+      "role": "two_stage_skill_entrypoints"
+    },
+    {
+      "path": "generated/two_stage_router_prompt_blocks.json",
+      "role": "two_stage_router_prompt_blocks"
+    },
+    {
+      "path": "generated/two_stage_router_tool_schemas.json",
+      "role": "two_stage_router_tool_schemas"
+    },
+    {
+      "path": "generated/two_stage_router_examples.json",
+      "role": "two_stage_router_examples"
+    },
+    {
+      "path": "generated/two_stage_router_manifest.json",
+      "role": "two_stage_router_manifest"
+    },
+    {
+      "path": "generated/two_stage_router_eval_cases.jsonl",
+      "role": "two_stage_router_eval_cases"
     },
     {
       "path": "routing/core/schemas/aoa-router.schema.json",
@@ -71,6 +111,86 @@
       "role": "schema"
     },
     {
+      "path": "routing/core/schemas/cross-repo-registry.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/core/schemas/task-to-surface-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/core/schemas/task-to-tier-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/core/schemas/recommended-paths.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/core/schemas/pairing-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/core/schemas/tiny-model-entrypoints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "mechanics/questbook/parts/quest-routing-seam/schemas/quest-dispatch-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "mechanics/boundary-bridge/parts/federation-entry/schemas/federation-entrypoints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "mechanics/recurrence/parts/return-navigation/schemas/return-navigation-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "mechanics/antifragility/parts/composite-stress-routing/schemas/composite-stress-route-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "mechanics/boundary-bridge/parts/stats-regrounding/schemas/stats-regrounding-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "mechanics/boundary-bridge/parts/owner-layer-shortlist/schemas/owner-layer-shortlist.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "mechanics/boundary-bridge/parts/tos-kag-boundary/schemas/kag-source-lift-relation-hints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/schemas/two-stage-skill-entrypoints.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/schemas/two-stage-router-prompt-blocks.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/schemas/two-stage-router-tool-schemas.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/schemas/two-stage-router-examples.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/schemas/two-stage-router-manifest.schema.json",
+      "role": "schema"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/config/two_stage_router_policy.json",
+      "role": "two_stage_policy"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
+      "role": "two_stage_precision_cases"
+    },
+    {
       "path": "scripts/build_router.py",
       "role": "builder"
     },
@@ -79,8 +199,28 @@
       "role": "builder_core"
     },
     {
+      "path": "scripts/build_two_stage_skill_router.py",
+      "role": "two_stage_builder_launcher"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/scripts/build_two_stage_skill_router.py",
+      "role": "two_stage_builder"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/scripts/two_stage_router_lib.py",
+      "role": "two_stage_builder_core"
+    },
+    {
       "path": "scripts/validate_router.py",
       "role": "validator"
+    },
+    {
+      "path": "scripts/validate_two_stage_skill_router.py",
+      "role": "two_stage_validator_launcher"
+    },
+    {
+      "path": "routing/two-stage-skill-selection/scripts/validate_two_stage_skill_router.py",
+      "role": "two_stage_validator"
     },
     {
       "path": "README.md",

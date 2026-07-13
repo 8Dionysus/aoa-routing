@@ -35,6 +35,69 @@ def test_thin_router_bundle_declares_consumer_trust_path() -> None:
     assert manifest["consumer_contract"]["admission_gate"] == "fail_closed_consumer_admission"
 
 
+def test_thin_router_bundle_covers_live_generated_route_family() -> None:
+    manifest = json.loads((REPO_ROOT / "docs" / "artifact-bundles" / "thin_router.bundle.json").read_text())
+    subjects = {entry["path"] for entry in manifest["artifact_subjects"]}
+    expected_generated_subjects = {
+        "generated/aoa_router.min.json",
+        "generated/composite_stress_route_hints.min.json",
+        "generated/cross_repo_registry.min.json",
+        "generated/federation_entrypoints.min.json",
+        "generated/kag_source_lift_relation_hints.min.json",
+        "generated/owner_layer_shortlist.min.json",
+        "generated/pairing_hints.min.json",
+        "generated/quest_dispatch_hints.min.json",
+        "generated/recommended_paths.min.json",
+        "generated/return_navigation_hints.min.json",
+        "generated/stats_regrounding_hints.min.json",
+        "generated/task_to_surface_hints.json",
+        "generated/task_to_tier_hints.json",
+        "generated/tiny_model_entrypoints.json",
+        "generated/two_stage_router_eval_cases.jsonl",
+        "generated/two_stage_router_examples.json",
+        "generated/two_stage_router_manifest.json",
+        "generated/two_stage_router_prompt_blocks.json",
+        "generated/two_stage_router_tool_schemas.json",
+        "generated/two_stage_skill_entrypoints.json",
+    }
+    expected_two_stage_sources = {
+        "routing/two-stage-skill-selection/config/two_stage_router_policy.json",
+        "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
+        "routing/two-stage-skill-selection/scripts/build_two_stage_skill_router.py",
+        "routing/two-stage-skill-selection/scripts/two_stage_router_lib.py",
+        "routing/two-stage-skill-selection/scripts/validate_two_stage_skill_router.py",
+    }
+
+    expected_subjects = expected_generated_subjects | expected_two_stage_sources
+
+    assert expected_subjects - subjects == set()
+    assert {path for path in expected_subjects if not (REPO_ROOT / path).exists()} == set()
+
+
+def test_federation_entry_abi_uses_current_kag_mechanics_paths() -> None:
+    abi = (
+        REPO_ROOT
+        / "mechanics"
+        / "boundary-bridge"
+        / "parts"
+        / "federation-entry"
+        / "docs"
+        / "federation-entry-abi.md"
+    ).read_text()
+
+    assert "aoa-kag/generated/federation_spine.min.json" not in abi
+    assert "aoa-kag/generated/tos_zarathustra_route_retrieval_pack.min.json" not in abi
+    assert (
+        "aoa-kag/mechanics/boundary-bridge/parts/federation-spine/generated/federation_spine.min.json"
+        in abi
+    )
+    assert (
+        "aoa-kag/mechanics/boundary-bridge/parts/tos-retrieval-axis/generated/"
+        "tos_zarathustra_route_retrieval_pack.min.json"
+        in abi
+    )
+
+
 def test_thin_router_bundle_validator_accepts_expected_pre_materialization_deny() -> None:
     validator = load_bundle_validator()
     state = validator._trust_gate_pre_materialization_state(
@@ -68,3 +131,76 @@ def test_thin_router_bundle_validator_accepts_expected_pre_materialization_deny(
     assert state["ok"] is True
     assert state["mode"] == "deny_until_subject_store_materialized"
     assert state["expected_pre_materialization_deny"] is True
+    assert state["unexpected_pre_materialization_blockers"] == []
+
+
+def test_thin_router_bundle_validator_rejects_extra_pre_materialization_blocker() -> None:
+    validator = load_bundle_validator()
+    state = validator._trust_gate_pre_materialization_state(
+        artifact_bundles=type(
+            "FakeArtifactBundles",
+            (),
+            {
+                "trust_gate": staticmethod(
+                    lambda *_args, **_kwargs: {
+                        "verdict": "deny",
+                        "blockers": ["unexpected_trust_regression"],
+                        "decision": {
+                            "allow": False,
+                            "model": "fail_closed_consumer_admission",
+                            "blockers": [validator.REQUIRED_SUBJECT_STORE_BLOCKER],
+                        },
+                        "inspected_claims": {
+                            "registry_latest": {"selected_record_is_latest": True},
+                            "controls": {"required_controls_missing": []},
+                            "source": {"source_repo_matched": True},
+                            "trust_root": {"trust_root_mode_matched": True},
+                            "artifact_subject_store": {"required": True, "ok": False},
+                        },
+                    }
+                )
+            },
+        )(),
+        registry_dir=REPO_ROOT / "dist" / "test-registry",
+        registry={"promoted": {"record": {"subject_digest": "sha256:" + ("1" * 64)}}},
+    )
+
+    assert state["ok"] is False
+    assert state["expected_pre_materialization_deny"] is False
+    assert state["unexpected_pre_materialization_blockers"] == ["unexpected_trust_regression"]
+
+
+def test_thin_router_bundle_validator_rejects_pre_materialization_allow() -> None:
+    validator = load_bundle_validator()
+    state = validator._trust_gate_pre_materialization_state(
+        artifact_bundles=type(
+            "FakeArtifactBundles",
+            (),
+            {
+                "trust_gate": staticmethod(
+                    lambda *_args, **_kwargs: {
+                        "ok": True,
+                        "verdict": "allow",
+                        "decision": {
+                            "allow": True,
+                            "model": "fail_closed_consumer_admission",
+                            "blockers": [],
+                        },
+                        "inspected_claims": {
+                            "registry_latest": {"selected_record_is_latest": True},
+                            "controls": {"required_controls_missing": []},
+                            "source": {"source_repo_matched": True},
+                            "trust_root": {"trust_root_mode_matched": True},
+                            "artifact_subject_store": {"required": True, "ok": False},
+                        },
+                    }
+                )
+            },
+        )(),
+        registry_dir=REPO_ROOT / "dist" / "test-registry",
+        registry={"promoted": {"record": {"subject_digest": "sha256:" + ("1" * 64)}}},
+    )
+
+    assert state["ok"] is False
+    assert state["mode"] == "unexpected_pre_materialization_state"
+    assert state["expected_pre_materialization_deny"] is False

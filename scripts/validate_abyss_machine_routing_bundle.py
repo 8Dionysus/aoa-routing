@@ -8,6 +8,7 @@ import os
 import shutil
 import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -170,6 +171,37 @@ def _default_tmp_root() -> Path | None:
         if path.is_dir():
             return path
     return None
+
+
+@contextmanager
+def _artifact_subject_store_roots(store_root: Path, artifact_bundles: Any | None = None):
+    env_root = "ABYSS_MACHINE_ARTIFACT_SUBJECT_STORE_ROOT"
+    env_roots = "ABYSS_MACHINE_ARTIFACT_SUBJECT_STORE_ROOTS"
+    old_root = os.environ.get(env_root)
+    old_roots = os.environ.get(env_roots)
+    missing = object()
+    old_default = (
+        getattr(artifact_bundles, "DEFAULT_ARTIFACT_SUBJECT_STORE_ROOT", missing)
+        if artifact_bundles is not None
+        else missing
+    )
+    os.environ[env_root] = str(store_root)
+    os.environ[env_roots] = str(store_root)
+    if old_default is not missing:
+        artifact_bundles.DEFAULT_ARTIFACT_SUBJECT_STORE_ROOT = store_root
+    try:
+        yield
+    finally:
+        if old_default is not missing:
+            artifact_bundles.DEFAULT_ARTIFACT_SUBJECT_STORE_ROOT = old_default
+        if old_root is None:
+            os.environ.pop(env_root, None)
+        else:
+            os.environ[env_root] = old_root
+        if old_roots is None:
+            os.environ.pop(env_roots, None)
+        else:
+            os.environ[env_roots] = old_roots
 
 
 def _manifest_subject_paths(manifest: dict[str, Any]) -> list[Path]:
@@ -391,8 +423,10 @@ def _trust_gate_pre_materialization_state(
     decision = trust_gate.get("decision") if isinstance(trust_gate, dict) else {}
     decision = decision if isinstance(decision, dict) else {}
     blockers = set(trust_gate.get("blockers") or []) | set(decision.get("blockers") or [])
+    expected_blockers = {REQUIRED_SUBJECT_STORE_BLOCKER}
+    unexpected_blockers = sorted(blockers - expected_blockers)
     missing_subject_store = bool(
-        REQUIRED_SUBJECT_STORE_BLOCKER in blockers
+        blockers == expected_blockers
         and trust_gate.get("verdict") == "deny"
         and decision.get("model") == "fail_closed_consumer_admission"
         and decision.get("allow") is False
@@ -404,13 +438,14 @@ def _trust_gate_pre_materialization_state(
         and subject_store.get("ok") is False
     )
     return {
-        "ok": bool(gate_check.get("ok") or missing_subject_store),
+        "ok": bool(missing_subject_store),
         "mode": (
-            "allow_existing_subject_store"
-            if gate_check.get("ok")
-            else "deny_until_subject_store_materialized"
+            "deny_until_subject_store_materialized"
+            if missing_subject_store
+            else "unexpected_pre_materialization_state"
         ),
         "expected_pre_materialization_deny": bool(missing_subject_store),
+        "unexpected_pre_materialization_blockers": unexpected_blockers,
         "trust_gate": trust_gate,
     }
 
@@ -712,20 +747,22 @@ def _validate_in_bundle_dir(
     identity = _load_json(bundle_dir / artifact_bundles.IDENTITY_SIDECAR)
     _assert_expected_controls(artifact_bundles, bundle_dir, verify, identity)
     _assert_public_payloads_do_not_leak_local_roots(bundle_dir, abyss_machine_root, label="sidecars")
-    registry = _registry_roundtrip(
-        artifact_bundles,
-        bundle_dir,
-        registry_dir,
-        lifecycle_state="release-ready",
-        evidence_ref=_portable_ref(bundle_dir) + "/artifact.verify.json",
-        manifest=manifest,
-        abyss_repo_root=abyss_repo_root,
-    )
-    pre_materialization_gate = _trust_gate_pre_materialization_state(
-        artifact_bundles,
-        registry_dir,
-        registry,
-    )
+    with tempfile.TemporaryDirectory(prefix="aoa-routing-pre-subject-store-", dir=_default_tmp_root()) as pre_store:
+        with _artifact_subject_store_roots(Path(pre_store), artifact_bundles):
+            registry = _registry_roundtrip(
+                artifact_bundles,
+                bundle_dir,
+                registry_dir,
+                lifecycle_state="release-ready",
+                evidence_ref=_portable_ref(bundle_dir) + "/artifact.verify.json",
+                manifest=manifest,
+                abyss_repo_root=abyss_repo_root,
+            )
+            pre_materialization_gate = _trust_gate_pre_materialization_state(
+                artifact_bundles,
+                registry_dir,
+                registry,
+            )
     materialized = artifact_bundles.materialize_artifact_subjects(
         bundle_dir,
         store_root=subject_store_root,

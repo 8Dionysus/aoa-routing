@@ -1,6 +1,6 @@
 # Local Eval Port
 
-This skeleton `evals/` port preserves routing-born eval pressure such as route
+This active `evals/` port preserves routing-born eval pressure such as route
 selection cases, two-stage router precision checks, owner-shortlist ambiguity
 fixtures, handoff hint failures, and generated-route regression cues.
 
@@ -18,5 +18,12 @@ packets, but they do not become bounded proof by location alone.
 
 ## Current Status
 
-Skeleton only. No active local intake packets, suites, reports, or draft bundles
-have been accepted here yet.
+Active local pressure exists:
+
+- `intake/aoa-routing-advisory-route-authority-boundary.eval_need.json`
+  records advisory route-authority boundary pressure.
+- `reports/aoa-evals-mcp-local-port-e2e-20260620.report.md` records the first
+  MCP local-port write/read validation path.
+
+No central proof bundle, verdict, scoring, regression marker, or proof doctrine
+has been accepted here.
