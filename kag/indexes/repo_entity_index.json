@@ -655,7 +655,7 @@
     {"anchor_ids":["aoa:aoa-routing:anchor:4b1124bd7756f4c5d95d99e3"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:ee1940706ebf7fb927a05183","label":"docs","provenance_ref":"deterministic","semantic_key":"directory:mechanics/boundary-bridge/parts/cross-repo-router-bridge/docs","source_digest":"80dd1ccf0935cc500013012e7ea46dd16e3505007e3ea1c88c6003230e018d07","source_record_ids":["aoa:aoa-routing:artifact:549ec1e7eb42a18758990095"],"temporal_ref":"current","trust_ref":"deterministic"},
     {"anchor_ids":["aoa:aoa-routing:anchor:37cdd8480a07cee8b8406f6b"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:ee31b14a9260b757a7f0773e","label":"examples","provenance_ref":"deterministic","semantic_key":"directory:.agents/skills/aoa-session-self-repair/examples","source_digest":"b4f0547ebbde4c7313a561dcaeae0680c1679dd3fa38075ca556a35ab248b28f","source_record_ids":["aoa:aoa-routing:artifact:171636e3fbbedaa25f5eb4ab"],"temporal_ref":"current","trust_ref":"deterministic"},
     {"anchor_ids":["aoa:aoa-routing:anchor:7d13ba960b6d4edd5bc614ce"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:eea500cebae87eb21f565e62","label":"legacy","provenance_ref":"deterministic","semantic_key":"directory:mechanics/questbook/legacy","source_digest":"04b428cf7b931ad774d4c83ad8c7101efc52b0a29df8fa33d153d0eef3aa8660","source_record_ids":["aoa:aoa-routing:artifact:02e130c7aa24ec4b2d97dd68"],"temporal_ref":"current","trust_ref":"deterministic"},
-    {"anchor_ids":["aoa:aoa-routing:anchor:24be4fb97fd16e07cb9a490a"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:f019620edd42955bd2ad859f","label":"workflows","provenance_ref":"deterministic","semantic_key":"directory:.github/workflows","source_digest":"11a63404370235dda1a5e6fec1da0b6a46cf91a152baad3cb345a003fe1ad498","source_record_ids":["aoa:aoa-routing:artifact:3affb923d04bc06217e2c3a1"],"temporal_ref":"current","trust_ref":"deterministic"},
+    {"anchor_ids":["aoa:aoa-routing:anchor:24be4fb97fd16e07cb9a490a"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:f019620edd42955bd2ad859f","label":"workflows","provenance_ref":"deterministic","semantic_key":"directory:.github/workflows","source_digest":"10e7e70f2cf28cb28a8957b2bb091dddbaebb2127f77ae23db98dcc533f129bc","source_record_ids":["aoa:aoa-routing:artifact:3affb923d04bc06217e2c3a1"],"temporal_ref":"current","trust_ref":"deterministic"},
     {"anchor_ids":["aoa:aoa-routing:anchor:6f41b9ae68b82834fa603117"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:f0d77850a40ed47521c8bcb7","label":"docs","provenance_ref":"deterministic","semantic_key":"directory:mechanics/questbook/parts/quest-board-seam/docs","source_digest":"bf9f001510969b4fbf0afb99780006a527e40eb9ff3a4463e0fddc00c148efd9","source_record_ids":["aoa:aoa-routing:artifact:7482de66de685a3e8765d405"],"temporal_ref":"current","trust_ref":"deterministic"},
     {"anchor_ids":["aoa:aoa-routing:anchor:a04b2dec336a147c9f3ddbb3"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:f1bea7a4acd312c2ba5977ab","label":"adoption-routing","provenance_ref":"deterministic","semantic_key":"directory:mechanics/experience/parts/adoption-routing","source_digest":"c41105fe8d2dfe909697d46af0ddf0f6ea005eaee3ff206f5f17be916d282c7b","source_record_ids":["aoa:aoa-routing:artifact:ee7d58a3f23135d70d0dfa9a"],"temporal_ref":"current","trust_ref":"deterministic"},
     {"anchor_ids":["aoa:aoa-routing:anchor:f75f4d10af76d0cb70d1bbb1"],"entity_kind":"directory","id":"aoa:aoa-routing:entity:f2afd2ff037caa398b0e0665","label":"references","provenance_ref":"deterministic","semantic_key":"directory:.agents/skills/aoa-session-donor-harvest/references","source_digest":"0cb4647ddaf1497cd9ad4f6f930a168f9c3e81506257168b7d45d998c2685654","source_record_ids":["aoa:aoa-routing:artifact:18e4d7b9ab04bf529f3f4af7"],"temporal_ref":"current","trust_ref":"deterministic"},
@@ -2008,7 +2008,7 @@
   ],
   "index_identity": {
     "artifact_kind": "repository_entity_index",
-    "content_digest": "e59c901a9f24dea09532690773bb5551bb794ff1d01e3cfac01f4e4aa50fc3e0",
+    "content_digest": "921089d4f32a6f737142c9e00d81b052457103e0b5214038c9055a96e6dbac8e",
     "index_kind": "entity",
     "local_id": "index:repo-local:entities",
     "schema_ref": "aoa-kag:schemas/repo-local-kag-repository-index.schema.json"
@@ -2093,7 +2093,7 @@
   },
   "schema_version": "aoa-repo-local-kag-repository-index-v2",
   "source_index": {
-    "content_digest": "e523df0f130ad43aa46dcb914eeda2e6d641116b5f9ff71084e132f0565b4ac7",
+    "content_digest": "d9a97a2f48085bcc9fdc588c11d286d85b245787decfe04924424c9253272d81",
     "local_id": "index:repo-local:source-surfaces",
     "path": "kag/indexes/source_surface_index.json"
   },
