@@ -27,9 +27,11 @@
           },
           {
             "id": "change-validation",
-            "score": 11,
+            "score": 8,
             "reasons": [
-              "shortlist:aoa-change-protocol"
+              "token:apply",
+              "token:change",
+              "token:explicit"
             ]
           }
         ],
@@ -50,6 +52,21 @@
             ]
           },
           {
+            "name": "abyss-sanitized-share",
+            "band": "risk-ops-safety",
+            "manual_invocation_required": true,
+            "project_overlay": true,
+            "score": 20,
+            "reasons": [
+              "band:risk-ops-safety",
+              "positive:abyss",
+              "token:abyss",
+              "token:authority",
+              "token:infra",
+              "positive-prompt:abyss"
+            ]
+          },
+          {
             "name": "aoa-safe-infra-change",
             "band": "risk-ops-safety",
             "manual_invocation_required": true,
@@ -63,26 +80,22 @@
               "positive-prompt:change",
               "positive-prompt:explicit"
             ]
-          },
-          {
-            "name": "aoa-change-protocol",
-            "band": "change-validation",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 11,
-            "reasons": [
-              "band:change-validation",
-              "token:apply",
-              "token:verification",
-              "positive-prompt:apply",
-              "positive-prompt:change"
-            ]
           }
         ],
         "confidence": "strong",
         "lead_score": 53,
         "lead_gap": 33,
         "fallback_candidates": [
+          {
+            "name": "aoa-change-protocol",
+            "band": "change-validation",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          },
           {
             "name": "aoa-source-of-truth-check",
             "band": "decision-doc-authority",
@@ -101,6 +114,16 @@
         "lead_gap": 33,
         "candidate_count": 3,
         "fallback_candidates": [
+          {
+            "name": "aoa-change-protocol",
+            "band": "change-validation",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          },
           {
             "name": "aoa-source-of-truth-check",
             "band": "decision-doc-authority",
@@ -130,6 +153,22 @@
             "activation_hint": "$abyss-safe-infra-change"
           },
           {
+            "name": "abyss-sanitized-share",
+            "band": "risk-ops-safety",
+            "score": 20,
+            "preselect_reasons": [
+              "band:risk-ops-safety",
+              "positive:abyss",
+              "token:abyss",
+              "token:authority",
+              "token:infra",
+              "positive-prompt:abyss"
+            ],
+            "invocation_mode": "explicit-only",
+            "manual_invocation_required": true,
+            "activation_hint": "$abyss-sanitized-share"
+          },
+          {
             "name": "aoa-safe-infra-change",
             "band": "risk-ops-safety",
             "score": 20,
@@ -144,21 +183,6 @@
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
             "activation_hint": "$aoa-safe-infra-change"
-          },
-          {
-            "name": "aoa-change-protocol",
-            "band": "change-validation",
-            "score": 11,
-            "preselect_reasons": [
-              "band:change-validation",
-              "token:apply",
-              "token:verification",
-              "positive-prompt:apply",
-              "positive-prompt:change"
-            ],
-            "invocation_mode": "explicit-preferred",
-            "manual_invocation_required": false,
-            "activation_hint": "implicit-ok"
           }
         ],
         "decision_reason": "lead candidate is explicit-only even though the shortlist is strong",
@@ -287,193 +311,6 @@
       }
     },
     {
-      "case_id": "tiny-defer-abyss-safe-infra-change",
-      "prompt": "Inside this abyss-stack repo, place a sanitized incident artifact in the repo-relative abyss sharing surface with explicit local thresholds.",
-      "preselect_result": {
-        "task": "Inside this abyss-stack repo, place a sanitized incident artifact in the repo-relative abyss sharing surface with explicit local thresholds.",
-        "repo_family": "abyss",
-        "top_bands": [
-          {
-            "id": "risk-ops-safety",
-            "score": 29,
-            "reasons": [
-              "shortlist:abyss-sanitized-share"
-            ]
-          },
-          {
-            "id": "os-artifact-trust",
-            "score": 5,
-            "reasons": [
-              "shortlist:os-abyss-artifact-trust-loop"
-            ]
-          }
-        ],
-        "shortlist": [
-          {
-            "name": "abyss-sanitized-share",
-            "band": "risk-ops-safety",
-            "manual_invocation_required": true,
-            "project_overlay": true,
-            "score": 29,
-            "reasons": [
-              "positive:abyss",
-              "token:abyss",
-              "token:incident",
-              "token:relative",
-              "positive-prompt:abyss",
-              "positive-prompt:explicit"
-            ]
-          },
-          {
-            "name": "abyss-self-diagnostic-spine",
-            "band": "quest-harvest-governance",
-            "manual_invocation_required": true,
-            "project_overlay": true,
-            "score": 5,
-            "reasons": [
-              "band:quest-harvest-governance",
-              "token:abyss",
-              "token:artifact",
-              "positive-prompt:abyss",
-              "positive-prompt:artifact",
-              "positive-prompt:relative"
-            ]
-          },
-          {
-            "name": "os-abyss-artifact-trust-loop",
-            "band": "os-artifact-trust",
-            "manual_invocation_required": true,
-            "project_overlay": true,
-            "score": 5,
-            "reasons": [
-              "band:os-artifact-trust",
-              "token:abyss",
-              "token:artifact",
-              "positive-prompt:abyss",
-              "positive-prompt:artifact",
-              "token-only-cap"
-            ]
-          }
-        ],
-        "confidence": "strong",
-        "lead_score": 29,
-        "lead_gap": 24,
-        "fallback_candidates": [
-          {
-            "name": "aoa-change-protocol",
-            "band": "change-validation",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 0,
-            "reasons": [
-              "fallback"
-            ]
-          },
-          {
-            "name": "aoa-source-of-truth-check",
-            "band": "decision-doc-authority",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 0,
-            "reasons": [
-              "fallback"
-            ]
-          }
-        ]
-      },
-      "decision_packet": {
-        "confidence": "strong",
-        "lead_score": 29,
-        "lead_gap": 24,
-        "candidate_count": 3,
-        "fallback_candidates": [
-          {
-            "name": "aoa-change-protocol",
-            "band": "change-validation",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 0,
-            "reasons": [
-              "fallback"
-            ]
-          },
-          {
-            "name": "aoa-source-of-truth-check",
-            "band": "decision-doc-authority",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 0,
-            "reasons": [
-              "fallback"
-            ]
-          }
-        ],
-        "candidates": [
-          {
-            "name": "abyss-sanitized-share",
-            "band": "risk-ops-safety",
-            "score": 29,
-            "preselect_reasons": [
-              "positive:abyss",
-              "token:abyss",
-              "token:incident",
-              "token:relative",
-              "positive-prompt:abyss",
-              "positive-prompt:explicit"
-            ],
-            "invocation_mode": "explicit-only",
-            "manual_invocation_required": true,
-            "activation_hint": "$abyss-sanitized-share"
-          },
-          {
-            "name": "abyss-self-diagnostic-spine",
-            "band": "quest-harvest-governance",
-            "score": 5,
-            "preselect_reasons": [
-              "band:quest-harvest-governance",
-              "token:abyss",
-              "token:artifact",
-              "positive-prompt:abyss",
-              "positive-prompt:artifact",
-              "positive-prompt:relative"
-            ],
-            "invocation_mode": "explicit-preferred",
-            "manual_invocation_required": true,
-            "activation_hint": "$abyss-self-diagnostic-spine"
-          },
-          {
-            "name": "os-abyss-artifact-trust-loop",
-            "band": "os-artifact-trust",
-            "score": 5,
-            "preselect_reasons": [
-              "band:os-artifact-trust",
-              "token:abyss",
-              "token:artifact",
-              "positive-prompt:abyss",
-              "positive-prompt:artifact",
-              "token-only-cap"
-            ],
-            "invocation_mode": "explicit-preferred",
-            "manual_invocation_required": true,
-            "activation_hint": "$os-abyss-artifact-trust-loop"
-          }
-        ],
-        "decision_reason": "lead candidate is explicit-only even though the shortlist is strong",
-        "suggested_decision": {
-          "decision_mode": "manual-invocation-required",
-          "skill": "abyss-sanitized-share",
-          "next_step": "require explicit handle $abyss-sanitized-share before activation"
-        },
-        "stage_2_checklist": [
-          "choose at most one skill to activate",
-          "if the lead candidate is explicit-only, require an explicit handle",
-          "do not load full skill bodies for non-shortlisted skills",
-          "continue without a skill when the shortlist is weak or empty",
-          "keep fallback candidates visible without treating them as the live shortlist"
-        ]
-      }
-    },
-    {
       "case_id": "tiny-positive-abyss-sanitized-share",
       "prompt": "Use $abyss-sanitized-share to place sanitized abyss artifacts in repo-relative sharing surfaces with explicit local thresholds and review posture.",
       "preselect_result": {
@@ -512,6 +349,21 @@
             ]
           },
           {
+            "name": "abyss-safe-infra-change",
+            "band": "risk-ops-safety",
+            "manual_invocation_required": true,
+            "project_overlay": true,
+            "score": 15,
+            "reasons": [
+              "positive:abyss",
+              "token:abyss",
+              "token:relative",
+              "positive-prompt:abyss",
+              "positive-prompt:explicit",
+              "positive-prompt:relative"
+            ]
+          },
+          {
             "name": "atm10-source-of-truth-check",
             "band": "decision-doc-authority",
             "manual_invocation_required": true,
@@ -523,24 +375,11 @@
               "positive-prompt:relative",
               "token-only-cap"
             ]
-          },
-          {
-            "name": "os-abyss-artifact-trust-loop",
-            "band": "os-artifact-trust",
-            "manual_invocation_required": true,
-            "project_overlay": true,
-            "score": 5,
-            "reasons": [
-              "band:os-artifact-trust",
-              "token:abyss",
-              "token:artifacts",
-              "token-only-cap"
-            ]
           }
         ],
         "confidence": "strong",
         "lead_score": 54,
-        "lead_gap": 49,
+        "lead_gap": 39,
         "fallback_candidates": [
           {
             "name": "aoa-change-protocol",
@@ -567,7 +406,7 @@
       "decision_packet": {
         "confidence": "strong",
         "lead_score": 54,
-        "lead_gap": 49,
+        "lead_gap": 39,
         "candidate_count": 3,
         "fallback_candidates": [
           {
@@ -609,6 +448,22 @@
             "activation_hint": "$abyss-sanitized-share"
           },
           {
+            "name": "abyss-safe-infra-change",
+            "band": "risk-ops-safety",
+            "score": 15,
+            "preselect_reasons": [
+              "positive:abyss",
+              "token:abyss",
+              "token:relative",
+              "positive-prompt:abyss",
+              "positive-prompt:explicit",
+              "positive-prompt:relative"
+            ],
+            "invocation_mode": "explicit-only",
+            "manual_invocation_required": true,
+            "activation_hint": "$abyss-safe-infra-change"
+          },
+          {
             "name": "atm10-source-of-truth-check",
             "band": "decision-doc-authority",
             "score": 5,
@@ -621,20 +476,6 @@
             "invocation_mode": "explicit-preferred",
             "manual_invocation_required": true,
             "activation_hint": "$atm10-source-of-truth-check"
-          },
-          {
-            "name": "os-abyss-artifact-trust-loop",
-            "band": "os-artifact-trust",
-            "score": 5,
-            "preselect_reasons": [
-              "band:os-artifact-trust",
-              "token:abyss",
-              "token:artifacts",
-              "token-only-cap"
-            ],
-            "invocation_mode": "explicit-preferred",
-            "manual_invocation_required": true,
-            "activation_hint": "$os-abyss-artifact-trust-loop"
           }
         ],
         "decision_reason": "lead candidate is explicit-only even though the shortlist is strong",
@@ -804,173 +645,6 @@
       }
     },
     {
-      "case_id": "tiny-defer-abyss-sanitized-share",
-      "prompt": "Inside this abyss-stack repo, plan a bounded infra change with repo-relative abyss paths, explicit local authority, and rollback thinking.",
-      "preselect_result": {
-        "task": "Inside this abyss-stack repo, plan a bounded infra change with repo-relative abyss paths, explicit local authority, and rollback thinking.",
-        "repo_family": "abyss",
-        "top_bands": [
-          {
-            "id": "risk-ops-safety",
-            "score": 44,
-            "reasons": [
-              "shortlist:abyss-safe-infra-change"
-            ]
-          },
-          {
-            "id": "change-validation",
-            "score": 20,
-            "reasons": [
-              "shortlist:aoa-change-protocol"
-            ]
-          }
-        ],
-        "shortlist": [
-          {
-            "name": "abyss-safe-infra-change",
-            "band": "risk-ops-safety",
-            "manual_invocation_required": true,
-            "project_overlay": true,
-            "score": 44,
-            "reasons": [
-              "band:risk-ops-safety",
-              "positive:abyss",
-              "positive:abyss stack",
-              "positive:repo-relative abyss",
-              "token:abyss",
-              "token:authority"
-            ]
-          },
-          {
-            "name": "aoa-safe-infra-change",
-            "band": "risk-ops-safety",
-            "manual_invocation_required": true,
-            "project_overlay": false,
-            "score": 33,
-            "reasons": [
-              "band:risk-ops-safety",
-              "positive:infra change",
-              "positive:rollback",
-              "token:authority",
-              "token:infra",
-              "token:rollback"
-            ]
-          },
-          {
-            "name": "aoa-change-protocol",
-            "band": "change-validation",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 20,
-            "reasons": [
-              "band:change-validation",
-              "positive:rollback thinking",
-              "token:plan",
-              "token:rollback",
-              "token:thinking",
-              "positive-prompt:bounded"
-            ]
-          }
-        ],
-        "confidence": "strong",
-        "lead_score": 44,
-        "lead_gap": 11,
-        "fallback_candidates": [
-          {
-            "name": "aoa-source-of-truth-check",
-            "band": "decision-doc-authority",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 0,
-            "reasons": [
-              "fallback"
-            ]
-          }
-        ]
-      },
-      "decision_packet": {
-        "confidence": "strong",
-        "lead_score": 44,
-        "lead_gap": 11,
-        "candidate_count": 3,
-        "fallback_candidates": [
-          {
-            "name": "aoa-source-of-truth-check",
-            "band": "decision-doc-authority",
-            "manual_invocation_required": false,
-            "project_overlay": false,
-            "score": 0,
-            "reasons": [
-              "fallback"
-            ]
-          }
-        ],
-        "candidates": [
-          {
-            "name": "abyss-safe-infra-change",
-            "band": "risk-ops-safety",
-            "score": 44,
-            "preselect_reasons": [
-              "band:risk-ops-safety",
-              "positive:abyss",
-              "positive:abyss stack",
-              "positive:repo-relative abyss",
-              "token:abyss",
-              "token:authority"
-            ],
-            "invocation_mode": "explicit-only",
-            "manual_invocation_required": true,
-            "activation_hint": "$abyss-safe-infra-change"
-          },
-          {
-            "name": "aoa-safe-infra-change",
-            "band": "risk-ops-safety",
-            "score": 33,
-            "preselect_reasons": [
-              "band:risk-ops-safety",
-              "positive:infra change",
-              "positive:rollback",
-              "token:authority",
-              "token:infra",
-              "token:rollback"
-            ],
-            "invocation_mode": "explicit-only",
-            "manual_invocation_required": true,
-            "activation_hint": "$aoa-safe-infra-change"
-          },
-          {
-            "name": "aoa-change-protocol",
-            "band": "change-validation",
-            "score": 20,
-            "preselect_reasons": [
-              "band:change-validation",
-              "positive:rollback thinking",
-              "token:plan",
-              "token:rollback",
-              "token:thinking",
-              "positive-prompt:bounded"
-            ],
-            "invocation_mode": "explicit-preferred",
-            "manual_invocation_required": false,
-            "activation_hint": "implicit-ok"
-          }
-        ],
-        "decision_reason": "lead candidate is explicit-only even though the shortlist is strong",
-        "suggested_decision": {
-          "decision_mode": "manual-invocation-required",
-          "skill": "abyss-safe-infra-change",
-          "next_step": "require explicit handle $abyss-safe-infra-change before activation"
-        },
-        "stage_2_checklist": [
-          "choose at most one skill to activate",
-          "if the lead candidate is explicit-only, require an explicit handle",
-          "do not load full skill bodies for non-shortlisted skills",
-          "continue without a skill when the shortlist is weak or empty",
-          "keep fallback candidates visible without treating them as the live shortlist"
-        ]
-      }
-    },
-    {
       "case_id": "tiny-positive-abyss-self-diagnostic-spine",
       "prompt": "Use $abyss-self-diagnostic-spine to turn repo-relative runtime evidence plus optional reviewed session refs into one bounded diagnostic session artifact with an honest exit class and no silent repair authority.",
       "preselect_result": {
@@ -986,7 +660,7 @@
           },
           {
             "id": "risk-ops-safety",
-            "score": 7,
+            "score": 13,
             "reasons": [
               "shortlist:abyss-sanitized-share"
             ]
@@ -1013,14 +687,13 @@
             "band": "risk-ops-safety",
             "manual_invocation_required": true,
             "project_overlay": true,
-            "score": 7,
+            "score": 13,
             "reasons": [
               "positive:abyss",
               "token:abyss",
               "token:relative",
               "positive-prompt:abyss",
-              "positive-prompt:relative",
-              "defer-prompt:abyss"
+              "positive-prompt:relative"
             ]
           },
           {
@@ -1028,7 +701,7 @@
             "band": "risk-ops-safety",
             "manual_invocation_required": true,
             "project_overlay": true,
-            "score": 5,
+            "score": 11,
             "reasons": [
               "positive:abyss",
               "token:abyss",
@@ -1041,7 +714,7 @@
         ],
         "confidence": "strong",
         "lead_score": 81,
-        "lead_gap": 74,
+        "lead_gap": 68,
         "fallback_candidates": [
           {
             "name": "aoa-change-protocol",
@@ -1068,7 +741,7 @@
       "decision_packet": {
         "confidence": "strong",
         "lead_score": 81,
-        "lead_gap": 74,
+        "lead_gap": 68,
         "candidate_count": 3,
         "fallback_candidates": [
           {
@@ -1112,14 +785,13 @@
           {
             "name": "abyss-sanitized-share",
             "band": "risk-ops-safety",
-            "score": 7,
+            "score": 13,
             "preselect_reasons": [
               "positive:abyss",
               "token:abyss",
               "token:relative",
               "positive-prompt:abyss",
-              "positive-prompt:relative",
-              "defer-prompt:abyss"
+              "positive-prompt:relative"
             ],
             "invocation_mode": "explicit-only",
             "manual_invocation_required": true,
@@ -1128,7 +800,7 @@
           {
             "name": "abyss-safe-infra-change",
             "band": "risk-ops-safety",
-            "score": 5,
+            "score": 11,
             "preselect_reasons": [
               "positive:abyss",
               "token:abyss",
@@ -1309,6 +981,357 @@
           "decision_mode": "no-skill",
           "skill": null,
           "next_step": "continue without a skill or use flat routing"
+        },
+        "stage_2_checklist": [
+          "choose at most one skill to activate",
+          "if the lead candidate is explicit-only, require an explicit handle",
+          "do not load full skill bodies for non-shortlisted skills",
+          "continue without a skill when the shortlist is weak or empty",
+          "keep fallback candidates visible without treating them as the live shortlist"
+        ]
+      }
+    },
+    {
+      "case_id": "tiny-defer-abyss-self-diagnostic-spine",
+      "prompt": "This abyss repo now has a diagnostic spine note, runbook fragments, and overlay guidance that disagree about which file is authoritative. Map the canonical docs and shorten the entrypoints instead of producing a runtime artifact.",
+      "preselect_result": {
+        "task": "This abyss repo now has a diagnostic spine note, runbook fragments, and overlay guidance that disagree about which file is authoritative. Map the canonical docs and shorten the entrypoints instead of producing a runtime artifact.",
+        "repo_family": "abyss",
+        "top_bands": [
+          {
+            "id": "decision-doc-authority",
+            "score": 9,
+            "reasons": [
+              "shortlist:aoa-adr-write"
+            ]
+          },
+          {
+            "id": "quest-harvest-governance",
+            "score": 8,
+            "reasons": [
+              "token:artifact",
+              "token:diagnostic",
+              "token:now"
+            ]
+          }
+        ],
+        "shortlist": [
+          {
+            "name": "aoa-adr-write",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 9,
+            "reasons": [
+              "band:decision-doc-authority",
+              "token:authoritative",
+              "token:canonical",
+              "token:file",
+              "negative-token:canonical"
+            ]
+          },
+          {
+            "name": "aoa-source-of-truth-check",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 9,
+            "reasons": [
+              "band:decision-doc-authority",
+              "token:authoritative",
+              "token:canonical",
+              "token:file",
+              "positive-prompt:authoritative",
+              "positive-prompt:guidance"
+            ]
+          },
+          {
+            "name": "aoa-decision-correct",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": true,
+            "project_overlay": false,
+            "score": 5,
+            "reasons": [
+              "band:decision-doc-authority",
+              "token:canonical",
+              "token:note",
+              "token-only-cap"
+            ]
+          }
+        ],
+        "confidence": "weak",
+        "lead_score": 9,
+        "lead_gap": 0,
+        "fallback_candidates": [
+          {
+            "name": "aoa-change-protocol",
+            "band": "change-validation",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          }
+        ]
+      },
+      "decision_packet": {
+        "confidence": "weak",
+        "lead_score": 9,
+        "lead_gap": 0,
+        "candidate_count": 3,
+        "fallback_candidates": [
+          {
+            "name": "aoa-change-protocol",
+            "band": "change-validation",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "name": "aoa-adr-write",
+            "band": "decision-doc-authority",
+            "score": 9,
+            "preselect_reasons": [
+              "band:decision-doc-authority",
+              "token:authoritative",
+              "token:canonical",
+              "token:file",
+              "negative-token:canonical"
+            ],
+            "invocation_mode": "explicit-preferred",
+            "manual_invocation_required": false,
+            "activation_hint": "implicit-ok"
+          },
+          {
+            "name": "aoa-source-of-truth-check",
+            "band": "decision-doc-authority",
+            "score": 9,
+            "preselect_reasons": [
+              "band:decision-doc-authority",
+              "token:authoritative",
+              "token:canonical",
+              "token:file",
+              "positive-prompt:authoritative",
+              "positive-prompt:guidance"
+            ],
+            "invocation_mode": "explicit-preferred",
+            "manual_invocation_required": false,
+            "activation_hint": "implicit-ok"
+          },
+          {
+            "name": "aoa-decision-correct",
+            "band": "decision-doc-authority",
+            "score": 5,
+            "preselect_reasons": [
+              "band:decision-doc-authority",
+              "token:canonical",
+              "token:note",
+              "token-only-cap"
+            ],
+            "invocation_mode": "explicit-preferred",
+            "manual_invocation_required": true,
+            "activation_hint": "$aoa-decision-correct"
+          }
+        ],
+        "decision_reason": "shortlist stayed below the precision-first activation thresholds",
+        "suggested_decision": {
+          "decision_mode": "no-skill",
+          "skill": null,
+          "next_step": "continue without a skill or use flat routing"
+        },
+        "stage_2_checklist": [
+          "choose at most one skill to activate",
+          "if the lead candidate is explicit-only, require an explicit handle",
+          "do not load full skill bodies for non-shortlisted skills",
+          "continue without a skill when the shortlist is weak or empty",
+          "keep fallback candidates visible without treating them as the live shortlist"
+        ]
+      }
+    },
+    {
+      "case_id": "tiny-positive-aoa-adr-write",
+      "prompt": "Use $aoa-adr-write to record a meaningful architectural or workflow decision, place it in the canonical decision surface, and verify the rationale is easy to find.",
+      "preselect_result": {
+        "task": "Use $aoa-adr-write to record a meaningful architectural or workflow decision, place it in the canonical decision surface, and verify the rationale is easy to find.",
+        "repo_family": null,
+        "top_bands": [
+          {
+            "id": "decision-doc-authority",
+            "score": 59,
+            "reasons": [
+              "shortlist:aoa-adr-write"
+            ]
+          },
+          {
+            "id": "quest-harvest-governance",
+            "score": 4,
+            "reasons": [
+              "token:aoa",
+              "token:surface"
+            ]
+          }
+        ],
+        "shortlist": [
+          {
+            "name": "aoa-adr-write",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 59,
+            "reasons": [
+              "band:decision-doc-authority",
+              "explicit-skill-mention",
+              "positive:adr",
+              "positive:rationale",
+              "token:adr",
+              "token:architectural"
+            ]
+          },
+          {
+            "name": "aoa-decision",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 24,
+            "reasons": [
+              "band:decision-doc-authority",
+              "positive:adr",
+              "token:adr",
+              "token:architectural",
+              "token:canonical",
+              "positive-prompt:aoa"
+            ]
+          },
+          {
+            "name": "aoa-decision-create",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": true,
+            "project_overlay": false,
+            "score": 22,
+            "reasons": [
+              "band:decision-doc-authority",
+              "positive:adr",
+              "token:adr",
+              "token:architectural",
+              "token:canonical",
+              "positive-prompt:aoa"
+            ]
+          }
+        ],
+        "confidence": "strong",
+        "lead_score": 59,
+        "lead_gap": 35,
+        "fallback_candidates": [
+          {
+            "name": "aoa-change-protocol",
+            "band": "change-validation",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          },
+          {
+            "name": "aoa-source-of-truth-check",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          }
+        ]
+      },
+      "decision_packet": {
+        "confidence": "strong",
+        "lead_score": 59,
+        "lead_gap": 35,
+        "candidate_count": 3,
+        "fallback_candidates": [
+          {
+            "name": "aoa-change-protocol",
+            "band": "change-validation",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          },
+          {
+            "name": "aoa-source-of-truth-check",
+            "band": "decision-doc-authority",
+            "manual_invocation_required": false,
+            "project_overlay": false,
+            "score": 0,
+            "reasons": [
+              "fallback"
+            ]
+          }
+        ],
+        "candidates": [
+          {
+            "name": "aoa-adr-write",
+            "band": "decision-doc-authority",
+            "score": 59,
+            "preselect_reasons": [
+              "band:decision-doc-authority",
+              "explicit-skill-mention",
+              "positive:adr",
+              "positive:rationale",
+              "token:adr",
+              "token:architectural"
+            ],
+            "invocation_mode": "explicit-preferred",
+            "manual_invocation_required": false,
+            "activation_hint": "implicit-ok"
+          },
+          {
+            "name": "aoa-decision",
+            "band": "decision-doc-authority",
+            "score": 24,
+            "preselect_reasons": [
+              "band:decision-doc-authority",
+              "positive:adr",
+              "token:adr",
+              "token:architectural",
+              "token:canonical",
+              "positive-prompt:aoa"
+            ],
+            "invocation_mode": "explicit-preferred",
+            "manual_invocation_required": false,
+            "activation_hint": "implicit-ok"
+          },
+          {
+            "name": "aoa-decision-create",
+            "band": "decision-doc-authority",
+            "score": 22,
+            "preselect_reasons": [
+              "band:decision-doc-authority",
+              "positive:adr",
+              "token:adr",
+              "token:architectural",
+              "token:canonical",
+              "positive-prompt:aoa"
+            ],
+            "invocation_mode": "explicit-preferred",
+            "manual_invocation_required": true,
+            "activation_hint": "$aoa-decision-create"
+          }
+        ],
+        "decision_reason": "lead candidate cleared the precision-first activation thresholds",
+        "suggested_decision": {
+          "decision_mode": "activate-candidate",
+          "skill": "aoa-adr-write",
+          "next_step": "inspect or activate aoa-adr-write using the skill runtime seam"
         },
         "stage_2_checklist": [
           "choose at most one skill to activate",
