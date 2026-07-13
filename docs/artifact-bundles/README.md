@@ -34,8 +34,5 @@ records, terminal revocation, and missing materialized subject-store state.
 - C2PA: not applicable to routing JSON unless a public media/export pipeline
   appears.
 
-Run:
-
-```bash
-python scripts/validate_abyss_machine_routing_bundle.py
-```
+The executable artifact-bundle check is owned by root `AGENTS.md` and
+`scripts/validate_abyss_machine_routing_bundle.py`.

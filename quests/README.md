@@ -22,7 +22,7 @@ quests/<lane>/<state>/<quest-file>
 | output | lane/state source record, `QUESTBOOK.md` open-obligation entry, or handoff to an owning mechanic part |
 | owner | `quests/AGENTS.md` for editing law; `mechanics/questbook/` for operation posture |
 | next route | `QUESTBOOK.md`, `quests/<lane>/<state>/`, `mechanics/questbook/`, or the owning mechanic part |
-| validation | `python scripts/validate_router.py` |
+| validation | executable quest and routing checks in `quests/AGENTS.md` and root `AGENTS.md` |
 
 ## Lanes
 

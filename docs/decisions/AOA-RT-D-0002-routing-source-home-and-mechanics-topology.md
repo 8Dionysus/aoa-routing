@@ -133,14 +133,6 @@ remaining at root needs an owner reason, not inertia.
 
 ## Validation
 
-Run:
-
-```bash
-python scripts/validate_source_home.py
-python scripts/validate_mechanics_topology.py
-python scripts/validate_nested_agents.py
-python scripts/generate_decision_indexes.py
-python scripts/generate_decision_indexes.py --check
-python scripts/validate_decision_records.py
-python -m pytest -q tests/test_source_home_topology.py tests/test_mechanics_topology.py tests/test_nested_agents_docs.py tests/test_decision_indexes.py
-```
+Current executable checks are owned by root `AGENTS.md`,
+`docs/decisions/AGENTS.md`, and the source-home, mechanics, decision-index, and
+test owners named in the affected surfaces.

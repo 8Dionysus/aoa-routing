@@ -26,19 +26,9 @@ Please make sure:
 - generated outputs stay deterministic and bounded
 - no copied content quietly replaces source-owned meaning
 
-Run the documented local path before opening a PR:
-
-```bash
-python -m pip install -r requirements-dev.txt
-python scripts/build_router.py
-python scripts/validate_router.py
-python scripts/build_router.py --check
-python scripts/generate_decision_indexes.py --check
-python scripts/validate_decision_records.py
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-python -m pytest -q tests
-```
+Before opening a PR, use the executable route in [AGENTS.md](AGENTS.md#verify)
+and the nearest nested `AGENTS.md`. Keep this contribution guide focused on
+scope and review posture rather than duplicating the command battery.
 
 When a change creates durable route, generated-output, validator, fallback, or owner-boundary rationale, add or update `docs/decisions/AOA-RT-D-####-*.md`, regenerate indexes, and keep the owning source surface stronger than the decision note.
 

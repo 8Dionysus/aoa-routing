@@ -50,9 +50,5 @@ The generated eval surface is the committed readout after the builder joins:
 
 ## Verify
 
-```bash
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
-python scripts/validate_router.py
-python -m pytest -q tests
-```
+Use the executable routing, two-stage, and test routes in root `AGENTS.md` and
+the nearest mechanic route card.

@@ -1,0 +1,110 @@
+{
+  "schema_version": "aoa_stats_local_port_v1",
+  "contract_version": "1.0.0",
+  "owner_repo": "aoa-routing",
+  "status": "active",
+  "owner_boundary_ref": "AGENTS.md",
+  "central_contract_refs": [
+    "aoa-stats:stats/measurement-contract/measurement-contract.schema.json",
+    "aoa-stats:stats/measurement-contract/measurement-packet.schema.json"
+  ],
+  "evidence_posture": {
+    "live_state": "reference_only",
+    "privacy": "public",
+    "raw_content_allowed": false
+  },
+  "questions": [
+    {
+      "id": "question:stats-regrounding-owner-first-route-ratio",
+      "question": "What fraction of current stats re-grounding hints send their primary inspect action directly to a non-stats owner at this source revision?",
+      "consumer_refs": [
+        "stats/README.md",
+        "mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md"
+      ]
+    }
+  ],
+  "measurements": [
+    {
+      "schema_version": "aoa_stats_measurement_contract_v1",
+      "measurement_id": "aoa-routing/stats-regrounding-owner-first-route-ratio",
+      "contract_version": "1.0.0",
+      "owner_repo": "aoa-routing",
+      "question_ref": "question:stats-regrounding-owner-first-route-ratio",
+      "semantic_class": "statistic",
+      "statistic": "ratio",
+      "object_kind": "stats-regrounding-hint-route",
+      "unit": {
+        "symbol": "1",
+        "quantity": "proportion"
+      },
+      "population": {
+        "subject": "current stats re-grounding advisory hints",
+        "definition": "one hints[] record in generated/stats_regrounding_hints.min.json",
+        "inclusion_rule": "every current catalog-backed hint emitted by the stats re-grounding builder",
+        "exclusion_rule": "schemas, examples, docs, retired stats surfaces absent from the generated hint catalog, and fallback actions",
+        "sampling": "census"
+      },
+      "window": {
+        "temporality": "instant",
+        "clock": "owner_defined"
+      },
+      "dimensions": {
+        "allowed": [],
+        "prohibited": [
+          "hint_id",
+          "target_ref",
+          "owner_truth_input"
+        ]
+      },
+      "aggregation": {
+        "operator": "none",
+        "across": []
+      },
+      "missingness": {
+        "states": [
+          "missing",
+          "unknown",
+          "stale"
+        ],
+        "zero_is_observation": true
+      },
+      "uncertainty": {
+        "required": false,
+        "methods": [
+          "not_applicable"
+        ]
+      },
+      "provenance": {
+        "evidence_refs_required": true,
+        "source_revision_required": true
+      },
+      "lifecycle": {
+        "status": "active",
+        "compatible_with": []
+      },
+      "privacy": {
+        "classification": "public",
+        "raw_content_allowed": false,
+        "sensitive_dimensions_allowed": false
+      },
+      "live_state": {
+        "capability": "reference_only"
+      },
+      "authority_ceiling": "Reports the primary inspect-action shape of current stats re-grounding hints only; it does not establish route quality, correct owner choice, successful dispatch, proof, policy, or owner acceptance."
+    }
+  ],
+  "exports": [
+    {
+      "measurement_id": "aoa-routing/stats-regrounding-owner-first-route-ratio",
+      "posture": "reference",
+      "packet_refs": [
+        "stats/packets/stats-regrounding-owner-first-route-ratio.reference.json"
+      ],
+      "evidence_refs": [
+        "generated/stats_regrounding_hints.min.json",
+        "mechanics/boundary-bridge/parts/stats-regrounding/docs/stats-regrounding-hints.md",
+        "mechanics/boundary-bridge/parts/stats-regrounding/schemas/stats-regrounding-hints.schema.json"
+      ]
+    }
+  ]
+}

@@ -28,8 +28,5 @@ a reviewed checkpoint or continuity artifact.
 
 ## Verification
 
-Use:
-
-`python -m pytest -q mechanics/checkpoint/parts/live-session-reentry-route-review/tests`
-
-and the repo-wide `python scripts/validate_router.py`.
+Use the focused part tests and repo-wide routing validator through root
+`AGENTS.md` and the nearest mechanic route card.
