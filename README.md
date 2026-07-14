@@ -6,7 +6,7 @@ It does not author new meaning. It derives lightweight routing surfaces from sib
 
 **Source repos own meaning. Routing repo owns navigation.**
 
-> Current release: `v0.2.2`. See [CHANGELOG](CHANGELOG.md) for release notes.
+> Current release: `v0.3.0`. See [CHANGELOG](CHANGELOG.md) for release notes.
 
 The current public paths are:
 
@@ -40,6 +40,7 @@ Use the shortest route by need:
 - Agon gate routing: `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`, [mechanics/agon/parts/gate-routing/docs/gate-routing.md](mechanics/agon/parts/gate-routing/docs/gate-routing.md), [mechanics/agon/parts/gate-routing/docs/trigger-model.md](mechanics/agon/parts/gate-routing/docs/trigger-model.md), [mechanics/agon/parts/gate-routing/docs/decision-boundary.md](mechanics/agon/parts/gate-routing/docs/decision-boundary.md), [mechanics/agon/parts/gate-routing/docs/assistant-escalation.md](mechanics/agon/parts/gate-routing/docs/assistant-escalation.md), and [mechanics/agon/parts/gate-routing/docs/owner-handoffs.md](mechanics/agon/parts/gate-routing/docs/owner-handoffs.md)
 - optional two-stage seam: `generated/tiny_model_entrypoints.json`, `generated/two_stage_skill_entrypoints.json`, `generated/two_stage_router_prompt_blocks.json`, `generated/two_stage_router_tool_schemas.json`, `generated/two_stage_router_examples.json`, `generated/two_stage_router_manifest.json`, `generated/two_stage_router_eval_cases.jsonl`, `routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl`, and [routing/two-stage-skill-selection/docs/two-stage-skill-selection.md](routing/two-stage-skill-selection/docs/two-stage-skill-selection.md)
 - durable routing rationale: [docs/decisions](docs/decisions/README.md)
+- release-readiness and publication shape: [docs/RELEASING](docs/RELEASING.md)
 - current direction: [ROADMAP](ROADMAP.md)
 
 If the task affects ingestion contracts, inspect the relevant upstream generated catalogs before editing routing logic.
