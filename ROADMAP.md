@@ -25,16 +25,13 @@ It already carries:
   `mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md`
 - stress posture routing contracts through `mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md` and
   `mechanics/antifragility/parts/degraded-route-hints/docs/degraded-route-hints.md`
-- optional low-context and two-stage skill routing surfaces through
-  `generated/tiny_model_entrypoints.json`,
-  `generated/two_stage_skill_entrypoints.json`,
-  `generated/two_stage_router_manifest.json`,
-  `generated/two_stage_router_eval_cases.jsonl`, and
-  `routing/two-stage-skill-selection/docs/two-stage-skill-selection.md`
+- low-context skill routing through `generated/tiny_model_entrypoints.json`,
+  `aoa-skills/generated/agent_skill_catalog.min.json`, and
+  `aoa-skills/generated/capability_graph.json`
 
 The near-term risk is roadmap drift: routing has already shipped
-federation-mesh, composite stress, technique-kind second-cut, and two-stage
-low-context surfaces, but those surfaces must stay framed as navigation and
+federation-mesh, composite stress, technique-kind second-cut, and owner-backed
+low-context skill surfaces, but those surfaces must stay framed as navigation and
 dispatch support rather than becoming source authority.
 
 ## Current Baseline
@@ -43,14 +40,17 @@ Already merged:
 
 - symmetric catalog ingestion across the active source repos:
   - `aoa-techniques` via `generated/technique_catalog.min.json`
-  - `aoa-skills` via `generated/skill_catalog.min.json`
+  - `aoa-skills` callable bundles via `generated/agent_skill_catalog.min.json`
+    and deep capability navigation via `generated/capability_graph.json`
   - `aoa-evals` via `generated/eval_catalog.min.json`
 - capsule-aware inspect routing:
   - `aoa-routing` points to repo-local capsule surfaces
-- section-aware expand routing:
-  - `aoa-routing` points to repo-local section surfaces
+- owner-shaped expand routing:
+  - `aoa-routing` points to repo-local section surfaces where the owner exposes
+    them and to the typed capability graph for skills
 - bounded pairing routing:
-  - `aoa-routing` publishes route-owned pair hints for technique, skill, and eval flows
+  - `aoa-routing` publishes bounded dependency adjacency for technique and eval
+    flows; skill dependency edges appear only where an eval contract names them
 - tiny-model entry routing:
   - `aoa-routing` publishes a low-context query grammar and curated starter entrypoints
 - memo dispatch readiness:
@@ -174,40 +174,24 @@ It must not own:
 - retry policy
 - router-owned fallback for thin-router returns
 
-### Milestone 9: Two-stage skill selection
+### Milestone 9: Owner capability routing
 
-Merged as an optional adjacent seam rather than a replacement for flat routing.
+The v0.3.0 two-stage implementation was retired by
+`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md` after the skill owner
+replaced the flat 57-skill contract with seven callable bundles plus a typed
+capability graph.
 
-This contour adds:
+The current contour consumes:
 
-- `generated/two_stage_skill_entrypoints.json`
-- `generated/two_stage_router_prompt_blocks.json`
-- `generated/two_stage_router_tool_schemas.json`
-- `generated/two_stage_router_examples.json`
-- `generated/two_stage_router_manifest.json`
-- `generated/two_stage_router_eval_cases.jsonl`
+- `aoa-skills/generated/agent_skill_catalog.min.json` for the callable first cut
+- `aoa-skills/generated/capability_graph.json` for modes, workflows, guards,
+  tools, adapters, lifecycle, typed relations, and deep retrieval
+- `aoa-evals/generated/eval_catalog.min.json` for typed proof dependencies
 
-It also consumes the new skill-derived bridge from `aoa-skills`:
-
-- `generated/tiny_router_skill_signals.json`
-- `generated/tiny_router_candidate_bands.json`
-- `generated/tiny_router_capsules.min.json`
-
-`aoa-routing` should own:
-
-- stage-1 shortlist policy
-- scoring weights and penalties
-- fallback behavior
-- repo-family boosts
-- stage wiring and decision modes
-- prompt and tool contracts for the two-stage seam
-
-It must not own:
-
-- skill wording
-- invocation posture
-- activation authority
-- a second skill canon hidden inside router examples or prompt blocks
+`aoa-routing` owns only the thin registry projection, inspect/expand pointers,
+owner-qualified lifecycle and trust navigation, and strict mismatch failures.
+It does not own skill wording, invocation authority, capability meaning,
+graph retrieval, or task-local DAG execution.
 
 ### Milestone 10: Agon gate routing
 
@@ -273,9 +257,14 @@ These boundaries come directly from the source config and should remain hard con
 - the ToS path may hand off from that source-owned route into a ToS-specific derived `kag_view`, and that `kag_view` may advertise one bounded `aoa-kag` retrieval adjunct, but the default KAG starter remains `aoa-techniques`
 - declared federation kinds must stay documented but inactive until their contracts are narrower and more stable
 - the federation entry ABI must stay additive beside the thin router core instead of replacing it
-- the two-stage skill-selection seam must stay additive beside flat routing rather than replacing `tiny_model_entrypoints.json`
+- the skill lane must inspect the owner agent catalog and expand through the
+  owner capability graph instead of maintaining a second selector
+- task-local DAGs must stay in the session or runtime; stable sequences route
+  to their workflow or playbook owner
 - the Agon gate-routing seam must stay additive beside the thin router core and must never treat a gate hint as arena activation
-- `aoa-skills` must merge source-owned bridge surfaces before downstream two-stage routing changes can be treated as green on GitHub checks that read sibling repos from `main`
+- `aoa-skills` must merge source-owned catalog or graph changes before
+  downstream routing changes can be treated as green on checks that read
+  sibling repositories from `main`
 
 ## Definition Of Success
 
@@ -289,7 +278,7 @@ or
 
 or
 
-`tiny preselect -> stage-2 skill decision -> source-owned activation seam`
+`skill root -> owner agent catalog -> owner capability graph -> task-local composition`
 
 Without:
 

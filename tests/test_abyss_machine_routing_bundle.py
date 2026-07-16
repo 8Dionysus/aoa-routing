@@ -53,25 +53,14 @@ def test_thin_router_bundle_covers_live_generated_route_family() -> None:
         "generated/task_to_surface_hints.json",
         "generated/task_to_tier_hints.json",
         "generated/tiny_model_entrypoints.json",
-        "generated/two_stage_router_eval_cases.jsonl",
-        "generated/two_stage_router_examples.json",
-        "generated/two_stage_router_manifest.json",
-        "generated/two_stage_router_prompt_blocks.json",
-        "generated/two_stage_router_tool_schemas.json",
-        "generated/two_stage_skill_entrypoints.json",
     }
-    expected_two_stage_sources = {
-        "routing/two-stage-skill-selection/config/two_stage_router_policy.json",
-        "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
-        "routing/two-stage-skill-selection/scripts/build_two_stage_skill_router.py",
-        "routing/two-stage-skill-selection/scripts/two_stage_router_lib.py",
-        "routing/two-stage-skill-selection/scripts/validate_two_stage_skill_router.py",
-    }
+    retired_subjects = {path for path in subjects if "two_stage" in path or "two-stage" in path}
 
-    expected_subjects = expected_generated_subjects | expected_two_stage_sources
-
-    assert expected_subjects - subjects == set()
-    assert {path for path in expected_subjects if not (REPO_ROOT / path).exists()} == set()
+    assert expected_generated_subjects - subjects == set()
+    assert retired_subjects == set()
+    assert {
+        path for path in expected_generated_subjects if not (REPO_ROOT / path).exists()
+    } == set()
 
 
 def test_federation_entry_abi_uses_current_kag_mechanics_paths() -> None:

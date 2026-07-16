@@ -164,13 +164,15 @@ def test_antifragility_surfaces_are_discoverable_and_keep_routing_thin() -> None
         "mechanics/antifragility/parts/composite-stress-routing/schemas/composite_stress_route_hint_v1.json",
         "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.example.json",
         "mechanics/antifragility/parts/composite-stress-routing/examples/composite_stress_route_hint.retrieval-outage-honesty.example.json",
-        "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
+        "aoa-skills/generated/agent_skill_catalog.min.json",
+        "aoa-skills/generated/capability_graph.json",
+        "docs/decisions/AOA-RT-D-0003-owner-capability-routing.md",
     ]:
         assert fragment in readme
 
     assert "do not make routing the source of stress meaning" in routing_doc
     assert "Do not turn `aoa-routing` into a health oracle" in chaos_doc
-    assert "weak or empty shortlist -> `no-skill`" in chaos_doc
+    assert "Keep the owner catalog and capability graph coherent and owner-first." in chaos_doc
     assert "They are a stress overlay, not a new sovereign router." in degraded_doc
     assert "Use structured playbook lane and re-entry gate surfaces, not live `PLAYBOOK.md` parsing." in playbook_doc
     assert "Quarantine hints stay additive and never replace KAG authored truth." in kag_doc

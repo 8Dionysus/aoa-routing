@@ -9,3 +9,7 @@
 ## 2026-06-05
 
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## 2026-07-16
+
+- [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)

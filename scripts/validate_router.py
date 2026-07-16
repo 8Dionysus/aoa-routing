@@ -21,7 +21,6 @@ except ModuleNotFoundError:
     yaml = None
 
 import validate_nested_agents
-from validate_two_stage_skill_router import validate_outputs as validate_two_stage_outputs
 
 from build_router import build_outputs
 from router_core import (
@@ -160,11 +159,6 @@ OUTPUT_SCHEMA_NAMES = {
     ),
     "pairing_hints.min.json": "routing/core/schemas/pairing-hints.schema.json",
     "tiny_model_entrypoints.json": "routing/core/schemas/tiny-model-entrypoints.schema.json",
-    "two_stage_skill_entrypoints.json": "routing/two-stage-skill-selection/schemas/two-stage-skill-entrypoints.schema.json",
-    "two_stage_router_prompt_blocks.json": "routing/two-stage-skill-selection/schemas/two-stage-router-prompt-blocks.schema.json",
-    "two_stage_router_tool_schemas.json": "routing/two-stage-skill-selection/schemas/two-stage-router-tool-schemas.schema.json",
-    "two_stage_router_examples.json": "routing/two-stage-skill-selection/schemas/two-stage-router-examples.schema.json",
-    "two_stage_router_manifest.json": "routing/two-stage-skill-selection/schemas/two-stage-router-manifest.schema.json",
 }
 
 SOURCE_OWNED_PAYLOAD_KEYS = (
@@ -465,7 +459,6 @@ def get_schema_registry() -> Registry:
         *sorted((REPO_ROOT / "routing" / "core" / "schemas").glob("*.schema.json")),
         *sorted((REPO_ROOT / "mechanics").glob("**/schemas/*.schema.json")),
         *sorted((REPO_ROOT / "mechanics").glob("**/schemas/*.json")),
-        *sorted((REPO_ROOT / "routing" / "two-stage-skill-selection" / "schemas").glob("*.schema.json")),
     ]
     for schema_path in schema_paths:
         schema = load_schema(schema_path.relative_to(REPO_ROOT).as_posix())
@@ -1563,18 +1556,76 @@ def validate_registry_entry_attributes(
         return True
 
     if kind == "skill":
-        expected_keys = {"scope", "invocation_mode", "technique_dependencies"}
+        expected_keys = {
+            "scope",
+            "invocation_mode",
+            "technique_dependencies",
+            "allow_implicit_invocation",
+            "candidate_only",
+            "trust_posture",
+            "projection_path",
+            "capability_id",
+            "capability_graph_ref",
+            "capability_source_path",
+            "lifecycle",
+            "target_owner",
+            "requires_human_approval",
+        }
         if set(attributes) != expected_keys:
             issues.append(ValidationIssue(location, "skill attributes do not match the expected shape"))
             return False
-        for key in ("scope", "invocation_mode"):
+        for key in (
+            "scope",
+            "invocation_mode",
+            "trust_posture",
+            "capability_id",
+            "target_owner",
+        ):
             if not isinstance(attributes[key], str):
                 issues.append(ValidationIssue(location, f"skill {key} must be a string"))
+        for key in (
+            "allow_implicit_invocation",
+            "candidate_only",
+            "requires_human_approval",
+        ):
+            if not isinstance(attributes[key], bool):
+                issues.append(ValidationIssue(location, f"skill {key} must be a boolean"))
         try:
             ensure_string_list(attributes["technique_dependencies"], f"{location}.technique_dependencies")
+            ensure_repo_relative_path(attributes["projection_path"], f"{location}.projection_path")
+            ensure_repo_relative_path(
+                attributes["capability_graph_ref"],
+                f"{location}.capability_graph_ref",
+            )
+            ensure_repo_relative_path(
+                attributes["capability_source_path"],
+                f"{location}.capability_source_path",
+            )
+            lifecycle = ensure_mapping(attributes["lifecycle"], f"{location}.lifecycle")
+            if set(lifecycle) != {
+                "evidence_state",
+                "health",
+                "state",
+                "version",
+                "visibility",
+            }:
+                raise RouterError(f"{location}.lifecycle must match the owner lifecycle shape")
+            for lifecycle_key, lifecycle_value in lifecycle.items():
+                ensure_string(lifecycle_value, f"{location}.lifecycle.{lifecycle_key}")
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
             return False
+        if not attributes["capability_id"].startswith("skill."):
+            issues.append(ValidationIssue(location, "skill capability_id must use the 'skill.<name>' form"))
+        if attributes["capability_graph_ref"] != "generated/capability_graph.json":
+            issues.append(
+                ValidationIssue(
+                    location,
+                    "skill capability_graph_ref must point to generated/capability_graph.json",
+                )
+            )
+        if attributes["target_owner"] != "aoa-skills":
+            issues.append(ValidationIssue(location, "skill target_owner must stay aoa-skills"))
         return True
 
     if kind == "eval":
@@ -1589,6 +1640,8 @@ def validate_registry_entry_attributes(
             "export_ready",
             "technique_dependencies",
             "skill_dependencies",
+            "capability_dependencies",
+            "capability_refs",
         }
         if set(attributes) != expected_keys:
             issues.append(ValidationIssue(location, "eval attributes do not match the expected shape"))
@@ -1609,6 +1662,34 @@ def validate_registry_entry_attributes(
         try:
             ensure_string_list(attributes["technique_dependencies"], f"{location}.technique_dependencies")
             ensure_string_list(attributes["skill_dependencies"], f"{location}.skill_dependencies")
+            capability_dependencies = ensure_string_list(
+                attributes["capability_dependencies"],
+                f"{location}.capability_dependencies",
+            )
+            capability_refs_raw = ensure_list(
+                attributes["capability_refs"],
+                f"{location}.capability_refs",
+            )
+            capability_ref_ids: list[str] = []
+            for ref_index, raw_ref in enumerate(capability_refs_raw):
+                ref_location = f"{location}.capability_refs[{ref_index}]"
+                ref = ensure_mapping(raw_ref, ref_location)
+                if set(ref) != {
+                    "id",
+                    "kind",
+                    "registry_repo",
+                    "registry_path",
+                    "target_owner",
+                }:
+                    raise RouterError(f"{ref_location} must match the typed capability ref shape")
+                capability_ref_ids.append(ensure_string(ref["id"], f"{ref_location}.id"))
+                for key in ("kind", "registry_repo", "target_owner"):
+                    ensure_string(ref[key], f"{ref_location}.{key}")
+                ensure_repo_relative_path(ref["registry_path"], f"{ref_location}.registry_path")
+            if capability_ref_ids != capability_dependencies:
+                raise RouterError(
+                    f"{location}.capability_refs must preserve the ordered capability_dependencies IDs"
+                )
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
             return False
@@ -1965,6 +2046,114 @@ def validate_expand_targets(
         surface_path = source_root / surface_file
         try:
             payload = ensure_mapping(load_json_file(surface_path), location)
+        except RouterError as exc:
+            issues.append(ValidationIssue(location, str(exc)))
+            continue
+
+        if kind == "skill" and Path(surface_file).name == "capability_graph.json":
+            if match_field != "id":
+                issues.append(
+                    ValidationIssue(
+                        "task_to_surface_hints.json",
+                        "skill capability-graph expansion must match node id",
+                    )
+                )
+            if section_key_field != "id":
+                issues.append(
+                    ValidationIssue(
+                        "task_to_surface_hints.json",
+                        "skill capability-graph expansion must use node id as its lookup key",
+                    )
+                )
+            if default_sections or supported_sections:
+                issues.append(
+                    ValidationIssue(
+                        "task_to_surface_hints.json",
+                        "skill capability-graph expansion must not declare synthetic sections",
+                    )
+                )
+
+            try:
+                graph_nodes = ensure_list(payload.get("nodes"), f"{location}.nodes")
+            except RouterError as exc:
+                issues.append(ValidationIssue(location, str(exc)))
+                continue
+
+            seen_capability_ids: set[str] = set()
+            for node_index, raw_node in enumerate(graph_nodes):
+                node_location = f"{location}.nodes[{node_index}]"
+                try:
+                    node = ensure_mapping(raw_node, node_location)
+                except RouterError as exc:
+                    issues.append(ValidationIssue(location, str(exc)))
+                    continue
+                if node.get("kind") != "skill":
+                    continue
+                capability_id = node.get("id")
+                if not isinstance(capability_id, str) or not capability_id.strip():
+                    issues.append(
+                        ValidationIssue(
+                            location,
+                            f"{node_location}.id must be a non-empty string",
+                        )
+                    )
+                    continue
+                if capability_id in seen_capability_ids:
+                    issues.append(
+                        ValidationIssue(
+                            location,
+                            f"duplicate skill capability node '{capability_id}'",
+                        )
+                    )
+                seen_capability_ids.add(capability_id)
+
+            expected_capability_ids: set[str] = set()
+            for entry_index, entry in enumerate(registry_entries):
+                if entry.get("kind") != "skill":
+                    continue
+                entry_location = f"cross_repo_registry.min.json.entries[{entry_index}]"
+                try:
+                    attributes = ensure_mapping(
+                        entry.get("attributes"),
+                        f"{entry_location}.attributes",
+                    )
+                    capability_id = ensure_string(
+                        attributes.get("capability_id"),
+                        f"{entry_location}.attributes.capability_id",
+                    )
+                    capability_graph_ref = ensure_string(
+                        attributes.get("capability_graph_ref"),
+                        f"{entry_location}.attributes.capability_graph_ref",
+                    )
+                except RouterError as exc:
+                    issues.append(ValidationIssue(entry_location, str(exc)))
+                    continue
+                if capability_graph_ref != surface_file:
+                    issues.append(
+                        ValidationIssue(
+                            entry_location,
+                            "skill registry entry must point to the routed capability graph",
+                        )
+                    )
+                expected_capability_ids.add(capability_id)
+
+            for capability_id in sorted(expected_capability_ids - seen_capability_ids):
+                issues.append(
+                    ValidationIssue(
+                        location,
+                        f"capability graph is missing skill node '{capability_id}'",
+                    )
+                )
+            for capability_id in sorted(seen_capability_ids - expected_capability_ids):
+                issues.append(
+                    ValidationIssue(
+                        location,
+                        f"capability graph contains unexpected skill node '{capability_id}'",
+                    )
+                )
+            continue
+
+        try:
             entries = ensure_list(payload.get(section_array_key(kind)), location)
         except RouterError as exc:
             issues.append(ValidationIssue(location, str(exc)))
@@ -2110,14 +2299,14 @@ def load_surface_entries_for_validation(
         "technique_catalog.min.json": "techniques",
         "technique_kind_manifest.min.json": "kinds",
         "playbook_registry.min.json": "playbooks",
-        "skill_capsules.json": "skills",
+        "agent_skill_catalog.min.json": "skills",
+        "capability_graph.json": "nodes",
         "eval_capsules.json": "evals",
         "memory_catalog.min.json": "memo_surfaces",
         "memory_capsules.json": "memo_surfaces",
         "memory_object_catalog.min.json": "memory_objects",
         "memory_object_capsules.json": "memory_objects",
         "technique_sections.full.json": "techniques",
-        "skill_sections.full.json": "skills",
         "eval_sections.full.json": "evals",
         "memory_sections.full.json": "memo_surfaces",
         "memory_object_sections.full.json": "memory_objects",
@@ -4633,7 +4822,6 @@ def validate_tiny_model_entrypoints(
         verb = starter.get("verb")
         match_key = starter.get("match_key")
         target_value = starter.get("target_value")
-        adjacent_handoff = starter.get("adjacent_handoff")
         recall_family = starter.get("recall_family")
         recall_mode = starter.get("recall_mode")
         if not isinstance(source_repo, str) or not isinstance(surface_file, str):
@@ -4680,119 +4868,6 @@ def validate_tiny_model_entrypoints(
                     f"non-recall starter '{starter.get('name', index)}' must not define recall_family",
                 )
             )
-        if adjacent_handoff is None:
-            continue
-        if not isinstance(adjacent_handoff, dict):
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    f"starter '{starter.get('name', index)}' adjacent_handoff must be a mapping",
-                )
-            )
-            continue
-        if starter.get("name") != "skill-root":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    f"only starter 'skill-root' may publish an adjacent_handoff; found one on '{starter.get('name', index)}'",
-                )
-            )
-            continue
-        try:
-            handoff_target_repo = ensure_string(
-                adjacent_handoff.get("target_repo"),
-                f"{location}.adjacent_handoff.target_repo",
-            )
-            handoff_target_surface = ensure_string(
-                adjacent_handoff.get("target_surface"),
-                f"{location}.adjacent_handoff.target_surface",
-            )
-            handoff_surface_kind = ensure_string(
-                adjacent_handoff.get("surface_kind"),
-                f"{location}.adjacent_handoff.surface_kind",
-            )
-            handoff_mode = ensure_string(
-                adjacent_handoff.get("handoff_mode"),
-                f"{location}.adjacent_handoff.handoff_mode",
-            )
-            activation_authority = ensure_string(
-                adjacent_handoff.get("activation_authority"),
-                f"{location}.adjacent_handoff.activation_authority",
-            )
-            ensure_string(adjacent_handoff.get("name"), f"{location}.adjacent_handoff.name")
-            ensure_string(adjacent_handoff.get("when"), f"{location}.adjacent_handoff.when")
-        except RouterError as exc:
-            issues.append(ValidationIssue("tiny_model_entrypoints.json", str(exc)))
-            continue
-        if handoff_target_repo != "aoa-routing":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "skill-root adjacent_handoff must stay on aoa-routing",
-                )
-            )
-        if handoff_target_surface != "generated/two_stage_skill_entrypoints.json":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "skill-root adjacent_handoff must target generated/two_stage_skill_entrypoints.json",
-                )
-            )
-        if handoff_surface_kind != "two_stage_skill_entrypoints":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "skill-root adjacent_handoff must target surface_kind 'two_stage_skill_entrypoints'",
-                )
-            )
-        if handoff_mode != "optional-adjacent":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "skill-root adjacent_handoff handoff_mode must stay 'optional-adjacent'",
-                )
-            )
-        if activation_authority != "source-owned":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "skill-root adjacent_handoff activation_authority must stay 'source-owned'",
-                )
-            )
-        handoff_payload = load_target_payload(handoff_target_repo, handoff_target_surface)
-        if handoff_payload is None:
-            continue
-        if handoff_payload.get("surface_kind") != "two_stage_skill_entrypoints":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "skill-root adjacent_handoff target must publish surface_kind 'two_stage_skill_entrypoints'",
-                )
-            )
-        tiny_model_handoff = handoff_payload.get("tiny_model_handoff")
-        if not isinstance(tiny_model_handoff, dict):
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "two_stage_skill_entrypoints.json must publish a tiny_model_handoff back-reference",
-                )
-            )
-            continue
-        if tiny_model_handoff.get("starter_ref") != "skill-root":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "two_stage_skill_entrypoints.json tiny_model_handoff must point back to starter 'skill-root'",
-                )
-            )
-        if tiny_model_handoff.get("entry_surface") != "generated/tiny_model_entrypoints.json":
-            issues.append(
-                ValidationIssue(
-                    "tiny_model_entrypoints.json",
-                    "two_stage_skill_entrypoints.json tiny_model_handoff must point back to generated/tiny_model_entrypoints.json",
-                )
-            )
-
     def validate_federation_target(
         *,
         consumer_label: str,
@@ -5642,11 +5717,6 @@ def validate_generated_outputs(
     owner_layer_shortlist_path = generated_dir / "owner_layer_shortlist.min.json"
     pairing_path = generated_dir / "pairing_hints.min.json"
     tiny_model_path = generated_dir / "tiny_model_entrypoints.json"
-    two_stage_entrypoints_path = generated_dir / "two_stage_skill_entrypoints.json"
-    two_stage_prompt_blocks_path = generated_dir / "two_stage_router_prompt_blocks.json"
-    two_stage_tool_schemas_path = generated_dir / "two_stage_router_tool_schemas.json"
-    two_stage_examples_path = generated_dir / "two_stage_router_examples.json"
-    two_stage_manifest_path = generated_dir / "two_stage_router_manifest.json"
 
     registry_payload = load_output(registry_path, issues)
     router_payload = load_output(router_path, issues)
@@ -5662,11 +5732,6 @@ def validate_generated_outputs(
     owner_layer_shortlist_payload = load_output(owner_layer_shortlist_path, issues)
     pairing_payload = load_output(pairing_path, issues)
     tiny_model_payload = load_output(tiny_model_path, issues)
-    two_stage_entrypoints_payload = load_output(two_stage_entrypoints_path, issues)
-    two_stage_prompt_blocks_payload = load_output(two_stage_prompt_blocks_path, issues)
-    two_stage_tool_schemas_payload = load_output(two_stage_tool_schemas_path, issues)
-    two_stage_examples_payload = load_output(two_stage_examples_path, issues)
-    two_stage_manifest_payload = load_output(two_stage_manifest_path, issues)
     if any(
         payload is None
         for payload in (
@@ -5684,11 +5749,6 @@ def validate_generated_outputs(
             owner_layer_shortlist_payload,
             pairing_payload,
             tiny_model_payload,
-            two_stage_entrypoints_payload,
-            two_stage_prompt_blocks_payload,
-            two_stage_tool_schemas_payload,
-            two_stage_examples_payload,
-            two_stage_manifest_payload,
         )
     ):
         return issues
@@ -5709,11 +5769,6 @@ def validate_generated_outputs(
             owner_layer_shortlist_path.name: owner_layer_shortlist_payload,
             pairing_path.name: pairing_payload,
             tiny_model_path.name: tiny_model_payload,
-            two_stage_entrypoints_path.name: two_stage_entrypoints_payload,
-            two_stage_prompt_blocks_path.name: two_stage_prompt_blocks_payload,
-            two_stage_tool_schemas_path.name: two_stage_tool_schemas_payload,
-            two_stage_examples_path.name: two_stage_examples_payload,
-            two_stage_manifest_path.name: two_stage_manifest_payload,
         },
         techniques_root,
         skills_root,
@@ -5748,11 +5803,6 @@ def validate_generated_outputs(
         (owner_layer_shortlist_path, owner_layer_shortlist_payload),
         (pairing_path, pairing_payload),
         (tiny_model_path, tiny_model_payload),
-        (two_stage_entrypoints_path, two_stage_entrypoints_payload),
-        (two_stage_prompt_blocks_path, two_stage_prompt_blocks_payload),
-        (two_stage_tool_schemas_path, two_stage_tool_schemas_payload),
-        (two_stage_examples_path, two_stage_examples_payload),
-        (two_stage_manifest_path, two_stage_manifest_payload),
     ):
         validate_against_schema(
             payload,
@@ -6160,11 +6210,6 @@ def validate_generated_outputs(
         (stats_regrounding_hints_path.name, stats_regrounding_hints_payload),
         (owner_layer_shortlist_path.name, owner_layer_shortlist_payload),
         (tiny_model_path.name, tiny_model_payload),
-        (two_stage_entrypoints_path.name, two_stage_entrypoints_payload),
-        (two_stage_prompt_blocks_path.name, two_stage_prompt_blocks_payload),
-        (two_stage_tool_schemas_path.name, two_stage_tool_schemas_payload),
-        (two_stage_examples_path.name, two_stage_examples_payload),
-        (two_stage_manifest_path.name, two_stage_manifest_payload),
     ):
         for key in SOURCE_OWNED_PAYLOAD_KEYS:
             if payload_contains_key(payload, key):
@@ -6174,9 +6219,6 @@ def validate_generated_outputs(
                         f"routing outputs must not copy source-owned payload key '{key}'",
                     )
                 )
-
-    for location, message in validate_two_stage_outputs(generated_dir, skills_root):
-        issues.append(ValidationIssue(location, message))
 
     return issues
 

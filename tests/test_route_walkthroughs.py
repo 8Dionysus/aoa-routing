@@ -8,7 +8,6 @@ import pytest
 
 import build_router
 import router_core
-from _two_stage_router_lib import build_decision_packet, preselect
 
 
 FIXTURES_ROOT = Path(__file__).resolve().parent / "fixtures"
@@ -268,11 +267,11 @@ def load_surface_entries(payload: dict[str, object], surface_file: str) -> list[
         "center_entry_map.min.json": "routes",
         "root_entry_map.min.json": "routes",
         "technique_capsules.json": "techniques",
-        "skill_capsules.json": "skills",
+        "agent_skill_catalog.min.json": "skills",
+        "capability_graph.json": "nodes",
         "eval_capsules.json": "evals",
         "memory_catalog.min.json": "memo_surfaces",
         "technique_sections.full.json": "techniques",
-        "skill_sections.full.json": "skills",
         "eval_sections.full.json": "evals",
         "memory_sections.full.json": "memo_surfaces",
     }
@@ -333,7 +332,6 @@ def test_route_walkthrough_smokes_resolve_canonical_flows(
     if isinstance(expand, dict):
         kind = expand["kind"]
         target_value = expand["target_value"]
-        section_value = expand["section_value"]
         hint = hints[kind]
         expand_action = hint["actions"]["expand"]
         assert expand_action["enabled"] is True
@@ -344,13 +342,20 @@ def test_route_walkthrough_smokes_resolve_canonical_flows(
             target_value,
         )
         assert expand_entry is not None
-        sections = expand_entry["sections"]
-        assert isinstance(sections, list)
-        assert any(
-            isinstance(section, dict)
-            and section.get(expand_action["section_key_field"]) == section_value
-            for section in sections
-        )
+        if kind == "skill":
+            assert Path(expand_action["surface_file"]).name == "capability_graph.json"
+            assert expand_entry["kind"] == "skill"
+            assert expand_action["default_sections"] == []
+            assert expand_action["supported_sections"] == []
+        else:
+            section_value = expand["section_value"]
+            sections = expand_entry["sections"]
+            assert isinstance(sections, list)
+            assert any(
+                isinstance(section, dict)
+                and section.get(expand_action["section_key_field"]) == section_value
+                for section in sections
+            )
 
     pair = walkthrough.get("pair")
     if isinstance(pair, dict):
@@ -422,25 +427,14 @@ def test_federation_starters_resolve_live_fixture_targets(tmp_path: Path) -> Non
     assert root_by_id["tos-root"]["authority_surface"] == "Tree-of-Sophia:CHARTER.md"
 
 
-@pytest.mark.parametrize(
-    ("case_id", "expected_skill"),
-    [
-        ("fixture-change", "aoa-change-protocol"),
-        ("fixture-context", "aoa-context-scan"),
-    ],
-)
-def test_two_stage_skill_root_walkthrough_reaches_source_owned_activation_seams(
+def test_skill_root_walkthrough_reaches_owner_catalog_and_capability_graph(
     tmp_path: Path,
-    case_id: str,
-    expected_skill: str,
 ) -> None:
     outputs, roots = build_walkthrough_context(tmp_path, "base")
     tiny_model = outputs["tiny_model_entrypoints.json"]
-    two_stage = outputs["two_stage_skill_entrypoints.json"]
     starters = {starter["name"]: starter for starter in tiny_model["starters"]}
     skill_root = starters["skill-root"]
 
-    assert two_stage["stage_1"]["starter_ref"] == "skill-root"
     assert skill_root == {
         "name": "skill-root",
         "verb": "pick",
@@ -450,84 +444,49 @@ def test_two_stage_skill_root_walkthrough_reaches_source_owned_activation_seams(
         "allowed_kinds": ["skill"],
         "target_kind": "skill",
         "target_value": "skill",
-        "adjacent_handoff": {
-            "name": "two-stage-skill-selection",
-            "target_repo": "aoa-routing",
-            "target_surface": "generated/two_stage_skill_entrypoints.json",
-            "surface_kind": "two_stage_skill_entrypoints",
-            "handoff_mode": "optional-adjacent",
-            "activation_authority": "source-owned",
-            "when": (
-                "Use when precision-first skill routing is preferred before loading "
-                "source-owned activation seams."
-            ),
+    }
+    skill_hint = next(
+        hint for hint in outputs["task_to_surface_hints.json"]["hints"]
+        if hint["kind"] == "skill"
+    )
+    assert skill_hint["actions"] == {
+        "pick": {"enabled": True},
+        "inspect": {
+            "enabled": True,
+            "surface_file": "generated/agent_skill_catalog.min.json",
+            "match_field": "name",
         },
-    }
-    assert two_stage["tiny_model_handoff"] == {
-        "starter_ref": "skill-root",
-        "entry_surface": "generated/tiny_model_entrypoints.json",
-        "handoff_name": "two-stage-skill-selection",
-        "handoff_mode": "optional-adjacent",
-        "activation_authority": "source-owned",
-    }
-    assert two_stage["stage_1"]["source_repo"] == "aoa-skills"
-    assert two_stage["stage_2"]["source_repo"] == "aoa-skills"
-    assert two_stage["stage_2"]["activation_manifest"] == "generated/local_adapter_manifest.json"
-    assert two_stage["stage_2"]["context_manifest"] == "generated/context_retention_manifest.json"
-
-    eval_case = next(
-        case
-        for case in outputs["two_stage_router_eval_cases.jsonl"]
-        if case["case_id"] == case_id
-    )
-    policy = load_json(
-        FIXTURES_ROOT
-        / "aoa-routing"
-        / "routing"
-        / "two-stage-skill-selection"
-        / "config"
-        / "two_stage_router_policy.json"
-    )
-    preselected = preselect(
-        task=eval_case["prompt"],
-        signals_doc=load_json(roots["aoa-skills"] / two_stage["stage_1"]["signals_surface"]),
-        bands_doc=load_json(roots["aoa-skills"] / two_stage["stage_1"]["bands_surface"]),
-        policy=policy,
-        top_k=two_stage["stage_1"]["top_k_default"],
-        repo_family=eval_case.get("repo_family_hint"),
-    )
-    packet = build_decision_packet(
-        eval_case["prompt"],
-        preselected,
-        roots["aoa-skills"],
-        max_shortlist=two_stage["stage_2"]["max_shortlist"],
-    )
-
-    assert preselected["shortlist"][0]["name"] == expected_skill
-    assert packet["suggested_decision"]["decision_mode"] == "activate-candidate"
-    assert packet["suggested_decision"]["skill"] == expected_skill
-    assert packet["candidates"][0]["activation_hint"] == "implicit-ok"
-
-    capsules = {
-        entry["name"]: entry
-        for entry in load_json(roots["aoa-skills"] / two_stage["stage_2"]["shortlist_surface"])["skills"]
-    }
-    adapters = {
-        entry["name"]: entry
-        for entry in load_json(roots["aoa-skills"] / two_stage["stage_2"]["activation_manifest"])["skills"]
-    }
-    contexts = {
-        entry["name"]: entry
-        for entry in load_json(roots["aoa-skills"] / two_stage["stage_2"]["context_manifest"])["skills"]
+        "expand": {
+            "enabled": True,
+            "surface_file": "generated/capability_graph.json",
+            "match_field": "id",
+            "section_key_field": "id",
+            "default_sections": [],
+            "supported_sections": [],
+        },
+        "pair": {"enabled": False},
+        "recall": {"enabled": False},
     }
 
-    assert expected_skill in capsules
-    assert expected_skill in adapters
-    assert expected_skill in contexts
-    assert (roots["aoa-skills"] / capsules[expected_skill]["skill_path"]).exists()
-    assert adapters[expected_skill]["allowlist_paths"] == [f".agents/skills/{expected_skill}"]
-    assert adapters[expected_skill]["invocation_mode"] == packet["candidates"][0]["invocation_mode"]
-    assert contexts[expected_skill]["rehydration_hint"]
+    catalog = load_json(roots["aoa-skills"] / "generated/agent_skill_catalog.min.json")
+    graph = load_json(roots["aoa-skills"] / "generated/capability_graph.json")
+    decision = find_entry(catalog["skills"], "name", "aoa-decision")
+    decision_node = find_entry(graph["nodes"], "id", "skill.aoa-decision")
+    assert decision is not None
+    assert decision_node is not None
+    assert decision["candidate_only"] is False
+    assert decision_node["owner"]["repo"] == "aoa-skills"
+
+    registry_entry = next(
+        entry for entry in outputs["cross_repo_registry.min.json"]["entries"]
+        if entry["kind"] == "skill" and entry["id"] == "aoa-decision"
+    )
+    assert registry_entry["path"] == decision_node["binding"]["ref"]
+    assert registry_entry["attributes"]["projection_path"] == decision["path"]
+    assert registry_entry["attributes"]["capability_id"] == decision_node["id"]
+    assert registry_entry["attributes"]["lifecycle"] == decision_node["lifecycle"]
+    assert not any("two_stage" in output_name for output_name in outputs)
+    assert not any("dag" in output_name.lower() for output_name in outputs)
 
 
 def test_tos_root_handoff_smoke_stays_tree_first_and_source_owned(tmp_path: Path) -> None:

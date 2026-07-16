@@ -29,7 +29,12 @@ FIXTURE_REPO_NAMES = (
 )
 
 
-def test_default_dependency_root_climbs_out_of_codex_worktree(tmp_path: Path) -> None:
+def test_default_dependency_root_climbs_out_of_codex_worktree(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("OS_ABYSS_ROOT", raising=False)
+    monkeypatch.delenv("AOA_WORKSPACE_ROOT", raising=False)
     workspace = tmp_path / "workspace"
     routing_root = workspace / ".codex" / "worktrees" / "aoa-routing-fix"
     sibling_root = workspace / "aoa-skills"
@@ -39,7 +44,17 @@ def test_default_dependency_root_climbs_out_of_codex_worktree(tmp_path: Path) ->
     assert router_core.default_dependency_root("aoa-skills", routing_root) == sibling_root
 
 
-def test_default_dependency_root_prefers_abyss_stack_source_checkout(tmp_path: Path) -> None:
+def test_default_dependency_root_prefers_abyss_stack_source_checkout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    for env_name in (
+        "ABYSS_STACK_ROOT",
+        "AOA_SOURCE_ROOT",
+        "OS_ABYSS_ROOT",
+        "AOA_WORKSPACE_ROOT",
+    ):
+        monkeypatch.delenv(env_name, raising=False)
     workspace = tmp_path / "workspace"
     routing_root = workspace / ".codex" / "worktrees" / "aoa-routing-fix"
     configs_root = workspace / "abyss-stack" / "Configs"
@@ -53,6 +68,50 @@ def test_default_dependency_root_prefers_abyss_stack_source_checkout(tmp_path: P
 
     assert router_core.default_dependency_root("abyss-stack", routing_root) == expected_root
     assert source_root.exists()
+
+
+def test_default_dependency_root_honors_cross_host_workspace_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    routing_root = tmp_path / "isolated" / "aoa-routing"
+    sibling_root = workspace / "aoa-skills"
+    routing_root.mkdir(parents=True)
+    sibling_root.mkdir(parents=True)
+    monkeypatch.setenv("OS_ABYSS_ROOT", str(workspace))
+
+    assert router_core.default_dependency_root("aoa-skills", routing_root) == sibling_root
+
+
+def test_cross_host_workspace_prefers_abyss_stack_source_checkout(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    workspace = tmp_path / "workspace"
+    routing_root = tmp_path / "isolated" / "aoa-routing"
+    configs_root = workspace / "abyss-stack" / "Configs"
+    routing_root.mkdir(parents=True)
+    configs_root.mkdir(parents=True)
+    monkeypatch.setenv("HOME", str(tmp_path / "empty-home"))
+    monkeypatch.setenv("OS_ABYSS_ROOT", str(workspace))
+    monkeypatch.delenv("ABYSS_STACK_ROOT", raising=False)
+    monkeypatch.delenv("AOA_SOURCE_ROOT", raising=False)
+
+    assert router_core.default_dependency_root("abyss-stack", routing_root) == configs_root
+
+
+def test_default_dependency_root_honors_explicit_abyss_stack_root(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    routing_root = tmp_path / "isolated" / "aoa-routing"
+    source_root = tmp_path / "source" / "abyss-stack"
+    routing_root.mkdir(parents=True)
+    source_root.mkdir(parents=True)
+    monkeypatch.setenv("ABYSS_STACK_ROOT", str(source_root))
+
+    assert router_core.default_dependency_root("abyss-stack", routing_root) == source_root
 KAG_SOURCE_LIFT_TECHNIQUE_IDS = [
     "AOA-T-0018",
     "AOA-T-0019",
@@ -213,10 +272,30 @@ def test_collect_technique_entries_reads_generated_catalog() -> None:
 def test_collect_skill_entries_reads_generated_catalog() -> None:
     entries = build_router.collect_skill_entries(FIXTURES_ROOT / "aoa-skills")
 
-    assert [entry["id"] for entry in entries] == ["aoa-change-protocol", "aoa-context-scan"]
-    assert entries[0]["path"] == "skills/aoa-change-protocol/SKILL.md"
+    assert [entry["id"] for entry in entries] == ["aoa-decision", "aoa-verification"]
+    assert entries[0]["path"] == "skills/core/engineering/aoa-decision/SKILL.md"
     assert entries[0]["source_type"] == "generated-catalog"
-    assert entries[0]["attributes"]["technique_dependencies"] == ["AOA-T-0001", "AOA-T-0002"]
+    assert entries[0]["attributes"] == {
+        "scope": "stewardship.decisions",
+        "invocation_mode": "invoke",
+        "technique_dependencies": [],
+        "allow_implicit_invocation": True,
+        "candidate_only": False,
+        "trust_posture": "portable-core",
+        "projection_path": ".agents/skills/aoa-decision/SKILL.md",
+        "capability_id": "skill.aoa-decision",
+        "capability_graph_ref": "generated/capability_graph.json",
+        "capability_source_path": "capabilities/families/decisions.yaml",
+        "lifecycle": {
+            "evidence_state": "pilot-verified",
+            "health": "challenger",
+            "state": "candidate",
+            "version": "0.1.0",
+            "visibility": "advertised",
+        },
+        "target_owner": "aoa-skills",
+        "requires_human_approval": False,
+    }
 
 
 def test_collect_eval_entries_reads_generated_catalog() -> None:
@@ -228,7 +307,10 @@ def test_collect_eval_entries_reads_generated_catalog() -> None:
     ]
     assert entries[0]["path"] == "bundles/aoa-bounded-change-quality/EVAL.md"
     assert entries[0]["source_type"] == "generated-catalog"
-    assert entries[0]["attributes"]["skill_dependencies"] == ["aoa-change-protocol"]
+    assert entries[0]["attributes"]["skill_dependencies"] == []
+    assert entries[0]["attributes"]["capability_dependencies"] == [
+        "workflow.operations.repository-change"
+    ]
 
 
 def test_collect_memo_entries_reads_generated_catalog() -> None:
@@ -246,9 +328,9 @@ def test_collect_memo_entries_reads_generated_catalog() -> None:
 def test_collect_skill_entries_raises_on_missing_generated_catalog(tmp_path: Path) -> None:
     skills_root = tmp_path / "aoa-skills"
     shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
-    (skills_root / "generated" / "skill_catalog.min.json").unlink()
+    (skills_root / "generated" / "agent_skill_catalog.min.json").unlink()
 
-    with pytest.raises(build_router.RouterError, match="skill_catalog.min.json"):
+    with pytest.raises(build_router.RouterError, match="agent_skill_catalog.min.json"):
         build_router.collect_skill_entries(skills_root)
 
 
@@ -321,12 +403,25 @@ def test_collect_eval_entries_raises_on_missing_required_field(tmp_path: Path) -
 def test_collect_skill_entries_rejects_parent_directory_skill_path(tmp_path: Path) -> None:
     skills_root = tmp_path / "aoa-skills"
     shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
-    catalog_path = skills_root / "generated" / "skill_catalog.min.json"
+    catalog_path = skills_root / "generated" / "agent_skill_catalog.min.json"
     payload = json.loads(catalog_path.read_text(encoding="utf-8"))
-    payload["skills"][0]["skill_path"] = "../secret.md"
+    payload["skills"][0]["path"] = "../secret.md"
     write_json(catalog_path, payload)
 
     with pytest.raises(build_router.RouterError, match="must not traverse outside the repository root"):
+        build_router.collect_skill_entries(skills_root)
+
+
+def test_collect_skill_entries_rejects_foreign_capability_owner(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
+    graph_path = skills_root / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    skill_node = next(node for node in payload["nodes"] if node["kind"] == "skill")
+    skill_node["owner"]["repo"] = "aoa-routing"
+    write_json(graph_path, payload)
+
+    with pytest.raises(build_router.RouterError, match="owner.repo must equal 'aoa-skills'"):
         build_router.collect_skill_entries(skills_root)
 
 
@@ -340,6 +435,60 @@ def test_collect_eval_entries_rejects_parent_directory_eval_path(tmp_path: Path)
 
     with pytest.raises(build_router.RouterError, match="must not traverse outside the repository root"):
         build_router.collect_eval_entries(evals_root)
+
+
+def test_collect_eval_entries_rejects_capability_ref_order_drift(tmp_path: Path) -> None:
+    evals_root = tmp_path / "aoa-evals"
+    shutil.copytree(FIXTURES_ROOT / "aoa-evals", evals_root)
+    catalog_path = evals_root / "generated" / "eval_catalog.min.json"
+    payload = json.loads(catalog_path.read_text(encoding="utf-8"))
+    payload["evals"][0]["capability_refs"][0]["id"] = "guard.operations.approval"
+    write_json(catalog_path, payload)
+
+    with pytest.raises(
+        build_router.RouterError,
+        match="capability_refs must preserve the ordered capability_dependencies IDs",
+    ):
+        build_router.collect_eval_entries(evals_root)
+
+
+@pytest.mark.parametrize(
+    ("drift", "expected_message"),
+    [
+        ("missing-node", "is missing from"),
+        ("kind", "does not match owner graph kind"),
+        ("registry-path", "does not match owner graph source_path"),
+        ("target-owner", "does not match owner graph owner.repo"),
+    ],
+)
+def test_build_rejects_eval_capability_ref_drift_from_owner_graph(
+    tmp_path: Path,
+    drift: str,
+    expected_message: str,
+) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
+    graph_path = skills_root / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    node = next(
+        item
+        for item in payload["nodes"]
+        if item["id"] == "workflow.operations.repository-change"
+    )
+    if drift == "missing-node":
+        payload["nodes"].remove(node)
+    elif drift == "kind":
+        node["kind"] = "mode"
+    elif drift == "registry-path":
+        node["source_path"] = "capabilities/families/stale-operations.yaml"
+    elif drift == "target-owner":
+        node["owner"]["repo"] = "stale-owner"
+    else:  # pragma: no cover - the parametrization is closed above.
+        raise AssertionError(f"unsupported drift case: {drift}")
+    write_json(graph_path, payload)
+
+    with pytest.raises(build_router.RouterError, match=expected_message):
+        build_fixture_outputs(skills_root=skills_root)
 
 
 def test_build_outputs_from_fixtures() -> None:
@@ -609,15 +758,17 @@ def test_build_outputs_from_fixtures() -> None:
     }
 
     by_key = {(entry["kind"], entry["id"]): entry for entry in recommended["entries"]}
-    change_skill = by_key[("skill", "aoa-change-protocol")]
-    assert change_skill["upstream"] == [
-        {"kind": "technique", "id": "AOA-T-0001", "relation": "requires"},
-        {"kind": "technique", "id": "AOA-T-0002", "relation": "requires"},
-    ]
+    decision_skill = by_key[("skill", "aoa-decision")]
+    assert decision_skill == {
+        "kind": "skill",
+        "id": "aoa-decision",
+        "upstream": [],
+        "downstream": [],
+    }
     context_eval = by_key[("eval", "aoa-context-scan-quality")]
     assert context_eval["upstream"] == [
         {"kind": "technique", "id": "AOA-T-0002", "relation": "requires"},
-        {"kind": "skill", "id": "aoa-context-scan", "relation": "requires"},
+        {"kind": "skill", "id": "aoa-verification", "relation": "requires"},
     ]
     assert by_key[("memo", "AOA-M-0001")] == {
         "kind": "memo",
@@ -631,15 +782,13 @@ def test_build_outputs_from_fixtures() -> None:
         "kind": "technique",
         "id": "AOA-T-0001",
         "pairs": [
-            {"kind": "skill", "id": "aoa-change-protocol", "relation": "required_by"},
             {"kind": "eval", "id": "aoa-bounded-change-quality", "relation": "required_by"},
         ],
     }
-    assert pairing_by_key[("skill", "aoa-context-scan")] == {
+    assert pairing_by_key[("skill", "aoa-verification")] == {
         "kind": "skill",
-        "id": "aoa-context-scan",
+        "id": "aoa-verification",
         "pairs": [
-            {"kind": "technique", "id": "AOA-T-0002", "relation": "requires"},
             {"kind": "eval", "id": "aoa-context-scan-quality", "relation": "required_by"},
         ],
     }
@@ -942,18 +1091,6 @@ def test_build_outputs_from_fixtures() -> None:
             "allowed_kinds": ["skill"],
             "target_kind": "skill",
             "target_value": "skill",
-            "adjacent_handoff": {
-                "name": "two-stage-skill-selection",
-                "target_repo": "aoa-routing",
-                "target_surface": "generated/two_stage_skill_entrypoints.json",
-                "surface_kind": "two_stage_skill_entrypoints",
-                "handoff_mode": "optional-adjacent",
-                "activation_authority": "source-owned",
-                "when": (
-                    "Use when precision-first skill routing is preferred before loading "
-                    "source-owned activation seams."
-                ),
-            },
         },
         {
             "name": "eval-root",
@@ -1586,27 +1723,21 @@ def test_build_outputs_lifts_kag_source_family_relations(tmp_path: Path) -> None
     ]
 
 
-def test_build_outputs_keeps_routing_root_pinned_instead_of_inferring_from_techniques_parent(tmp_path: Path) -> None:
-    foreign_workspace = tmp_path / "foreign-workspace"
-    techniques_root = foreign_workspace / "aoa-techniques"
-    foreign_routing_root = foreign_workspace / "aoa-routing"
-    shutil.copytree(FIXTURES_ROOT / "aoa-techniques", techniques_root)
-    shutil.copytree(FIXTURES_ROOT / "aoa-routing", foreign_routing_root)
+def test_build_outputs_do_not_recreate_a_routing_owned_skill_router() -> None:
+    outputs = build_fixture_outputs()
 
-    foreign_policy_path = (
-        foreign_routing_root
-        / "routing"
-        / "two-stage-skill-selection"
-        / "config"
-        / "two_stage_router_policy.json"
+    assert not any("two_stage" in output_name for output_name in outputs)
+    skill_hint = next(
+        hint for hint in outputs["task_to_surface_hints.json"]["hints"]
+        if hint["kind"] == "skill"
     )
-    foreign_policy = json.loads(foreign_policy_path.read_text(encoding="utf-8"))
-    foreign_policy["defaults"]["max_stage_2_shortlist"] = 1
-    write_json(foreign_policy_path, foreign_policy)
-
-    outputs = build_fixture_outputs(techniques_root=techniques_root)
-
-    assert outputs["two_stage_skill_entrypoints.json"]["stage_2"]["max_shortlist"] == 3
+    assert skill_hint["actions"]["inspect"]["surface_file"] == (
+        "generated/agent_skill_catalog.min.json"
+    )
+    assert skill_hint["actions"]["expand"]["surface_file"] == (
+        "generated/capability_graph.json"
+    )
+    assert skill_hint["actions"]["pair"] == {"enabled": False}
 
 
 def test_build_outputs_limits_tiny_model_recall_modes_to_router_ready_contracts(tmp_path: Path) -> None:
@@ -1769,28 +1900,25 @@ def test_build_uses_catalog_only_ingestion_for_skills_and_evals(tmp_path: Path) 
     assert len(outputs["cross_repo_registry.min.json"]["entries"]) == 8
 
 
-def test_build_allows_pending_technique_dependencies_without_creating_paths(tmp_path: Path) -> None:
-    skills_root = tmp_path / "aoa-skills"
-    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
-    catalog_path = skills_root / "generated" / "skill_catalog.min.json"
-    payload = json.loads(catalog_path.read_text(encoding="utf-8"))
-    for skill in payload["skills"]:
-        if skill["name"] == "aoa-context-scan":
-            skill["technique_dependencies"] = ["AOA-T-PENDING-CONTEXT-SCAN"]
-            break
-    write_json(catalog_path, payload)
-
-    outputs = build_fixture_outputs(skills_root=skills_root)
-
+def test_build_preserves_typed_eval_capability_dependencies() -> None:
+    outputs = build_fixture_outputs()
     registry_entries = outputs["cross_repo_registry.min.json"]["entries"]
-    skill_entry = next(entry for entry in registry_entries if entry["id"] == "aoa-context-scan")
-    assert skill_entry["attributes"]["technique_dependencies"] == ["AOA-T-PENDING-CONTEXT-SCAN"]
-
-    by_key = {
-        (entry["kind"], entry["id"]): entry
-        for entry in outputs["recommended_paths.min.json"]["entries"]
-    }
-    assert by_key[("skill", "aoa-context-scan")]["upstream"] == []
+    eval_entry = next(
+        entry for entry in registry_entries
+        if entry["kind"] == "eval" and entry["id"] == "aoa-bounded-change-quality"
+    )
+    assert eval_entry["attributes"]["capability_dependencies"] == [
+        "workflow.operations.repository-change"
+    ]
+    assert eval_entry["attributes"]["capability_refs"] == [
+        {
+            "id": "workflow.operations.repository-change",
+            "kind": "workflow",
+            "registry_repo": "aoa-skills",
+            "registry_path": "capabilities/families/operations.yaml",
+            "target_owner": "host-agent",
+        }
+    ]
 
 
 def test_build_outputs_composite_stress_hints_include_memo_recovery_context(
@@ -2301,7 +2429,7 @@ def test_owner_layer_shortlist_includes_explicit_and_ambiguous_family_hints() ->
         if entry["signal"] == "explicit-request" and entry["owner_repo"] == "8Dionysus"
     )
 
-    assert explicit_skill["target_surface"] == "aoa-skills.runtime_discovery_index"
+    assert explicit_skill["target_surface"] == "aoa-skills.agent_skill_catalog.min"
     assert explicit_source_route["target_surface"] == "Dionysus.source_route_anchor"
     assert explicit_runtime["target_surface"] == "abyss-stack.diagnostic_surface_catalog.min"
     assert explicit_profile["target_surface"] == "8Dionysus.public_route_map.min"

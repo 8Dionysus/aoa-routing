@@ -40,40 +40,6 @@
         "scripts/router_core.py",
         "scripts/validate_router.py"
       ]
-    },
-    {
-      "id": "two-stage-skill-selection",
-      "path": "routing/two-stage-skill-selection/",
-      "status": "active",
-      "owns": [
-        "stage-1 skill shortlist policy",
-        "stage-2 skill decision packet support",
-        "two-stage prompt and tool routing contracts",
-        "precision case validation"
-      ],
-      "public_outputs": [
-        "generated/two_stage_skill_entrypoints.json",
-        "generated/two_stage_router_prompt_blocks.json",
-        "generated/two_stage_router_tool_schemas.json",
-        "generated/two_stage_router_examples.json",
-        "generated/two_stage_router_manifest.json",
-        "generated/two_stage_router_eval_cases.jsonl"
-      ],
-      "former_flat_implementation_surfaces": [
-        "config/two_stage_router_policy.json",
-        "config/two_stage_router_precision_cases.jsonl",
-        "docs/TWO_STAGE_SKILL_SELECTION.md",
-        "schemas/two-stage-router-examples.schema.json",
-        "schemas/two-stage-router-manifest.schema.json",
-        "schemas/two-stage-router-prompt-blocks.schema.json",
-        "schemas/two-stage-router-tool-schemas.schema.json",
-        "schemas/two-stage-skill-entrypoints.schema.json",
-        "scripts/_two_stage_router_lib.py",
-        "scripts/build_two_stage_skill_router.py",
-        "scripts/two_stage_skill_router.py",
-        "scripts/validate_two_stage_skill_router.py",
-        "tests/test_two_stage_skill_router.py"
-      ]
     }
   ],
   "placement_rules": [

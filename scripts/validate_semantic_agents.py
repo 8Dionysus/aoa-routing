@@ -28,16 +28,6 @@ REQUIRED_DOCS: tuple[AgentsDocSpec, ...] = (
         ),
     ),
     AgentsDocSpec(
-        Path('routing/two-stage-skill-selection/AGENTS.md'),
-        (
-            'source-home branch',
-            'Root `scripts/` launchers are compatibility wrappers only',
-            'legacy/` is provenance',
-            'must not be used by active validators or builders',
-            'python scripts/validate_semantic_agents.py',
-        ),
-    ),
-    AgentsDocSpec(
         Path('docs/AGENTS.md'),
         (
             'routing ABI',

@@ -34,12 +34,6 @@ def validate() -> list[str]:
         "routing/AGENTS.md",
         "routing/README.md",
         "routing/core/README.md",
-        "routing/two-stage-skill-selection/AGENTS.md",
-        "routing/two-stage-skill-selection/PROVENANCE.md",
-        "routing/two-stage-skill-selection/README.md",
-        "routing/two-stage-skill-selection/legacy/INDEX.md",
-        "routing/two-stage-skill-selection/legacy/README.md",
-        "routing/two-stage-skill-selection/legacy/former-routes.json",
     ]
     for route in required_root_docs:
         if not (REPO_ROOT / route).exists():
@@ -72,8 +66,8 @@ def validate() -> list[str]:
             if not isinstance(value, list):
                 issues.append(f"{route_id or '<unknown>'}: {key} must be a list")
 
-    if {"core", "two-stage-skill-selection"} - seen:
-        missing = sorted({"core", "two-stage-skill-selection"} - seen)
+    if {"core"} - seen:
+        missing = sorted({"core"} - seen)
         issues.append(f"missing required source-home routes: {', '.join(missing)}")
 
     return issues

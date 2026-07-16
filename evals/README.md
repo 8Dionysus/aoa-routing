@@ -1,8 +1,9 @@
 # Local Eval Port
 
 This active `evals/` port preserves routing-born eval pressure such as route
-selection cases, two-stage router precision checks, owner-shortlist ambiguity
-fixtures, handoff hint failures, and generated-route regression cues.
+selection cases, skill catalog and capability-graph routing checks,
+owner-shortlist ambiguity fixtures, handoff hint failures, and generated-route
+regression cues.
 
 `aoa-evals` owns central verdict, scoring, regression, and proof doctrine
 authority. Local files here may shape evidence, suites, reports, and intake

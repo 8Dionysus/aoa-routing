@@ -10,14 +10,27 @@
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
 
+## generated/readmodel
+
+- [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)
+
 ## mechanics/route-law
 
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+
+## routing/ingestion
+
+- [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)
 
 ## scripts/validation
 
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+- [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)
+
+## tests/integration
+
+- [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)
 
 ## tests/route-law
 
@@ -30,3 +43,4 @@
 ## topology/source-home
 
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+- [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)

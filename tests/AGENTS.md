@@ -22,6 +22,8 @@ When adding or changing coverage:
 
 - prefer small fixtures over sprawling synthetic corpora
 - assert that routing points to source-owned surfaces rather than copied meaning
+- derive durable catalog, graph, and typed-dependency assertions from manual
+  positive, negative, and coexistence trials
 - keep walkthroughs bounded and deterministic
 - make cross-repo assumptions visible in the fixture data
 - update tests when schema or output shape changes are intentional
@@ -39,8 +41,6 @@ python scripts/validate_router.py
 python scripts/build_router.py --check
 python scripts/generate_decision_indexes.py --check
 python scripts/validate_decision_records.py
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests
 ```
 

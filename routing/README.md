@@ -15,7 +15,7 @@ Release Support, RPG, and Titan route through `mechanics/<head>/`.
 | input | route derivation, source catalog ingestion, low-context routing policy, generated-output parity, or source-home cleanup |
 | output | source-home contract, public generated routing output, root compatibility wrapper, or mechanics handoff |
 | owner | `aoa-routing` owns navigation; sibling repositories own meaning |
-| next route | `core/`, `two-stage-skill-selection/`, root `generated/`, or `mechanics/` for shared mechanic participation |
+| next route | `core/`, root `generated/`, or `mechanics/` for shared mechanic participation |
 | validation | root route validators plus source-home topology validation when active |
 
 ## Active Routes
@@ -23,7 +23,12 @@ Release Support, RPG, and Titan route through `mechanics/<head>/`.
 | Route | Owns | Stronger split |
 | --- | --- | --- |
 | [`core/`](core/README.md) | thin-router derivation, cross-repo registry, task/surface/tier hints, recommended paths, pairing, owner shortlist, and federation-return builder behavior | source repos own object meaning; root `generated/` may remain public output |
-| [`two-stage-skill-selection/`](two-stage-skill-selection/README.md) | optional routing-local stage-1 shortlist and stage-2 skill decision seam | `aoa-skills` owns skill source meaning and activation posture |
+
+Skill routing is part of the core ingestion path: the compact callable-bundle
+cut comes from `aoa-skills/generated/agent_skill_catalog.min.json`, while deep
+capability navigation routes to
+`aoa-skills/generated/capability_graph.json`. `aoa-routing` does not own a
+second skill selector or a persisted task execution DAG.
 
 ## Placement Rule
 

@@ -87,6 +87,7 @@
             "memo",
             "playbook",
             "agent",
+            "guard",
             "source_route",
             "runtime_surface",
             "orientation_surface"

@@ -1,37 +1,37 @@
 {
   "schema_version": "stress_navigation_hint_v1",
-  "hint_id": "route:stress:two-stage-skill-selection:skill-collision-chaos",
+  "hint_id": "route:stress:skill-capability-routing:skill-collision-chaos",
   "applies_to": {
     "repo": "aoa-routing",
-    "surface": "two-stage-skill-selection",
+    "surface": "skill-capability-routing",
     "stressor_class": "ambiguous_shortlist_collision",
-    "degraded_mode": "stage_2=no-skill-or-manual",
+    "degraded_mode": "catalog_or_graph_mismatch=stop",
     "severity_at_least": "medium"
   },
   "preferred_posture": "human_review_first",
   "next_hops": [
     {
       "kind": "generated_surface",
-      "target": "aoa-routing:generated/two_stage_router_eval_cases.jsonl",
-      "reason": "Inspect the precision-first shortlist expectations before deciding that a collision should activate anything.",
+      "target": "aoa-skills:generated/agent_skill_catalog.min.json",
+      "reason": "Inspect the bounded callable-bundle catalog before treating any capability as a skill.",
       "bounded": true
     },
     {
       "kind": "generated_surface",
-      "target": "aoa-skills:generated/description_trigger_eval_cases.jsonl",
-      "reason": "Check whether the neighboring skills are really manual, defer, or no-skill cases.",
+      "target": "aoa-skills:generated/capability_graph.json",
+      "reason": "Check identity, owner, binding, lifecycle, and typed relations without copying the graph into routing.",
       "bounded": true
     },
     {
       "kind": "doc",
-      "target": "aoa-routing:routing/two-stage-skill-selection/docs/two-stage-skill-selection.md",
-      "reason": "Re-read the optional seam rules that keep weak shortlists at no-skill and explicit-only skills at manual.",
+      "target": "aoa-routing:docs/decisions/AOA-RT-D-0003-owner-capability-routing.md",
+      "reason": "Re-read the boundary that retires the local selector and keeps composition task-local.",
       "bounded": true
     }
   ],
   "evidence_inputs": [
-    "aoa-routing:two_stage_router_eval_cases.skill-collision-chaos",
-    "aoa-skills:description_trigger_eval_cases.skill-collision-chaos"
+    "aoa-skills:agent_skill_catalog.skill-collision-chaos",
+    "aoa-skills:capability_graph.skill-collision-chaos"
   ],
   "optional_context": [],
   "confidence_band": "high",

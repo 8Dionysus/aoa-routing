@@ -11,6 +11,9 @@ Use this reference when:
 
 Do not treat this file as a competing root. If a preserved rule still actively governs a local directory, move or restate it at the smallest owner surface rather than re-bloating the root.
 
+The two-stage skill references preserved below are historical. Current skill
+routing follows AOA-RT-D-0003 and the owner catalog/capability-graph route.
+
 ## Preserved root AGENTS.md from before Pack 5
 
 # AGENTS.md
