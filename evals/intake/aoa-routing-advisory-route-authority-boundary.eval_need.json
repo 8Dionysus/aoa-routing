@@ -1,10 +1,10 @@
 {
   "schema_version": "eval_need_v1",
   "name": "aoa-routing-advisory-route-authority-boundary",
-  "proof_question": "Can aoa-routing's two-stage skill routing and owner-layer shortlist hints remain advisory, without becoming skill activation authority, proof authority, or central eval verdict authority?",
-  "origin_need": "The routing repo exposes generated owner-layer shortlist hints and optional two-stage skill-selection surfaces. These are useful for agent routing, but repeated OS Abyss work depends on them staying advisory rather than becoming activation, proof, scoring, or verdict authority.",
-  "summary": "Capture routing-local eval pressure for checking that generated route hints and two-stage skill-routing outputs preserve owner boundaries and route to stronger owners for proof, skill meaning, and activation decisions.",
-  "object_under_evaluation": "aoa-routing generated route hints and two-stage skill selection surfaces",
+  "proof_question": "Can aoa-routing preserve the owner agent-skill catalog, capability graph, typed eval dependencies, and owner-layer shortlist hints without becoming skill activation, capability, proof, or verdict authority?",
+  "origin_need": "The routing repo projects callable bundles from the aoa-skills agent catalog and points deeper navigation to the owner capability graph. Repeated OS Abyss work depends on that route remaining advisory and on task-local DAG composition staying outside repository truth.",
+  "summary": "Capture routing-local eval pressure for checking that generated route hints preserve callable-bundle, typed-capability, and owner boundaries and route stronger meaning or execution decisions back to their owners.",
+  "object_under_evaluation": "aoa-routing skill catalog, capability graph, typed dependency, and owner-layer navigation",
   "category": "boundary",
   "claim_type": "bounded",
   "baseline_mode": "none",
@@ -12,7 +12,7 @@
   "authoring_route": "candidate_evidence_packet",
   "expected_use_when": [
     "an agent relies on generated owner-layer shortlist hints to choose an owner repo",
-    "an agent uses two-stage skill routing outputs before deciding whether to activate a skill",
+    "an agent inspects the owner skill catalog or expands into the owner capability graph",
     "routing outputs mention aoa-evals, aoa-skills, or other stronger owners and must remain advisory"
   ],
   "blind_spot_notes": [
@@ -29,10 +29,12 @@
   ],
   "candidate_evidence_refs": [
     "generated/owner_layer_shortlist.min.json",
-    "generated/two_stage_router_eval_cases.jsonl",
-    "generated/two_stage_router_manifest.json",
-    "routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl",
-    "routing/two-stage-skill-selection/docs/two-stage-skill-selection.md"
+    "generated/cross_repo_registry.min.json",
+    "generated/task_to_surface_hints.json",
+    "generated/tiny_model_entrypoints.json",
+    "repo:aoa-skills/generated/agent_skill_catalog.min.json",
+    "repo:aoa-skills/generated/capability_graph.json",
+    "repo:aoa-evals/generated/eval_catalog.min.json"
   ],
   "source_refs": [
     "AGENTS.md",
@@ -42,7 +44,7 @@
     "repo:aoa-evals/evals/boundary/aoa-experience-protocol-integrity/EVAL.md",
     "repo:aoa-evals/evals/boundary/aoa-stats-regrounding-boundary-integrity/EVAL.md",
     "routing/README.md",
-    "routing/two-stage-skill-selection/README.md",
+    "docs/decisions/AOA-RT-D-0003-owner-capability-routing.md",
     "tests/test_build_router.py",
     "tests/test_live_workspace_contracts.py"
   ],

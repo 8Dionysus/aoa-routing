@@ -111,25 +111,6 @@ def _command_with_roots(command: str) -> list[str]:
             str(roots["abyss_stack"]),
             "--check",
         ]
-    if command == "two_stage_build":
-        return [
-            sys.executable,
-            "scripts/build_two_stage_skill_router.py",
-            "--routing-root",
-            str(REPO_ROOT),
-            "--skills-root",
-            str(roots["skills"]),
-            "--check",
-        ]
-    if command == "two_stage_validate":
-        return [
-            sys.executable,
-            "scripts/validate_two_stage_skill_router.py",
-            "--routing-root",
-            str(REPO_ROOT),
-            "--skills-root",
-            str(roots["skills"]),
-        ]
     raise ValueError(command)
 
 
@@ -147,8 +128,6 @@ COMMANDS = [
     ("check decision indexes", [sys.executable, "scripts/generate_decision_indexes.py", "--check"]),
     ("validate decision records", [sys.executable, "scripts/validate_decision_records.py"]),
     ("run tests", [sys.executable, "-m", "pytest", "-q", "tests"]),
-    ("check two-stage router build", "two_stage_build"),
-    ("check two-stage router validation", "two_stage_validate"),
 ]
 
 

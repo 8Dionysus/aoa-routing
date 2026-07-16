@@ -1039,70 +1039,47 @@ def test_validate_generated_outputs_rejects_missing_registry_version_key_via_sch
     )
 
 
-def test_validate_generated_outputs_rejects_two_stage_schema_drift_via_schema(tmp_path: Path) -> None:
-    generated_dir, roots = build_fixture_generated(tmp_path)
-    tool_schemas_path = generated_dir / "two_stage_router_tool_schemas.json"
-    payload = json.loads(tool_schemas_path.read_text(encoding="utf-8"))
-    del payload["tools"]
-    write_json(tool_schemas_path, payload)
-
-    issues = validate_fixture_generated(generated_dir, roots)
-    assert any(
-        issue.location == "two_stage_router_tool_schemas.json"
-        and "schema violation" in issue.message
-        for issue in issues
-    )
-
-
-def test_validate_generated_outputs_rejects_source_owned_field_leak_in_two_stage_prompt_blocks(
+def test_validate_generated_outputs_rejects_skill_capability_graph_ref_drift(
     tmp_path: Path,
 ) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    prompt_blocks_path = generated_dir / "two_stage_router_prompt_blocks.json"
-    payload = json.loads(prompt_blocks_path.read_text(encoding="utf-8"))
-    payload["tiny_preselector_system"] += " Never copy summary fields."
-    write_json(prompt_blocks_path, payload)
+    registry_path = generated_dir / "cross_repo_registry.min.json"
+    payload = json.loads(registry_path.read_text(encoding="utf-8"))
+    skill_entry = next(entry for entry in payload["entries"] if entry["kind"] == "skill")
+    skill_entry["attributes"]["capability_graph_ref"] = "generated/stale_graph.json"
+    write_json(registry_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        issue.location == "two_stage_router_prompt_blocks.json"
-        and "source-owned payload field" in issue.message
+        "skill registry entry must point to the routed capability graph" in issue.message
         for issue in issues
     )
 
 
-def test_validate_generated_outputs_rejects_source_owned_field_in_two_stage_tool_schema(
+def test_validate_generated_outputs_rejects_synthetic_skill_expand_sections(
     tmp_path: Path,
 ) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    tool_schemas_path = generated_dir / "two_stage_router_tool_schemas.json"
-    payload = json.loads(tool_schemas_path.read_text(encoding="utf-8"))
-    payload["tools"][0]["input_schema"]["properties"]["summary"] = {"type": "string"}
-    write_json(tool_schemas_path, payload)
+    hints_path = generated_dir / "task_to_surface_hints.json"
+    payload = json.loads(hints_path.read_text(encoding="utf-8"))
+    skill_hint = next(hint for hint in payload["hints"] if hint["kind"] == "skill")
+    skill_hint["actions"]["expand"]["default_sections"] = ["procedure"]
+    skill_hint["actions"]["expand"]["supported_sections"] = ["procedure"]
+    write_json(hints_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
-        issue.location == "two_stage_router_tool_schemas.json"
-        and "must not expose source-owned payload fields" in issue.message
+        "skill capability-graph expansion must not declare synthetic sections" in issue.message
         for issue in issues
     )
 
 
-def test_validate_generated_outputs_rejects_stale_two_stage_manifest_against_rebuild(
+def test_validate_generated_outputs_do_not_require_retired_two_stage_artifacts(
     tmp_path: Path,
 ) -> None:
-    generated_dir, roots = build_fixture_generated(tmp_path)
-    manifest_path = generated_dir / "two_stage_router_manifest.json"
-    payload = json.loads(manifest_path.read_text(encoding="utf-8"))
-    payload["integration_mode"] = "stale-seam"
-    write_json(manifest_path, payload)
+    generated_dir, _ = build_fixture_generated(tmp_path)
 
-    issues = validate_fixture_generated(generated_dir, roots)
-    assert any(
-        issue.location == "two_stage_router_manifest.json"
-        and "canonical rebuild from current sibling catalogs" in issue.message
-        for issue in issues
-    )
+    assert not list(generated_dir.glob("two_stage*"))
 
 
 def test_validate_generated_outputs_rejects_duplicate_registry_entry(tmp_path: Path) -> None:
@@ -1611,28 +1588,34 @@ def test_validate_generated_outputs_rejects_invalid_pairing_hints(tmp_path: Path
 
 def test_validate_generated_outputs_rejects_missing_inspect_target(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    capsules_path = roots["aoa-skills"] / "generated" / "skill_capsules.json"
-    payload = json.loads(capsules_path.read_text(encoding="utf-8"))
+    catalog_path = roots["aoa-skills"] / "generated" / "agent_skill_catalog.min.json"
+    payload = json.loads(catalog_path.read_text(encoding="utf-8"))
     payload["skills"] = [
-        entry for entry in payload["skills"] if entry["name"] != "aoa-context-scan"
+        entry for entry in payload["skills"] if entry["name"] != "aoa-verification"
     ]
-    write_json(capsules_path, payload)
+    write_json(catalog_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
-    assert any("inspect surface is missing skill match 'aoa-context-scan'" in issue.message for issue in issues)
+    assert any(
+        "inspect surface is missing skill match 'aoa-verification'" in issue.message
+        for issue in issues
+    )
 
 
 def test_validate_generated_outputs_rejects_missing_expand_target(tmp_path: Path) -> None:
     generated_dir, roots = build_fixture_generated(tmp_path)
-    sections_path = roots["aoa-skills"] / "generated" / "skill_sections.full.json"
-    payload = json.loads(sections_path.read_text(encoding="utf-8"))
-    payload["skills"] = [
-        entry for entry in payload["skills"] if entry["name"] != "aoa-context-scan"
+    graph_path = roots["aoa-skills"] / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    payload["nodes"] = [
+        node for node in payload["nodes"] if node["id"] != "skill.aoa-verification"
     ]
-    write_json(sections_path, payload)
+    write_json(graph_path, payload)
 
     issues = validate_fixture_generated(generated_dir, roots)
-    assert any("expand surface is missing skill match 'aoa-context-scan'" in issue.message for issue in issues)
+    assert any(
+        "capability graph is missing skill node 'skill.aoa-verification'" in issue.message
+        for issue in issues
+    )
 
 
 def test_validate_generated_outputs_rejects_missing_technique_second_cut_target(tmp_path: Path) -> None:

@@ -14,7 +14,7 @@ This repository owns:
 
 - routing projections, registries, dispatch hints, and recommended paths
 - advisory owner-layer shortlist hints and bounded return-navigation seams
-- optional two-stage routing policy and tool/prompt surfaces
+- bounded skill-catalog inspection and capability-graph expansion routes
 - owner-local statistical questions about routing-owned surfaces under `stats/`
 - local schemas, build scripts, validators, and routing integrity checks
 
@@ -88,8 +88,6 @@ python scripts/validate_router.py
 python scripts/build_router.py --check
 python scripts/generate_decision_indexes.py --check
 python scripts/validate_decision_records.py
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests
 ```
 
@@ -102,4 +100,4 @@ Name the routing surface, output shape, involved source repos, generated outputs
 
 ## Full reference
 
-`docs/AGENTS_ROOT_REFERENCE.md` preserves the former detailed root guidance for route branches, stage-two checks, and review posture.
+`docs/AGENTS_ROOT_REFERENCE.md` preserves historical detailed root guidance for route branches and review posture; current skill routing follows AOA-RT-D-0003.

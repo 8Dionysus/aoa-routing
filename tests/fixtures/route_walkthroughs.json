@@ -18,26 +18,19 @@
       }
     },
     {
-      "name": "skill_inspect_pair_to_technique",
+      "name": "skill_inspect_expand_capability",
       "fixture_variant": "base",
       "inspect": {
         "kind": "skill",
-        "target_value": "aoa-change-protocol"
+        "target_value": "aoa-decision"
       },
-      "pair": {
-        "source_kind": "skill",
-        "source_id": "aoa-change-protocol",
-        "targets": [
-          {
-            "kind": "technique",
-            "id": "AOA-T-0001",
-            "relation": "requires"
-          }
-        ]
+      "expand": {
+        "kind": "skill",
+        "target_value": "skill.aoa-decision"
       }
     },
     {
-      "name": "eval_inspect_pair_to_skill",
+      "name": "eval_inspect_pair_to_technique",
       "fixture_variant": "base",
       "inspect": {
         "kind": "eval",
@@ -48,8 +41,8 @@
         "source_id": "aoa-bounded-change-quality",
         "targets": [
           {
-            "kind": "skill",
-            "id": "aoa-change-protocol",
+            "kind": "technique",
+            "id": "AOA-T-0001",
             "relation": "requires"
           }
         ]

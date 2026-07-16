@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import posixpath
 import re
 from pathlib import Path
@@ -59,10 +60,29 @@ def default_dependency_root(repo_name: str, routing_root: Path | None = None) ->
             candidates.append(path)
 
     if repo_name == ABYSS_STACK_REPO:
+        for env_name in ("ABYSS_STACK_ROOT", "AOA_SOURCE_ROOT"):
+            configured_root = os.environ.get(env_name)
+            if configured_root:
+                add_candidate(Path(configured_root).expanduser())
         add_candidate(Path.home() / "src" / repo_name)
+
+    for env_name in ("OS_ABYSS_ROOT", "AOA_WORKSPACE_ROOT"):
+        configured_root = os.environ.get(env_name)
+        if configured_root:
+            repo_path = Path(configured_root).expanduser() / repo_name
+            if repo_name == ABYSS_STACK_REPO:
+                add_candidate(repo_path / "Configs")
+            add_candidate(repo_path)
 
     for base in (base_root, base_root.parent, *base_root.parents):
         repo_path = base / repo_name
+        if repo_name == ABYSS_STACK_REPO:
+            add_candidate(repo_path / "Configs")
+        add_candidate(repo_path)
+
+    conventional_workspace = Path("/srv/AbyssOS")
+    if (conventional_workspace / "AOA_WORKSPACE_ROOT").is_file():
+        repo_path = conventional_workspace / repo_name
         if repo_name == ABYSS_STACK_REPO:
             add_candidate(repo_path / "Configs")
         add_candidate(repo_path)
@@ -2660,7 +2680,7 @@ def build_return_navigation_hints_payload(
                     target_repo=source_repo,
                     target_surface=expand_surface,
                     match_field=expand_match,
-                    section_key_field=expand_section_key,
+                    section_key_field=None if kind == "skill" else expand_section_key,
                 ),
                 "ownership_note": {
                     "technique": (
@@ -3128,40 +3148,18 @@ def build_task_to_surface_hints_payload(memo_root: Path) -> dict[str, Any]:
                 "kind": "skill",
                 "enabled": True,
                 "source_repo": "aoa-skills",
-                "use_when": "need a bounded agent-facing workflow to execute",
+                "use_when": "need one current callable skill bundle; use the capability graph for modes, typed relations, and deeper retrieval",
                 "actions": action_flags(
                     inspect_enabled=True,
-                    surface_file="generated/skill_capsules.json",
+                    surface_file="generated/agent_skill_catalog.min.json",
                     match_field="name",
                     expand_enabled=True,
-                    expand_surface_file="generated/skill_sections.full.json",
-                    expand_match_field="name",
-                    default_sections=[
-                        "intent",
-                        "trigger_boundary",
-                        "inputs",
-                        "outputs",
-                        "procedure",
-                        "contracts",
-                        "risks_and_anti_patterns",
-                        "verification",
-                    ],
-                    supported_sections=[
-                        "intent",
-                        "trigger_boundary",
-                        "inputs",
-                        "outputs",
-                        "procedure",
-                        "contracts",
-                        "risks_and_anti_patterns",
-                        "verification",
-                        "technique_traceability",
-                        "adaptation_points",
-                    ],
-                    pair_enabled=True,
-                    pair_surface_repo=PAIRING_SURFACE_REPO,
-                    pair_surface_file=PAIRING_SURFACE_FILE,
-                    pair_match_field="id",
+                    expand_surface_file="generated/capability_graph.json",
+                    expand_match_field="id",
+                    expand_section_key_field="id",
+                    default_sections=[],
+                    supported_sections=[],
+                    pair_enabled=False,
                 ),
             },
             {
@@ -3366,7 +3364,6 @@ def build_tiny_model_entrypoints_payload(
     hints_payload: dict[str, Any],
     federation_payload: dict[str, Any],
 ) -> dict[str, Any]:
-    two_stage_skill_surface = "generated/two_stage_skill_entrypoints.json"
     registry_index = {(entry["kind"], entry["id"]): entry for entry in registry_entries}
     available_kinds = {entry["kind"] for entry in registry_entries}
     hints = ensure_list(hints_payload.get("hints"), "task_to_surface_hints.json.hints")
@@ -3531,19 +3528,6 @@ def build_tiny_model_entrypoints_payload(
             "target_kind": kind,
             "target_value": kind,
         }
-        if kind == "skill":
-            starter["adjacent_handoff"] = {
-                "name": "two-stage-skill-selection",
-                "target_repo": PAIRING_SURFACE_REPO,
-                "target_surface": two_stage_skill_surface,
-                "surface_kind": "two_stage_skill_entrypoints",
-                "handoff_mode": "optional-adjacent",
-                "activation_authority": "source-owned",
-                "when": (
-                    "Use when precision-first skill routing is preferred before loading "
-                    "source-owned activation seams."
-                ),
-            }
         starters.append(starter)
     for mode in memo_recall_supported_modes:
         starters.append(

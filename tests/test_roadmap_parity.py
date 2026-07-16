@@ -34,11 +34,8 @@ def test_roadmap_matches_current_v0_3_release_surfaces() -> None:
         "generated/return_navigation_hints.min.json",
         "generated/composite_stress_route_hints.min.json",
         "generated/tiny_model_entrypoints.json",
-        "generated/two_stage_skill_entrypoints.json",
-        "generated/two_stage_router_manifest.json",
-        "generated/two_stage_router_eval_cases.jsonl",
+        "docs/decisions/AOA-RT-D-0003-owner-capability-routing.md",
         "mechanics/boundary-bridge/parts/federation-entry/docs/federation-entry-abi.md",
-        "routing/two-stage-skill-selection/docs/two-stage-skill-selection.md",
         "mechanics/antifragility/parts/composite-stress-routing/docs/playbook-stress-route-consumption.md",
         "mechanics/antifragility/parts/quarantine-routing/docs/kag-quarantine-route-hints.md",
         "mechanics/antifragility/parts/stress-routing/docs/stress-posture-routing.md",
@@ -47,9 +44,17 @@ def test_roadmap_matches_current_v0_3_release_surfaces() -> None:
         assert (REPO_ROOT / relative_path).is_file()
         assert relative_path in roadmap
 
+    for owner_surface in (
+        "aoa-skills/generated/agent_skill_catalog.min.json",
+        "aoa-skills/generated/capability_graph.json",
+        "aoa-evals/generated/eval_catalog.min.json",
+    ):
+        assert owner_surface in roadmap
+
     assert "federation-mesh" in changelog
     assert "technique-kind second-cut" in roadmap
     assert "roadmap drift" in roadmap
+    assert "task-local DAG" in roadmap
 
 
 def test_roadmap_names_agon_gate_routing_surfaces() -> None:

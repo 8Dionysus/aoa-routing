@@ -52,8 +52,6 @@ python scripts/build_router.py --check
 python scripts/validate_abyss_machine_routing_bundle.py
 python mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py --check
 python mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests
 ```
 

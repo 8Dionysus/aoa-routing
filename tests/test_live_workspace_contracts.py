@@ -6,7 +6,6 @@ from pathlib import Path
 
 import build_router
 import validate_router
-from _two_stage_router_lib import build_decision_packet, preselect
 from router_core import (
     ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
     FEDERATION_SPINE_PATH,
@@ -50,11 +49,8 @@ LIVE_REQUIRED_INPUTS = {
     ],
     "aoa-playbooks": [Path("generated/playbook_registry.min.json")],
     "aoa-skills": [
-        Path("generated/tiny_router_candidate_bands.json"),
-        Path("generated/tiny_router_skill_signals.json"),
-        Path("generated/skill_capsules.json"),
-        Path("generated/local_adapter_manifest.json"),
-        Path("generated/context_retention_manifest.json"),
+        Path("generated/agent_skill_catalog.min.json"),
+        Path("generated/capability_graph.json"),
     ],
     "aoa-stats": [Path("generated/stress_recovery_window_summary.min.json")],
     "aoa-techniques": [
@@ -75,14 +71,6 @@ MISSING_LIVE_INPUTS = sorted(
 
 def load_json(path: Path):
     return json.loads(path.read_text(encoding="utf-8"))
-
-
-def load_jsonl(path: Path) -> list[dict[str, object]]:
-    return [
-        json.loads(line)
-        for line in path.read_text(encoding="utf-8").splitlines()
-        if line.strip()
-    ]
 
 
 def strip_anchor(ref: str) -> str:
@@ -374,77 +362,55 @@ class LiveWorkspaceContractTests(unittest.TestCase):
             all((LIVE_ROOTS["Tree-of-Sophia"] / ref).exists() for ref in tos_route["verification_refs"])
         )
 
-    def test_live_workspace_skill_root_handoff_reaches_source_owned_activation_seams(self) -> None:
+    def test_live_workspace_skill_root_reaches_owner_catalog_and_capability_graph(self) -> None:
         tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
-        two_stage = load_json(REPO_ROOT / "generated" / "two_stage_skill_entrypoints.json")
-        policy = load_json(
-            REPO_ROOT
-            / "routing"
-            / "two-stage-skill-selection"
-            / "config"
-            / "two_stage_router_policy.json"
-        )
-        eval_cases = {
-            entry["case_id"]: entry
-            for entry in load_jsonl(REPO_ROOT / "generated" / "two_stage_router_eval_cases.jsonl")
-        }
+        hints = load_json(REPO_ROOT / "generated" / "task_to_surface_hints.json")
+        registry = load_json(REPO_ROOT / "generated" / "cross_repo_registry.min.json")
         skill_root = next(starter for starter in tiny["starters"] if starter["name"] == "skill-root")
-        self.assertEqual(skill_root["adjacent_handoff"]["target_surface"], "generated/two_stage_skill_entrypoints.json")
-        self.assertEqual(two_stage["tiny_model_handoff"]["starter_ref"], "skill-root")
+        self.assertNotIn("adjacent_handoff", skill_root)
 
         skills_root = LIVE_ROOTS["aoa-skills"]
-        signals_doc = load_json(skills_root / two_stage["stage_1"]["signals_surface"])
-        bands_doc = load_json(skills_root / two_stage["stage_1"]["bands_surface"])
-        capsules = {
+        catalog = load_json(skills_root / "generated" / "agent_skill_catalog.min.json")
+        graph = load_json(skills_root / "generated" / "capability_graph.json")
+        catalog_by_name = {
             entry["name"]: entry
-            for entry in load_json(skills_root / two_stage["stage_2"]["shortlist_surface"])["skills"]
+            for entry in catalog["skills"]
         }
-        adapters = {
-            entry["name"]: entry
-            for entry in load_json(skills_root / two_stage["stage_2"]["activation_manifest"])["skills"]
+        graph_skill_by_id = {
+            node["id"]: node
+            for node in graph["nodes"]
+            if node.get("kind") == "skill"
         }
-        contexts = {
-            entry["name"]: entry
-            for entry in load_json(skills_root / two_stage["stage_2"]["context_manifest"])["skills"]
+        registry_skills = {
+            entry["id"]: entry
+            for entry in registry["entries"]
+            if entry["kind"] == "skill"
         }
 
-        for case_id, expected_mode in [
-            ("tiny-positive-aoa-adr-write", "activate-candidate"),
-            ("tiny-positive-abyss-safe-infra-change", "manual-invocation-required"),
-        ]:
-            with self.subTest(case_id=case_id):
-                case = eval_cases[case_id]
-                preselected = preselect(
-                    task=case["prompt"],
-                    signals_doc=signals_doc,
-                    bands_doc=bands_doc,
-                    policy=policy,
-                    top_k=two_stage["stage_1"]["top_k_default"],
-                    repo_family=case.get("repo_family_hint"),
-                )
-                packet = build_decision_packet(
-                    case["prompt"],
-                    preselected,
-                    skills_root,
-                    max_shortlist=two_stage["stage_2"]["max_shortlist"],
-                )
-                self.assertEqual(packet["suggested_decision"]["decision_mode"], expected_mode)
-                self.assertEqual(packet["suggested_decision"]["skill"], case["expected_top1"])
-                candidate = packet["candidates"][0]
-                self.assertEqual(candidate["name"], case["expected_top1"])
-                self.assertIn(candidate["name"], capsules)
-                self.assertIn(candidate["name"], adapters)
-                self.assertIn(candidate["name"], contexts)
-                self.assertTrue((skills_root / capsules[candidate["name"]]["skill_path"]).exists())
+        self.assertEqual(set(catalog_by_name), set(registry_skills))
+        self.assertEqual(
+            set(graph_skill_by_id),
+            {entry["attributes"]["capability_id"] for entry in registry_skills.values()},
+        )
+        skill_hint = next(hint for hint in hints["hints"] if hint["kind"] == "skill")
+        self.assertEqual(
+            skill_hint["actions"]["inspect"]["surface_file"],
+            "generated/agent_skill_catalog.min.json",
+        )
+        self.assertEqual(
+            skill_hint["actions"]["expand"]["surface_file"],
+            "generated/capability_graph.json",
+        )
+        self.assertEqual(skill_hint["actions"]["pair"], {"enabled": False})
+        for skill_name, registry_entry in registry_skills.items():
+            with self.subTest(skill=skill_name):
+                graph_node = graph_skill_by_id[registry_entry["attributes"]["capability_id"]]
+                self.assertEqual(registry_entry["path"], graph_node["binding"]["ref"])
                 self.assertEqual(
-                    adapters[candidate["name"]]["invocation_mode"],
-                    candidate["invocation_mode"],
+                    registry_entry["attributes"]["projection_path"],
+                    catalog_by_name[skill_name]["path"],
                 )
-                self.assertEqual(
-                    candidate["manual_invocation_required"],
-                    expected_mode == "manual-invocation-required",
-                )
-                self.assertTrue(contexts[candidate["name"]]["rehydration_hint"])
+                self.assertEqual(registry_entry["attributes"]["target_owner"], "aoa-skills")
 
     def test_live_workspace_remaining_federation_starters_reach_owner_owned_capsule_paths(self) -> None:
         tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
@@ -748,11 +714,6 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         tiny = load_json(REPO_ROOT / "generated" / "tiny_model_entrypoints.json")
         shortlist = load_json(REPO_ROOT / "generated" / "owner_layer_shortlist.min.json")
         returns = load_json(REPO_ROOT / "generated" / "return_navigation_hints.min.json")
-        two_stage_entrypoints = load_json(REPO_ROOT / "generated" / "two_stage_skill_entrypoints.json")
-        two_stage_prompt_blocks = load_json(REPO_ROOT / "generated" / "two_stage_router_prompt_blocks.json")
-        two_stage_tool_schemas = load_json(REPO_ROOT / "generated" / "two_stage_router_tool_schemas.json")
-        two_stage_examples = load_json(REPO_ROOT / "generated" / "two_stage_router_examples.json")
-        two_stage_manifest = load_json(REPO_ROOT / "generated" / "two_stage_router_manifest.json")
 
         self.assertEqual(federation["schema_version"], "aoa_routing_federation_entrypoints_v2")
         self.assertEqual(
@@ -779,44 +740,15 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         )
         self.assertEqual(returns["owner_repo"], "aoa-routing")
         self.assertEqual(returns["surface_kind"], "return_navigation_hints")
-        self.assertEqual(two_stage_entrypoints["schema_version"], "aoa_routing_two_stage_skill_entrypoints_v2")
-        self.assertEqual(
-            two_stage_entrypoints["schema_ref"],
-            "routing/two-stage-skill-selection/schemas/two-stage-skill-entrypoints.schema.json",
-        )
-        self.assertEqual(two_stage_entrypoints["owner_repo"], "aoa-routing")
-        self.assertEqual(two_stage_entrypoints["surface_kind"], "two_stage_skill_entrypoints")
-        self.assertEqual(two_stage_prompt_blocks["schema_version"], "aoa_routing_two_stage_router_prompt_blocks_v2")
-        self.assertEqual(
-            two_stage_prompt_blocks["schema_ref"],
-            "routing/two-stage-skill-selection/schemas/two-stage-router-prompt-blocks.schema.json",
-        )
-        self.assertEqual(two_stage_prompt_blocks["owner_repo"], "aoa-routing")
-        self.assertEqual(two_stage_prompt_blocks["surface_kind"], "two_stage_router_prompt_blocks")
-        self.assertEqual(two_stage_prompt_blocks["low_context_boundary"]["wording_scope"], "routing-owned")
-        self.assertEqual(two_stage_prompt_blocks["low_context_boundary"]["source_payload_copying"], "forbidden")
-        self.assertEqual(two_stage_tool_schemas["schema_version"], "aoa_routing_two_stage_router_tool_schemas_v2")
-        self.assertEqual(
-            two_stage_tool_schemas["schema_ref"],
-            "routing/two-stage-skill-selection/schemas/two-stage-router-tool-schemas.schema.json",
-        )
-        self.assertEqual(two_stage_tool_schemas["owner_repo"], "aoa-routing")
-        self.assertEqual(two_stage_tool_schemas["surface_kind"], "two_stage_router_tool_schemas")
-        self.assertEqual(two_stage_tool_schemas["low_context_boundary"], two_stage_prompt_blocks["low_context_boundary"])
-        self.assertEqual(two_stage_examples["schema_version"], "aoa_routing_two_stage_router_examples_v2")
-        self.assertEqual(
-            two_stage_examples["schema_ref"],
-            "routing/two-stage-skill-selection/schemas/two-stage-router-examples.schema.json",
-        )
-        self.assertEqual(two_stage_examples["owner_repo"], "aoa-routing")
-        self.assertEqual(two_stage_examples["surface_kind"], "two_stage_router_examples")
-        self.assertEqual(two_stage_manifest["schema_version"], "aoa_routing_two_stage_router_manifest_v2")
-        self.assertEqual(
-            two_stage_manifest["schema_ref"],
-            "routing/two-stage-skill-selection/schemas/two-stage-router-manifest.schema.json",
-        )
-        self.assertEqual(two_stage_manifest["owner_repo"], "aoa-routing")
-        self.assertEqual(two_stage_manifest["surface_kind"], "two_stage_router_manifest")
+        for retired_name in (
+            "two_stage_skill_entrypoints.json",
+            "two_stage_router_prompt_blocks.json",
+            "two_stage_router_tool_schemas.json",
+            "two_stage_router_examples.json",
+            "two_stage_router_manifest.json",
+            "two_stage_router_eval_cases.jsonl",
+        ):
+            self.assertFalse((REPO_ROOT / "generated" / retired_name).exists())
 
     def test_live_workspace_playbook_routes_resolve_to_registry_activation_federation_review_status_packet_contracts_and_intake(self) -> None:
         federation = load_json(REPO_ROOT / "generated" / "federation_entrypoints.min.json")

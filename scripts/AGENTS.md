@@ -9,6 +9,9 @@ This file applies to Python tooling under `scripts/`.
 - `build_router.py` writes the derived routing surfaces
 - `router_core.py` holds shared constants, loaders, and derivation helpers
 - `validate_router.py` enforces schema integrity, rebuild parity, and bounded cross-repo routing rules
+- skill ingestion reads the owner agent catalog for callable bundles and the
+  owner capability graph for typed navigation; it does not rebuild a local
+  skill selector
 - `validate_abyss_machine_routing_bundle.py` validates the OS Abyss ABI,
   SBOM-lite, SLSA/in-toto, and registry envelope for the generated routing
   readmodel family
@@ -63,8 +66,6 @@ python scripts/generate_decision_indexes.py --check
 python scripts/validate_decision_records.py
 python mechanics/agon/parts/gate-routing/scripts/build_agon_gate_routing_registry.py --check
 python mechanics/agon/parts/gate-routing/scripts/validate_agon_gate_routing.py
-python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check
-python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills
 python -m pytest -q tests
 ```
 

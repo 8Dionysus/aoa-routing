@@ -21,34 +21,35 @@ Use `composite_stress_route_hint_v1` when the next hop needs a structured join a
 
 ### skill collision chaos
 
-Keep the two-stage router precision-first.
+Keep the owner catalog and capability graph coherent and owner-first.
 The important failures are:
 
-- weak shortlists that still try to activate something
-- explicit-only shortlist winners that skip the manual handle
-- neighboring skills that ignore the better owning skill
+- a catalog bundle without a matching skill capability node
+- a graph node whose owner, binding, lifecycle, or trust posture is inconsistent
+- a semantically nearby capability being flattened into a callable skill
+- typed eval dependencies being reordered or rewritten as skill dependencies
 
 ## Source-owned landing
 
-This contour uses two source-owned routing surfaces:
+This contour uses three source-owned surfaces:
 
-- `routing/two-stage-skill-selection/config/two_stage_router_precision_cases.jsonl`
-- `generated/two_stage_router_eval_cases.jsonl`
+- `aoa-skills/generated/agent_skill_catalog.min.json`
+- `aoa-skills/generated/capability_graph.json`
+- `aoa-evals/generated/eval_catalog.min.json`
 
-The config file is the routing-owned precision lane.
-The generated eval surface is the committed readout after the builder joins:
-
-- the `aoa-skills` tiny-router cases
-- the routing-owned local precision cases
+The router preserves only a thin projection and inspect/expand pointers. It
+stops on contract mismatch instead of repairing owner data or inventing a
+local shortlist.
 
 ## Rules to preserve
 
-- weak or empty shortlist -> `no-skill`
-- explicit-only shortlist winner -> `manual-invocation-required`
+- missing or mismatched owner node -> stop and return to `aoa-skills`
+- deferred or candidate-only bundle -> preserve that posture
+- mode, workflow, guard, tool, or adapter -> never relabel as a skill
 - owner receipts outrank stats and memo
 - suppression beats confident fiction when evidence is thin
 
 ## Verify
 
-Use the executable routing, two-stage, and test routes in root `AGENTS.md` and
+Use the executable routing and test routes in root `AGENTS.md` and
 the nearest mechanic route card.

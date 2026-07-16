@@ -1,0 +1,80 @@
+{
+  "authority": false,
+  "nodes": [
+    {
+      "id": "skill.aoa-decision",
+      "kind": "skill",
+      "description": "Find, record, or correct durable repository decisions through one decision family.",
+      "binding": {
+        "availability": "available",
+        "kind": "skill",
+        "operation": "route-one-mode",
+        "ref": "skills/core/engineering/aoa-decision/SKILL.md"
+      },
+      "lifecycle": {
+        "evidence_state": "pilot-verified",
+        "health": "challenger",
+        "state": "candidate",
+        "version": "0.1.0",
+        "visibility": "advertised"
+      },
+      "owner": {
+        "authority": "authored",
+        "repo": "aoa-skills",
+        "surface": "skills/core/engineering/aoa-decision/SKILL.md"
+      },
+      "primary_parent": "stewardship.decisions",
+      "source_path": "capabilities/families/decisions.yaml",
+      "trust": {
+        "posture": "authored-procedure",
+        "public_safe": true,
+        "requires_human_approval": false
+      }
+    },
+    {
+      "id": "skill.aoa-verification",
+      "kind": "skill",
+      "description": "Turn one stable technical truth into bounded evidence.",
+      "binding": {
+        "availability": "available",
+        "kind": "skill",
+        "operation": "route-one-mode",
+        "ref": "skills/core/engineering/aoa-verification/SKILL.md"
+      },
+      "lifecycle": {
+        "evidence_state": "evaluated",
+        "health": "degraded",
+        "state": "candidate",
+        "version": "0.1.0",
+        "visibility": "deferred"
+      },
+      "owner": {
+        "authority": "authored",
+        "repo": "aoa-skills",
+        "surface": "capabilities/families/engineering.yaml"
+      },
+      "primary_parent": "engineering.verification",
+      "source_path": "capabilities/families/engineering.yaml",
+      "trust": {
+        "posture": "authored-procedure",
+        "public_safe": true,
+        "requires_human_approval": false
+      }
+    },
+    {
+      "id": "workflow.operations.repository-change",
+      "kind": "workflow",
+      "owner": {
+        "authority": "external-authority",
+        "repo": "host-agent",
+        "surface": "built-in/repository-change-loop"
+      },
+      "source_path": "capabilities/families/operations.yaml"
+    }
+  ],
+  "relations": [],
+  "retrieval_documents": [],
+  "roots": ["aoa"],
+  "schema_version": "aoa-skill-capability-graph-v1",
+  "source": "fixture"
+}

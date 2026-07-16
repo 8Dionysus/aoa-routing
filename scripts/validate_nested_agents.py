@@ -20,7 +20,6 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "python scripts/build_router.py",
         "python scripts/validate_router.py",
         "python scripts/build_router.py --check",
-        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
         "python -m pytest -q tests",
     ),
     "routing/core/schemas/AGENTS.md": (
@@ -45,7 +44,6 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "python scripts/build_router.py",
         "python scripts/build_router.py --check",
         "python scripts/generate_decision_indexes.py --check",
-        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
         "python -m pytest -q tests",
     ),
     "tests/AGENTS.md": (
@@ -58,7 +56,6 @@ REQUIRED_AGENTS: dict[str, tuple[str, ...]] = {
         "walkthroughs",
         "python scripts/build_router.py --check",
         "python scripts/generate_decision_indexes.py --check",
-        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
         "python -m pytest -q tests",
     ),
     "docs/decisions/AGENTS.md": (

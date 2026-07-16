@@ -41,7 +41,11 @@ def tracked_markdown_paths() -> tuple[Path, ...]:
         capture_output=True,
         text=True,
     )
-    return tuple(Path(line) for line in completed.stdout.splitlines() if line)
+    return tuple(
+        path
+        for line in completed.stdout.splitlines()
+        if line and (path := Path(line)) and (REPO_ROOT / path).is_file()
+    )
 
 
 def markdown_command_violations(content: str) -> set[str]:
@@ -65,8 +69,6 @@ def test_readme_routes_verify_battery_to_agents() -> None:
         "python scripts/generate_decision_indexes.py --check",
         "python scripts/validate_decision_records.py",
         "python -m pytest -q tests",
-        "python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check",
-        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
     ]
     for command in commands:
         assert command not in readme
@@ -80,8 +82,6 @@ def test_contributor_and_agent_surfaces_use_exact_verify_commands() -> None:
     core_fragments = [
         "python scripts/validate_router.py",
         "python scripts/build_router.py --check",
-        "python scripts/build_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills --check",
-        "python scripts/validate_two_stage_skill_router.py --routing-root . --skills-root ../aoa-skills",
         "python -m pytest -q tests",
     ]
 

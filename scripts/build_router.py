@@ -9,7 +9,6 @@ import re
 from pathlib import Path
 from typing import Any
 
-from build_two_stage_skill_router import build_outputs as build_two_stage_outputs
 from router_core import (
     CANONICAL_REPO_BY_KIND,
     FEDERATION_ENTRYPOINTS_FILE,
@@ -55,6 +54,8 @@ STATS_REGROUNDING_HINTS_FILE = "generated/stats_regrounding_hints.min.json"
 STATS_STRESS_RECOVERY_WINDOW_SUMMARY_FILE = "generated/stress_recovery_window_summary.min.json"
 STATS_SUMMARY_SURFACE_CATALOG_FILE = "generated/summary_surface_catalog.min.json"
 STATS_SOURCE_COVERAGE_SUMMARY_FILE = "generated/source_coverage_summary.min.json"
+SKILL_AGENT_CATALOG_FILE = "generated/agent_skill_catalog.min.json"
+SKILL_CAPABILITY_GRAPH_FILE = "generated/capability_graph.json"
 PLAYBOOK_STRESS_LANE_FILE = (
     "mechanics/antifragility/parts/stress-lanes/examples/playbook_stress_lane.example.json"
 )
@@ -83,8 +84,8 @@ OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
         "signal": "explicit-request",
         "owner_repo": "aoa-skills",
         "object_kind": "skill",
-        "target_surface": "aoa-skills.runtime_discovery_index",
-        "inspect_surface": "aoa-skills.runtime_discovery_index",
+        "target_surface": "aoa-skills.agent_skill_catalog.min",
+        "inspect_surface": "aoa-skills.agent_skill_catalog.min",
         "hint_reason": "explicit owner-layer request for skills should stay on the bounded execution layer first",
         "confidence": "high",
         "ambiguity": "clear",
@@ -215,8 +216,8 @@ OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
         "signal": "proof-need",
         "owner_repo": "aoa-skills",
         "object_kind": "skill",
-        "target_surface": "aoa-skills.runtime_discovery_index",
-        "inspect_surface": "aoa-skills.runtime_discovery_index",
+        "target_surface": "aoa-skills.agent_skill_catalog.min",
+        "inspect_surface": "aoa-skills.agent_skill_catalog.min",
         "hint_reason": "some proof-shaped routes are still bounded skill execution slices, so keep the skill lane visible as an adjacent option",
         "confidence": "low",
         "ambiguity": "ambiguous",
@@ -303,14 +304,14 @@ OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
         "ambiguity": "ambiguous",
     },
     {
-        "shortlist_id": "risk-gate.skills.primary",
+        "shortlist_id": "risk-gate.capability-guard.primary",
         "signal": "risk-gate",
         "owner_repo": "aoa-skills",
-        "object_kind": "skill",
-        "target_surface": "aoa-skills.runtime_discovery_index",
-        "inspect_surface": "aoa-skills.runtime_discovery_index",
-        "hint_reason": "risk-gate signals stay skill-first even when the route later hands off to owner layers",
-        "confidence": "medium",
+        "object_kind": "guard",
+        "target_surface": "aoa-skills.capability_graph",
+        "inspect_surface": "aoa-skills.capability_graph",
+        "hint_reason": "risk-gate signals inspect typed guard capability and target ownership before runtime enforcement",
+        "confidence": "high",
         "ambiguity": "clear",
     },
 )
@@ -560,49 +561,170 @@ def collect_technique_entries(techniques_root: Path) -> list[dict[str, Any]]:
 
 
 def collect_skill_entries(skills_root: Path) -> list[dict[str, Any]]:
-    catalog_path = skills_root / "generated" / "skill_catalog.min.json"
+    catalog_path = skills_root / SKILL_AGENT_CATALOG_FILE
     payload = ensure_mapping(load_json_file(catalog_path), relative_posix(catalog_path))
     skills = ensure_list(payload.get("skills"), f"{relative_posix(catalog_path)}.skills")
+    graph_path = skills_root / SKILL_CAPABILITY_GRAPH_FILE
+    graph_payload = ensure_mapping(load_json_file(graph_path), relative_posix(graph_path))
+    graph_nodes = ensure_list(
+        graph_payload.get("nodes"),
+        f"{relative_posix(graph_path)}.nodes",
+    )
+    skill_nodes: dict[str, dict[str, Any]] = {}
+    for index, item in enumerate(graph_nodes):
+        location = f"{relative_posix(graph_path)}.nodes[{index}]"
+        node = ensure_mapping(item, location)
+        if node.get("kind") != "skill":
+            continue
+        node_id = ensure_string(node.get("id"), f"{location}.id")
+        if not node_id.startswith("skill."):
+            raise RouterError(f"{location}.id must use the 'skill.<name>' form")
+        skill_name = node_id.removeprefix("skill.")
+        if skill_name in skill_nodes:
+            raise RouterError(f"duplicate skill capability node '{node_id}'")
+        skill_nodes[skill_name] = node
+
     entries: list[dict[str, Any]] = []
     required_keys = (
         "name",
-        "scope",
-        "status",
-        "summary",
-        "invocation_mode",
-        "technique_dependencies",
-        "skill_path",
+        "description",
+        "path",
+        "implicit_activation_policy",
+        "allow_implicit_invocation",
+        "candidate_only",
+        "trust_posture",
     )
+    catalog_names: set[str] = set()
     for index, item in enumerate(skills):
         location = f"{relative_posix(catalog_path)}.skills[{index}]"
         skill = ensure_mapping(item, location)
         require_keys(skill, required_keys, location)
         skill_name = ensure_string(skill["name"], f"{location}.name")
-        technique_dependencies = ensure_string_list(
-            skill["technique_dependencies"],
-            f"{location}.technique_dependencies",
+        if skill_name in catalog_names:
+            raise RouterError(f"duplicate agent skill catalog entry '{skill_name}'")
+        catalog_names.add(skill_name)
+        node = skill_nodes.get(skill_name)
+        if node is None:
+            raise RouterError(
+                f"{location}.name has no matching skill capability node in "
+                f"{relative_posix(graph_path)}"
+            )
+        node_location = f"{relative_posix(graph_path)}:skill.{skill_name}"
+        require_keys(
+            node,
+            (
+                "binding",
+                "description",
+                "lifecycle",
+                "owner",
+                "primary_parent",
+                "source_path",
+                "trust",
+            ),
+            node_location,
         )
+        binding = ensure_mapping(node["binding"], f"{node_location}.binding")
+        lifecycle = ensure_mapping(node["lifecycle"], f"{node_location}.lifecycle")
+        owner = ensure_mapping(node["owner"], f"{node_location}.owner")
+        trust = ensure_mapping(node["trust"], f"{node_location}.trust")
+        require_keys(binding, ("availability", "kind", "ref"), f"{node_location}.binding")
+        require_keys(
+            lifecycle,
+            ("evidence_state", "health", "state", "version", "visibility"),
+            f"{node_location}.lifecycle",
+        )
+        require_keys(owner, ("authority", "repo", "surface"), f"{node_location}.owner")
+        require_keys(
+            trust,
+            ("posture", "public_safe", "requires_human_approval"),
+            f"{node_location}.trust",
+        )
+        if ensure_string(binding["kind"], f"{node_location}.binding.kind") != "skill":
+            raise RouterError(f"{node_location}.binding.kind must equal 'skill'")
+        if ensure_string(binding["availability"], f"{node_location}.binding.availability") != "available":
+            raise RouterError(f"{node_location}.binding.availability must equal 'available'")
+        if ensure_string(owner["repo"], f"{node_location}.owner.repo") != "aoa-skills":
+            raise RouterError(f"{node_location}.owner.repo must equal 'aoa-skills'")
+
         entries.append(
             {
                 "kind": "skill",
                 "id": skill_name,
                 "name": skill_name,
                 "repo": CANONICAL_REPO_BY_KIND["skill"],
-                "path": ensure_repo_relative_path(skill["skill_path"], f"{location}.skill_path"),
-                "status": ensure_string(skill["status"], f"{location}.status"),
+                "path": ensure_repo_relative_path(binding["ref"], f"{node_location}.binding.ref"),
+                "status": ensure_string(lifecycle["state"], f"{node_location}.lifecycle.state"),
                 "summary": normalize_active_generated_text(
-                    ensure_string(skill["summary"], f"{location}.summary")
+                    ensure_string(skill["description"], f"{location}.description")
                 ),
                 "source_type": SKILL_SOURCE_TYPE,
                 "attributes": {
-                    "scope": ensure_string(skill["scope"], f"{location}.scope"),
+                    "scope": ensure_string(node["primary_parent"], f"{node_location}.primary_parent"),
                     "invocation_mode": ensure_string(
-                        skill["invocation_mode"],
-                        f"{location}.invocation_mode",
+                        skill["implicit_activation_policy"],
+                        f"{location}.implicit_activation_policy",
                     ),
-                    "technique_dependencies": technique_dependencies,
+                    "technique_dependencies": [],
+                    "allow_implicit_invocation": ensure_bool(
+                        skill["allow_implicit_invocation"],
+                        f"{location}.allow_implicit_invocation",
+                    ),
+                    "candidate_only": ensure_bool(
+                        skill["candidate_only"],
+                        f"{location}.candidate_only",
+                    ),
+                    "trust_posture": ensure_string(
+                        skill["trust_posture"],
+                        f"{location}.trust_posture",
+                    ),
+                    "projection_path": ensure_repo_relative_path(
+                        skill["path"],
+                        f"{location}.path",
+                    ),
+                    "capability_id": f"skill.{skill_name}",
+                    "capability_graph_ref": SKILL_CAPABILITY_GRAPH_FILE,
+                    "capability_source_path": ensure_repo_relative_path(
+                        node["source_path"],
+                        f"{node_location}.source_path",
+                    ),
+                    "lifecycle": {
+                        "evidence_state": ensure_string(
+                            lifecycle["evidence_state"],
+                            f"{node_location}.lifecycle.evidence_state",
+                        ),
+                        "health": ensure_string(
+                            lifecycle["health"],
+                            f"{node_location}.lifecycle.health",
+                        ),
+                        "state": ensure_string(
+                            lifecycle["state"],
+                            f"{node_location}.lifecycle.state",
+                        ),
+                        "version": ensure_string(
+                            lifecycle["version"],
+                            f"{node_location}.lifecycle.version",
+                        ),
+                        "visibility": ensure_string(
+                            lifecycle["visibility"],
+                            f"{node_location}.lifecycle.visibility",
+                        ),
+                    },
+                    "target_owner": ensure_string(
+                        owner["repo"],
+                        f"{node_location}.owner.repo",
+                    ),
+                    "requires_human_approval": ensure_bool(
+                        trust["requires_human_approval"],
+                        f"{node_location}.trust.requires_human_approval",
+                    ),
                 },
             }
+        )
+    missing_catalog_entries = sorted(set(skill_nodes) - catalog_names)
+    if missing_catalog_entries:
+        raise RouterError(
+            f"{relative_posix(catalog_path)} is missing skill capability nodes: "
+            + ", ".join(missing_catalog_entries)
         )
     return entries
 
@@ -627,6 +749,8 @@ def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
         "export_ready",
         "technique_dependencies",
         "skill_dependencies",
+        "capability_dependencies",
+        "capability_refs",
         "eval_path",
     )
     for index, item in enumerate(evals):
@@ -642,6 +766,43 @@ def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
             evaluation["skill_dependencies"],
             f"{location}.skill_dependencies",
         )
+        capability_dependencies = ensure_string_list(
+            evaluation["capability_dependencies"],
+            f"{location}.capability_dependencies",
+        )
+        capability_refs_raw = ensure_list(
+            evaluation["capability_refs"],
+            f"{location}.capability_refs",
+        )
+        capability_refs: list[dict[str, str]] = []
+        for ref_index, ref_item in enumerate(capability_refs_raw):
+            ref_location = f"{location}.capability_refs[{ref_index}]"
+            ref = ensure_mapping(ref_item, ref_location)
+            require_keys(
+                ref,
+                ("id", "kind", "registry_repo", "registry_path", "target_owner"),
+                ref_location,
+            )
+            capability_refs.append(
+                {
+                    "id": ensure_string(ref["id"], f"{ref_location}.id"),
+                    "kind": ensure_string(ref["kind"], f"{ref_location}.kind"),
+                    "registry_repo": ensure_string(
+                        ref["registry_repo"], f"{ref_location}.registry_repo"
+                    ),
+                    "registry_path": ensure_repo_relative_path(
+                        ref["registry_path"], f"{ref_location}.registry_path"
+                    ),
+                    "target_owner": ensure_string(
+                        ref["target_owner"], f"{ref_location}.target_owner"
+                    ),
+                }
+            )
+        if [ref["id"] for ref in capability_refs] != capability_dependencies:
+            raise RouterError(
+                f"{location}.capability_refs must preserve the ordered "
+                "capability_dependencies IDs"
+            )
         entries.append(
             {
                 "kind": "eval",
@@ -687,10 +848,94 @@ def collect_eval_entries(evals_root: Path) -> list[dict[str, Any]]:
                     ),
                     "technique_dependencies": technique_dependencies,
                     "skill_dependencies": skill_dependencies,
+                    "capability_dependencies": capability_dependencies,
+                    "capability_refs": capability_refs,
                 },
             }
         )
     return entries
+
+
+def validate_eval_capability_refs_against_owner_graph(
+    eval_entries: list[dict[str, Any]],
+    skills_root: Path,
+) -> None:
+    graph_path = skills_root / SKILL_CAPABILITY_GRAPH_FILE
+    graph_payload = ensure_mapping(load_json_file(graph_path), relative_posix(graph_path))
+    graph_nodes = ensure_list(
+        graph_payload.get("nodes"),
+        f"{relative_posix(graph_path)}.nodes",
+    )
+    nodes_by_id: dict[str, dict[str, Any]] = {}
+    for node_index, raw_node in enumerate(graph_nodes):
+        node_location = f"{relative_posix(graph_path)}.nodes[{node_index}]"
+        node = ensure_mapping(raw_node, node_location)
+        node_id = ensure_string(node.get("id"), f"{node_location}.id")
+        if node_id in nodes_by_id:
+            raise RouterError(f"duplicate capability graph node '{node_id}'")
+        nodes_by_id[node_id] = node
+
+    for entry in eval_entries:
+        eval_id = ensure_string(entry.get("id"), "eval entry id")
+        attributes = ensure_mapping(entry.get("attributes"), f"eval:{eval_id}.attributes")
+        capability_refs = ensure_list(
+            attributes.get("capability_refs"),
+            f"eval:{eval_id}.attributes.capability_refs",
+        )
+        for ref_index, raw_ref in enumerate(capability_refs):
+            ref_location = f"eval:{eval_id}.attributes.capability_refs[{ref_index}]"
+            ref = ensure_mapping(raw_ref, ref_location)
+            capability_id = ensure_string(ref.get("id"), f"{ref_location}.id")
+            registry_repo = ensure_string(
+                ref.get("registry_repo"),
+                f"{ref_location}.registry_repo",
+            )
+            if registry_repo != "aoa-skills":
+                raise RouterError(
+                    f"{ref_location}.registry_repo must equal 'aoa-skills' while "
+                    "aoa-routing exposes only the aoa-skills capability graph"
+                )
+
+            node = nodes_by_id.get(capability_id)
+            if node is None:
+                raise RouterError(
+                    f"{ref_location}.id '{capability_id}' is missing from "
+                    f"{relative_posix(graph_path)}"
+                )
+            node_location = f"{relative_posix(graph_path)}:{capability_id}"
+            node_kind = ensure_string(node.get("kind"), f"{node_location}.kind")
+            ref_kind = ensure_string(ref.get("kind"), f"{ref_location}.kind")
+            if ref_kind != node_kind:
+                raise RouterError(
+                    f"{ref_location}.kind '{ref_kind}' does not match owner graph "
+                    f"kind '{node_kind}'"
+                )
+
+            node_source_path = ensure_repo_relative_path(
+                node.get("source_path"),
+                f"{node_location}.source_path",
+            )
+            registry_path = ensure_repo_relative_path(
+                ref.get("registry_path"),
+                f"{ref_location}.registry_path",
+            )
+            if registry_path != node_source_path:
+                raise RouterError(
+                    f"{ref_location}.registry_path '{registry_path}' does not match "
+                    f"owner graph source_path '{node_source_path}'"
+                )
+
+            owner = ensure_mapping(node.get("owner"), f"{node_location}.owner")
+            node_owner = ensure_string(owner.get("repo"), f"{node_location}.owner.repo")
+            target_owner = ensure_string(
+                ref.get("target_owner"),
+                f"{ref_location}.target_owner",
+            )
+            if target_owner != node_owner:
+                raise RouterError(
+                    f"{ref_location}.target_owner '{target_owner}' does not match "
+                    f"owner graph owner.repo '{node_owner}'"
+                )
 
 
 def collect_memo_entries(memo_root: Path) -> list[dict[str, Any]]:
@@ -1200,10 +1445,13 @@ def build_outputs(
     technique_catalog_source, technique_catalog_entries = load_technique_catalog_entries(
         techniques_root
     )
+    skill_entries = collect_skill_entries(skills_root)
+    eval_entries = collect_eval_entries(evals_root)
+    validate_eval_capability_refs_against_owner_graph(eval_entries, skills_root)
     registry_entries = sort_registry_entries(
         collect_technique_entries(techniques_root)
-        + collect_skill_entries(skills_root)
-        + collect_eval_entries(evals_root)
+        + skill_entries
+        + eval_entries
         + collect_memo_entries(memo_root)
     )
     seen: set[tuple[str, str]] = set()
@@ -1299,16 +1547,6 @@ def build_outputs(
         "pairing_hints.min.json": pairing_payload,
         "tiny_model_entrypoints.json": tiny_model_entrypoints_payload,
     }
-    outputs.update(
-        build_two_stage_outputs(
-            routing_root=routing_root,
-            skills_root=skills_root,
-            tiny_model_entrypoints=tiny_model_entrypoints_payload,
-            aoa_router=router_payload,
-            pairing_hints=pairing_payload,
-            task_to_surface_hints=hints_payload,
-        )
-    )
     return outputs
 
 

@@ -21,8 +21,8 @@ adoption rules, read the local eval-port standard in `aoa-evals`.
 
 ## Boundaries
 
-- Keep route policy, route hints, generated route maps, two-stage router
-  behavior, and owner-shortlist evidence in `aoa-routing`.
+- Keep route policy, route hints, generated route maps, skill catalog and
+  capability-graph navigation, and owner-shortlist evidence in `aoa-routing`.
 - Keep proof doctrine, verdicts, scoring, and regression authority in
   `aoa-evals`.
 - Do not treat an intake packet as proof acceptance or a central eval verdict.

@@ -7,6 +7,19 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [Unreleased]
 
+### Changed
+
+- Retired the routing-owned two-stage skill-selection branch and its generated
+  prompt, tool, policy, example, manifest, and eval-case surfaces.
+- Skill routing now consumes the `aoa-skills` agent catalog for the callable
+  first cut and the owner capability graph for typed deep navigation, while
+  task-local DAG composition remains in the session or runtime.
+- Typed `aoa-evals` capability refs now fail closed when the current owner
+  graph disagrees on capability identity, kind, registry path, or target owner.
+- Cross-host owner discovery now honors explicit workspace roots while keeping
+  the `abyss-stack/Configs` source checkout ahead of its containing workspace
+  repository.
+
 ## [0.3.0] - 2026-07-13
 
 ### Summary
