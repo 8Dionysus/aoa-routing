@@ -120,16 +120,13 @@ EXCLUDED_CONTENT_FILES = {
     Path("scripts/validate_active_legacy_names.py"),
 }
 EXCLUDED_CONTENT_PREFIXES: tuple[Path, ...] = (
-    Path("kag/indexes/source_surface_index.json"),
-    Path("kag/indexes/repo_entity_index.json"),
-    Path("kag/indexes/repo_artifact_index.json"),
-    Path("kag/indexes/repo_anchor_index.json"),
-    Path("kag/indexes/repo_event_index.json"),
-    Path("kag/indexes/repo_assertion_index.json"),
-    Path("kag/indexes/repo_relation_index.json"),
+    Path("kag/indexes/index_family.manifest.json"),
+    Path("kag/indexes/shards"),
+    Path("kag/receipts/index_family_budget"),
 )
 TEXT_SUFFIXES = {
     ".json",
+    ".jsonl",
     ".md",
     ".py",
     ".txt",
