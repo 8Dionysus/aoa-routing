@@ -1,0 +1,1 @@
+{"_key":"event:aoa:aoa-routing:event:f053b4967d4430be9f2ff110:evidence_refs:0","_kind":"event_chunk","field":"evidence_refs","parent":"event:aoa:aoa-routing:event:f053b4967d4430be9f2ff110","position":0,"values":[{"kind":"git_commit","ref":"86804a564bfc291b342643349c79c5e23dfa3733"}]}

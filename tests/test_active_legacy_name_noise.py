@@ -7,17 +7,14 @@ def test_active_paths_do_not_use_legacy_names() -> None:
     assert validate() == []
 
 
-def test_repository_kag_readmodels_are_outside_authored_content_checks(tmp_path: Path) -> None:
-    for filename in (
-        "source_surface_index.json",
-        "repo_entity_index.json",
-        "repo_artifact_index.json",
-        "repo_anchor_index.json",
-        "repo_event_index.json",
-        "repo_assertion_index.json",
-        "repo_relation_index.json",
+def test_repository_kag_family_is_outside_authored_content_checks(tmp_path: Path) -> None:
+    for relative_path in (
+        "kag/indexes/index_family.manifest.json",
+        "kag/indexes/shards/source/00.jsonl",
+        "kag/indexes/shards/event/0.jsonl",
+        "kag/receipts/index_family_budget/digest.json",
     ):
-        index_path = tmp_path / "kag" / "indexes" / filename
+        index_path = tmp_path / relative_path
         index_path.parent.mkdir(parents=True, exist_ok=True)
         index_path.write_text("historical " + ("wa" + "ve") + " route\n", encoding="utf-8")
 
