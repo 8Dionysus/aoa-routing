@@ -1,0 +1,17 @@
+{
+  "allowed_bytes": 4409745,
+  "allowed_tracked_bytes": 8035961,
+  "approved_by": "repository-owner",
+  "base_ref": "c55f86bf099304efc990fc0a5128c18b02027ee2",
+  "changed_generated_bytes": 4409745,
+  "changed_generated_files": 194,
+  "decision_ref": "aoa-kag:docs/decisions/AOA-KAG-D-0017-portable-content-addressed-repository-family.md",
+  "default_limit_bytes": 1048576,
+  "head_family_digest": "651b7c3d45760f564f66c390753540b4dc091a14d18c74e27f2b9c9b7ffcaba3",
+  "reason": "Deterministic re-sharding for the paired aoa-routing predecessor succession decision after current-owner parity landed; routing authority remains unchanged and tracked family size stays within the standing cap.",
+  "repo": "aoa-routing",
+  "schema_version": "aoa-repo-local-kag-budget-receipt-v1",
+  "scope": "generated_delta",
+  "tracked_bytes": 8035961,
+  "tracked_bytes_max": 9437184
+}
