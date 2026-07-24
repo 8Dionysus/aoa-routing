@@ -2079,7 +2079,7 @@ def validate_expand_targets(
                 issues.append(ValidationIssue(location, str(exc)))
                 continue
 
-            seen_capability_ids: set[str] = set()
+            skill_nodes_by_id: dict[str, dict[str, Any]] = {}
             for node_index, raw_node in enumerate(graph_nodes):
                 node_location = f"{location}.nodes[{node_index}]"
                 try:
@@ -2098,14 +2098,22 @@ def validate_expand_targets(
                         )
                     )
                     continue
-                if capability_id in seen_capability_ids:
+                if not capability_id.startswith("skill."):
+                    issues.append(
+                        ValidationIssue(
+                            location,
+                            f"{node_location}.id must use the 'skill.<name>' form",
+                        )
+                    )
+                    continue
+                if capability_id in skill_nodes_by_id:
                     issues.append(
                         ValidationIssue(
                             location,
                             f"duplicate skill capability node '{capability_id}'",
                         )
                     )
-                seen_capability_ids.add(capability_id)
+                skill_nodes_by_id[capability_id] = node
 
             expected_capability_ids: set[str] = set()
             for entry_index, entry in enumerate(registry_entries):
@@ -2137,6 +2145,7 @@ def validate_expand_targets(
                     )
                 expected_capability_ids.add(capability_id)
 
+            seen_capability_ids = set(skill_nodes_by_id)
             for capability_id in sorted(expected_capability_ids - seen_capability_ids):
                 issues.append(
                     ValidationIssue(
@@ -2145,12 +2154,33 @@ def validate_expand_targets(
                     )
                 )
             for capability_id in sorted(seen_capability_ids - expected_capability_ids):
-                issues.append(
-                    ValidationIssue(
-                        location,
-                        f"capability graph contains unexpected skill node '{capability_id}'",
+                node = skill_nodes_by_id[capability_id]
+                node_location = f"{location}:{capability_id}"
+                try:
+                    owner = ensure_mapping(node.get("owner"), f"{node_location}.owner")
+                    owner_authority = ensure_string(
+                        owner.get("authority"),
+                        f"{node_location}.owner.authority",
                     )
-                )
+                    owner_repo = ensure_string(
+                        owner.get("repo"),
+                        f"{node_location}.owner.repo",
+                    )
+                    ensure_repo_relative_path(
+                        owner.get("surface"),
+                        f"{node_location}.owner.surface",
+                    )
+                except RouterError as exc:
+                    issues.append(ValidationIssue(node_location, str(exc)))
+                    continue
+                if owner_authority != "external-authority" or owner_repo == "aoa-skills":
+                    issues.append(
+                        ValidationIssue(
+                            location,
+                            "capability graph contains non-catalog skill node "
+                            f"'{capability_id}' without external owner authority",
+                        )
+                    )
             continue
 
         try:

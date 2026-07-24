@@ -31,7 +31,8 @@ The authority plane should stay upstream:
 - `aoa-agents` owns agent and tier authority
 - `aoa-playbooks` owns playbook authority
 - `aoa-kag` owns KAG doctrine for the derived readiness view
-- `Dionysus` owns source-route lineage for source_route-entry orientation
+- `Dionysus` owns the decision that retired its former source-route staging role;
+  the retained `source_route` entry is a compatibility stop, not live staging authority
 - `aoa-sdk` owns the control-plane anchor for runtime-surface re-entry
 - `aoa-stats` and `abyss-stack` remain owner repos for their own runtime-facing surfaces
 - `8Dionysus` owns public orientation only, never owner-layer authority
@@ -152,7 +153,7 @@ Current capsule-grade surfaces already accepted without wrappers:
 Current route-map capsules published in the owner repos are now schema-backed v2 surfaces:
 
 - `aoa-sdk/generated/workspace_control_plane.min.json`
-- `Dionysus/docs/codex/planting-protocol.md`
+- `Dionysus/docs/decisions/DION-D-0001-conversational-self-portrait.md`
 - `8Dionysus/generated/public_route_map.min.json`
 
 Current center-first zero-entry capsules are owner-owned v1 surfaces:
@@ -168,6 +169,8 @@ These are hard constraints for the landing:
 - `aoa-routing` may summarize a source surface, but it may not replace it
 - root entry cards must keep AoA and ToS authority in their owning repos
 - return-oriented re-entry may use router-owned entry cards only as orientation; the first authority surface must still live in the owning repo
+- `dionysus-source-route` must stop at the owner retirement decision and must
+  not imply that Dionysus still accepts source-route staging work
 - `tos-root` may hand off to one current source-owned ToS tiny-entry route without activating `tos_node`
 - KAG views remain derived readiness views, not canon authorship
 - the thin router taxonomy for `technique`, `skill`, `eval`, and `memo` must not be widened by this ABI layer
@@ -227,8 +230,7 @@ This landing reads sibling source and capsule surfaces:
 - `aoa-agents/generated/runtime_seam_bindings.json`
 - `aoa-playbooks/generated/playbook_registry.min.json`
 - `aoa-kag/mechanics/boundary-bridge/parts/federation-spine/generated/federation_spine.min.json`
-- `Dionysus/docs/codex/planting-protocol.md`
-- `Dionysus/source_route-registry.yaml`
+- `Dionysus/docs/decisions/DION-D-0001-conversational-self-portrait.md`
 - `aoa-sdk/generated/workspace_control_plane.min.json`
 - `aoa-sdk/.aoa/workspace.toml`
 - `aoa-stats/generated/summary_surface_catalog.min.json`
@@ -236,7 +238,9 @@ This landing reads sibling source and capsule surfaces:
 - `abyss-stack/mechanics/diagnostic-spine/parts/diagnostic-surfaces/generated/diagnostic_surface_catalog.min.json`
 - `abyss-stack/mechanics/diagnostic-spine/parts/diagnostic-surfaces/examples/diagnostic_session.min.example.json`
 
-The compact capsule is the first inspect surface for source_route, runtime-surface, and profile-entry re-entry.
+The compact capsule is the first inspect surface for runtime-surface and
+profile-entry re-entry. The retained source-route starter instead inspects the
+Dionysus recharter decision and stops before selecting any current owner.
 The heavier raw anchor remains visible only as a source anchor or verification target in the owner repo.
 
 For the current root cards, the first inspect path is now:

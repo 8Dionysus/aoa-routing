@@ -133,6 +133,8 @@ This contour adds:
 - `generated/federation_entrypoints.min.json`
 - explicit `aoa-root` and `tos-root` root cards
 - active entry cards for `agent`, `tier`, `playbook`, `kag_view`, `source_route`, `runtime_surface`, and `orientation_surface`
+- the active `source_route` card is a compatibility retirement entry that stops
+  at the Dionysus recharter decision rather than advertising a live staging owner
 - `federation_queries` and `federation_starters` in `generated/tiny_model_entrypoints.json`
 - schema-backed validation that orientation never points authority at route-owned generated surfaces
 - router-owned generated-surface refresh stays a parity-maintenance lane for routing-owned outputs and must not transfer source authority from sibling repos

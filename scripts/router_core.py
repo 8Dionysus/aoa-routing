@@ -172,7 +172,9 @@ FEDERATION_DEFAULT_KAG_VIEW_ENTRY_ID = "aoa-techniques"
 FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID = "dionysus-source-route"
 FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID = "aoa-sdk-control-plane"
 FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID = "8dionysus-public-route-map"
-DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH = "docs/codex/planting-protocol.md"
+DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH = (
+    "docs/decisions/DION-D-0001-conversational-self-portrait.md"
+)
 AOA_SDK_WORKSPACE_TOML_PATH = ".aoa/workspace.toml"
 AOA_SDK_WORKSPACE_CONTROL_PLANE_PATH = "generated/workspace_control_plane.min.json"
 AOA_SDK_BOUNDARIES_PATH = "docs/boundaries.md"
@@ -2162,7 +2164,7 @@ def build_federation_entrypoints_payload(
         kind="source_route",
         entry_id=FEDERATION_DEFAULT_SOURCE_ROUTE_ENTRY_ID,
         owner_repo=DIONYSUS_REPO,
-        title="Dionysus Source Route",
+        title="Dionysus Legacy Source Route Boundary",
         capsule_surface=make_repo_qualified_ref(DIONYSUS_REPO, DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH),
         authority_surface=make_repo_qualified_ref(DIONYSUS_REPO, DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH),
         next_entries=[
@@ -2170,9 +2172,9 @@ def build_federation_entrypoints_payload(
             ("runtime_surface", FEDERATION_DEFAULT_RUNTIME_SURFACE_ENTRY_ID),
         ],
         risk=(
-            "Source-route entry cards are lineage and staging orientation only; confirm the "
-            "planting protocol and target owner repo before treating the route as "
-            "implementation authority."
+            "This compatibility entry points to the owner decision that retired the "
+            "Dionysus source-incubation and source-route staging role. It is a stop and reroute "
+            "boundary, not current implementation or planting authority."
         ),
     )
     append_mesh_entry(
@@ -2329,9 +2331,9 @@ def build_federation_entrypoints_payload(
                 "ref": federation_spine_path,
             },
             {
-                "name": "dionysus_source_route_anchor",
+                "name": "dionysus_source_route_retirement_anchor",
                 "repo": DIONYSUS_REPO,
-                "role": "source_route_anchor",
+                "role": "source_route_retirement",
                 "ref": DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
             },
             {
@@ -2816,9 +2818,9 @@ def build_return_navigation_hints_payload(
             "owner_repo": DIONYSUS_REPO,
             "primary_surface": DIONYSUS_SOURCE_ROUTE_ANCHOR_PATH,
             "ownership_note": (
-                "Source-route lineage stays in Dionysus; routing restores the owner-owned "
-                "planting protocol first and leaves implementation authority in the target "
-                "owner repo."
+                "Dionysus retired its former source-incubation route role; routing preserves a "
+                "compatibility return to the owner decision and then stops before choosing "
+                "a current implementation owner."
             ),
         },
         "runtime_surface": {
@@ -2921,8 +2923,9 @@ def build_return_navigation_hints_payload(
             "entry_kind": "source_route",
             "owner_repo": DIONYSUS_REPO,
             "ownership_note": (
-                "Dionysus owns the planting protocol anchor; routing returns there before "
-                "any owner-repo deepening."
+                "Dionysus owns the accepted decision that retired source-route staging; "
+                "routing returns there as a compatibility stop rather than treating the "
+                "former source-incubation garden as active."
             ),
         },
         FEDERATION_DEFAULT_ORIENTATION_SURFACE_ENTRY_ID: {

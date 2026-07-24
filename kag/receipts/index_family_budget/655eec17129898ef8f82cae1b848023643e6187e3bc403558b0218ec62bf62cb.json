@@ -1,0 +1,17 @@
+{
+  "allowed_bytes": 4525469,
+  "allowed_tracked_bytes": 7986329,
+  "approved_by": "repository-owner",
+  "base_ref": "cde31e568e49c5a50afbd89071cf72abd9733d99",
+  "changed_generated_bytes": 4525469,
+  "changed_generated_files": 199,
+  "decision_ref": "aoa-kag:docs/decisions/AOA-KAG-D-0017-portable-content-addressed-repository-family.md",
+  "default_limit_bytes": 1048576,
+  "head_family_digest": "655eec17129898ef8f82cae1b848023643e6187e3bc403558b0218ec62bf62cb",
+  "reason": "Deterministic re-sharding after current owner catalog parity and Dionysus source-route retirement compatibility update; source scope is unchanged and the tracked family remains below its standing cap.",
+  "repo": "aoa-routing",
+  "schema_version": "aoa-repo-local-kag-budget-receipt-v1",
+  "scope": "generated_delta",
+  "tracked_bytes": 7986329,
+  "tracked_bytes_max": 9437184
+}

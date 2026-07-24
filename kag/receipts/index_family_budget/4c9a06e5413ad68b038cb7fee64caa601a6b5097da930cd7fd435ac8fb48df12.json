@@ -1,0 +1,17 @@
+{
+  "allowed_bytes": 4606806,
+  "allowed_tracked_bytes": 7989410,
+  "approved_by": "repository-owner",
+  "base_ref": "cde31e568e49c5a50afbd89071cf72abd9733d99",
+  "changed_generated_bytes": 4606806,
+  "changed_generated_files": 201,
+  "decision_ref": "aoa-kag:docs/decisions/AOA-KAG-D-0017-portable-content-addressed-repository-family.md",
+  "default_limit_bytes": 1048576,
+  "head_family_digest": "4c9a06e5413ad68b038cb7fee64caa601a6b5097da930cd7fd435ac8fb48df12",
+  "reason": "Deterministic re-sharding after current owner parity, CI owner-snapshot alignment, and review-driven validator/build skill-id parity hardening; source scope is unchanged and the tracked family remains below its standing cap.",
+  "repo": "aoa-routing",
+  "schema_version": "aoa-repo-local-kag-budget-receipt-v1",
+  "scope": "generated_delta",
+  "tracked_bytes": 7989410,
+  "tracked_bytes_max": 9437184
+}
