@@ -7,6 +7,36 @@ The governing rule stays unchanged:
 
 **Source repos own meaning. Routing owns navigation.**
 
+## Accepted Succession Contour
+
+`AOA-RT-D-0004` accepts transfer of the routing producer and routing ABI to
+`aoa-sdk` through rehearsal, non-publishing shadow parity, and an explicit G5
+owner-switch receipt.
+
+This roadmap remains the direction surface for the current
+`predecessor_canonical` state. Until G5:
+
+- `aoa-routing` is the only canonical producer;
+- public generated outputs, schemas, builders, and validators remain active;
+- SDK shadow output cannot publish;
+- no archive or functional freeze has taken effect.
+
+After G5:
+
+- new routing features land only in `aoa-sdk`;
+- this repository is limited to compatibility, security, rollback, and
+  deprecation maintenance;
+- the fourteen output paths and `aoa_routing_thin_router_v1` remain stable
+  through the compatibility window;
+- consumer-zero and compatibility exit conditions must pass before rollback
+  retirement;
+- archive execution still requires exact operator approval.
+
+The transfer changes the home of navigation authority, not the stronger
+source-organ or runtime boundaries. It must reduce measured coordination,
+validation, release, synchronization, and agent-context cost; repository
+consolidation alone is not a success metric.
+
 ## Current Release Contour
 
 The current release contour is `v0.3.0`.

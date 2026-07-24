@@ -8,10 +8,15 @@ Root route card for `aoa-routing`.
 It derives lightweight routing surfaces that point agents to source-owned objects without copying source corpora into a second canon.
 This repository owns navigation, not the meaning of things it routes to.
 
+`AOA-RT-D-0004` accepts staged producer succession to `aoa-sdk`, but this
+repository remains the sole canonical producer until the explicit G5
+owner-switch receipt. Acceptance is not a live authority switch.
+
 ## Owner lane
 
 This repository owns:
 
+- the canonical routing producer and routing ABI before G5
 - routing projections, registries, dispatch hints, and recommended paths
 - advisory owner-layer shortlist hints and bounded return-navigation seams
 - bounded skill-catalog inspection and capability-graph expansion routes
@@ -22,6 +27,8 @@ It does not own:
 
 - technique, skill, eval, memory, role, playbook, KAG, stats, or center meaning
 - activation authority, semantic truth, or live quest sovereignty
+- archive authority; hosting archive requires a separate exact operator
+  approval after consumer-zero
 
 ## Start here
 
@@ -34,7 +41,9 @@ It does not own:
 7. affected source catalogs or upstream generated surfaces
 8. `stats/README.md` when routing-owned statistical questions or reference packets change
 9. `docs/decisions/README.md` when durable route, boundary, generated-output, validator, or source-lane rationale is in scope
-10. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
+10. `docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`
+    when work may affect producer ownership, compatibility, freeze, or archive posture
+11. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
 
 
 ## AGENTS stack law

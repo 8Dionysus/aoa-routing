@@ -6,6 +6,11 @@ It does not author new meaning. It derives lightweight routing surfaces from sib
 
 **Source repos own meaning. Routing repo owns navigation.**
 
+That statement describes the live `predecessor_canonical` state.
+`AOA-RT-D-0004` accepts staged producer succession to `aoa-sdk`, but
+`aoa-routing` remains canonical until shadow parity and the explicit G5
+owner-switch receipt.
+
 > Current release: `v0.3.0`. See [CHANGELOG](CHANGELOG.md) for release notes.
 
 The current public paths are:
@@ -42,6 +47,8 @@ Use the shortest route by need:
   `aoa-skills/generated/capability_graph.json`
 - owner capability-routing decision:
   `docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`
+- accepted producer-succession decision:
+  `docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`
 - durable routing rationale: [docs/decisions](docs/decisions/README.md)
 - release-readiness and publication shape: [docs/RELEASING](docs/RELEASING.md)
 - current direction: [ROADMAP](ROADMAP.md)
@@ -71,7 +78,7 @@ keeps the public surface map rather than a second command catalog.
 - Agon gate routing surfaces: `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`, [gate routing](mechanics/agon/parts/gate-routing/docs/gate-routing.md), [trigger model](mechanics/agon/parts/gate-routing/docs/trigger-model.md), [decision boundary](mechanics/agon/parts/gate-routing/docs/decision-boundary.md), [assistant escalation](mechanics/agon/parts/gate-routing/docs/assistant-escalation.md), `mechanics/agon/parts/gate-routing/schemas/agon-gate-routing-registry.schema.json`, `mechanics/agon/parts/gate-routing/schemas/agon-gate-trigger.schema.json`, `mechanics/agon/parts/gate-routing/schemas/agon-gate-route-hint.schema.json`, and `mechanics/agon/parts/gate-routing/examples/agon_gate_route_hint.example.json`
 - local build, schema, decision, and validation path: `routing/core/schemas/`, owning `mechanics/<head>/parts/<part>/schemas/`, [docs/decisions](docs/decisions/README.md), [AGENTS.md](AGENTS.md#verify), and the nearest nested route card
 
-## What `aoa-routing` owns
+## What `aoa-routing` owns before G5
 
 This repository is the source of truth for:
 
@@ -83,6 +90,11 @@ This repository is the source of truth for:
 - direct expansion from `skill-root` into the owner capability graph without a routing-local selector
 - routing-local measurement meaning under `stats/`, without cross-owner statistical authority
 - local schemas, builders, validators, and routing integrity checks
+
+After G5, canonical producer and ABI ownership move to `aoa-sdk`. This
+repository becomes maintenance-only for compatibility, security, rollback,
+and deprecation. It must not publish a competing canonical output or accept
+new routing features.
 
 ## What it reads
 

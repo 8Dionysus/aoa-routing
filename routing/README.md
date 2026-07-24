@@ -7,6 +7,10 @@ It is not a head mechanic. Shared OS Abyss operations such as Agon,
 Experience, Checkpoint, Recurrence, Questbook, Antifragility, Boundary Bridge,
 Release Support, RPG, and Titan route through `mechanics/<head>/`.
 
+This source home remains canonical until the G5 owner-switch receipt accepted
+by `AOA-RT-D-0004`. After G5 it becomes maintenance-only for compatibility,
+security, rollback, and deprecation; new routing features route to `aoa-sdk`.
+
 ## Operating Card
 
 | Field | Route |
