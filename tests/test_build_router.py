@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import shutil
 from pathlib import Path
@@ -422,6 +423,47 @@ def test_collect_skill_entries_rejects_foreign_capability_owner(tmp_path: Path) 
     write_json(graph_path, payload)
 
     with pytest.raises(build_router.RouterError, match="owner.repo must equal 'aoa-skills'"):
+        build_router.collect_skill_entries(skills_root)
+
+
+def test_collect_skill_entries_accepts_external_owner_graph_reference(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
+    graph_path = skills_root / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    external_node = copy.deepcopy(
+        next(node for node in payload["nodes"] if node["kind"] == "skill")
+    )
+    external_node["id"] = "skill.aoa-summon"
+    external_node["owner"] = {
+        "authority": "external-authority",
+        "repo": "aoa-agents",
+        "surface": "skills/aoa-summon/SKILL.md",
+    }
+    payload["nodes"].append(external_node)
+    write_json(graph_path, payload)
+
+    entries = build_router.collect_skill_entries(skills_root)
+
+    assert [entry["id"] for entry in entries] == ["aoa-decision", "aoa-verification"]
+
+
+def test_collect_skill_entries_rejects_unpublished_local_graph_skill(tmp_path: Path) -> None:
+    skills_root = tmp_path / "aoa-skills"
+    shutil.copytree(FIXTURES_ROOT / "aoa-skills", skills_root)
+    graph_path = skills_root / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    local_node = copy.deepcopy(
+        next(node for node in payload["nodes"] if node["kind"] == "skill")
+    )
+    local_node["id"] = "skill.unpublished-local"
+    payload["nodes"].append(local_node)
+    write_json(graph_path, payload)
+
+    with pytest.raises(
+        build_router.RouterError,
+        match="contains non-catalog skill nodes without external owner authority",
+    ):
         build_router.collect_skill_entries(skills_root)
 
 
@@ -898,7 +940,7 @@ def test_build_outputs_from_fixtures() -> None:
     assert source_route_return["primary_action"] == {
         "verb": "inspect",
         "target_repo": "Dionysus",
-        "target_surface": "docs/codex/planting-protocol.md",
+        "target_surface": "docs/decisions/DION-D-0001-conversational-self-portrait.md",
     }
     runtime_return = next(
         record
@@ -963,7 +1005,7 @@ def test_build_outputs_from_fixtures() -> None:
     assert entry_returns["dionysus-source-route"]["primary_action"] == {
         "verb": "inspect",
         "target_repo": "Dionysus",
-        "target_surface": "docs/codex/planting-protocol.md",
+        "target_surface": "docs/decisions/DION-D-0001-conversational-self-portrait.md",
     }
     assert entry_returns["8dionysus-public-route-map"]["primary_action"] == {
         "verb": "inspect",
@@ -1028,7 +1070,10 @@ def test_build_outputs_from_fixtures() -> None:
         if entry["repo"] in {"aoa-sdk", "Dionysus", "abyss-stack"}
     } >= {
         ("aoa_sdk_workspace_control_plane", "generated/workspace_control_plane.min.json"),
-        ("dionysus_source_route_anchor", "docs/codex/planting-protocol.md"),
+        (
+            "dionysus_source_route_retirement_anchor",
+            "docs/decisions/DION-D-0001-conversational-self-portrait.md",
+        ),
         (
             "abyss_stack_diagnostic_surface_catalog",
             router_core.ABYSS_STACK_DIAGNOSTIC_SURFACE_CATALOG_PATH,
@@ -1506,8 +1551,14 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
     assert "Tree-of-Sophia remains authoritative" in tos_kag_view["risk"]
 
     source_route_entry = entry_by_key[("source_route", "dionysus-source-route")]
-    assert source_route_entry["capsule_surface"] == "Dionysus:docs/codex/planting-protocol.md"
-    assert source_route_entry["authority_surface"] == "Dionysus:docs/codex/planting-protocol.md"
+    assert (
+        source_route_entry["capsule_surface"]
+        == "Dionysus:docs/decisions/DION-D-0001-conversational-self-portrait.md"
+    )
+    assert (
+        source_route_entry["authority_surface"]
+        == "Dionysus:docs/decisions/DION-D-0001-conversational-self-portrait.md"
+    )
     assert source_route_entry["next_hops"] == [
         {"kind": "orientation_surface", "id": "8dionysus-public-route-map"},
         {"kind": "runtime_surface", "id": "aoa-sdk-control-plane"},

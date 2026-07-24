@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import copy
 import json
 import shutil
 from pathlib import Path
@@ -1614,6 +1615,50 @@ def test_validate_generated_outputs_rejects_missing_expand_target(tmp_path: Path
     issues = validate_fixture_generated(generated_dir, roots)
     assert any(
         "capability graph is missing skill node 'skill.aoa-verification'" in issue.message
+        for issue in issues
+    )
+
+
+def test_validate_generated_outputs_accepts_external_owner_graph_skill(tmp_path: Path) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    graph_path = roots["aoa-skills"] / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    external_node = copy.deepcopy(
+        next(node for node in payload["nodes"] if node["kind"] == "skill")
+    )
+    external_node["id"] = "skill.aoa-summon"
+    external_node["owner"] = {
+        "authority": "external-authority",
+        "repo": "aoa-agents",
+        "surface": "skills/aoa-summon/SKILL.md",
+    }
+    payload["nodes"].append(external_node)
+    write_json(graph_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert not any("skill.aoa-summon" in issue.message for issue in issues)
+
+
+def test_validate_generated_outputs_rejects_unpublished_local_graph_skill(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    graph_path = roots["aoa-skills"] / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    local_node = copy.deepcopy(
+        next(node for node in payload["nodes"] if node["kind"] == "skill")
+    )
+    local_node["id"] = "skill.unpublished-local"
+    payload["nodes"].append(local_node)
+    write_json(graph_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any(
+        "capability graph contains non-catalog skill node "
+        "'skill.unpublished-local' without external owner authority"
+        in issue.message
         for issue in issues
     )
 

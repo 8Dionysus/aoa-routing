@@ -174,7 +174,7 @@ OWNER_LAYER_SHORTLIST_SPECS: tuple[dict[str, str], ...] = (
         "object_kind": "source_route",
         "target_surface": "Dionysus.source_route_anchor",
         "inspect_surface": "Dionysus.source_route_anchor",
-        "hint_reason": "explicit source-route or staging requests should inspect the Dionysus source-route anchor before crossing into owner repos",
+        "hint_reason": "explicit legacy source-route requests should inspect the Dionysus owner decision that retired source-incubation staging before choosing a current owner repo",
         "confidence": "high",
         "ambiguity": "clear",
     },
@@ -720,11 +720,25 @@ def collect_skill_entries(skills_root: Path) -> list[dict[str, Any]]:
                 },
             }
         )
-    missing_catalog_entries = sorted(set(skill_nodes) - catalog_names)
-    if missing_catalog_entries:
+    invalid_non_catalog_nodes: list[str] = []
+    for skill_name in sorted(set(skill_nodes) - catalog_names):
+        node = skill_nodes[skill_name]
+        node_location = f"{relative_posix(graph_path)}:skill.{skill_name}"
+        owner = ensure_mapping(node.get("owner"), f"{node_location}.owner")
+        require_keys(owner, ("authority", "repo", "surface"), f"{node_location}.owner")
+        owner_authority = ensure_string(
+            owner["authority"],
+            f"{node_location}.owner.authority",
+        )
+        owner_repo = ensure_string(owner["repo"], f"{node_location}.owner.repo")
+        ensure_repo_relative_path(owner["surface"], f"{node_location}.owner.surface")
+        if owner_authority != "external-authority" or owner_repo == "aoa-skills":
+            invalid_non_catalog_nodes.append(skill_name)
+    if invalid_non_catalog_nodes:
         raise RouterError(
-            f"{relative_posix(catalog_path)} is missing skill capability nodes: "
-            + ", ".join(missing_catalog_entries)
+            f"{relative_posix(graph_path)} contains non-catalog skill nodes without "
+            "external owner authority: "
+            + ", ".join(invalid_non_catalog_nodes)
         )
     return entries
 

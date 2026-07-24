@@ -176,13 +176,20 @@ class LiveWorkspaceContractTests(unittest.TestCase):
 
         self.assertEqual(
             entry_by_id["dionysus-source-route"]["capsule_surface"],
-            "Dionysus:docs/codex/planting-protocol.md",
+            "Dionysus:docs/decisions/DION-D-0001-conversational-self-portrait.md",
         )
         self.assertEqual(
             entry_by_id["dionysus-source-route"]["authority_surface"],
-            "Dionysus:docs/codex/planting-protocol.md",
+            "Dionysus:docs/decisions/DION-D-0001-conversational-self-portrait.md",
         )
-        self.assertTrue((LIVE_ROOTS["Dionysus"] / "docs" / "codex" / "planting-protocol.md").exists())
+        self.assertTrue(
+            (
+                LIVE_ROOTS["Dionysus"]
+                / "docs"
+                / "decisions"
+                / "DION-D-0001-conversational-self-portrait.md"
+            ).exists()
+        )
 
         stats_payload = load_json(LIVE_ROOTS["aoa-stats"] / "generated" / "summary_surface_catalog.min.json")
         self.assertEqual(
@@ -388,10 +395,17 @@ class LiveWorkspaceContractTests(unittest.TestCase):
         }
 
         self.assertEqual(set(catalog_by_name), set(registry_skills))
-        self.assertEqual(
-            set(graph_skill_by_id),
-            {entry["attributes"]["capability_id"] for entry in registry_skills.values()},
+        registry_capability_ids = {
+            entry["attributes"]["capability_id"] for entry in registry_skills.values()
+        }
+        self.assertTrue(
+            registry_capability_ids.issubset(graph_skill_by_id),
         )
+        for capability_id in set(graph_skill_by_id) - registry_capability_ids:
+            with self.subTest(external_capability=capability_id):
+                owner = graph_skill_by_id[capability_id]["owner"]
+                self.assertEqual(owner["authority"], "external-authority")
+                self.assertNotEqual(owner["repo"], "aoa-skills")
         skill_hint = next(hint for hint in hints["hints"] if hint["kind"] == "skill")
         self.assertEqual(
             skill_hint["actions"]["inspect"]["surface_file"],
