@@ -13,3 +13,7 @@
 ## 2026-07-16
 
 - [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)
+
+## 2026-07-23
+
+- [AOA-RT-D-0004 - Stage Producer Succession To aoa-sdk](../AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md) (`docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`)

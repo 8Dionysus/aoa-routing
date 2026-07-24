@@ -35,6 +35,10 @@ a shared OS Abyss mechanic.
   compatibility wrappers after implementation moves under source homes.
 - Route former flat paths through the owning `PROVENANCE.md` and `legacy/`
   index instead of recreating root-path aliases.
+- Keep this source home canonical until the G5 owner-switch receipt.
+- After G5, reject new feature implementation here and route it to
+  `aoa-sdk`; retain only compatibility, security, rollback, and deprecation
+  changes until consumer-zero.
 
 ## Closeout
 

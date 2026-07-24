@@ -14,6 +14,7 @@
 
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
 - [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)
+- [AOA-RT-D-0004 - Stage Producer Succession To aoa-sdk](../AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md) (`docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`)
 
 ## low-context entrypoints
 
@@ -23,9 +24,14 @@
 
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
 
+## release contour
+
+- [AOA-RT-D-0004 - Stage Producer Succession To aoa-sdk](../AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md) (`docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`)
+
 ## routing source-home
 
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
+- [AOA-RT-D-0004 - Stage Producer Succession To aoa-sdk](../AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md) (`docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`)
 
 ## skill capability route
 
@@ -36,3 +42,4 @@
 - [AOA-RT-D-0001 - Routing Decision Rationale Lane](../AOA-RT-D-0001-routing-decision-rationale-lane.md) (`docs/decisions/AOA-RT-D-0001-routing-decision-rationale-lane.md`)
 - [AOA-RT-D-0002 - Routing Source Home And Mechanics Topology](../AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md) (`docs/decisions/AOA-RT-D-0002-routing-source-home-and-mechanics-topology.md`)
 - [AOA-RT-D-0003 - Route Skills Through Owner Capability Contracts](../AOA-RT-D-0003-owner-capability-routing.md) (`docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`)
+- [AOA-RT-D-0004 - Stage Producer Succession To aoa-sdk](../AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md) (`docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`)
