@@ -1,0 +1,17 @@
+{
+  "allowed_bytes": 3239895,
+  "allowed_tracked_bytes": 8121026,
+  "approved_by": "repository-owner",
+  "base_ref": "7e2fe467ad26aa645b61849001a456dda4562ffc",
+  "changed_generated_bytes": 3239895,
+  "changed_generated_files": 116,
+  "decision_ref": "aoa-kag:docs/decisions/AOA-KAG-D-0017-portable-content-addressed-repository-family.md",
+  "default_limit_bytes": 1048576,
+  "head_family_digest": "4c85436246030086897984fb4eaad5ddcd32362500317c7c50f8b63dbfad2d02",
+  "reason": "Deterministic re-sharding for the M1 predecessor consumer of the exact aoa-sdk v0.6.0 shadow release; canonical authority and runtime state remain unchanged, and the tracked family stays below its standing cap.",
+  "repo": "aoa-routing",
+  "schema_version": "aoa-repo-local-kag-budget-receipt-v1",
+  "scope": "generated_delta",
+  "tracked_bytes": 8121026,
+  "tracked_bytes_max": 9437184
+}

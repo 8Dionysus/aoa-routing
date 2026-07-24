@@ -27,6 +27,9 @@ A release is ready only after:
   and their tests;
 - generated routing and KAG surfaces are builder-current;
 - the repository release gate passes against the exact pinned sibling roots;
+- the M1 predecessor consumer builds and clean-installs the exact tagged
+  `aoa-sdk v0.6.0` source, then proves 14/14 byte parity without publishing or
+  changing canonical ownership;
 - the release branch lands through PR and GitHub Repo Validation;
 - landed `main` passes the same gate before any tag is created;
 - the GitHub Release body is derived from the canonical changelog section;
@@ -42,6 +45,12 @@ memory truth, shared statistics, or runtime state as routing-owned authority.
 Artifact identity and a trust-gate verdict prove the bounded routing readmodel
 handoff named by the manifest. They do not certify the upstream objects to
 which the router points.
+
+The SDK shadow release consumer is similarly bounded. Its exact tag, source,
+wheel-install, fixture, provenance, and byte-parity proof admits only an M1
+shadow comparison. It does not pass G4, issue G5, switch runtime consumers,
+publish SDK-built routing artifacts, or authorize archive action. Any
+unexplained mismatch is a release blocker.
 
 ## Version Surfaces
 

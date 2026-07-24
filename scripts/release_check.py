@@ -32,6 +32,8 @@ def _resolve(repo_name: str) -> Path:
     override = None
     if repo_name == "abyss-stack":
         override = os.environ.get("ABYSS_STACK_ROOT") or os.environ.get("AOA_SOURCE_ROOT")
+    if repo_name == "aoa-sdk":
+        override = os.environ.get("AOA_SDK_SHADOW_RELEASE_ROOT")
     candidates = [
         Path(override).expanduser() if override else None,
         default_dependency_root(repo_name, REPO_ROOT),
@@ -111,6 +113,16 @@ def _command_with_roots(command: str) -> list[str]:
             str(roots["abyss_stack"]),
             "--check",
         ]
+    if command == "sdk_shadow_release_parity":
+        return [
+            sys.executable,
+            (
+                "mechanics/release-support/parts/release-gate-routing/"
+                "scripts/verify_sdk_shadow_release_parity.py"
+            ),
+            "--sdk-root",
+            str(roots["sdk"]),
+        ]
     raise ValueError(command)
 
 
@@ -121,6 +133,10 @@ COMMANDS = [
     ("validate owner-local stats port", [sys.executable, "scripts/validate_local_stats_port.py"]),
     ("validate routing surfaces", "validate_router"),
     ("check rebuild parity", "build_router_check"),
+    (
+        "verify installed aoa-sdk shadow release parity",
+        "sdk_shadow_release_parity",
+    ),
     (
         "validate OS Abyss routing artifact bundle",
         [sys.executable, "scripts/validate_abyss_machine_routing_bundle.py"],

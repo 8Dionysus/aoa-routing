@@ -1,0 +1,77 @@
+{
+  "abi_epoch": "aoa_routing_thin_router_v1",
+  "artifact_names": [
+    "aoa_router.min.json",
+    "composite_stress_route_hints.min.json",
+    "cross_repo_registry.min.json",
+    "federation_entrypoints.min.json",
+    "kag_source_lift_relation_hints.min.json",
+    "owner_layer_shortlist.min.json",
+    "pairing_hints.min.json",
+    "quest_dispatch_hints.min.json",
+    "recommended_paths.min.json",
+    "return_navigation_hints.min.json",
+    "stats_regrounding_hints.min.json",
+    "task_to_surface_hints.json",
+    "task_to_tier_hints.json",
+    "tiny_model_entrypoints.json"
+  ],
+  "authority_stop_line": "This pin admits only an installed aoa-sdk shadow parity check. aoa-routing remains canonical; G4, G5, runtime publication, consumer switching, and archival action remain forbidden.",
+  "fixture": {
+    "archive_path": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/fixtures/routing-shadow/inputs.tar.gz",
+    "archive_sha256": "84701e73bde368a921bbe5f8dd9ad2de1e2e835ed53be9c62ba205d70f06f27c",
+    "expected_hashes_path": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/fixtures/routing-shadow/expected-hashes.json",
+    "input_source_refs": {
+      "8Dionysus": "39cdef104d54d570e7eb4f689ebcd48b2cc6a658",
+      "Agents-of-Abyss": "bfeb4bfb447b437f1360b814bbf4f1def5e62859",
+      "Dionysus": "6c463f6b89a11e85b37e2606525afc7d45005fbd",
+      "Tree-of-Sophia": "8126cc379a759990358728bbcedadbd3b24a7b6d",
+      "abyss-stack": "83d64234e719f74d6fd6a84a16c1a2af14754958",
+      "aoa-agents": "66f8bf22d03518b1e2367fd4f51dab80650f6d37",
+      "aoa-evals": "3412b47f9ee7bec9567f92e1c2d59596c4428a2c",
+      "aoa-kag": "cdd2286c5ad4a345fe704ca065036945f6ba4353",
+      "aoa-memo": "7672add5e2bb4ff21c2581ca656998f0ca7c8a3e",
+      "aoa-playbooks": "a15866ec867209288533850cc34939ad81829947",
+      "aoa-sdk": "1ecd0a95c2b43afafee81b75a490ff5b791edbb4",
+      "aoa-skills": "48598a9564c4621b15428831642b802dbc8d2a47",
+      "aoa-stats": "504571995cc36905cc886259c0a19be6e8e35045",
+      "aoa-techniques": "e842c0d0156c58cfb9020b636e81134e96fc8cfb"
+    }
+  },
+  "gates": {
+    "archive_authorized": false,
+    "g4_passed": false,
+    "g5_owner_switch": false,
+    "runtime_mirror_passed": false,
+    "runtime_publication_authorized": false
+  },
+  "predecessor": {
+    "canonical_owner": "aoa-routing",
+    "implementation_baseline_ref": "7e2fe467ad26aa645b61849001a456dda4562ffc",
+    "producer_paths": [
+      "routing/core/schemas",
+      "scripts/build_router.py",
+      "scripts/router_core.py"
+    ],
+    "state": "predecessor_canonical"
+  },
+  "publication_posture": "sdk_shadow_non_publishing",
+  "schema_version": "aoa_routing_sdk_shadow_release_pin_v1",
+  "sdk_release": {
+    "artifact_observation": {
+      "artifact_digest_sha256": "e492fdd8b8ebc675aaf3a48b4cce0679cfad6ac1aa43b05c0bc0e8dcc34ddb2a",
+      "artifact_expires_on": "2026-10-22",
+      "artifact_id": 8587247177,
+      "artifact_name": "aoa-sdk-dist-v0.6.0",
+      "release_artifacts_run_id": 30068905255,
+      "sdist_sha256": "0d91a9e89e497aee328ee61e06b2018799a51f41b3bf92b01ad13482948e452b",
+      "wheel_sha256": "3733e9de789a82e61219c5474320897775aa5ee05e75dd94bdc5d3302b4575b0"
+    },
+    "release_url": "https://github.com/8Dionysus/aoa-sdk/releases/tag/v0.6.0",
+    "source_ref": "f3e23b60ec483ce81f5abe9aafe7303c15df2102",
+    "tag": "v0.6.0",
+    "tag_object_ref": "14e34a7eb5515dbb788c7fa1373dbcaf43d51163",
+    "version": "0.6.0"
+  },
+  "state": "predecessor_canonical"
+}
