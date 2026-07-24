@@ -94,7 +94,7 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-sdk
-          ref: 29de1b1f893c683e0923cbf0cf0ee13beaa86d0e
+          ref: f3e23b60ec483ce81f5abe9aafe7303c15df2102
           path: aoa-sdk
 
       - name: Checkout Dionysus
@@ -136,5 +136,6 @@ jobs:
       - name: Run release audit
         env:
           ABYSS_MACHINE_REPO_ROOT: ./abyss-machine
+          AOA_SDK_SHADOW_RELEASE_ROOT: ./aoa-sdk
           AOA_STATS_ROOT: ./aoa-stats
         run: python scripts/release_check.py

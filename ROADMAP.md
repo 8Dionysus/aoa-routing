@@ -18,7 +18,10 @@ This roadmap remains the direction surface for the current
 
 - `aoa-routing` is the only canonical producer;
 - public generated outputs, schemas, builders, and validators remain active;
-- SDK shadow output cannot publish;
+- the exact tagged `aoa-sdk v0.6.0` shadow release is consumed by the
+  predecessor release gate for installed-wheel 14/14 parity only;
+- SDK shadow output cannot publish, and any unexplained parity difference
+  stops succession;
 - no archive or functional freeze has taken effect.
 
 After G5:

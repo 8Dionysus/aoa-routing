@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agents-of-abyss.dev/schemas/aoa-routing/sdk-shadow-release-pin.schema.json",
+  "title": "AoA SDK routing shadow release pin",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "state",
+    "publication_posture",
+    "abi_epoch",
+    "artifact_names",
+    "authority_stop_line",
+    "predecessor",
+    "sdk_release",
+    "fixture",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "aoa_routing_sdk_shadow_release_pin_v1"
+    },
+    "state": {
+      "const": "predecessor_canonical"
+    },
+    "publication_posture": {
+      "const": "sdk_shadow_non_publishing"
+    },
+    "abi_epoch": {
+      "const": "aoa_routing_thin_router_v1"
+    },
+    "artifact_names": {
+      "const": [
+        "aoa_router.min.json",
+        "composite_stress_route_hints.min.json",
+        "cross_repo_registry.min.json",
+        "federation_entrypoints.min.json",
+        "kag_source_lift_relation_hints.min.json",
+        "owner_layer_shortlist.min.json",
+        "pairing_hints.min.json",
+        "quest_dispatch_hints.min.json",
+        "recommended_paths.min.json",
+        "return_navigation_hints.min.json",
+        "stats_regrounding_hints.min.json",
+        "task_to_surface_hints.json",
+        "task_to_tier_hints.json",
+        "tiny_model_entrypoints.json"
+      ]
+    },
+    "authority_stop_line": {
+      "type": "string",
+      "minLength": 80
+    },
+    "predecessor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "canonical_owner",
+        "state",
+        "implementation_baseline_ref",
+        "producer_paths"
+      ],
+      "properties": {
+        "canonical_owner": {
+          "const": "aoa-routing"
+        },
+        "state": {
+          "const": "predecessor_canonical"
+        },
+        "implementation_baseline_ref": {
+          "const": "7e2fe467ad26aa645b61849001a456dda4562ffc"
+        },
+        "producer_paths": {
+          "const": [
+            "routing/core/schemas",
+            "scripts/build_router.py",
+            "scripts/router_core.py"
+          ]
+        }
+      }
+    },
+    "sdk_release": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "tag",
+        "tag_object_ref",
+        "version",
+        "source_ref",
+        "release_url",
+        "artifact_observation"
+      ],
+      "properties": {
+        "tag": {
+          "const": "v0.6.0"
+        },
+        "tag_object_ref": {
+          "const": "14e34a7eb5515dbb788c7fa1373dbcaf43d51163"
+        },
+        "version": {
+          "const": "0.6.0"
+        },
+        "source_ref": {
+          "const": "f3e23b60ec483ce81f5abe9aafe7303c15df2102"
+        },
+        "release_url": {
+          "const": "https://github.com/8Dionysus/aoa-sdk/releases/tag/v0.6.0"
+        },
+        "artifact_observation": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "release_artifacts_run_id",
+            "artifact_id",
+            "artifact_name",
+            "artifact_digest_sha256",
+            "wheel_sha256",
+            "sdist_sha256",
+            "artifact_expires_on"
+          ],
+          "properties": {
+            "release_artifacts_run_id": {
+              "const": 30068905255
+            },
+            "artifact_id": {
+              "const": 8587247177
+            },
+            "artifact_name": {
+              "const": "aoa-sdk-dist-v0.6.0"
+            },
+            "artifact_digest_sha256": {
+              "const": "e492fdd8b8ebc675aaf3a48b4cce0679cfad6ac1aa43b05c0bc0e8dcc34ddb2a"
+            },
+            "wheel_sha256": {
+              "const": "3733e9de789a82e61219c5474320897775aa5ee05e75dd94bdc5d3302b4575b0"
+            },
+            "sdist_sha256": {
+              "const": "0d91a9e89e497aee328ee61e06b2018799a51f41b3bf92b01ad13482948e452b"
+            },
+            "artifact_expires_on": {
+              "const": "2026-10-22",
+              "format": "date"
+            }
+          }
+        }
+      }
+    },
+    "fixture": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "archive_path",
+        "archive_sha256",
+        "expected_hashes_path",
+        "input_source_refs"
+      ],
+      "properties": {
+        "archive_path": {
+          "const": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/fixtures/routing-shadow/inputs.tar.gz"
+        },
+        "archive_sha256": {
+          "const": "84701e73bde368a921bbe5f8dd9ad2de1e2e835ed53be9c62ba205d70f06f27c"
+        },
+        "expected_hashes_path": {
+          "const": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/fixtures/routing-shadow/expected-hashes.json"
+        },
+        "input_source_refs": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "aoa-techniques",
+            "aoa-skills",
+            "aoa-evals",
+            "aoa-memo",
+            "aoa-stats",
+            "aoa-agents",
+            "Agents-of-Abyss",
+            "aoa-playbooks",
+            "aoa-kag",
+            "Tree-of-Sophia",
+            "aoa-sdk",
+            "Dionysus",
+            "8Dionysus",
+            "abyss-stack"
+          ],
+          "properties": {
+            "aoa-techniques": {
+              "const": "e842c0d0156c58cfb9020b636e81134e96fc8cfb"
+            },
+            "aoa-skills": {
+              "const": "48598a9564c4621b15428831642b802dbc8d2a47"
+            },
+            "aoa-evals": {
+              "const": "3412b47f9ee7bec9567f92e1c2d59596c4428a2c"
+            },
+            "aoa-memo": {
+              "const": "7672add5e2bb4ff21c2581ca656998f0ca7c8a3e"
+            },
+            "aoa-stats": {
+              "const": "504571995cc36905cc886259c0a19be6e8e35045"
+            },
+            "aoa-agents": {
+              "const": "66f8bf22d03518b1e2367fd4f51dab80650f6d37"
+            },
+            "Agents-of-Abyss": {
+              "const": "bfeb4bfb447b437f1360b814bbf4f1def5e62859"
+            },
+            "aoa-playbooks": {
+              "const": "a15866ec867209288533850cc34939ad81829947"
+            },
+            "aoa-kag": {
+              "const": "cdd2286c5ad4a345fe704ca065036945f6ba4353"
+            },
+            "Tree-of-Sophia": {
+              "const": "8126cc379a759990358728bbcedadbd3b24a7b6d"
+            },
+            "aoa-sdk": {
+              "const": "1ecd0a95c2b43afafee81b75a490ff5b791edbb4"
+            },
+            "Dionysus": {
+              "const": "6c463f6b89a11e85b37e2606525afc7d45005fbd"
+            },
+            "8Dionysus": {
+              "const": "39cdef104d54d570e7eb4f689ebcd48b2cc6a658"
+            },
+            "abyss-stack": {
+              "const": "83d64234e719f74d6fd6a84a16c1a2af14754958"
+            }
+          }
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "g4_passed",
+        "g5_owner_switch",
+        "runtime_mirror_passed",
+        "runtime_publication_authorized",
+        "archive_authorized"
+      ],
+      "properties": {
+        "g4_passed": {
+          "const": false
+        },
+        "g5_owner_switch": {
+          "const": false
+        },
+        "runtime_mirror_passed": {
+          "const": false
+        },
+        "runtime_publication_authorized": {
+          "const": false
+        },
+        "archive_authorized": {
+          "const": false
+        }
+      }
+    }
+  }
+}

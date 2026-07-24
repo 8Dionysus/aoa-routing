@@ -49,6 +49,8 @@ Use the shortest route by need:
   `docs/decisions/AOA-RT-D-0003-owner-capability-routing.md`
 - accepted producer-succession decision:
   `docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`
+- M1 installed-release parity consumer:
+  `mechanics/release-support/parts/release-gate-routing/docs/sdk-shadow-release-parity-consumer.md`
 - durable routing rationale: [docs/decisions](docs/decisions/README.md)
 - release-readiness and publication shape: [docs/RELEASING](docs/RELEASING.md)
 - current direction: [ROADMAP](ROADMAP.md)
@@ -95,6 +97,11 @@ After G5, canonical producer and ABI ownership move to `aoa-sdk`. This
 repository becomes maintenance-only for compatibility, security, rollback,
 and deprecation. It must not publish a competing canonical output or accept
 new routing features.
+
+The current M1 state has not reached that switch. The release gate consumes
+the exact annotated `aoa-sdk v0.6.0` source through a freshly installed wheel
+and requires 14/14 byte parity, while `aoa-routing` remains the only canonical
+producer and the SDK output remains non-publishing.
 
 ## What it reads
 
