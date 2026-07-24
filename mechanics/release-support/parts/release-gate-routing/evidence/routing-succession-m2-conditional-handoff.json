@@ -1,0 +1,82 @@
+{
+  "schema_version": "aoa_routing_succession_m2_conditional_handoff_v1",
+  "observed_on": "2026-07-24",
+  "status": "conditional_handoff_ready",
+  "scope": {
+    "program": "aoa-routing producer succession into aoa-sdk",
+    "stage": "ROUTING_M2_CONDITIONAL_HANDOFF",
+    "current_state": "predecessor_canonical",
+    "canonical_producer": "aoa-routing",
+    "handoff_posture": "conditional_g5_only",
+    "effect_stop_line": "This predecessor receipt admits the exact SDK G4 shadow evidence and prepares a fail-closed G5 transition. Until a separate validated SDK G5 owner-switch receipt exists, aoa-routing remains canonical, ordinary owner-scoped feature work remains allowed here, maintenance-only mode is inactive, runtime publication is unchanged, and repository archival is forbidden."
+  },
+  "pins": {
+    "predecessor": {
+      "implementation_baseline_ref": "7e2fe467ad26aa645b61849001a456dda4562ffc",
+      "m1_parity_consumer_ref": "5c7c0e5784b1642fb2e9e5231609100dacdbf1e3",
+      "m1_parity_consumer_pr": 155,
+      "m1_parity_consumer_post_main_run_id": 30070166322,
+      "producer_paths": [
+        "routing/core/schemas",
+        "scripts/build_router.py",
+        "scripts/router_core.py"
+      ],
+      "rollback_posture": "retained_and_release_gate_verified"
+    },
+    "sdk_g4": {
+      "merge_ref": "5cab5840c03b66c22bb07a6d0863bef9e95c7b23",
+      "feature_ref": "73196922f2322177d1e00ef2c6141c404b445b64",
+      "pull_request": 221,
+      "pr_validation_run_id": 30102380158,
+      "post_main_run_id": 30102545148,
+      "evidence_path": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/evidence/routing-succession-g4-evidence.json",
+      "evidence_sha256": "d7cebc8fb19389e18fba83636e816502d2c4134e01ae36811054afaff118ffc8",
+      "release_source_ref": "f3e23b60ec483ce81f5abe9aafe7303c15df2102",
+      "release_tag": "v0.6.0",
+      "admitted_status": "g4_passed_shadow_only"
+    }
+  },
+  "feature_acceptance": {
+    "before_g5": "owner_normal_until_g5",
+    "after_g5": "compatibility_security_rollback_deprecation_only",
+    "new_feature_owner_after_g5": "aoa-sdk",
+    "activation_condition": "validated_sdk_g5_owner_switch_receipt"
+  },
+  "g5_transition_contract": {
+    "receipt_owner": "aoa-sdk",
+    "expected_receipt_path": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/evidence/routing-succession-g5-owner-switch.json",
+    "required_successor_state": "sdk_canonical",
+    "required_canonical_owner": "aoa-sdk",
+    "required_runtime_posture": "live_runtime_loads_sdk_produced_artifact_with_source_and_trust_provenance",
+    "required_compatibility_posture": "fourteen_artifacts_and_aoa_routing_thin_router_v1_preserved",
+    "required_rollback_posture": "predecessor_rebuild_reproduced_at_switch",
+    "forbidden_combined_scope": "runner_or_agent_os_capability_landing"
+  },
+  "compatibility_window": {
+    "state": "not_started",
+    "starts_on": "validated_sdk_g5_owner_switch_receipt",
+    "started_on": null,
+    "started_by_sdk_version": null,
+    "exit_requires": [
+      "all_registered_active_consumers_green_on_sdk_output",
+      "direct_aoa_routing_checkout_dependencies_zero",
+      "clean_install_upgrade_downgrade_and_rollback_green",
+      "two_consecutive_sdk_validation_cycles_without_predecessor_generation",
+      "runtime_and_trust_records_identify_sdk_source",
+      "no_open_high_severity_compatibility_regression"
+    ]
+  },
+  "gates": {
+    "sdk_g4_admitted": true,
+    "conditional_handoff_ready": true,
+    "g5_owner_switch": false,
+    "predecessor_maintenance_only": false,
+    "sdk_canonical": false,
+    "live_runtime_sdk_provenance_verified": false,
+    "compatibility_window_started": false,
+    "consumer_zero": false,
+    "rollback_retired": false,
+    "archive_ready": false,
+    "archive_authorized": false
+  }
+}

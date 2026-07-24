@@ -22,6 +22,9 @@ This roadmap remains the direction surface for the current
   predecessor release gate for installed-wheel 14/14 parity only;
 - SDK shadow output cannot publish, and any unexplained parity difference
   stops succession;
+- the exact SDK G4 merge and evidence are admitted by the predecessor M2
+  conditional handoff, while G5, maintenance-only mode, live publication, and
+  the compatibility-window start remain false;
 - no archive or functional freeze has taken effect.
 
 After G5:

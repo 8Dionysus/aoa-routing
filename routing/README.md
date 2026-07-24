@@ -10,6 +10,8 @@ Release Support, RPG, and Titan route through `mechanics/<head>/`.
 This source home remains canonical until the G5 owner-switch receipt accepted
 by `AOA-RT-D-0004`. After G5 it becomes maintenance-only for compatibility,
 security, rollback, and deprecation; new routing features route to `aoa-sdk`.
+The M2 conditional handoff admits the exact SDK G4 proof but does not activate
+that post-G5 posture.
 
 ## Operating Card
 

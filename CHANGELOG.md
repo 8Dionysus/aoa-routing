@@ -9,6 +9,13 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Changed
 
+- Added a strict M2 conditional predecessor handoff that admits the exact
+  landed SDK G4 shadow evidence and unchanged rollback producer while keeping
+  G5, maintenance-only mode, live SDK provenance, the compatibility window,
+  consumer-zero, rollback retirement, and archive authority inactive.
+- Repository validation now keeps the immutable `aoa-sdk v0.6.0` M1 release
+  checkout separate from the exact landed SDK G4 checkout, preventing release
+  parity evidence from being confused with owner-switch authority.
 - Retired the routing-owned two-stage skill-selection branch and its generated
   prompt, tool, policy, example, manifest, and eval-case surfaces.
 - Skill routing now consumes the `aoa-skills` agent catalog for the callable

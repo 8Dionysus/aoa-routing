@@ -30,6 +30,9 @@ A release is ready only after:
 - the M1 predecessor consumer builds and clean-installs the exact tagged
   `aoa-sdk v0.6.0` source, then proves 14/14 byte parity without publishing or
   changing canonical ownership;
+- the M2 predecessor handoff admits the exact landed SDK G4 evidence and
+  remains fail-closed against G5, premature maintenance-only posture, live
+  publication, compatibility-window start, and archive authority;
 - the release branch lands through PR and GitHub Repo Validation;
 - landed `main` passes the same gate before any tag is created;
 - the GitHub Release body is derived from the canonical changelog section;
@@ -51,6 +54,12 @@ wheel-install, fixture, provenance, and byte-parity proof admits only an M1
 shadow comparison. It does not pass G4, issue G5, switch runtime consumers,
 publish SDK-built routing artifacts, or authorize archive action. Any
 unexplained mismatch is a release blocker.
+
+The separate M2 conditional handoff may admit the exact G4 evidence after its
+SDK PR and post-main validation land. That admission still does not issue G5:
+`aoa-routing` remains canonical and accepts ordinary owner-scoped work until a
+future SDK-owned switch receipt proves live runtime SDK provenance, consumer
+compatibility, and rollback together.
 
 ## Version Surfaces
 

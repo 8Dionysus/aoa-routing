@@ -36,6 +36,8 @@ a shared OS Abyss mechanic.
 - Route former flat paths through the owning `PROVENANCE.md` and `legacy/`
   index instead of recreating root-path aliases.
 - Keep this source home canonical until the G5 owner-switch receipt.
+- Treat the M2 conditional handoff as G4 admission only: it does not reject
+  ordinary owner-scoped feature work before G5.
 - After G5, reject new feature implementation here and route it to
   `aoa-sdk`; retain only compatibility, security, rollback, and deprecation
   changes until consumer-zero.

@@ -11,6 +11,9 @@ This repository owns navigation, not the meaning of things it routes to.
 `AOA-RT-D-0004` accepts staged producer succession to `aoa-sdk`, but this
 repository remains the sole canonical producer until the explicit G5
 owner-switch receipt. Acceptance is not a live authority switch.
+The M2 conditional handoff admits exact SDK G4 evidence without starting the
+compatibility window or maintenance-only posture; ordinary owner-scoped work
+remains here until G5.
 
 ## Owner lane
 
@@ -43,7 +46,9 @@ It does not own:
 9. `docs/decisions/README.md` when durable route, boundary, generated-output, validator, or source-lane rationale is in scope
 10. `docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`
     when work may affect producer ownership, compatibility, freeze, or archive posture
-11. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
+11. `mechanics/release-support/parts/release-gate-routing/evidence/routing-succession-m2-conditional-handoff.json`
+    when work may admit G4 evidence or claim G5 readiness
+12. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
 
 
 ## AGENTS stack law

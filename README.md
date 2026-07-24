@@ -10,6 +10,9 @@ That statement describes the live `predecessor_canonical` state.
 `AOA-RT-D-0004` accepts staged producer succession to `aoa-sdk`, but
 `aoa-routing` remains canonical until shadow parity and the explicit G5
 owner-switch receipt.
+The current M2 conditional handoff admits the exact landed SDK G4 proof while
+keeping G5, maintenance-only mode, the compatibility window, live publication,
+and archive authority inactive.
 
 > Current release: `v0.3.0`. See [CHANGELOG](CHANGELOG.md) for release notes.
 
@@ -51,6 +54,8 @@ Use the shortest route by need:
   `docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`
 - M1 installed-release parity consumer:
   `mechanics/release-support/parts/release-gate-routing/docs/sdk-shadow-release-parity-consumer.md`
+- M2 conditional predecessor handoff:
+  `mechanics/release-support/parts/release-gate-routing/docs/routing-succession-m2-conditional-handoff.md`
 - durable routing rationale: [docs/decisions](docs/decisions/README.md)
 - release-readiness and publication shape: [docs/RELEASING](docs/RELEASING.md)
 - current direction: [ROADMAP](ROADMAP.md)
@@ -98,10 +103,13 @@ repository becomes maintenance-only for compatibility, security, rollback,
 and deprecation. It must not publish a competing canonical output or accept
 new routing features.
 
-The current M1 state has not reached that switch. The release gate consumes
-the exact annotated `aoa-sdk v0.6.0` source through a freshly installed wheel
-and requires 14/14 byte parity, while `aoa-routing` remains the only canonical
-producer and the SDK output remains non-publishing.
+The current M2 state has not reached that switch. The release gate still
+consumes the exact annotated `aoa-sdk v0.6.0` source through a freshly
+installed wheel and requires 14/14 byte parity. A separate gate admits the
+exact landed SDK G4 shadow evidence and verifies that it did not authorize G5.
+`aoa-routing` remains the only canonical producer and SDK output remains
+non-publishing until the future receipt also proves live SDK provenance,
+consumer compatibility, and rollback at the switch.
 
 ## What it reads
 

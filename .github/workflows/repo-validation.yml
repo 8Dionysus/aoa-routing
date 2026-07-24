@@ -98,6 +98,13 @@ jobs:
           fetch-tags: true
           path: aoa-sdk
 
+      - name: Checkout admitted aoa-sdk G4 evidence
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
+        with:
+          repository: 8Dionysus/aoa-sdk
+          ref: 5cab5840c03b66c22bb07a6d0863bef9e95c7b23
+          path: .deps/aoa-sdk-g4
+
       - name: Checkout Dionysus
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
@@ -137,6 +144,7 @@ jobs:
       - name: Run release audit
         env:
           ABYSS_MACHINE_REPO_ROOT: ./abyss-machine
+          AOA_SDK_G4_ROOT: ./.deps/aoa-sdk-g4
           AOA_SDK_SHADOW_RELEASE_ROOT: ./aoa-sdk
           AOA_STATS_ROOT: ./aoa-stats
         run: python scripts/release_check.py

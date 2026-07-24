@@ -1,0 +1,308 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://agents-of-abyss.dev/schemas/aoa-routing/routing-succession-m2-conditional-handoff.schema.json",
+  "title": "AoA routing M2 conditional owner handoff",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observed_on",
+    "status",
+    "scope",
+    "pins",
+    "feature_acceptance",
+    "g5_transition_contract",
+    "compatibility_window",
+    "gates"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "aoa_routing_succession_m2_conditional_handoff_v1"
+    },
+    "observed_on": {
+      "const": "2026-07-24",
+      "format": "date"
+    },
+    "status": {
+      "const": "conditional_handoff_ready"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "program",
+        "stage",
+        "current_state",
+        "canonical_producer",
+        "handoff_posture",
+        "effect_stop_line"
+      ],
+      "properties": {
+        "program": {
+          "const": "aoa-routing producer succession into aoa-sdk"
+        },
+        "stage": {
+          "const": "ROUTING_M2_CONDITIONAL_HANDOFF"
+        },
+        "current_state": {
+          "const": "predecessor_canonical"
+        },
+        "canonical_producer": {
+          "const": "aoa-routing"
+        },
+        "handoff_posture": {
+          "const": "conditional_g5_only"
+        },
+        "effect_stop_line": {
+          "type": "string",
+          "minLength": 200
+        }
+      }
+    },
+    "pins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "predecessor",
+        "sdk_g4"
+      ],
+      "properties": {
+        "predecessor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "implementation_baseline_ref",
+            "m1_parity_consumer_ref",
+            "m1_parity_consumer_pr",
+            "m1_parity_consumer_post_main_run_id",
+            "producer_paths",
+            "rollback_posture"
+          ],
+          "properties": {
+            "implementation_baseline_ref": {
+              "const": "7e2fe467ad26aa645b61849001a456dda4562ffc"
+            },
+            "m1_parity_consumer_ref": {
+              "const": "5c7c0e5784b1642fb2e9e5231609100dacdbf1e3"
+            },
+            "m1_parity_consumer_pr": {
+              "const": 155
+            },
+            "m1_parity_consumer_post_main_run_id": {
+              "const": 30070166322
+            },
+            "producer_paths": {
+              "const": [
+                "routing/core/schemas",
+                "scripts/build_router.py",
+                "scripts/router_core.py"
+              ]
+            },
+            "rollback_posture": {
+              "const": "retained_and_release_gate_verified"
+            }
+          }
+        },
+        "sdk_g4": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "merge_ref",
+            "feature_ref",
+            "pull_request",
+            "pr_validation_run_id",
+            "post_main_run_id",
+            "evidence_path",
+            "evidence_sha256",
+            "release_source_ref",
+            "release_tag",
+            "admitted_status"
+          ],
+          "properties": {
+            "merge_ref": {
+              "const": "5cab5840c03b66c22bb07a6d0863bef9e95c7b23"
+            },
+            "feature_ref": {
+              "const": "73196922f2322177d1e00ef2c6141c404b445b64"
+            },
+            "pull_request": {
+              "const": 221
+            },
+            "pr_validation_run_id": {
+              "const": 30102380158
+            },
+            "post_main_run_id": {
+              "const": 30102545148
+            },
+            "evidence_path": {
+              "const": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/evidence/routing-succession-g4-evidence.json"
+            },
+            "evidence_sha256": {
+              "const": "d7cebc8fb19389e18fba83636e816502d2c4134e01ae36811054afaff118ffc8"
+            },
+            "release_source_ref": {
+              "const": "f3e23b60ec483ce81f5abe9aafe7303c15df2102"
+            },
+            "release_tag": {
+              "const": "v0.6.0"
+            },
+            "admitted_status": {
+              "const": "g4_passed_shadow_only"
+            }
+          }
+        }
+      }
+    },
+    "feature_acceptance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "before_g5",
+        "after_g5",
+        "new_feature_owner_after_g5",
+        "activation_condition"
+      ],
+      "properties": {
+        "before_g5": {
+          "const": "owner_normal_until_g5"
+        },
+        "after_g5": {
+          "const": "compatibility_security_rollback_deprecation_only"
+        },
+        "new_feature_owner_after_g5": {
+          "const": "aoa-sdk"
+        },
+        "activation_condition": {
+          "const": "validated_sdk_g5_owner_switch_receipt"
+        }
+      }
+    },
+    "g5_transition_contract": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "receipt_owner",
+        "expected_receipt_path",
+        "required_successor_state",
+        "required_canonical_owner",
+        "required_runtime_posture",
+        "required_compatibility_posture",
+        "required_rollback_posture",
+        "forbidden_combined_scope"
+      ],
+      "properties": {
+        "receipt_owner": {
+          "const": "aoa-sdk"
+        },
+        "expected_receipt_path": {
+          "const": "mechanics/boundary-bridge/parts/consumed-surface-posture-gate/evidence/routing-succession-g5-owner-switch.json"
+        },
+        "required_successor_state": {
+          "const": "sdk_canonical"
+        },
+        "required_canonical_owner": {
+          "const": "aoa-sdk"
+        },
+        "required_runtime_posture": {
+          "const": "live_runtime_loads_sdk_produced_artifact_with_source_and_trust_provenance"
+        },
+        "required_compatibility_posture": {
+          "const": "fourteen_artifacts_and_aoa_routing_thin_router_v1_preserved"
+        },
+        "required_rollback_posture": {
+          "const": "predecessor_rebuild_reproduced_at_switch"
+        },
+        "forbidden_combined_scope": {
+          "const": "runner_or_agent_os_capability_landing"
+        }
+      }
+    },
+    "compatibility_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "starts_on",
+        "started_on",
+        "started_by_sdk_version",
+        "exit_requires"
+      ],
+      "properties": {
+        "state": {
+          "const": "not_started"
+        },
+        "starts_on": {
+          "const": "validated_sdk_g5_owner_switch_receipt"
+        },
+        "started_on": {
+          "type": "null"
+        },
+        "started_by_sdk_version": {
+          "type": "null"
+        },
+        "exit_requires": {
+          "const": [
+            "all_registered_active_consumers_green_on_sdk_output",
+            "direct_aoa_routing_checkout_dependencies_zero",
+            "clean_install_upgrade_downgrade_and_rollback_green",
+            "two_consecutive_sdk_validation_cycles_without_predecessor_generation",
+            "runtime_and_trust_records_identify_sdk_source",
+            "no_open_high_severity_compatibility_regression"
+          ]
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sdk_g4_admitted",
+        "conditional_handoff_ready",
+        "g5_owner_switch",
+        "predecessor_maintenance_only",
+        "sdk_canonical",
+        "live_runtime_sdk_provenance_verified",
+        "compatibility_window_started",
+        "consumer_zero",
+        "rollback_retired",
+        "archive_ready",
+        "archive_authorized"
+      ],
+      "properties": {
+        "sdk_g4_admitted": {
+          "const": true
+        },
+        "conditional_handoff_ready": {
+          "const": true
+        },
+        "g5_owner_switch": {
+          "const": false
+        },
+        "predecessor_maintenance_only": {
+          "const": false
+        },
+        "sdk_canonical": {
+          "const": false
+        },
+        "live_runtime_sdk_provenance_verified": {
+          "const": false
+        },
+        "compatibility_window_started": {
+          "const": false
+        },
+        "consumer_zero": {
+          "const": false
+        },
+        "rollback_retired": {
+          "const": false
+        },
+        "archive_ready": {
+          "const": false
+        },
+        "archive_authorized": {
+          "const": false
+        }
+      }
+    }
+  }
+}
