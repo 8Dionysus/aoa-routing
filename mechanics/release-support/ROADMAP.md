@@ -12,6 +12,8 @@ runtime deployment truth, or sibling implementation release authority.
 
 - Keep release gate routes aligned with root release checks and generated
   parity.
+- Keep the M2 predecessor handoff fail-closed until an SDK-owned G5 receipt
+  proves live runtime provenance, compatibility, and rollback together.
 - Keep deployment, installation, and watchtower signals tied to owner evidence.
 - Keep public claims out of generated outputs unless they are validated.
 

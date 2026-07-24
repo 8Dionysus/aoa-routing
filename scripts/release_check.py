@@ -44,6 +44,18 @@ def _resolve(repo_name: str) -> Path:
     raise FileNotFoundError(f"missing required sibling repo {repo_name}")
 
 
+def _resolve_sdk_g4() -> Path:
+    override = os.environ.get("AOA_SDK_G4_ROOT")
+    candidates = [
+        Path(override).expanduser() if override else None,
+        default_dependency_root("aoa-sdk", REPO_ROOT),
+    ]
+    for candidate in candidates:
+        if candidate is not None and candidate.exists():
+            return candidate.resolve()
+    raise FileNotFoundError("missing required exact aoa-sdk G4 checkout")
+
+
 def _command_with_roots(command: str) -> list[str]:
     roots = {key: _resolve(value) for key, value in DEPENDENCIES.items()}
     if command == "validate_router":
@@ -123,6 +135,16 @@ def _command_with_roots(command: str) -> list[str]:
             "--sdk-root",
             str(roots["sdk"]),
         ]
+    if command == "sdk_g4_conditional_handoff":
+        return [
+            sys.executable,
+            (
+                "mechanics/release-support/parts/release-gate-routing/"
+                "scripts/verify_routing_succession_m2_handoff.py"
+            ),
+            "--sdk-g4-root",
+            str(_resolve_sdk_g4()),
+        ]
     raise ValueError(command)
 
 
@@ -136,6 +158,10 @@ COMMANDS = [
     (
         "verify installed aoa-sdk shadow release parity",
         "sdk_shadow_release_parity",
+    ),
+    (
+        "verify routing succession M2 conditional handoff",
+        "sdk_g4_conditional_handoff",
     ),
     (
         "validate OS Abyss routing artifact bundle",

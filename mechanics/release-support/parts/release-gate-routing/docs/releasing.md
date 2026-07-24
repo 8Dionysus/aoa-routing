@@ -15,6 +15,8 @@ See also:
    - `python scripts/release_check.py`
    - the verifier must consume the exact `aoa-sdk v0.6.0` annotated release
      pin through an installed wheel and prove 14/14 shadow byte parity;
+   - a separate verifier must admit the exact landed SDK G4 evidence while
+     proving that G5 and maintenance-only mode remain inactive;
    - this is a non-publishing M1 comparison only: `aoa-routing` remains
      canonical and an SDK mismatch stops the release.
 4. If you need the wider workspace-level federation preflight in addition to the

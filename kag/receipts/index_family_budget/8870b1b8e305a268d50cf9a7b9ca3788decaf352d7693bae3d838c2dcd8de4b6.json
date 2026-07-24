@@ -1,0 +1,17 @@
+{
+  "allowed_bytes": 4122589,
+  "allowed_tracked_bytes": 8182221,
+  "approved_by": "repository-owner",
+  "base_ref": "5c7c0e5784b1642fb2e9e5231609100dacdbf1e3",
+  "changed_generated_bytes": 4122589,
+  "changed_generated_files": 171,
+  "decision_ref": "aoa-kag:docs/decisions/AOA-KAG-D-0017-portable-content-addressed-repository-family.md",
+  "default_limit_bytes": 1048576,
+  "head_family_digest": "8870b1b8e305a268d50cf9a7b9ca3788decaf352d7693bae3d838c2dcd8de4b6",
+  "reason": "M2 adds a reviewed predecessor handoff evidence, strict schema, verifier, tests, and route documentation; the content-addressed family reshards those source additions while standing delta and tracked-size budgets remain unchanged.",
+  "repo": "aoa-routing",
+  "schema_version": "aoa-repo-local-kag-budget-receipt-v1",
+  "scope": "generated_delta",
+  "tracked_bytes": 8182221,
+  "tracked_bytes_max": 9437184
+}
