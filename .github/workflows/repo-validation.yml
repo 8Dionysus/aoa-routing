@@ -94,7 +94,8 @@ jobs:
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           repository: 8Dionysus/aoa-sdk
-          ref: f3e23b60ec483ce81f5abe9aafe7303c15df2102
+          ref: v0.6.0
+          fetch-tags: true
           path: aoa-sdk
 
       - name: Checkout Dionysus

@@ -127,6 +127,7 @@ def test_repo_validation_pins_the_same_sdk_release() -> None:
         encoding="utf-8"
     )
 
-    assert f"ref: {pin['sdk_release']['source_ref']}" in workflow
+    assert f"ref: {pin['sdk_release']['tag']}" in workflow
+    assert "fetch-tags: true" in workflow
     assert "AOA_SDK_SHADOW_RELEASE_ROOT: ./aoa-sdk" in workflow
     assert "verify_sdk_shadow_release_parity.py" in release_check
