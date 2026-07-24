@@ -2098,6 +2098,14 @@ def validate_expand_targets(
                         )
                     )
                     continue
+                if not capability_id.startswith("skill."):
+                    issues.append(
+                        ValidationIssue(
+                            location,
+                            f"{node_location}.id must use the 'skill.<name>' form",
+                        )
+                    )
+                    continue
                 if capability_id in skill_nodes_by_id:
                     issues.append(
                         ValidationIssue(

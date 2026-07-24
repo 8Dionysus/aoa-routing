@@ -1640,6 +1640,31 @@ def test_validate_generated_outputs_accepts_external_owner_graph_skill(tmp_path:
     assert not any("skill.aoa-summon" in issue.message for issue in issues)
 
 
+def test_validate_generated_outputs_rejects_external_skill_without_skill_prefix(
+    tmp_path: Path,
+) -> None:
+    generated_dir, roots = build_fixture_generated(tmp_path)
+    graph_path = roots["aoa-skills"] / "generated" / "capability_graph.json"
+    payload = json.loads(graph_path.read_text(encoding="utf-8"))
+    external_node = copy.deepcopy(
+        next(node for node in payload["nodes"] if node["kind"] == "skill")
+    )
+    external_node["id"] = "aoa-summon"
+    external_node["owner"] = {
+        "authority": "external-authority",
+        "repo": "aoa-agents",
+        "surface": "skills/aoa-summon/SKILL.md",
+    }
+    payload["nodes"].append(external_node)
+    write_json(graph_path, payload)
+
+    issues = validate_fixture_generated(generated_dir, roots)
+
+    assert any(
+        ".id must use the 'skill.<name>' form" in issue.message for issue in issues
+    )
+
+
 def test_validate_generated_outputs_rejects_unpublished_local_graph_skill(
     tmp_path: Path,
 ) -> None:
