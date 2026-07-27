@@ -14,6 +14,20 @@ from router_core import (
 
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+MAINTENANCE_EVIDENCE = (
+    REPO_ROOT
+    / "mechanics"
+    / "release-support"
+    / "parts"
+    / "release-gate-routing"
+    / "evidence"
+    / "routing-succession-m3-maintenance-only.json"
+)
+MAINTENANCE_ONLY = (
+    MAINTENANCE_EVIDENCE.is_file()
+    and json.loads(MAINTENANCE_EVIDENCE.read_text(encoding="utf-8")).get("status")
+    == "maintenance_only"
+)
 LIVE_ROOTS = {
     "aoa-techniques": default_dependency_root("aoa-techniques", REPO_ROOT),
     "aoa-skills": default_dependency_root("aoa-skills", REPO_ROOT),
@@ -99,6 +113,10 @@ def assert_live_playbook_refs_exist(refs: list[object]) -> None:
     + ", ".join(MISSING_LIVE_ROOTS + MISSING_LIVE_INPUTS),
 )
 class LiveWorkspaceContractTests(unittest.TestCase):
+    @unittest.skipIf(
+        MAINTENANCE_ONLY,
+        "live producer rebuild retired after G5; predecessor outputs are frozen",
+    )
     def test_live_workspace_rebuild_matches_checked_in_generated_outputs(self) -> None:
         outputs = build_router.build_outputs(
             LIVE_ROOTS["aoa-techniques"],
@@ -124,6 +142,10 @@ class LiveWorkspaceContractTests(unittest.TestCase):
 
         self.assertEqual(mismatches, [])
 
+    @unittest.skipIf(
+        MAINTENANCE_ONLY,
+        "live producer validation retired after G5; predecessor outputs are frozen",
+    )
     def test_live_workspace_generated_outputs_validate_cleanly(self) -> None:
         issues = validate_router.validate_generated_outputs(
             REPO_ROOT / "generated",

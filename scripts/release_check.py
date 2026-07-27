@@ -1,4 +1,6 @@
 #!/usr/bin/env python3
+"""Run the post-G5 maintenance-only predecessor validation gate."""
+
 from __future__ import annotations
 
 import os
@@ -6,179 +8,57 @@ import subprocess
 import sys
 from pathlib import Path
 
-from router_core import default_dependency_root
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-
-DEPENDENCIES = {
-    "skills": "aoa-skills",
-    "techniques": "aoa-techniques",
-    "evals": "aoa-evals",
-    "stats": "aoa-stats",
-    "memo": "aoa-memo",
-    "agents": "aoa-agents",
-    "aoa": "Agents-of-Abyss",
-    "playbooks": "aoa-playbooks",
-    "kag": "aoa-kag",
-    "tos": "Tree-of-Sophia",
-    "sdk": "aoa-sdk",
-    "source_route": "Dionysus",
-    "profile": "8Dionysus",
-    "abyss_stack": "abyss-stack",
-}
-
-
-def _resolve(repo_name: str) -> Path:
-    override = None
-    if repo_name == "abyss-stack":
-        override = os.environ.get("ABYSS_STACK_ROOT") or os.environ.get("AOA_SOURCE_ROOT")
-    if repo_name == "aoa-sdk":
-        override = os.environ.get("AOA_SDK_SHADOW_RELEASE_ROOT")
-    candidates = [
-        Path(override).expanduser() if override else None,
-        default_dependency_root(repo_name, REPO_ROOT),
-    ]
-    for candidate in candidates:
-        if candidate is not None and candidate.exists():
-            return candidate.resolve()
-    raise FileNotFoundError(f"missing required sibling repo {repo_name}")
-
-
-def _resolve_sdk_g4() -> Path:
-    override = os.environ.get("AOA_SDK_G4_ROOT")
-    candidates = [
-        Path(override).expanduser() if override else None,
-        default_dependency_root("aoa-sdk", REPO_ROOT),
-    ]
-    for candidate in candidates:
-        if candidate is not None and candidate.exists():
-            return candidate.resolve()
-    raise FileNotFoundError("missing required exact aoa-sdk G4 checkout")
-
-
-def _command_with_roots(command: str) -> list[str]:
-    roots = {key: _resolve(value) for key, value in DEPENDENCIES.items()}
-    if command == "validate_router":
-        return [
-            sys.executable,
-            "scripts/validate_router.py",
-            "--techniques-root",
-            str(roots["techniques"]),
-            "--skills-root",
-            str(roots["skills"]),
-            "--evals-root",
-            str(roots["evals"]),
-            "--stats-root",
-            str(roots["stats"]),
-            "--memo-root",
-            str(roots["memo"]),
-            "--agents-root",
-            str(roots["agents"]),
-            "--aoa-root",
-            str(roots["aoa"]),
-            "--playbooks-root",
-            str(roots["playbooks"]),
-            "--kag-root",
-            str(roots["kag"]),
-            "--tos-root",
-            str(roots["tos"]),
-            "--sdk-root",
-            str(roots["sdk"]),
-            "--source-route-root",
-            str(roots["source_route"]),
-            "--profile-root",
-            str(roots["profile"]),
-            "--abyss-stack-root",
-            str(roots["abyss_stack"]),
-        ]
-    if command == "build_router_check":
-        return [
-            sys.executable,
-            "scripts/build_router.py",
-            "--techniques-root",
-            str(roots["techniques"]),
-            "--skills-root",
-            str(roots["skills"]),
-            "--evals-root",
-            str(roots["evals"]),
-            "--stats-root",
-            str(roots["stats"]),
-            "--memo-root",
-            str(roots["memo"]),
-            "--agents-root",
-            str(roots["agents"]),
-            "--aoa-root",
-            str(roots["aoa"]),
-            "--playbooks-root",
-            str(roots["playbooks"]),
-            "--kag-root",
-            str(roots["kag"]),
-            "--tos-root",
-            str(roots["tos"]),
-            "--sdk-root",
-            str(roots["sdk"]),
-            "--source-route-root",
-            str(roots["source_route"]),
-            "--profile-root",
-            str(roots["profile"]),
-            "--abyss-stack-root",
-            str(roots["abyss_stack"]),
-            "--check",
-        ]
-    if command == "sdk_shadow_release_parity":
-        return [
-            sys.executable,
-            (
-                "mechanics/release-support/parts/release-gate-routing/"
-                "scripts/verify_sdk_shadow_release_parity.py"
-            ),
-            "--sdk-root",
-            str(roots["sdk"]),
-        ]
-    if command == "sdk_g4_conditional_handoff":
-        return [
-            sys.executable,
-            (
-                "mechanics/release-support/parts/release-gate-routing/"
-                "scripts/verify_routing_succession_m2_handoff.py"
-            ),
-            "--sdk-g4-root",
-            str(_resolve_sdk_g4()),
-        ]
-    raise ValueError(command)
-
-
-COMMANDS = [
-    ("validate source-home topology", [sys.executable, "scripts/validate_source_home.py"]),
-    ("validate mechanics topology", [sys.executable, "scripts/validate_mechanics_topology.py"]),
-    ("validate active legacy names", [sys.executable, "scripts/validate_active_legacy_names.py"]),
-    ("validate owner-local stats port", [sys.executable, "scripts/validate_local_stats_port.py"]),
-    ("validate routing surfaces", "validate_router"),
-    ("check rebuild parity", "build_router_check"),
+COMMANDS = (
     (
-        "verify installed aoa-sdk shadow release parity",
-        "sdk_shadow_release_parity",
+        "validate maintenance-only posture",
+        [
+            sys.executable,
+            "mechanics/release-support/parts/release-gate-routing/"
+            "scripts/validate_routing_maintenance_only.py",
+        ],
     ),
     (
-        "verify routing succession M2 conditional handoff",
-        "sdk_g4_conditional_handoff",
+        "validate source-home topology",
+        [sys.executable, "scripts/validate_source_home.py"],
     ),
     (
-        "validate OS Abyss routing artifact bundle",
-        [sys.executable, "scripts/validate_abyss_machine_routing_bundle.py"],
+        "validate mechanics topology",
+        [sys.executable, "scripts/validate_mechanics_topology.py"],
     ),
-    ("check decision indexes", [sys.executable, "scripts/generate_decision_indexes.py", "--check"]),
-    ("validate decision records", [sys.executable, "scripts/validate_decision_records.py"]),
-    ("run tests", [sys.executable, "-m", "pytest", "-q", "tests"]),
-]
+    (
+        "validate active legacy names",
+        [sys.executable, "scripts/validate_active_legacy_names.py"],
+    ),
+    (
+        "check decision indexes",
+        [sys.executable, "scripts/generate_decision_indexes.py", "--check"],
+    ),
+    (
+        "validate decision records",
+        [sys.executable, "scripts/validate_decision_records.py"],
+    ),
+    (
+        "run local maintenance tests",
+        [sys.executable, "-m", "pytest", "-q", "tests"],
+    ),
+)
 
 
-def run_step(label: str, command: str | list[str]) -> int:
-    resolved = _command_with_roots(command) if isinstance(command, str) else command
-    print(f"[run] {label}: {subprocess.list2cmdline(resolved)}", flush=True)
-    completed = subprocess.run(resolved, cwd=REPO_ROOT, env=os.environ.copy(), check=False)
+def run_step(label: str, command: list[str]) -> int:
+    print(f"[run] {label}: {subprocess.list2cmdline(command)}", flush=True)
+    completed = subprocess.run(
+        command,
+        cwd=REPO_ROOT,
+        env=os.environ.copy(),
+        check=False,
+    )
     if completed.returncode != 0:
-        print(f"[error] {label} failed with exit code {completed.returncode}", flush=True)
+        print(
+            f"[error] {label} failed with exit code {completed.returncode}",
+            flush=True,
+        )
         return completed.returncode
     print(f"[ok] {label}", flush=True)
     return 0

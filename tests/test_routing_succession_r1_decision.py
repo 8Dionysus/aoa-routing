@@ -32,12 +32,12 @@ def test_succession_decision_preserves_abi_and_stronger_owners() -> None:
     assert "`AOA-SDK-D-0071`" in text
 
 
-def test_active_route_docs_name_accepted_succession_without_claiming_switch() -> None:
+def test_active_route_docs_name_the_completed_switch_and_maintenance_posture() -> None:
     required = {
         REPO_ROOT / "AGENTS.md": "AOA-RT-D-0004",
-        REPO_ROOT / "README.md": "predecessor_canonical",
-        REPO_ROOT / "ROADMAP.md": "Accepted Succession Contour",
-        REPO_ROOT / "routing" / "AGENTS.md": "G5",
+        REPO_ROOT / "README.md": "canonical routing producer",
+        REPO_ROOT / "ROADMAP.md": "sdk_canonical",
+        REPO_ROOT / "routing" / "AGENTS.md": "canonical ownership to `aoa-sdk`",
         REPO_ROOT / "routing" / "README.md": "maintenance-only",
     }
 

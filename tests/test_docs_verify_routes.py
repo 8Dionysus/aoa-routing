@@ -64,8 +64,8 @@ def test_readme_routes_verify_battery_to_agents() -> None:
     root_agents = read_text("AGENTS.md")
 
     commands = [
-        "python scripts/validate_router.py",
-        "python scripts/build_router.py --check",
+        "python mechanics/release-support/parts/release-gate-routing/scripts/validate_routing_maintenance_only.py",
+        "python scripts/validate_active_legacy_names.py",
         "python scripts/generate_decision_indexes.py --check",
         "python scripts/validate_decision_records.py",
         "python -m pytest -q tests",
@@ -79,21 +79,32 @@ def test_readme_routes_verify_battery_to_agents() -> None:
 
 
 def test_contributor_and_agent_surfaces_use_exact_verify_commands() -> None:
-    core_fragments = [
+    maintenance_fragments = [
+        "python mechanics/release-support/parts/release-gate-routing/scripts/validate_routing_maintenance_only.py",
+        "python scripts/validate_active_legacy_names.py",
+        "python -m pytest -q tests",
+    ]
+    root_agents = read_text("AGENTS.md")
+    for fragment in maintenance_fragments:
+        assert fragment in root_agents
+
+    predecessor_fragments = [
         "python scripts/validate_router.py",
         "python scripts/build_router.py --check",
         "python -m pytest -q tests",
     ]
 
     for relative_path in [
-        "AGENTS.md",
         "generated/AGENTS.md",
         "scripts/AGENTS.md",
         "tests/AGENTS.md",
     ]:
         text = read_text(relative_path)
-        for fragment in core_fragments:
+        for fragment in predecessor_fragments:
             assert fragment in text, f"{relative_path} missing {fragment}"
+
+    assert "python scripts/validate_router.py" not in root_agents
+    assert "python scripts/build_router.py --check" not in root_agents
 
     decision_fragments = [
         "python scripts/generate_decision_indexes.py --check",
@@ -111,7 +122,7 @@ def test_contributor_and_agent_surfaces_use_exact_verify_commands() -> None:
 
     contributing = read_text("CONTRIBUTING.md")
     assert "[AGENTS.md](AGENTS.md#verify)" in contributing
-    for fragment in (*core_fragments, *decision_fragments):
+    for fragment in (*maintenance_fragments, *predecessor_fragments, *decision_fragments):
         assert fragment not in contributing
 
 

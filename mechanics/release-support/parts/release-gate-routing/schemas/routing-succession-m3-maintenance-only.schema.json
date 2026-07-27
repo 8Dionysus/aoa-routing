@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/8Dionysus/aoa-routing/blob/main/mechanics/release-support/parts/release-gate-routing/schemas/routing-succession-m3-maintenance-only.schema.json",
+  "title": "aoa-routing M3 maintenance-only receipt",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "observed_on",
+    "status",
+    "scope",
+    "pins",
+    "compatibility_window",
+    "ci_retirement",
+    "gates",
+    "claim_limit"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "aoa_routing_succession_m3_maintenance_only_v1"
+    },
+    "observed_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "status": {
+      "const": "maintenance_only"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "current_state",
+        "canonical_producer",
+        "predecessor_repo",
+        "new_feature_owner",
+        "allowed_predecessor_change_classes"
+      ],
+      "properties": {
+        "current_state": {
+          "const": "sdk_canonical"
+        },
+        "canonical_producer": {
+          "const": "aoa-sdk"
+        },
+        "predecessor_repo": {
+          "const": "aoa-routing"
+        },
+        "new_feature_owner": {
+          "const": "aoa-sdk"
+        },
+        "allowed_predecessor_change_classes": {
+          "type": "array",
+          "prefixItems": [
+            {
+              "const": "compatibility"
+            },
+            {
+              "const": "security"
+            },
+            {
+              "const": "rollback"
+            },
+            {
+              "const": "deprecation"
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "pins": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "sdk_g5",
+        "predecessor",
+        "routing_abi"
+      ],
+      "properties": {
+        "sdk_g5": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "release_tag",
+            "release_source_ref",
+            "owner_switch_receipt_sha256",
+            "runtime_contract_ref"
+          ],
+          "properties": {
+            "release_tag": {
+              "const": "v0.8.0"
+            },
+            "release_source_ref": {
+              "const": "e4ffd26edc9fc771e987914b0bd787a72c4af5c6"
+            },
+            "owner_switch_receipt_sha256": {
+              "const": "8b6b278962cd403b9b9fdc3bbbdfff05738d3c1dbeb06395b62f8a285f0a363c"
+            },
+            "runtime_contract_ref": {
+              "const": "abyss-stack@fac82c75d860dd2433cfc1e391f4b6ba117425d7#ABYSS-STACK-D-0086"
+            }
+          }
+        },
+        "predecessor": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maintenance_base_ref",
+            "rollback_implementation_ref",
+            "rollback_posture"
+          ],
+          "properties": {
+            "maintenance_base_ref": {
+              "const": "97f60de1b5992ef6bf5ff0f051bd452d940d9a85"
+            },
+            "rollback_implementation_ref": {
+              "const": "7e2fe467ad26aa645b61849001a456dda4562ffc"
+            },
+            "rollback_posture": {
+              "const": "retained_not_retired"
+            }
+          }
+        },
+        "routing_abi": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "abi_epoch",
+            "preserved_root_output_count"
+          ],
+          "properties": {
+            "abi_epoch": {
+              "const": "aoa_routing_thin_router_v1"
+            },
+            "preserved_root_output_count": {
+              "const": 14
+            }
+          }
+        }
+      }
+    },
+    "compatibility_window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "state",
+        "started_on",
+        "consumer_zero",
+        "rollback_retired"
+      ],
+      "properties": {
+        "state": {
+          "const": "active"
+        },
+        "started_on": {
+          "const": "2026-07-26"
+        },
+        "consumer_zero": {
+          "const": false
+        },
+        "rollback_retired": {
+          "const": false
+        }
+      }
+    },
+    "ci_retirement": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workflow_contours_before",
+        "workflow_contours_after",
+        "sibling_checkouts_before",
+        "sibling_checkouts_after",
+        "producer_generation_in_ci",
+        "active_release_pipeline"
+      ],
+      "properties": {
+        "workflow_contours_before": {
+          "const": 2
+        },
+        "workflow_contours_after": {
+          "const": 1
+        },
+        "sibling_checkouts_before": {
+          "const": 30
+        },
+        "sibling_checkouts_after": {
+          "const": 0
+        },
+        "producer_generation_in_ci": {
+          "const": false
+        },
+        "active_release_pipeline": {
+          "const": false
+        }
+      }
+    },
+    "gates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "g5_owner_switch_admitted",
+        "sdk_canonical",
+        "predecessor_maintenance_only",
+        "consumer_zero",
+        "rollback_retired",
+        "archive_ready",
+        "archive_authorized"
+      ],
+      "properties": {
+        "g5_owner_switch_admitted": {
+          "const": true
+        },
+        "sdk_canonical": {
+          "const": true
+        },
+        "predecessor_maintenance_only": {
+          "const": true
+        },
+        "consumer_zero": {
+          "const": false
+        },
+        "rollback_retired": {
+          "const": false
+        },
+        "archive_ready": {
+          "const": false
+        },
+        "archive_authorized": {
+          "const": false
+        }
+      }
+    },
+    "claim_limit": {
+      "type": "string",
+      "minLength": 40
+    }
+  }
+}

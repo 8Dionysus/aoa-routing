@@ -1,0 +1,58 @@
+{
+  "schema_version": "aoa_routing_succession_m3_maintenance_only_v1",
+  "observed_on": "2026-07-26",
+  "status": "maintenance_only",
+  "scope": {
+    "current_state": "sdk_canonical",
+    "canonical_producer": "aoa-sdk",
+    "predecessor_repo": "aoa-routing",
+    "new_feature_owner": "aoa-sdk",
+    "allowed_predecessor_change_classes": [
+      "compatibility",
+      "security",
+      "rollback",
+      "deprecation"
+    ]
+  },
+  "pins": {
+    "sdk_g5": {
+      "release_tag": "v0.8.0",
+      "release_source_ref": "e4ffd26edc9fc771e987914b0bd787a72c4af5c6",
+      "owner_switch_receipt_sha256": "8b6b278962cd403b9b9fdc3bbbdfff05738d3c1dbeb06395b62f8a285f0a363c",
+      "runtime_contract_ref": "abyss-stack@fac82c75d860dd2433cfc1e391f4b6ba117425d7#ABYSS-STACK-D-0086"
+    },
+    "predecessor": {
+      "maintenance_base_ref": "97f60de1b5992ef6bf5ff0f051bd452d940d9a85",
+      "rollback_implementation_ref": "7e2fe467ad26aa645b61849001a456dda4562ffc",
+      "rollback_posture": "retained_not_retired"
+    },
+    "routing_abi": {
+      "abi_epoch": "aoa_routing_thin_router_v1",
+      "preserved_root_output_count": 14
+    }
+  },
+  "compatibility_window": {
+    "state": "active",
+    "started_on": "2026-07-26",
+    "consumer_zero": false,
+    "rollback_retired": false
+  },
+  "ci_retirement": {
+    "workflow_contours_before": 2,
+    "workflow_contours_after": 1,
+    "sibling_checkouts_before": 30,
+    "sibling_checkouts_after": 0,
+    "producer_generation_in_ci": false,
+    "active_release_pipeline": false
+  },
+  "gates": {
+    "g5_owner_switch_admitted": true,
+    "sdk_canonical": true,
+    "predecessor_maintenance_only": true,
+    "consumer_zero": false,
+    "rollback_retired": false,
+    "archive_ready": false,
+    "archive_authorized": false
+  },
+  "claim_limit": "This receipt retires active predecessor development, producer CI, sibling-corpus validation, and paired release pressure. It retains the rollback implementation and does not prove consumer-zero, compatibility exit, rollback retirement, archive readiness, or archive authority."
+}

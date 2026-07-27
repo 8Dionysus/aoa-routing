@@ -85,14 +85,7 @@ def test_m2_schema_rejects_premature_transition(
         verifier.load_evidence()
 
 
-def test_release_gate_pins_separate_release_and_g4_checkouts() -> None:
-    evidence = json.loads(
-        (
-            PART_ROOT
-            / "evidence"
-            / "routing-succession-m2-conditional-handoff.json"
-        ).read_text(encoding="utf-8")
-    )
+def test_m2_remains_historical_but_is_absent_from_active_maintenance_gate() -> None:
     workflow = (
         REPO_ROOT / ".github" / "workflows" / "repo-validation.yml"
     ).read_text(encoding="utf-8")
@@ -100,7 +93,7 @@ def test_release_gate_pins_separate_release_and_g4_checkouts() -> None:
         encoding="utf-8"
     )
 
-    assert f"ref: {evidence['pins']['sdk_g4']['merge_ref']}" in workflow
-    assert "path: .deps/aoa-sdk-g4" in workflow
-    assert "AOA_SDK_G4_ROOT: ./.deps/aoa-sdk-g4" in workflow
-    assert "verify_routing_succession_m2_handoff.py" in release_check
+    assert "path: .deps/aoa-sdk-g4" not in workflow
+    assert "AOA_SDK_G4_ROOT" not in workflow
+    assert "verify_routing_succession_m2_handoff.py" not in release_check
+    assert "validate_routing_maintenance_only.py" in release_check

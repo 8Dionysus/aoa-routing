@@ -1,47 +1,41 @@
 # Routing Source Home
 
-`routing/` is the source-home district for local `aoa-routing` navigation
-behavior.
+`routing/` retains the predecessor source-home for v1 compatibility and
+rollback evidence.
 
 It is not a head mechanic. Shared OS Abyss operations such as Agon,
 Experience, Checkpoint, Recurrence, Questbook, Antifragility, Boundary Bridge,
 Release Support, RPG, and Titan route through `mechanics/<head>/`.
 
-This source home remains canonical until the G5 owner-switch receipt accepted
-by `AOA-RT-D-0004`. After G5 it becomes maintenance-only for compatibility,
-security, rollback, and deprecation; new routing features route to `aoa-sdk`.
-The M2 conditional handoff admits the exact SDK G4 proof but does not activate
-that post-G5 posture.
+The G5 owner-switch receipt governed by `AOA-RT-D-0004` has moved canonical
+producer and ABI ownership to `aoa-sdk`. This source home is maintenance-only
+for compatibility, security, rollback, and deprecation. M1 and M2 remain
+historical transition evidence.
 
 ## Operating Card
 
 | Field | Route |
 | --- | --- |
-| role | local source-home for thin routing, public output derivation, and routing-only seams |
-| input | route derivation, source catalog ingestion, low-context routing policy, generated-output parity, or source-home cleanup |
-| output | source-home contract, public generated routing output, root compatibility wrapper, or mechanics handoff |
-| owner | `aoa-routing` owns navigation; sibling repositories own meaning |
-| next route | `core/`, root `generated/`, or `mechanics/` for shared mechanic participation |
-| validation | root route validators plus source-home topology validation when active |
+| role | retained predecessor source-home for v1 compatibility and rollback |
+| input | compatibility, security, rollback, deprecation, or source-home cleanup |
+| output | bounded predecessor repair or route to canonical `aoa-sdk` owner |
+| owner | `aoa-sdk` owns navigation producer and ABI; sibling repositories own meaning |
+| next route | `aoa-sdk` for active work; `core/` only for allowed predecessor maintenance |
+| validation | root maintenance gate plus source-home topology validation |
 
 ## Active Routes
 
 | Route | Owns | Stronger split |
 | --- | --- | --- |
-| [`core/`](core/README.md) | thin-router derivation, cross-repo registry, task/surface/tier hints, recommended paths, pairing, owner shortlist, and federation-return builder behavior | source repos own object meaning; root `generated/` may remain public output |
+| [`core/`](core/README.md) | retained v1 thin-router derivation used by compatibility and rollback | canonical work routes to `aoa-sdk`; source repos own object meaning |
 
-Skill routing is part of the core ingestion path: the compact callable-bundle
-cut comes from `aoa-skills/generated/agent_skill_catalog.min.json`, while deep
-capability navigation routes to
-`aoa-skills/generated/capability_graph.json`. `aoa-routing` does not own a
-second skill selector or a persisted task execution DAG.
+The retained implementation may still read the historical skill surfaces when
+exercised for rollback. It is not an active selector or producer path.
 
 ## Placement Rule
 
-When a file-name cluster is local routing behavior, route it here. When it is a
-functioning part of a shared mechanic, route it to `mechanics/<head>/parts/`.
-When it is a public output consumed across repositories, it may remain
-root-published under `generated/` while its builder, contract, and provenance
-route through the owning source home or part.
+Route new routing behavior and public output work to `aoa-sdk`. Place only
+allowed predecessor maintenance here; shared mechanics still route to
+`mechanics/<head>/parts/`.
 
 Former flat root paths are lookup facts, not active homes.

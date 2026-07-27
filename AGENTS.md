@@ -8,23 +8,20 @@ Root route card for `aoa-routing`.
 It derives lightweight routing surfaces that point agents to source-owned objects without copying source corpora into a second canon.
 This repository owns navigation, not the meaning of things it routes to.
 
-`AOA-RT-D-0004` accepts staged producer succession to `aoa-sdk`, but this
-repository remains the sole canonical producer until the explicit G5
-owner-switch receipt. Acceptance is not a live authority switch.
-The M2 conditional handoff admits exact SDK G4 evidence without starting the
-compatibility window or maintenance-only posture; ordinary owner-scoped work
-remains here until G5.
+`AOA-RT-D-0004` governs the completed producer succession to `aoa-sdk`.
+The exact G5 receipt is SDK-owned; this repository now preserves the
+predecessor ABI and rollback implementation in maintenance-only mode.
+New routing features, producer changes, publication logic, and Agent OS
+control-plane work route to `aoa-sdk`.
 
 ## Owner lane
 
 This repository owns:
 
-- the canonical routing producer and routing ABI before G5
-- routing projections, registries, dispatch hints, and recommended paths
-- advisory owner-layer shortlist hints and bounded return-navigation seams
-- bounded skill-catalog inspection and capability-graph expansion routes
-- owner-local statistical questions about routing-owned surfaces under `stats/`
-- local schemas, build scripts, validators, and routing integrity checks
+- compatibility and security maintenance for the retained v1 routing ABI
+- the frozen predecessor implementation required by the rollback window
+- deprecation notices and consumer-migration support
+- local validation of that maintenance-only boundary
 
 It does not own:
 
@@ -46,8 +43,8 @@ It does not own:
 9. `docs/decisions/README.md` when durable route, boundary, generated-output, validator, or source-lane rationale is in scope
 10. `docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`
     when work may affect producer ownership, compatibility, freeze, or archive posture
-11. `mechanics/release-support/parts/release-gate-routing/evidence/routing-succession-m2-conditional-handoff.json`
-    when work may admit G4 evidence or claim G5 readiness
+11. `mechanics/release-support/parts/release-gate-routing/evidence/routing-succession-m3-maintenance-only.json`
+    for the active ownership, compatibility, rollback, and archive posture
 12. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
 
 
@@ -92,19 +89,18 @@ If GitHub status or merge permissions cannot be observed, stop the landing route
 
 ## Verify
 
-For routing logic changes:
+For maintenance-only changes:
 
 ```bash
-python scripts/build_router.py
+python mechanics/release-support/parts/release-gate-routing/scripts/validate_routing_maintenance_only.py
 python scripts/validate_active_legacy_names.py
-python scripts/validate_local_stats_port.py
-python scripts/validate_router.py
-python scripts/build_router.py --check
 python scripts/generate_decision_indexes.py --check
 python scripts/validate_decision_records.py
 python -m pytest -q tests
 ```
 
+Do not change routing logic here. Route feature, producer, generated-output,
+publication, or Agent OS work to `aoa-sdk`.
 Use Agon, stress, quest, or federation-entry branches from `docs/AGENTS_ROOT_REFERENCE.md` when those surfaces change.
 Use `docs/decisions/AGENTS.md` when durable routing rationale changes; decision records explain why and do not replace generated routing authority.
 

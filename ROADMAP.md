@@ -9,25 +9,24 @@ The governing rule stays unchanged:
 
 ## Accepted Succession Contour
 
-`AOA-RT-D-0004` accepts transfer of the routing producer and routing ABI to
+`AOA-RT-D-0004` governed transfer of the routing producer and routing ABI to
 `aoa-sdk` through rehearsal, non-publishing shadow parity, and an explicit G5
 owner-switch receipt.
 
-This roadmap remains the direction surface for the current
-`predecessor_canonical` state. Until G5:
+The current state is `sdk_canonical`:
 
-- `aoa-routing` is the only canonical producer;
-- public generated outputs, schemas, builders, and validators remain active;
-- the exact tagged `aoa-sdk v0.6.0` shadow release is consumed by the
-  predecessor release gate for installed-wheel 14/14 parity only;
-- SDK shadow output cannot publish, and any unexplained parity difference
-  stops succession;
-- the exact SDK G4 merge and evidence are admitted by the predecessor M2
-  conditional handoff, while G5, maintenance-only mode, live publication, and
-  the compatibility-window start remain false;
+- `aoa-sdk` is the only canonical producer and routing ABI owner;
+- new routing features, generated-output changes, publication, and Agent OS
+  control-plane work land only in `aoa-sdk`;
+- `aoa-routing` retains the frozen v1 predecessor implementation for
+  compatibility, security, rollback, and deprecation only;
+- predecessor CI performs one repository-local maintenance check and does not
+  generate, publish, or checkout sibling repositories;
+- M1 and M2 packets remain historical transition evidence rather than active
+  release dependencies;
 - no archive or functional freeze has taken effect.
 
-After G5:
+During the compatibility window:
 
 - new routing features land only in `aoa-sdk`;
 - this repository is limited to compatibility, security, rollback, and
