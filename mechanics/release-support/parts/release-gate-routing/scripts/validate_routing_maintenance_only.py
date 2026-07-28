@@ -25,11 +25,22 @@ APPROVAL_SCHEMA_PATH = (
     PART_ROOT / "schemas" / "routing-maintenance-approval.schema.json"
 )
 APPROVAL_ROOT = PART_ROOT / "evidence" / "maintenance-approvals"
-MAINTENANCE_CONTROL_PREFIX = (
+MAINTENANCE_PART_PREFIX = (
     "mechanics/release-support/parts/release-gate-routing/"
+)
+MAINTENANCE_APPROVAL_PREFIX = (
+    f"{MAINTENANCE_PART_PREFIX}evidence/maintenance-approvals/"
 )
 MAINTENANCE_CONTROL_PATHS = {
     ".github/workflows/repo-validation.yml",
+    f"{MAINTENANCE_PART_PREFIX}evidence/"
+    "routing-succession-m3-maintenance-only.json",
+    f"{MAINTENANCE_PART_PREFIX}schemas/"
+    "routing-maintenance-approval.schema.json",
+    f"{MAINTENANCE_PART_PREFIX}schemas/"
+    "routing-succession-m3-maintenance-only.schema.json",
+    f"{MAINTENANCE_PART_PREFIX}scripts/"
+    "validate_routing_maintenance_only.py",
     "scripts/release_check.py",
     "scripts/validate_active_legacy_names.py",
 }
@@ -183,8 +194,12 @@ def _is_document_or_test_path(path: str) -> bool:
 
 
 def _is_maintenance_control_path(path: str) -> bool:
-    return path in MAINTENANCE_CONTROL_PATHS or path.startswith(
-        MAINTENANCE_CONTROL_PREFIX
+    approval_path = Path(path)
+    return path in MAINTENANCE_CONTROL_PATHS or (
+        path.startswith(MAINTENANCE_APPROVAL_PREFIX)
+        and approval_path.parent.as_posix()
+        == MAINTENANCE_APPROVAL_PREFIX.rstrip("/")
+        and approval_path.suffix == ".json"
     )
 
 

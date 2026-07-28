@@ -214,6 +214,63 @@ def test_m3_rejects_new_producer_or_publication_entrypoint() -> None:
         )
 
 
+@pytest.mark.parametrize(
+    ("path", "is_control"),
+    [
+        (
+            "mechanics/release-support/parts/release-gate-routing/"
+            "scripts/validate_routing_maintenance_only.py",
+            True,
+        ),
+        (
+            "mechanics/release-support/parts/release-gate-routing/"
+            "evidence/maintenance-approvals/AOA-RT-MA-0001.json",
+            True,
+        ),
+        (
+            "mechanics/release-support/parts/release-gate-routing/"
+            "scripts/publish_router.py",
+            False,
+        ),
+        (
+            "mechanics/release-support/parts/release-gate-routing/"
+            "evidence/maintenance-approvals/nested/escape.json",
+            False,
+        ),
+    ],
+)
+def test_m3_maintenance_control_exemption_is_exact(
+    path: str,
+    is_control: bool,
+) -> None:
+    verifier = _load_verifier()
+
+    assert verifier._is_maintenance_control_path(path) is is_control
+
+
+def test_m3_rejects_new_entrypoint_inside_maintenance_part() -> None:
+    verifier = _load_verifier()
+    evidence = verifier.load_evidence()
+    entry = verifier.ChangedPath(
+        status="A",
+        path=(
+            "mechanics/release-support/parts/release-gate-routing/"
+            "scripts/publish_router.py"
+        ),
+    )
+
+    with pytest.raises(
+        RuntimeError,
+        match="new, structural, or generated predecessor implementation",
+    ):
+        verifier._validate_change_boundary(
+            (entry,),
+            (),
+            evidence=evidence,
+            base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        )
+
+
 def test_m3_rejects_unapproved_retained_source_modification() -> None:
     verifier = _load_verifier()
     evidence = verifier.load_evidence()
