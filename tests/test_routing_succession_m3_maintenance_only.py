@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -88,6 +89,49 @@ def test_active_gate_has_no_sibling_or_producer_contour() -> None:
     assert "AOA_SDK" not in release_check
     assert "build_router" not in release_check
     assert "validate_router" not in release_check
+
+
+def test_m3_diff_guard_includes_deleted_paths(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    verifier = _load_verifier()
+    captured_args: tuple[str, ...] = ()
+
+    def fake_git(*args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
+        nonlocal captured_args
+        captured_args = args
+        return subprocess.CompletedProcess(
+            args=["git", *args],
+            returncode=0,
+            stdout="generated/aoa_router.min.json\n",
+            stderr="",
+        )
+
+    monkeypatch.setattr(verifier, "_git", fake_git)
+
+    assert verifier._changed_paths("base-ref") == (
+        "generated/aoa_router.min.json",
+    )
+    assert "--diff-filter=ACDMRTUXB" in captured_args
+
+
+def test_m3_workflow_inventory_includes_yml_and_yaml(tmp_path: Path) -> None:
+    verifier = _load_verifier()
+    workflow_root = tmp_path / ".github" / "workflows"
+    workflow_root.mkdir(parents=True)
+    (workflow_root / "repo-validation.yml").write_text(
+        "name: Repo Validation\n",
+        encoding="utf-8",
+    )
+    (workflow_root / "producer.yaml").write_text(
+        "name: Producer\n",
+        encoding="utf-8",
+    )
+
+    assert tuple(path.name for path in verifier._workflow_paths(workflow_root)) == (
+        "producer.yaml",
+        "repo-validation.yml",
+    )
 
 
 @pytest.mark.parametrize(

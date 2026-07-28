@@ -83,10 +83,21 @@ def _changed_paths(base_ref: str) -> tuple[str, ...]:
     completed = _git(
         "diff",
         "--name-only",
-        "--diff-filter=ACMRTUXB",
+        "--diff-filter=ACDMRTUXB",
         f"{base_ref}...HEAD",
     )
     return tuple(line for line in completed.stdout.splitlines() if line)
+
+
+def _workflow_paths(workflow_root: Path) -> tuple[Path, ...]:
+    return tuple(
+        sorted(
+            {
+                *workflow_root.glob("*.yml"),
+                *workflow_root.glob("*.yaml"),
+            }
+        )
+    )
 
 
 def _is_producer_path(path: str) -> bool:
@@ -99,12 +110,15 @@ def validate(base_ref: str | None = None) -> dict[str, Any]:
     _git("cat-file", "-e", f"{rollback_ref}^{{commit}}")
 
     workflow_root = REPO_ROOT / ".github" / "workflows"
-    workflows = sorted(path.name for path in workflow_root.glob("*.yml"))
+    workflow_paths = _workflow_paths(workflow_root)
+    workflows = [path.name for path in workflow_paths]
+    workflow = "\n".join(
+        path.read_text(encoding="utf-8") for path in workflow_paths
+    )
     if workflows != ["repo-validation.yml"]:
         raise RuntimeError(
             "maintenance-only predecessor must expose exactly Repo Validation"
         )
-    workflow = (workflow_root / "repo-validation.yml").read_text(encoding="utf-8")
     forbidden_workflow_markers = (
         "repository: 8Dionysus/",
         "build_router.py",
