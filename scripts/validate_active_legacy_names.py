@@ -123,6 +123,7 @@ EXCLUDED_CONTENT_PREFIXES: tuple[Path, ...] = (
     Path("kag/indexes/index_family.manifest.json"),
     Path("kag/indexes/shards"),
     Path("kag/receipts/index_family_budget"),
+    Path("tests/fixtures"),
 )
 TEXT_SUFFIXES = {
     ".json",

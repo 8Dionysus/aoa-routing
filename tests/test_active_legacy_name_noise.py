@@ -36,6 +36,13 @@ def test_top_level_sibling_checkouts_are_not_active_local_content(tmp_path: Path
 
     fixture_doc = tmp_path / "tests" / "fixtures" / "aoa-techniques" / "TECHNIQUE.md"
     fixture_doc.parent.mkdir(parents=True)
-    fixture_doc.write_text("ordinary fixture content\n", encoding="utf-8")
+    fixture_doc.write_text(
+        "historical "
+        + ("wa" + "ve")
+        + " "
+        + ("se" + "ed")
+        + " language in a frozen sibling fixture\n",
+        encoding="utf-8",
+    )
 
     assert validate(tmp_path) == []

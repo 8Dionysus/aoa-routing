@@ -1410,21 +1410,21 @@ def test_build_outputs_publish_federation_entry_abi_from_fixtures() -> None:
             "target_repo": "Agents-of-Abyss",
             "target_surface": "generated/center_entry_map.min.json",
             "match_key": "route_id",
-            "target_value": "center-overview",
+            "target_value": "first-reading",
         },
         {
             "verb": "inspect",
             "target_repo": "Agents-of-Abyss",
             "target_surface": "generated/center_entry_map.min.json",
             "match_key": "route_id",
-            "target_value": "public-contour",
+            "target_value": "public-claim-validation",
         },
         {
             "verb": "inspect",
             "target_repo": "Agents-of-Abyss",
             "target_surface": "generated/center_entry_map.min.json",
             "match_key": "route_id",
-            "target_value": "source-of-truth-rules",
+            "target_value": "ownership-routing",
         },
     ]
     assert aoa_root["fallback"] == {

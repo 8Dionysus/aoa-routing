@@ -9,6 +9,17 @@ Tracking starts with the community-docs baseline for this repository.
 
 ### Changed
 
+- Entered the M3 maintenance-only posture after the SDK-owned G5 switch:
+  `aoa-sdk` is the canonical producer and ABI owner, while this repository
+  retains only compatibility, security, rollback, and deprecation scope.
+- Replaced paired sibling-checkout CI and release rehearsal with one local
+  fail-closed maintenance gate. Active predecessor CI no longer builds,
+  compares, or publishes canonical routing outputs.
+- The maintenance gate now derives the immutable M3 base even in the local
+  release flow, inventories both YAML workflow suffixes, rejects every new or
+  structural non-document predecessor surface, and permits an existing
+  retained-source blob only when an exact reviewed compatibility, security,
+  rollback, or deprecation approval packet covers it.
 - Added a strict M2 conditional predecessor handoff that admits the exact
   landed SDK G4 shadow evidence and unchanged rollback producer while keeping
   G5, maintenance-only mode, live SDK provenance, the compatibility window,

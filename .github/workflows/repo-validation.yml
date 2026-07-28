@@ -6,145 +6,26 @@ on:
       - main
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  release_audit:
+  maintenance:
     name: Repo Validation
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout routing repo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-
-      - name: Check repo-local KAG index family
-        uses: 8Dionysus/aoa-kag/.github/actions/repo-local-kag-index@b28f64a497fd440dd58cbaae90d655da46224d8c
-        with:
-          history-ref: ${{ github.event.pull_request.base.sha || github.event.before || format('{0}^', github.sha) }}
-          event-history-ref: ${{ github.event.pull_request.base.sha || github.event.before || format('{0}^', github.sha) }}
-
-      - name: Checkout aoa-techniques
+      - name: Checkout maintenance repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
-          repository: 8Dionysus/aoa-techniques
-          ref: e842c0d0156c58cfb9020b636e81134e96fc8cfb
-          path: aoa-techniques
-
-      - name: Checkout aoa-skills
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-skills
-          ref: 48598a9564c4621b15428831642b802dbc8d2a47
-          path: aoa-skills
-
-      - name: Checkout aoa-evals
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-evals
-          ref: 3412b47f9ee7bec9567f92e1c2d59596c4428a2c
-          path: aoa-evals
-
-      - name: Checkout aoa-stats
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-stats
-          ref: 504571995cc36905cc886259c0a19be6e8e35045
-          path: aoa-stats
-
-      - name: Checkout aoa-memo
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-memo
-          ref: 7672add5e2bb4ff21c2581ca656998f0ca7c8a3e
-          path: aoa-memo
-
-      - name: Checkout aoa-agents
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-agents
-          ref: 66f8bf22d03518b1e2367fd4f51dab80650f6d37
-          path: aoa-agents
-
-      - name: Checkout Agents-of-Abyss
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/Agents-of-Abyss
-          ref: bfeb4bfb447b437f1360b814bbf4f1def5e62859
-          path: Agents-of-Abyss
-
-      - name: Checkout aoa-playbooks
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-playbooks
-          ref: a15866ec867209288533850cc34939ad81829947
-          path: aoa-playbooks
-
-      - name: Checkout aoa-kag
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-kag
-          ref: cdd2286c5ad4a345fe704ca065036945f6ba4353
-          path: aoa-kag
-
-      - name: Checkout Tree-of-Sophia
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/Tree-of-Sophia
-          ref: 8126cc379a759990358728bbcedadbd3b24a7b6d
-          path: Tree-of-Sophia
-
-      - name: Checkout aoa-sdk
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-sdk
-          ref: v0.6.0
-          fetch-tags: true
-          path: aoa-sdk
-
-      - name: Checkout admitted aoa-sdk G4 evidence
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/aoa-sdk
-          ref: 5cab5840c03b66c22bb07a6d0863bef9e95c7b23
-          path: .deps/aoa-sdk-g4
-
-      - name: Checkout Dionysus
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/Dionysus
-          ref: 6c463f6b89a11e85b37e2606525afc7d45005fbd
-          path: Dionysus
-
-      - name: Checkout 8Dionysus
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/8Dionysus
-          ref: 39cdef104d54d570e7eb4f689ebcd48b2cc6a658
-          path: 8Dionysus
-
-      - name: Checkout abyss-stack
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/abyss-stack
-          ref: 83d64234e719f74d6fd6a84a16c1a2af14754958
-          path: abyss-stack
-
-      - name: Checkout abyss-machine
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
-        with:
-          repository: 8Dionysus/abyss-machine
-          ref: 4a70f4b0d80a78d4a3269158ab23b5c32592a454
-          path: abyss-machine
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405
         with:
           python-version: "3.12"
 
-      - name: Install dependencies
+      - name: Install validation dependencies
         run: python -m pip install -r requirements-dev.txt
 
-      - name: Run release audit
-        env:
-          ABYSS_MACHINE_REPO_ROOT: ./abyss-machine
-          AOA_SDK_G4_ROOT: ./.deps/aoa-sdk-g4
-          AOA_SDK_SHADOW_RELEASE_ROOT: ./aoa-sdk
-          AOA_STATS_ROOT: ./aoa-stats
+      - name: Run maintenance gate
         run: python scripts/release_check.py

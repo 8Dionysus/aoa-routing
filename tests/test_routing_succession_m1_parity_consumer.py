@@ -114,7 +114,7 @@ def test_sdk_shadow_fixture_materializer_rejects_duplicate_paths(
         verifier.safe_materialize_fixture(archive_path, tmp_path / "fixture")
 
 
-def test_repo_validation_pins_the_same_sdk_release() -> None:
+def test_m1_release_pin_is_historical_and_absent_from_active_gate() -> None:
     pin = json.loads(
         (PART_ROOT / "config" / "sdk_shadow_release_pin.json").read_text(
             encoding="utf-8"
@@ -127,7 +127,8 @@ def test_repo_validation_pins_the_same_sdk_release() -> None:
         encoding="utf-8"
     )
 
-    assert f"ref: {pin['sdk_release']['tag']}" in workflow
-    assert "fetch-tags: true" in workflow
-    assert "AOA_SDK_SHADOW_RELEASE_ROOT: ./aoa-sdk" in workflow
-    assert "verify_sdk_shadow_release_parity.py" in release_check
+    assert pin["sdk_release"]["tag"] == "v0.6.0"
+    assert f"ref: {pin['sdk_release']['tag']}" not in workflow
+    assert "AOA_SDK_SHADOW_RELEASE_ROOT" not in workflow
+    assert "verify_sdk_shadow_release_parity.py" not in release_check
+    assert "validate_routing_maintenance_only.py" in release_check

@@ -144,6 +144,20 @@ alone is not proof.
 - This record does not authorize repository archive, deletion, rename, or
   hidden ABI change.
 
+## Currentness Review (2026-07-28)
+
+The M3 maintenance gate now gives the accepted maintenance classes a
+fail-closed executable shape. Local and CI validation derive the immutable
+maintenance base from the M3 receipt. New or structural implementation
+surfaces, generated outputs, and publication contours remain forbidden.
+
+A compatibility, security, rollback, or deprecation repair may modify an
+already retained source file only when an owner-reviewed maintenance packet
+binds the allowed class and durable approval reference to the exact path and
+resulting Git blob. The packet is checked review evidence, not self-granted
+authority, and cannot reopen producer ownership. This corrects the earlier
+over-broad path freeze without weakening the G5 succession decision.
+
 ## Source Surfaces
 
 - `AGENTS.md`
