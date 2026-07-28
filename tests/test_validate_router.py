@@ -68,12 +68,12 @@ def copy_owner_dispatch_surface(repo_root: Path) -> None:
         copy_repo_text(repo_root, relative_path)
 
 
-def copy_live_repo_text(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
-    source_root = router_core.default_dependency_root(
-        repo_name,
-        Path(__file__).resolve().parents[1],
-    )
-    source = source_root / relative_path
+def copy_fixture_repo_text(
+    roots: dict[str, Path],
+    repo_name: str,
+    relative_path: str,
+) -> None:
+    source = FIXTURES_ROOT / repo_name / relative_path
     destination = roots[repo_name] / relative_path
     destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
@@ -116,9 +116,9 @@ def ensure_repo_ref_placeholder(roots: dict[str, Path], raw_ref: str) -> None:
 
 
 def hydrate_route_map_fixture(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
-    copy_live_repo_text(roots, repo_name, relative_path)
+    copy_fixture_repo_text(roots, repo_name, relative_path)
     payload = json.loads((roots[repo_name] / relative_path).read_text(encoding="utf-8"))
-    copy_live_repo_text(roots, repo_name, payload["schema_ref"])
+    copy_fixture_repo_text(roots, repo_name, payload["schema_ref"])
     ensure_local_ref_placeholder(roots[repo_name], payload["authority_ref"])
     for ref in payload.get("validation_refs", []):
         ensure_local_ref_placeholder(roots[repo_name], ref)
@@ -140,11 +140,11 @@ def hydrate_route_map_fixture(roots: dict[str, Path], repo_name: str, relative_p
 
 def hydrate_catalog_fixture(roots: dict[str, Path], repo_name: str, relative_path: str) -> None:
     if repo_name != "abyss-stack":
-        copy_live_repo_text(roots, repo_name, relative_path)
+        copy_fixture_repo_text(roots, repo_name, relative_path)
     payload = json.loads((roots[repo_name] / relative_path).read_text(encoding="utf-8"))
     schema_ref = payload.get("schema_ref")
     if repo_name != "abyss-stack" and isinstance(schema_ref, str):
-        copy_live_repo_text(roots, repo_name, schema_ref)
+        copy_fixture_repo_text(roots, repo_name, schema_ref)
     authority_ref = payload.get("authority_ref")
     if isinstance(authority_ref, str):
         ensure_local_ref_placeholder(roots[repo_name], authority_ref)

@@ -1,0 +1,237 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/8Dionysus/Agents-of-Abyss/main/schemas/center-entry-map.schema.json",
+  "title": "AoA center entry map",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "schema_ref",
+    "owner_repo",
+    "surface_kind",
+    "authority_ref",
+    "public_root_ref",
+    "route_contract_ref",
+    "artifact_identity",
+    "registry_ref",
+    "supporting_inventory_ref",
+    "validation_refs",
+    "routes"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "aoa_center_entry_map_v2"
+    },
+    "schema_ref": {
+      "const": "schemas/center-entry-map.schema.json"
+    },
+    "owner_repo": {
+      "const": "Agents-of-Abyss"
+    },
+    "surface_kind": {
+      "const": "center_entry_map"
+    },
+    "authority_ref": {
+      "$ref": "#/$defs/repoRelativeSurface"
+    },
+    "public_root_ref": {
+      "$ref": "#/$defs/repoRelativeSurface"
+    },
+    "route_contract_ref": {
+      "$ref": "#/$defs/repoRelativeSurface"
+    },
+    "artifact_identity": {
+      "$ref": "#/$defs/artifactIdentity"
+    },
+    "registry_ref": {
+      "$ref": "#/$defs/repoRelativeSurface"
+    },
+    "supporting_inventory_ref": {
+      "$ref": "#/$defs/repoRelativeSurface"
+    },
+    "validation_refs": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "$ref": "#/$defs/repoRelativeSurface"
+      }
+    },
+    "routes": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "$ref": "#/$defs/route"
+      }
+    }
+  },
+  "$defs": {
+    "artifactIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifact_class",
+        "surface_state",
+        "owner_repo",
+        "authority_ref",
+        "producer",
+        "consumer_expectation",
+        "privacy_boundary",
+        "content_identity",
+        "abi_epoch",
+        "contract_version",
+        "trust_layer",
+        "verification",
+        "action"
+      ],
+      "properties": {
+        "artifact_class": {
+          "type": "string",
+          "minLength": 3
+        },
+        "surface_state": {
+          "type": "string",
+          "const": "generated"
+        },
+        "owner_repo": {
+          "type": "string",
+          "const": "Agents-of-Abyss"
+        },
+        "authority_ref": {
+          "$ref": "#/$defs/repoRelativeSurface"
+        },
+        "producer": {
+          "type": "string",
+          "minLength": 3
+        },
+        "consumer_expectation": {
+          "type": "string",
+          "minLength": 3
+        },
+        "privacy_boundary": {
+          "type": "string",
+          "minLength": 3
+        },
+        "content_identity": {
+          "type": "string",
+          "minLength": 3
+        },
+        "abi_epoch": {
+          "type": "string",
+          "const": "aoa_center_entry_map_v2"
+        },
+        "contract_version": {
+          "type": "string",
+          "minLength": 3
+        },
+        "trust_layer": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 3
+          }
+        },
+        "verification": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/repoRelativeSurface"
+          }
+        },
+        "action": {
+          "type": "string",
+          "minLength": 3
+        }
+      }
+    },
+    "repoRelativeSurface": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?![A-Za-z0-9_-]+:)(?![A-Za-z]:[\\\\/])(?![\\\\/])(?!\\.\\.?[\\\\/])[A-Za-z0-9._/#-]+$"
+    },
+    "route": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "route_id",
+        "route_mode",
+        "priority",
+        "audience",
+        "need",
+        "surface_ref",
+        "human_path",
+        "machine_surface_refs",
+        "verification_refs",
+        "must_not_claim"
+      ],
+      "properties": {
+        "route_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "route_mode": {
+          "type": "string",
+          "enum": [
+            "first-reading",
+            "root-editing",
+            "direction-change",
+            "ownership-routing",
+            "mechanic-change",
+            "organ-alignment",
+            "public-claim-validation",
+            "low-context-agent",
+            "local-memory-port",
+            "district-work"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "audience": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "need": {
+          "type": "string",
+          "minLength": 1
+        },
+        "surface_ref": {
+          "$ref": "#/$defs/repoRelativeSurface"
+        },
+        "human_path": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/repoRelativeSurface"
+          }
+        },
+        "machine_surface_refs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/repoRelativeSurface"
+          }
+        },
+        "verification_refs": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/repoRelativeSurface"
+          }
+        },
+        "must_not_claim": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}
