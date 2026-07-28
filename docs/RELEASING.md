@@ -24,8 +24,12 @@ deprecation need is named explicitly and:
 - `CHANGELOG.md` has a dated section with Summary, Validation, and Notes;
 - the M3 maintenance-only validator accepts the exact SDK owner receipt,
   retained rollback implementation, compatibility ABI, and archive posture;
-- the diff contains no new producer, generated-output, feature, or publication
-  path;
+- the gate derives the immutable M3 base in CI and local release runs;
+- the diff contains no new or structural implementation path, generated
+  output, feature lane, or publication contour;
+- any modified retained source blob is covered by an owner-reviewed approval
+  packet for exactly one compatibility, security, rollback, or deprecation
+  class, exact path, exact resulting Git blob, and durable approval reference;
 - the repository-local maintenance gate passes without sibling checkout;
 - the release branch lands through PR and GitHub Repo Validation;
 - landed `main` passes the same gate before any tag is created;

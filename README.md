@@ -100,6 +100,16 @@ transition evidence. They are not current release dependencies or authority.
 The active M3 packet pins the SDK owner receipt, compatibility ABI, retained
 rollback implementation, and fail-closed archive posture.
 
+The local and CI maintenance gates always compare against the immutable M3
+maintenance base. New or structural implementation paths and all generated
+output changes fail closed. A repair to an already retained source file is
+admissible only when a reviewed packet under
+`mechanics/release-support/parts/release-gate-routing/evidence/maintenance-approvals/`
+names its allowed maintenance class, approval reference, exact path, and
+current Git blob. The packet makes the approved scope mechanically checkable;
+it does not self-authorize the change or restore producer/publication
+authority.
+
 ## What it reads
 
 The build stays thin by reading repo-local generated catalogs and registries from sibling repositories instead of reparsing their live authoring files.

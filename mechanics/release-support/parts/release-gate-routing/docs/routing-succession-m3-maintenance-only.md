@@ -16,6 +16,28 @@ fail-closed maintenance gate. It validates this receipt, repository topology,
 decision records, and local tests without publishing or generating routing
 artifacts.
 
+The root-owned repository release gate compares every run against the
+immutable `maintenance_base_ref` in this packet. Both `.yml` and `.yaml`
+workflow contours are inventoried. New, copied, renamed, deleted, or
+type-changed non-document predecessor surfaces fail closed, as do all
+generated-output changes and publication markers.
+
+An actual compatibility, security, rollback, or deprecation repair may modify
+an already retained source file. Such a modification is accepted only when a
+reviewed `aoa_routing_maintenance_approval_v1` packet under
+`evidence/maintenance-approvals/` matches:
+
+- the immutable M3 maintenance base;
+- one allowed maintenance class;
+- the exact retained path;
+- the exact resulting Git blob;
+- a named approval authority and durable approval reference.
+
+The packet is review evidence, not self-approval. Repository owner review
+admits it; the validator only proves that the landed blob did not escape the
+reviewed scope. It cannot permit new or structural paths, generated outputs, a
+competing producer, or publication.
+
 The fourteen historical output paths and `aoa_routing_thin_router_v1` stay
 available as rollback and compatibility evidence. Their presence does not
 make this repository canonical.
