@@ -15,11 +15,12 @@ this document owns release-readiness shape and closeout expectations.
 | next route | `CHANGELOG.md`, `README.md`, `ROADMAP.md`, `scripts/release_check.py`, GitHub PR and Release |
 | validation | root release gate, Repo Validation, landed-main rerun, release audit |
 
-## Maintenance Publication Shape
+## Historical Pre-Archive Maintenance Publication Shape
 
-Ordinary paired routing releases ended at G5. A rare predecessor maintenance
-publication is ready only when a compatibility, security, rollback, or
-deprecation need is named explicitly and:
+Ordinary paired routing releases ended at G5. Before the final `v0.4.0`
+boundary, a rare predecessor maintenance publication was admissible only when
+a compatibility, security, rollback, or deprecation need was named explicitly
+and:
 
 - `CHANGELOG.md` has a dated section with Summary, Validation, and Notes;
 - the M3 maintenance-only validator accepts the exact SDK owner receipt,
@@ -37,6 +38,22 @@ deprecation need is named explicitly and:
 - postpublish audit confirms branch, tag, latest release, body sync, and clean
   canonical worktree.
 
+## Final Release Boundary
+
+`v0.4.0` is the last predecessor release. It closes the deprecation contour
+after SDK-owned consumer-zero evidence, compatibility exit, rollback
+retirement, and exact operator archive approval.
+
+After the `v0.4.0` release and GitHub archive:
+
+- no further predecessor maintenance or release is authorized;
+- every routing fix, feature, generated-output, ABI, publication, and Agent OS
+  control-plane request routes to `aoa-sdk`;
+- the repository remains available only as historical source, decision,
+  release, and transition evidence;
+- any future release would first require an explicit unarchive decision and
+  new exact operator authorization outside this closeout.
+
 ## Routing Boundaries
 
 Release notes may describe routing projections, contracts, and owner-return
@@ -47,9 +64,10 @@ Artifact identity and a trust-gate verdict prove the bounded routing readmodel
 handoff named by the manifest. They do not certify the upstream objects to
 which the router points.
 
-The M1 shadow release and M2 conditional handoff are immutable historical
-evidence. They do not authorize a new paired release or reopen predecessor
-producer ownership. The M3 packet is the active release boundary.
+The M1 shadow release, M2 conditional handoff, and M3 maintenance-only packet
+are immutable historical evidence. They do not authorize a new paired or
+maintenance release, reopen predecessor producer ownership, or supersede the
+final `v0.4.0` archive boundary.
 
 ## Version Surfaces
 
@@ -69,6 +87,8 @@ and preserve enough history for a later contributor to reproduce the scope.
 
 ## Closeout
 
-After publication, verify the remote tag and GitHub Release, confirm local
-`main` equals `origin/main`, and report any skipped check or unresolved owner
-dependency. A local tag or green feature branch is not a completed release.
+After publication, verify the remote tag and GitHub Release, public metadata,
+archive state, and continued SDK-canonical runtime health. Confirm local
+`main` equals `origin/main` and report any skipped check or unresolved owner
+dependency. A local tag, green feature branch, or archived flag without these
+checks is not a completed final release.

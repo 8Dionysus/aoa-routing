@@ -1,27 +1,26 @@
 # Mechanics
 
-`mechanics/` is the active operation atlas for `aoa-routing` participation in
-shared OS Abyss mechanics.
+`mechanics/` preserves the predecessor operation atlas for historical
+`aoa-routing` participation in shared OS Abyss mechanics.
 
-Local thin-router behavior starts in [`routing/`](../routing/README.md). A
-mechanic exists here only when the repo owns a repeatable routing part of a
-shared operation.
+There is no active mechanic or thin-router behavior here after `v0.4.0`.
+Current routing mechanics route to `aoa-sdk`; stronger source owners retain
+their own meaning.
 
 ## Operating Card
 
 | Field | Route |
 | --- | --- |
-| role | route shared mechanic pressure to the owning parent and part |
+| role | preserve predecessor mechanic topology and route current work away |
 | input | mechanic-owned route docs, schemas, examples, config, manifests, generated companions, scripts, tests, or former flat path |
-| output | active parent mechanic, active part, source-home handoff, provenance bridge, or legacy lookup |
+| output | historical lookup, provenance bridge, or current-owner handoff |
 | owner | parent package docs and part contracts; stronger OS Abyss owners keep final meaning |
 | next route | `routing/` for local router source behavior, `QUESTBOOK.md` and `quests/` for source quest records, `mechanics/<head>/` for shared mechanic parts, `PROVENANCE.md` for former-path accounting |
 | validation | mechanics topology checks and owning part validators |
 
-## Active Parent Candidates
+## Preserved Parent Candidates
 
-The first landing will activate only parents with evidenced payload clusters.
-Candidate parents from current file inventory are:
+These candidates record the predecessor inventory at its observation stage:
 
 | Parent | Current pressure |
 | --- | --- |
@@ -40,9 +39,10 @@ Candidate means "evidenced by current payloads", not yet "fully landed".
 Activation requires parent docs, `PARTS.md`, provenance, legacy accounting when
 flat paths move, and validation.
 
-## Placement Rule
+## Historical Placement Rule
 
-Use the nearest operation owner:
+The following map explains preserved placement. It is not an active intake
+route:
 
 - router source behavior -> `routing/`;
 - routing quest source records -> `QUESTBOOK.md` and `quests/<lane>/<state>/`;
@@ -50,4 +50,4 @@ Use the nearest operation owner:
 - repo-wide release/validation/platform support -> root support districts;
 - former flat path lookup -> package `PROVENANCE.md` then `legacy/`.
 
-Do not preserve a root flat path as active just because it existed before.
+Route all current routing work to `aoa-sdk` or the stronger source owner.

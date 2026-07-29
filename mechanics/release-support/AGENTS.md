@@ -1,4 +1,6 @@
 # Release Support Mechanics
 
-This package owns aoa-routing release-support route parts. Keep active payloads
-under `parts/<part>/`; use `legacy/` only for former root-path accounting.
+This package preserves historical `aoa-routing` release-support route parts.
+It owns no active release or maintenance lane after `v0.4.0`; route current
+release-support work to `aoa-sdk`. Use `legacy/` only for former root-path
+accounting.

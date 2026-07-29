@@ -7,9 +7,9 @@ narrows the lane.
 
 ## Role
 
-`kag/` is the local KAG provider home for `aoa-routing`. It exposes compact,
-source-linked records over `routing source home and cross-repo route registry` for `aoa-kag` registry,
-composition, and MCP consumers.
+`kag/` preserves the retired local KAG provider packet for `aoa-routing`.
+Its compact records describe the historical routing source home and redirect
+owner-return consumers to `aoa-sdk`.
 
 ## Read before editing
 
@@ -19,14 +19,15 @@ changing provider records.
 
 ## Boundaries
 
-Keep authored meaning with `aoa-routing` source surfaces. Keep shared KAG schema,
-registry, composition, and provider validation with `aoa-kag`. Keep runtime
-serving state with `abyss-stack` or the runtime owner named by the consumer.
+Keep predecessor history with the archived `aoa-routing` source surfaces.
+Route active routing meaning and work to `aoa-sdk`. Keep shared KAG schema,
+registry, composition, and provider validation with `aoa-kag`; runtime serving
+state stays with `abyss-stack` or its named owner.
 
 ## Validation
 
-Use the owner validator named in `manifest.json`, then validate this provider
-through the `aoa-kag` local subtree validator.
+Use the owner validator named in `manifest.json`, then validate the retired
+provider through the `aoa-kag` local subtree validator.
 
 ## Closeout
 

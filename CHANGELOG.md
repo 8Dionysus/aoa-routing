@@ -7,6 +7,20 @@ Tracking starts with the community-docs baseline for this repository.
 
 ## [Unreleased]
 
+No further predecessor releases are planned. Route all routing changes to
+`aoa-sdk`.
+
+## [0.4.0] - 2026-07-29
+
+### Summary
+
+- This is the final `aoa-routing` deprecation release and GitHub archive
+  boundary. It adds no routing behavior.
+- `aoa-sdk` is the canonical routing producer, ABI owner, maintenance surface,
+  and Agent OS control-plane route.
+- SDK-owned X1 evidence demonstrates consumer-zero, closing the predecessor
+  compatibility window and retiring its operational rollback role.
+
 ### Changed
 
 - Entered the M3 maintenance-only posture after the SDK-owned G5 switch:
@@ -37,6 +51,41 @@ Tracking starts with the community-docs baseline for this repository.
 - Cross-host owner discovery now honors explicit workspace roots while keeping
   the `abyss-stack/Configs` source checkout ahead of its containing workspace
   repository.
+- Marked the predecessor documentation as historical-only and routed every
+  future routing fix, feature, release, and control-plane change to `aoa-sdk`.
+- Recorded exact operator authorization for the final release, public metadata
+  route, and GitHub archive of repository ID `1186624390`.
+
+### First-Parent Reconciliation (7/7)
+
+1. `636ed4e` — Route skills through owner capability contracts (#151).
+2. `cde31e5` — Adopt portable KAG index family (#152).
+3. `c55f86b` — Restore current owner routing parity (#153).
+4. `7e2fe46` — Accept routing producer succession to SDK (#154).
+5. `5c7c0e5` — Consume SDK M1 shadow release in parity gate (#155).
+6. `97f60de` — Prepare routing succession M2 handoff (#156).
+7. `19c2629` — Enter routing maintenance-only mode (#157).
+
+### Validation
+
+- The repository-local maintenance gate must pass without sibling checkout on
+  the release branch and landed `main`.
+- GitHub Repo Validation must pass for the exact release commit before tagging.
+- The SDK X1 report is landed at
+  `9d10318e446304bb951a7c71aab0b5def961af72`; GitHub Actions run
+  `30464461615` passed for that evidence.
+- The archive-readiness follow-up is landed in `aoa-sdk` at
+  `37c5aab075c115b50bb47fc431785b2c2b6e0d86`; its GitHub Actions run
+  `30466542840` passed.
+
+### Notes
+
+- Historical ABI, releases, decisions, generated outputs, and transition
+  packets remain preserved. The immutable M3 packet continues to describe the
+  pre-archive maintenance boundary and is not rewritten as current authority.
+- Live routing remains SDK-canonical. The GitHub archive is a separate,
+  explicitly authorized hosting action performed only after this release
+  lands and its public metadata points to `aoa-sdk`.
 
 ## [0.3.0] - 2026-07-13
 

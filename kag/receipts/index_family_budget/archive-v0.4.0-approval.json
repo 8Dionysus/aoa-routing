@@ -1,0 +1,12 @@
+{
+  "approval_id": "AOA-RT-KAG-ARCHIVE-0001",
+  "approval_ref": "operator-confirmation:github-repository-1186624390:2026-07-29",
+  "approval_scope": "final-v0.4.0-archive-refresh-only",
+  "approved_by": "repository operator",
+  "approved_family_digest": "05e508b815d653442b1e0b42e062641127e9716e2786439b0a3b8a2879557065",
+  "approved_on": "2026-07-29",
+  "approved_source_tree_digest": "dcdcce74f594bcc6a793a4f51f247fb12241590acf7d61eb4bda279c6e49e291",
+  "archive_target_repository_id": 1186624390,
+  "claim_limit": "Authorizes exactly one portable KAG regeneration for the final v0.4.0 archive boundary of GitHub repository 1186624390. The approval is consumed by the pinned family and source-tree digests and does not authorize any later regeneration, unarchive, deletion, rename, or routing change.",
+  "schema_version": "aoa-routing-kag-archive-approval-v1"
+}

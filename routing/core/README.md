@@ -2,7 +2,7 @@
 
 ## Role
 
-`routing/core/` owns the local thin-router source contour:
+`routing/core/` preserves the retired predecessor thin-router source contour:
 
 `source catalogs -> derived route registry -> public routing outputs -> bounded next hop`
 
@@ -18,9 +18,9 @@
 - public route projections, hints, and recommended paths;
 - owner-boundary checks that keep routing weaker than source meaning.
 
-## Active Contracts
+## Preserved Contracts
 
-Core public-output schemas live under `schemas/` inside this source-home:
+Historical core public-output schemas remain under `schemas/`:
 
 - `schemas/aoa-router.schema.json`
 - `schemas/cross-repo-registry.schema.json`
@@ -31,13 +31,14 @@ Core public-output schemas live under `schemas/` inside this source-home:
 - `schemas/pairing-hints.schema.json`
 - `schemas/tiny-model-entrypoints.schema.json`
 
-## Stronger Owner Split
+## Current Owner Split
 
-`aoa-routing` owns navigation. Source repositories own technique, skill, eval,
-memory, agent, playbook, KAG, stats, runtime, center, and ToS meaning.
+`aoa-sdk` owns active routing navigation, ABI, generation, maintenance, and
+publication. Source repositories own technique, skill, eval, memory, agent,
+playbook, KAG, stats, runtime, center, and ToS meaning.
 
-Root `generated/` may publish cross-repo routing outputs while this route owns
-the local source-home behavior that builds and verifies them.
+Root `generated/` and this source-home remain historical evidence only. They
+must not be used to dispatch active work back into `aoa-routing`.
 
 ## Stop-Lines
 
@@ -49,4 +50,5 @@ the local source-home behavior that builds and verifies them.
 
 ## Validation
 
-Use the root validation lane until source-home wrappers are fully localized.
+Use the root validation lane only to reproduce or audit preserved history.
+Route every active change to `aoa-sdk`.

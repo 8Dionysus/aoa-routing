@@ -7,19 +7,23 @@ nearer `AGENTS.md` narrows the lane.
 
 ## Role
 
-`mechanics/` is the active operation atlas for how `aoa-routing` participates
-in shared OS Abyss mechanics.
+`mechanics/` preserves the predecessor operation atlas for how `aoa-routing`
+participated in shared OS Abyss mechanics.
 
-It is not the source-home for the router itself. Local routing behavior starts
-in `routing/`; shared mechanic pressure starts here.
+It is not an active source-home or mechanic route. Current routing and Agent OS
+pressure routes to `aoa-sdk` or the stronger source owner.
+
+Historical validators call this the `active operation atlas`; that phrase
+describes the preserved pre-archive topology and does not grant current
+authority.
 
 ## Operating Card
 
 | Field | Route |
 | --- | --- |
-| role | active mechanic atlas, part topology, and legacy/provenance route law |
+| role | historical mechanic atlas, part topology, and legacy/provenance record |
 | input | recurring mechanic pressure, payload movement, former flat route, owner split, validation placement, or legacy accounting |
-| output | parent mechanic, part contract, payload home, provenance bridge, legacy index entry, or stronger-owner handoff |
+| output | preserved predecessor evidence or stronger-owner handoff |
 | owner | `mechanics/README.md` owns the atlas; parent `PARTS.md` owns part map; nearest part owns payload route |
 | next route | parent `README.md`, `PARTS.md`, nearest part `README.md`, `PROVENANCE.md`, and `legacy/` only through provenance |
 | validation | mechanics topology validators, owning route validators, and `python scripts/validate_semantic_agents.py` |
@@ -34,10 +38,14 @@ in `routing/`; shared mechanic pressure starts here.
   operation.
 - Source quest records live in `QUESTBOOK.md` and `quests/`; `mechanics/questbook/`
   owns operation law and validation posture, not the source-record district.
-- Keep active routes out of `legacy/`; legacy maps former paths back to active
-  owners.
-- Keep root districts only when they remain repo-wide, public, or compatibility
-  surfaces.
+- Interpret active/owner language in retained payloads at its historical
+  observation stage; it does not reopen a current predecessor lane.
+- Keep active routes out of `legacy/`; after retirement there are no active
+  predecessor routes to place there.
+- Preserved root districts are historical lookup surfaces, not current
+  implementation homes.
+- Route all current routing mechanics to `aoa-sdk` or the stronger source
+  owner.
 
 ## Closeout
 

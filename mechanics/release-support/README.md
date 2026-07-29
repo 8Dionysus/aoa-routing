@@ -1,20 +1,20 @@
 # Release Support
 
-`mechanics/release-support/` holds routing-local release gate, deployment ring,
-installation, and watchtower escalation contracts.
+`mechanics/release-support/` preserves predecessor release gate, deployment
+ring, installation, and watchtower escalation contracts.
 
 ## Operating Card
 
 | Field | Route |
 | --- | --- |
-| role | route release and installation pressure to the owner, gate, watch, or support surface that can act |
+| role | preserve predecessor release-support contracts and route current work to `aoa-sdk` |
 | input | release gate decisions, deployment signals, installation route plans, watchtower escalation routes, release runbook |
-| output | release gate route, deployment route signal, installation route plan, watchtower escalation route |
-| owner | `aoa-routing` owns route shape only; CI, GitHub, runtime deployment, proof, and source authority stay with stronger owners |
-| next route | `parts/release-gate-routing/`, `parts/deployment-ring-routing/`, `parts/installation-routing/`, `parts/watchtower-escalation/` |
+| output | historical lookup or `aoa-sdk` handoff |
+| owner | `aoa-sdk` owns active routing release support; stronger owners retain deployment, proof, runtime, and source authority |
+| next route | `aoa-sdk` for active work; retained `parts/` only for historical inspection |
 | validation | release contract tests, release check, mechanics topology validation |
 
 ## Boundary
 
-Release-support route parts do not certify a release or perform deployment. They
-make the next bounded release-support route explicit.
+These retained route parts do not authorize another predecessor release or
+perform deployment. Active routing release support belongs in `aoa-sdk`.

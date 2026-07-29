@@ -23,10 +23,10 @@
   "provenance_mode": "strict_source_linked",
   "derived_method": "source-linked local KAG edge over routing source home and cross-repo route registry",
   "generated_or_authored": "generated_from_source",
-  "status": "active",
+  "status": "archived",
   "owner_return_route": {
     "repo": "aoa-routing",
-    "surface": "routing/README.md",
+    "surface": "README.md",
     "route_kind": "routing"
   },
   "freshness": {
@@ -35,7 +35,7 @@
     "checked_ref": "routing/README.md"
   },
   "builder": {
-    "route": "router builders",
+    "route": "historical router builders",
     "surface": "scripts/build_router.py"
   },
   "validator": {
@@ -47,9 +47,9 @@
     "payload_class": "edge",
     "runtime_route": "source-repo"
   },
-  "consumer_route": "aoa-kag registry",
+  "consumer_route": "aoa-kag registry archival record; active routing returns to aoa-sdk",
   "from_id": "node:routing:routing-source-home",
   "to_id": "node:routing:routing-source-route",
   "edge_kind": "returns_to",
-  "edge_trace": "routing/source_home.manifest.json and generated/cross_repo_registry.min.json return route records to routing/README.md"
+  "edge_trace": "routing/source_home.manifest.json retires the predecessor route; active routing owner return is aoa-sdk/README.md"
 }

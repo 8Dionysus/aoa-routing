@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -48,7 +49,28 @@ def test_m3_receipt_is_strict_and_keeps_archive_forbidden() -> None:
         == "97f60de1b5992ef6bf5ff0f051bd452d940d9a85"
     )
     assert result["changed_path_count"] > 0
-    assert result["approved_retained_source_paths"] == []
+    assert result["approved_retained_source_paths"] == [
+        "kag/edges/source_returns_to_owner.json",
+        "kag/indexes/provider_readiness_index.json",
+        "kag/manifest.json",
+        "kag/nodes/routing-source-home.json",
+        "kag/nodes/routing-source-route.json",
+        "kag/projections/mcp_source_return.json",
+        "kag/receipts/validation_receipt.json",
+        "routing/source_home.manifest.json",
+    ]
+    manifest = json.loads(
+        (
+            REPO_ROOT / "kag" / "indexes" / "index_family.manifest.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert result["portable_kag_family_digest"] == (
+        manifest["family_identity"]["content_digest"]
+    )
+    assert re.fullmatch(
+        r"[0-9a-f]{64}",
+        result["portable_kag_family_digest"],
+    )
     assert result["consumer_zero"] is False
     assert result["archive_ready"] is False
     assert result["archive_authorized"] is False
@@ -237,6 +259,26 @@ def test_m3_rejects_new_producer_or_publication_entrypoint() -> None:
             "evidence/maintenance-approvals/nested/escape.json",
             False,
         ),
+        (
+            "kag/receipts/index_family_budget/"
+            "f943c80f1075715c0ae9e8df6b5522adcdbfc0ab4b0186b69b757af6db17ef20.json",
+            True,
+        ),
+        (
+            "kag/receipts/index_family_budget/"
+            "f943c80f1075715c0ae9e8df6b5522adcdbfc0ab4b0186b69b757af6db17ef2.json",
+            False,
+        ),
+        (
+            "kag/receipts/index_family_budget/nested/"
+            "f943c80f1075715c0ae9e8df6b5522adcdbfc0ab4b0186b69b757af6db17ef20.json",
+            False,
+        ),
+        (
+            "kag/receipts/index_family_budget/"
+            "archive-v0.4.0-approval.json",
+            True,
+        ),
     ],
 )
 def test_m3_maintenance_control_exemption_is_exact(
@@ -269,6 +311,135 @@ def test_m3_rejects_new_entrypoint_inside_maintenance_part() -> None:
             evidence=evidence,
             base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
         )
+
+
+@pytest.mark.parametrize(
+    ("path", "is_portable_index"),
+    [
+        ("kag/indexes/index_family.manifest.json", True),
+        ("kag/indexes/shards/anchor/0a.jsonl", True),
+        ("kag/indexes/shards/event/f.jsonl", True),
+        ("kag/indexes/shards/event_chunk/0.jsonl", True),
+        ("kag/indexes/shards/source/d4.jsonl", True),
+        ("kag/indexes/shards/source/xyz.jsonl", False),
+        ("kag/indexes/shards/nested/0a.jsonl", False),
+    ],
+)
+def test_m3_portable_index_path_is_exact(
+    path: str,
+    is_portable_index: bool,
+) -> None:
+    verifier = _load_verifier()
+
+    assert verifier._is_kag_portable_index_path(path) is is_portable_index
+
+
+def test_m3_allows_only_modification_of_existing_portable_index_path() -> None:
+    verifier = _load_verifier()
+    evidence = verifier.load_evidence()
+    manifest_path = "kag/indexes/index_family.manifest.json"
+
+    assert verifier._validate_change_boundary(
+        (verifier.ChangedPath(status="M", path=manifest_path),),
+        (),
+        evidence=evidence,
+        base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        portable_family_digest="a" * 64,
+    ) == ()
+
+    with pytest.raises(
+        RuntimeError,
+        match="new, structural, or generated predecessor implementation",
+    ):
+        verifier._validate_change_boundary(
+            (
+                verifier.ChangedPath(
+                    status="A",
+                    path="kag/indexes/shards/source/0b.jsonl",
+                ),
+            ),
+            (),
+            evidence=evidence,
+            base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+            portable_family_digest="a" * 64,
+        )
+
+
+def test_m3_portable_index_requires_validated_family_digest() -> None:
+    verifier = _load_verifier()
+    evidence = verifier.load_evidence()
+
+    with pytest.raises(
+        RuntimeError,
+        match="new, structural, or generated predecessor implementation",
+    ):
+        verifier._validate_change_boundary(
+            (
+                verifier.ChangedPath(
+                    status="M",
+                    path="kag/indexes/index_family.manifest.json",
+                ),
+            ),
+            (),
+            evidence=evidence,
+            base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        )
+
+
+def test_m3_budget_receipt_must_match_validated_family_digest() -> None:
+    verifier = _load_verifier()
+    evidence = verifier.load_evidence()
+    digest = "a" * 64
+
+    assert verifier._validate_change_boundary(
+        (
+            verifier.ChangedPath(
+                status="A",
+                path=f"kag/receipts/index_family_budget/{digest}.json",
+            ),
+        ),
+        (),
+        evidence=evidence,
+        base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        portable_family_digest=digest,
+    ) == ()
+
+    with pytest.raises(
+        RuntimeError,
+        match="new, structural, or generated predecessor implementation",
+    ):
+        verifier._validate_change_boundary(
+            (
+                verifier.ChangedPath(
+                    status="A",
+                    path=(
+                        "kag/receipts/index_family_budget/"
+                        f"{'b' * 64}.json"
+                    ),
+                ),
+            ),
+            (),
+            evidence=evidence,
+            base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+            portable_family_digest=digest,
+        )
+
+
+def test_m3_archive_kag_approval_is_exact_and_one_time() -> None:
+    verifier = _load_verifier()
+
+    assert verifier.KAG_ARCHIVE_APPROVAL_REF == (
+        "operator-confirmation:github-repository-1186624390:2026-07-29"
+    )
+    assert (
+        verifier.KAG_ARCHIVE_APPROVAL_SCOPE
+        == "final-v0.4.0-archive-refresh-only"
+    )
+    assert verifier.KAG_ARCHIVE_TARGET_REPOSITORY_ID == 1186624390
+    assert verifier.KAG_ARCHIVE_APPROVAL_PATH == (
+        "kag/receipts/index_family_budget/"
+        "archive-v0.4.0-approval.json"
+    )
 
 
 def test_m3_rejects_unapproved_retained_source_modification() -> None:

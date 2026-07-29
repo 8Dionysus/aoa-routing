@@ -9,26 +9,27 @@ It derives lightweight routing surfaces that point agents to source-owned object
 This repository owns navigation, not the meaning of things it routes to.
 
 `AOA-RT-D-0004` governs the completed producer succession to `aoa-sdk`.
-The exact G5 receipt is SDK-owned; this repository now preserves the
-predecessor ABI and rollback implementation in maintenance-only mode.
-New routing features, producer changes, publication logic, and Agent OS
-control-plane work route to `aoa-sdk`.
+The exact G5 receipt and consumer-zero evidence are SDK-owned. The predecessor
+compatibility window and operational rollback role are retired at the final
+`v0.4.0` archive boundary. This repository preserves historical source and ABI
+evidence only. All routing features, fixes, producer changes, publication
+logic, and Agent OS control-plane work route to `aoa-sdk`.
 
 ## Owner lane
 
-This repository owns:
+This repository owns no active routing or maintenance lane after `v0.4.0`.
+Its retained contents are historical evidence for:
 
-- compatibility and security maintenance for the retained v1 routing ABI
-- the frozen predecessor implementation required by the rollback window
-- deprecation notices and consumer-migration support
-- local validation of that maintenance-only boundary
+- the predecessor v1 routing ABI and implementation
+- the completed producer-succession and compatibility-exit sequence
+- prior releases, decisions, validation contracts, and deprecation notices
 
 It does not own:
 
 - technique, skill, eval, memory, role, playbook, KAG, stats, or center meaning
 - activation authority, semantic truth, or live quest sovereignty
-- archive authority; hosting archive requires a separate exact operator
-  approval after consumer-zero
+- current routing maintenance, release, or archive authority; the final GitHub
+  archive action was separately authorized for repository ID `1186624390`
 
 ## Start here
 
@@ -44,7 +45,7 @@ It does not own:
 10. `docs/decisions/AOA-RT-D-0004-stage-producer-succession-to-aoa-sdk.md`
     when work may affect producer ownership, compatibility, freeze, or archive posture
 11. `mechanics/release-support/parts/release-gate-routing/evidence/routing-succession-m3-maintenance-only.json`
-    for the active ownership, compatibility, rollback, and archive posture
+    for the historical pre-archive ownership and rollback posture
 12. `docs/AGENTS_ROOT_REFERENCE.md` for preserved full root branches
 
 
@@ -89,7 +90,7 @@ If GitHub status or merge permissions cannot be observed, stop the landing route
 
 ## Verify
 
-For maintenance-only changes:
+For the final deprecation release:
 
 ```bash
 python mechanics/release-support/parts/release-gate-routing/scripts/validate_routing_maintenance_only.py
@@ -99,8 +100,8 @@ python scripts/validate_decision_records.py
 python -m pytest -q tests
 ```
 
-Do not change routing logic here. Route feature, producer, generated-output,
-publication, or Agent OS work to `aoa-sdk`.
+Do not change routing logic here. After `v0.4.0`, route every fix, feature,
+producer, generated-output, publication, or Agent OS request to `aoa-sdk`.
 Use Agon, stress, quest, or federation-entry branches from `docs/AGENTS_ROOT_REFERENCE.md` when those surfaces change.
 Use `docs/decisions/AGENTS.md` when durable routing rationale changes; decision records explain why and do not replace generated routing authority.
 

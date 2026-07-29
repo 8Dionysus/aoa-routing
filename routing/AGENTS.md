@@ -7,19 +7,20 @@ nearer `AGENTS.md` narrows the lane.
 
 ## Role
 
-`routing/` retains the predecessor source-home district required for v1
-compatibility, rollback, and legacy accounting.
+`routing/` preserves the retired predecessor source-home district for v1 ABI
+history and legacy accounting.
 
-It does not accept new navigation behavior. Canonical thin-router source,
-policy, and Agent OS integration work route to `aoa-sdk`.
+It accepts no active maintenance or navigation behavior. Canonical thin-router
+source, fixes, policy, releases, and Agent OS integration work route to
+`aoa-sdk`.
 
 ## Operating Card
 
 | Field | Route |
 | --- | --- |
-| role | retained predecessor source-home law for compatibility and rollback |
-| input | compatibility, security, rollback, deprecation, or source-home placement question |
-| output | bounded predecessor maintenance or explicit route to `aoa-sdk` |
+| role | historical predecessor source-home law after compatibility exit |
+| input | historical lookup or a new routing work request |
+| output | preserved evidence or explicit route to `aoa-sdk` |
 | owner | `routing/README.md` owns the source-home map; nearest child route owns local contract |
 | next route | root `AGENTS.md`, `README.md`, `routing/README.md`, affected child route, `mechanics/` when the pressure is a shared mechanic |
 | validation | root release/validation lane plus source-home topology checks once landed |
@@ -37,8 +38,10 @@ policy, and Agent OS integration work route to `aoa-sdk`.
   index instead of recreating root-path aliases.
 - G5 has switched canonical ownership to `aoa-sdk`; M1 and M2 are historical
   transition evidence.
-- Reject new feature implementation here. Retain only compatibility, security,
-  rollback, and deprecation changes until consumer-zero.
+- Consumer-zero closed the compatibility window and retired the operational
+  rollback role at `v0.4.0`.
+- Reject every new feature, fix, maintenance, or release request here and route
+  it to `aoa-sdk`.
 
 ## Closeout
 

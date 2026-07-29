@@ -23,10 +23,10 @@
   "provenance_mode": "strict_source_linked",
   "derived_method": "source-linked local KAG receipt over routing source home and cross-repo route registry",
   "generated_or_authored": "authored_control",
-  "status": "active",
+  "status": "archived",
   "owner_return_route": {
     "repo": "aoa-routing",
-    "surface": "routing/README.md",
+    "surface": "README.md",
     "route_kind": "routing"
   },
   "freshness": {
@@ -47,8 +47,8 @@
     "payload_class": "receipt",
     "runtime_route": "source-repo"
   },
-  "consumer_route": "aoa-kag registry",
+  "consumer_route": "aoa-kag registry archival record; active routing returns to aoa-sdk",
   "receipt_kind": "validation",
-  "result": "current",
-  "fallback_route": "scripts/validate_source_home.py"
+  "result": "routed",
+  "fallback_route": "aoa-sdk README.md"
 }

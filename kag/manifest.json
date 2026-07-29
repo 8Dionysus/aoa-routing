@@ -62,7 +62,7 @@
   "owner_return_routes": [
     {
       "repo": "aoa-routing",
-      "surface": "routing/README.md",
+      "surface": "README.md",
       "route_kind": "routing"
     }
   ]
