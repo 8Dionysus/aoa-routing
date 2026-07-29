@@ -32,13 +32,13 @@ def test_succession_decision_preserves_abi_and_stronger_owners() -> None:
     assert "`AOA-SDK-D-0071`" in text
 
 
-def test_active_route_docs_name_the_completed_switch_and_maintenance_posture() -> None:
+def test_active_route_docs_name_the_completed_switch_and_archive_boundary() -> None:
     required = {
         REPO_ROOT / "AGENTS.md": "AOA-RT-D-0004",
         REPO_ROOT / "README.md": "canonical routing producer",
         REPO_ROOT / "ROADMAP.md": "sdk_canonical",
         REPO_ROOT / "routing" / "AGENTS.md": "canonical ownership to `aoa-sdk`",
-        REPO_ROOT / "routing" / "README.md": "maintenance-only",
+        REPO_ROOT / "routing" / "README.md": "final `v0.4.0` archive boundary",
     }
 
     for path, marker in required.items():

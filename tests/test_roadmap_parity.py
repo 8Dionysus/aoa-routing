@@ -20,14 +20,17 @@ def test_roadmap_federation_milestone_mentions_current_active_entry_kinds() -> N
         assert f"`{kind}`" in roadmap
 
 
-def test_roadmap_matches_current_v0_3_release_surfaces() -> None:
+def test_roadmap_matches_final_v0_4_release_surfaces() -> None:
     readme = read_text("README.md")
     changelog = read_text("CHANGELOG.md")
     roadmap = read_text("ROADMAP.md")
 
-    assert "v0.3.0" in readme
-    assert "[0.3.0]" in changelog
-    assert "v0.3.0" in roadmap
+    assert "Final release: `v0.4.0`" in readme
+    assert "[0.4.0]" in changelog
+    assert "final release contour is `v0.4.0`" in roadmap
+    assert "`aoa-sdk` is the only canonical producer" in roadmap
+    assert "consumer-zero has been demonstrated" in roadmap
+    assert "operational predecessor rollback" in roadmap
 
     for relative_path in (
         "generated/federation_entrypoints.min.json",

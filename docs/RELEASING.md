@@ -37,6 +37,22 @@ deprecation need is named explicitly and:
 - postpublish audit confirms branch, tag, latest release, body sync, and clean
   canonical worktree.
 
+## Final Release Boundary
+
+`v0.4.0` is the last predecessor release. It closes the deprecation contour
+after SDK-owned consumer-zero evidence, compatibility exit, rollback
+retirement, and exact operator archive approval.
+
+After the `v0.4.0` release and GitHub archive:
+
+- no further predecessor maintenance or release is authorized;
+- every routing fix, feature, generated-output, ABI, publication, and Agent OS
+  control-plane request routes to `aoa-sdk`;
+- the repository remains available only as historical source, decision,
+  release, and transition evidence;
+- any future release would first require an explicit unarchive decision and
+  new exact operator authorization outside this closeout.
+
 ## Routing Boundaries
 
 Release notes may describe routing projections, contracts, and owner-return
@@ -69,6 +85,8 @@ and preserve enough history for a later contributor to reproduce the scope.
 
 ## Closeout
 
-After publication, verify the remote tag and GitHub Release, confirm local
-`main` equals `origin/main`, and report any skipped check or unresolved owner
-dependency. A local tag or green feature branch is not a completed release.
+After publication, verify the remote tag and GitHub Release, public metadata,
+archive state, and continued SDK-canonical runtime health. Confirm local
+`main` equals `origin/main` and report any skipped check or unresolved owner
+dependency. A local tag, green feature branch, or archived flag without these
+checks is not a completed final release.

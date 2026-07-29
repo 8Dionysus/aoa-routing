@@ -13,29 +13,21 @@ The governing rule stays unchanged:
 `aoa-sdk` through rehearsal, non-publishing shadow parity, and an explicit G5
 owner-switch receipt.
 
-The current state is `sdk_canonical`:
+The final state is `sdk_canonical` and predecessor-retired:
 
 - `aoa-sdk` is the only canonical producer and routing ABI owner;
 - new routing features, generated-output changes, publication, and Agent OS
   control-plane work land only in `aoa-sdk`;
-- `aoa-routing` retains the frozen v1 predecessor implementation for
-  compatibility, security, rollback, and deprecation only;
-- predecessor CI performs one repository-local maintenance check and does not
-  generate, publish, or checkout sibling repositories;
+- consumer-zero has been demonstrated by the SDK-owned X1 evidence;
+- the compatibility window has exited and the operational predecessor rollback
+  role is retired;
+- `aoa-routing` preserves its frozen v1 implementation and transition evidence
+  as history rather than an active fallback;
 - M1 and M2 packets remain historical transition evidence rather than active
   release dependencies;
-- no archive or functional freeze has taken effect.
-
-During the compatibility window:
-
-- new routing features land only in `aoa-sdk`;
-- this repository is limited to compatibility, security, rollback, and
-  deprecation maintenance;
-- the fourteen output paths and `aoa_routing_thin_router_v1` remain stable
-  through the compatibility window;
-- consumer-zero and compatibility exit conditions must pass before rollback
-  retirement;
-- archive execution still requires exact operator approval.
+- exact operator approval was received for the final release, public route
+  update, and GitHub archive of repository ID `1186624390`;
+- `v0.4.0` is the final predecessor release and archive boundary.
 
 The transfer changes the home of navigation authority, not the stronger
 source-organ or runtime boundaries. It must reduce measured coordination,
@@ -44,8 +36,8 @@ consolidation alone is not a success metric.
 
 ## Current Release Contour
 
-The current release contour is `v0.3.0`.
-It already carries:
+The final release contour is `v0.4.0`.
+It preserves:
 
 - federation-mesh entry capsules, owner-capsule routing, and checkpoint-starter
   handoffs through `generated/federation_entrypoints.min.json` and

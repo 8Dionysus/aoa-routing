@@ -6,13 +6,13 @@ It does not author new meaning. It derives lightweight routing surfaces from sib
 
 **Source repos own meaning. Routing repo owns navigation.**
 
-`AOA-RT-D-0004` now describes a completed producer succession. `aoa-sdk` owns
-the canonical routing producer and ABI. This repository preserves the v1
-predecessor implementation only for compatibility, security, rollback, and
-deprecation during the bounded transition window. Archive authority remains
-inactive and requires separate exact operator approval after consumer-zero.
+`AOA-RT-D-0004` describes the completed producer succession. `aoa-sdk` owns the
+canonical routing producer, ABI, generated projections, maintenance, and Agent
+OS control-plane route. Consumer-zero evidence closed the compatibility window
+and retired the predecessor rollback role. This repository now preserves the
+v1 predecessor source and transition history as an archived reference.
 
-> Current release: `v0.3.0`. See [CHANGELOG](CHANGELOG.md) for release notes.
+> Final release: `v0.4.0`. See [CHANGELOG](CHANGELOG.md) for release notes.
 
 The current public paths are:
 
@@ -85,30 +85,25 @@ keeps the public surface map rather than a second command catalog.
 - Agon gate routing surfaces: `mechanics/agon/parts/gate-routing/generated/agon_gate_routing_registry.min.json`, [gate routing](mechanics/agon/parts/gate-routing/docs/gate-routing.md), [trigger model](mechanics/agon/parts/gate-routing/docs/trigger-model.md), [decision boundary](mechanics/agon/parts/gate-routing/docs/decision-boundary.md), [assistant escalation](mechanics/agon/parts/gate-routing/docs/assistant-escalation.md), `mechanics/agon/parts/gate-routing/schemas/agon-gate-routing-registry.schema.json`, `mechanics/agon/parts/gate-routing/schemas/agon-gate-trigger.schema.json`, `mechanics/agon/parts/gate-routing/schemas/agon-gate-route-hint.schema.json`, and `mechanics/agon/parts/gate-routing/examples/agon_gate_route_hint.example.json`
 - local build, schema, decision, and validation path: `routing/core/schemas/`, owning `mechanics/<head>/parts/<part>/schemas/`, [docs/decisions](docs/decisions/README.md), [AGENTS.md](AGENTS.md#verify), and the nearest nested route card
 
-## What `aoa-routing` owns after G5
+## What `aoa-routing` preserves after succession
 
 The canonical routing producer, ABI, generated projections, and new routing
-features are owned by `aoa-sdk`. This repository is limited to:
+features are owned by `aoa-sdk`. This repository preserves:
 
-- compatibility and security fixes for the retained v1 predecessor surface
-- rollback support while the compatibility window remains active
-- deprecation notices and bounded consumer-migration help
-- validation that no competing producer, publication, or feature lane reopens
+- the historical v1 predecessor implementation and generated outputs
+- the decisions and evidence that transferred ownership to `aoa-sdk`
+- prior release, compatibility, rollback, and deprecation history
+- the maintenance gate that kept the transition fail closed
 
 M1 shadow parity and M2 conditional-handoff packets remain historical
 transition evidence. They are not current release dependencies or authority.
-The active M3 packet pins the SDK owner receipt, compatibility ABI, retained
-rollback implementation, and fail-closed archive posture.
+The M3 packet records the pre-archive maintenance posture; it is intentionally
+preserved unchanged rather than rewritten as post-archive authority.
 
-The local and CI maintenance gates always compare against the immutable M3
-maintenance base. New or structural implementation paths and all generated
-output changes fail closed. A repair to an already retained source file is
-admissible only when a reviewed packet under
-`mechanics/release-support/parts/release-gate-routing/evidence/maintenance-approvals/`
-names its allowed maintenance class, approval reference, exact path, and
-current Git blob. The packet makes the approved scope mechanically checkable;
-it does not self-authorize the change or restore producer/publication
-authority.
+`v0.4.0` is the final predecessor release and archive boundary. There is no
+active repair, rollback, producer, or publication lane here after that release.
+All future routing work belongs in `aoa-sdk`; the GitHub archive state is an
+external hosting property and does not alter the preserved historical files.
 
 ## What it reads
 
