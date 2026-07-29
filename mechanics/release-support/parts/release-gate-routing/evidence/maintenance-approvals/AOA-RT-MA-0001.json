@@ -1,0 +1,21 @@
+{
+  "schema_version": "aoa_routing_maintenance_approval_v1",
+  "approval_id": "AOA-RT-MA-0001",
+  "change_class": "deprecation",
+  "approved_on": "2026-07-29",
+  "approval": {
+    "status": "approved",
+    "approved_by": "repository operator",
+    "approval_ref": "operator-confirmation:github-repository-1186624390:2026-07-29"
+  },
+  "scope": {
+    "maintenance_base_ref": "97f60de1b5992ef6bf5ff0f051bd452d940d9a85",
+    "retained_source_blobs": [
+      {
+        "path": "routing/source_home.manifest.json",
+        "git_blob_id": "8ba956f38f739571a4f543a9f1c912014aaf79d0"
+      }
+    ]
+  },
+  "claim_limit": "Authorizes only the exact deprecation edit that retires the machine-readable predecessor core route for the final v0.4.0 archive boundary; it does not authorize routing behavior, future maintenance, publication, unarchive, deletion, or rename."
+}

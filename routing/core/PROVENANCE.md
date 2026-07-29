@@ -12,11 +12,12 @@
 - `schemas/pairing-hints.schema.json`
 - `schemas/tiny-model-entrypoints.schema.json`
 
-## Current Active Home
+## Preserved Predecessor Home
 
 - `schemas/`
 
 ## Legacy Boundary
 
-Former root schema paths are recorded in `legacy/`. Active validators and
-builders must read from `routing/core/schemas/`, not from root `schemas/`.
+Former root schema paths are recorded in `legacy/`. Historical reproduction
+must read from `routing/core/schemas/`, not from root `schemas/`. Active
+routing contracts and builders belong in `aoa-sdk`.

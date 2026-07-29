@@ -2,20 +2,20 @@
   "schema_version": "aoa_routing_source_home.v1",
   "owner_repo": "aoa-routing",
   "source_home": "routing/",
-  "role": "local source-home for routing-owned navigation behavior",
+  "role": "historical predecessor source-home after succession to aoa-sdk",
   "routes": [
     {
       "id": "core",
       "path": "routing/core/",
-      "status": "active",
+      "status": "retired",
       "owns": [
-        "thin-router derivation",
-        "cross-repo registry projection",
-        "task surface and tier hints",
-        "recommended paths",
-        "pairing hints",
-        "core public-output schemas",
-        "public generated routing output derivation"
+        "historical thin-router derivation",
+        "historical cross-repo registry projection",
+        "historical task surface and tier hints",
+        "historical recommended paths",
+        "historical pairing hints",
+        "preserved core public-output schemas",
+        "preserved public generated routing outputs"
       ],
       "public_outputs": [
         "generated/cross_repo_registry.min.json",
@@ -43,9 +43,9 @@
     }
   ],
   "placement_rules": [
-    "routing-local source behavior starts under routing/",
-    "shared OS Abyss mechanic participation routes to mechanics/<head>/parts/<part>/",
-    "root generated outputs may remain root-published when consumed outside one part",
-    "root scripts may remain only as repo-wide validators, release gates, or compatibility wrappers"
+    "active routing behavior, fixes, ABI, and publication route to aoa-sdk",
+    "routing/ and mechanics/ preserve predecessor history only",
+    "root generated outputs remain historical committed evidence",
+    "root scripts remain for historical reproduction and validation only"
   ]
 }

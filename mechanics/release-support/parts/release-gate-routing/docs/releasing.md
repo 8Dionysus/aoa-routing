@@ -1,16 +1,17 @@
 # Releasing `aoa-routing`
 
-`aoa-routing` is released as the thin navigation and dispatch layer of AoA.
+`aoa-routing` was released as the predecessor thin navigation and dispatch
+layer of AoA. `v0.4.0` is its final release.
 
 See also:
 
 - [README](../../../../../README.md)
 - [CHANGELOG](../../../../../CHANGELOG.md)
 
-## Recommended maintenance publication flow
+## Historical pre-archive maintenance publication flow
 
-Ordinary paired routing releases ended at G5. Publish this repository only for
-an explicitly named compatibility, security, rollback, or deprecation need.
+Before `v0.4.0`, the following flow governed an explicitly named
+compatibility, security, rollback, or deprecation need:
 
 1. Keep the change inside the maintenance-only boundary.
 2. When an already retained source file must change, obtain owner review and
@@ -29,3 +30,8 @@ an explicitly named compatibility, security, rollback, or deprecation need.
    repo-local verifier and current CI route, run:
    - `aoa release audit /srv --phase preflight --repo aoa-routing --strict --json`
 6. Publish only through `aoa release publish`.
+
+This flow is preserved for audit and reproduction only. After `v0.4.0`, do not
+publish or maintain this predecessor. Route every routing release request to
+`aoa-sdk`; any future predecessor publication would require an explicit
+unarchive decision and new exact operator authorization.

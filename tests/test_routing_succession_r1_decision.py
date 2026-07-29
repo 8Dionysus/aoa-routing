@@ -43,3 +43,26 @@ def test_active_route_docs_name_the_completed_switch_and_archive_boundary() -> N
 
     for path, marker in required.items():
         assert marker in path.read_text(encoding="utf-8"), path
+
+
+def test_nested_predecessor_routes_are_retired() -> None:
+    source_home = (
+        REPO_ROOT / "routing" / "source_home.manifest.json"
+    ).read_text(encoding="utf-8")
+    core_card = (REPO_ROOT / "routing" / "core" / "AGENTS.md").read_text(
+        encoding="utf-8"
+    )
+    nested_release = (
+        REPO_ROOT
+        / "mechanics"
+        / "release-support"
+        / "parts"
+        / "release-gate-routing"
+        / "docs"
+        / "releasing.md"
+    ).read_text(encoding="utf-8")
+
+    assert '"status": "retired"' in source_home
+    assert "It owns no active changes." in core_card
+    assert "do not\npublish or maintain this predecessor" in nested_release
+    assert "Route every routing release request to\n`aoa-sdk`" in nested_release

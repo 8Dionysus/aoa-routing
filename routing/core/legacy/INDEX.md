@@ -1,6 +1,6 @@
 # Routing Core Legacy Index
 
-| Former root path | Active route |
+| Former root path | Preserved predecessor route |
 | --- | --- |
 | `schemas/AGENTS.md` | `routing/core/schemas/AGENTS.md` |
 | `schemas/aoa-router.schema.json` | `routing/core/schemas/aoa-router.schema.json` |
