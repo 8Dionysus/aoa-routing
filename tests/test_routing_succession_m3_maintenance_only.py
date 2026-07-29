@@ -246,6 +246,21 @@ def test_m3_rejects_new_producer_or_publication_entrypoint() -> None:
             "evidence/maintenance-approvals/nested/escape.json",
             False,
         ),
+        (
+            "kag/receipts/index_family_budget/"
+            "f943c80f1075715c0ae9e8df6b5522adcdbfc0ab4b0186b69b757af6db17ef20.json",
+            True,
+        ),
+        (
+            "kag/receipts/index_family_budget/"
+            "f943c80f1075715c0ae9e8df6b5522adcdbfc0ab4b0186b69b757af6db17ef2.json",
+            False,
+        ),
+        (
+            "kag/receipts/index_family_budget/nested/"
+            "f943c80f1075715c0ae9e8df6b5522adcdbfc0ab4b0186b69b757af6db17ef20.json",
+            False,
+        ),
     ],
 )
 def test_m3_maintenance_control_exemption_is_exact(
@@ -274,6 +289,56 @@ def test_m3_rejects_new_entrypoint_inside_maintenance_part() -> None:
     ):
         verifier._validate_change_boundary(
             (entry,),
+            (),
+            evidence=evidence,
+            base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        )
+
+
+@pytest.mark.parametrize(
+    ("path", "is_portable_index"),
+    [
+        ("kag/indexes/index_family.manifest.json", True),
+        ("kag/indexes/shards/anchor/0a.jsonl", True),
+        ("kag/indexes/shards/event/f.jsonl", True),
+        ("kag/indexes/shards/event_chunk/0.jsonl", True),
+        ("kag/indexes/shards/source/d4.jsonl", True),
+        ("kag/indexes/shards/source/xyz.jsonl", False),
+        ("kag/indexes/shards/nested/0a.jsonl", False),
+    ],
+)
+def test_m3_portable_index_path_is_exact(
+    path: str,
+    is_portable_index: bool,
+) -> None:
+    verifier = _load_verifier()
+
+    assert verifier._is_kag_portable_index_path(path) is is_portable_index
+
+
+def test_m3_allows_only_modification_of_existing_portable_index_path() -> None:
+    verifier = _load_verifier()
+    evidence = verifier.load_evidence()
+    manifest_path = "kag/indexes/index_family.manifest.json"
+
+    assert verifier._validate_change_boundary(
+        (verifier.ChangedPath(status="M", path=manifest_path),),
+        (),
+        evidence=evidence,
+        base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+    ) == ()
+
+    with pytest.raises(
+        RuntimeError,
+        match="new, structural, or generated predecessor implementation",
+    ):
+        verifier._validate_change_boundary(
+            (
+                verifier.ChangedPath(
+                    status="A",
+                    path="kag/indexes/shards/source/0b.jsonl",
+                ),
+            ),
             (),
             evidence=evidence,
             base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],

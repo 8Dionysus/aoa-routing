@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import subprocess
 from dataclasses import dataclass
 from pathlib import Path
@@ -30,6 +31,14 @@ MAINTENANCE_PART_PREFIX = (
 )
 MAINTENANCE_APPROVAL_PREFIX = (
     f"{MAINTENANCE_PART_PREFIX}evidence/maintenance-approvals/"
+)
+KAG_PORTABLE_INDEX_MANIFEST = "kag/indexes/index_family.manifest.json"
+KAG_PORTABLE_INDEX_SHARD_PATTERN = re.compile(
+    r"^kag/indexes/shards/(?:anchor|event|event_chunk|source)/"
+    r"[0-9a-f]{1,2}\.jsonl$"
+)
+KAG_BUDGET_RECEIPT_PATTERN = re.compile(
+    r"^kag/receipts/index_family_budget/[0-9a-f]{64}\.json$"
 )
 MAINTENANCE_CONTROL_PATHS = {
     ".github/workflows/repo-validation.yml",
@@ -195,11 +204,22 @@ def _is_document_or_test_path(path: str) -> bool:
 
 def _is_maintenance_control_path(path: str) -> bool:
     approval_path = Path(path)
-    return path in MAINTENANCE_CONTROL_PATHS or (
-        path.startswith(MAINTENANCE_APPROVAL_PREFIX)
-        and approval_path.parent.as_posix()
-        == MAINTENANCE_APPROVAL_PREFIX.rstrip("/")
-        and approval_path.suffix == ".json"
+    return (
+        path in MAINTENANCE_CONTROL_PATHS
+        or KAG_BUDGET_RECEIPT_PATTERN.fullmatch(path) is not None
+        or (
+            path.startswith(MAINTENANCE_APPROVAL_PREFIX)
+            and approval_path.parent.as_posix()
+            == MAINTENANCE_APPROVAL_PREFIX.rstrip("/")
+            and approval_path.suffix == ".json"
+        )
+    )
+
+
+def _is_kag_portable_index_path(path: str) -> bool:
+    return (
+        path == KAG_PORTABLE_INDEX_MANIFEST
+        or KAG_PORTABLE_INDEX_SHARD_PATTERN.fullmatch(path) is not None
     )
 
 
@@ -286,6 +306,17 @@ def _validate_change_boundary(
             for path in (entry.previous_path, entry.path)
             if path is not None
         )
+        portable_index_paths = tuple(
+            path for path in paths if _is_kag_portable_index_path(path)
+        )
+        if portable_index_paths:
+            if (
+                status_code == "M"
+                and len(portable_index_paths) == len(paths)
+            ):
+                continue
+            forbidden.append(f"{entry.status}:{' -> '.join(paths)}")
+            continue
         if any(_is_generated_output(path) for path in paths):
             forbidden.append(f"{entry.status}:{' -> '.join(paths)}")
             continue
