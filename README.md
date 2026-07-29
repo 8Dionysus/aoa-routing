@@ -54,7 +54,7 @@ Use the shortest route by need:
   `mechanics/release-support/parts/release-gate-routing/docs/sdk-shadow-release-parity-consumer.md`
 - M2 conditional predecessor handoff:
   `mechanics/release-support/parts/release-gate-routing/docs/routing-succession-m2-conditional-handoff.md`
-- active M3 maintenance-only posture:
+- historical M3 pre-archive maintenance posture:
   `mechanics/release-support/parts/release-gate-routing/docs/routing-succession-m3-maintenance-only.md`
 - durable routing rationale: [docs/decisions](docs/decisions/README.md)
 - release-readiness and publication shape: [docs/RELEASING](docs/RELEASING.md)
