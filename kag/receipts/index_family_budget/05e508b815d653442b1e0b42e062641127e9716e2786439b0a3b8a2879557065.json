@@ -1,0 +1,22 @@
+{
+  "allowed_bytes": 7130462,
+  "allowed_tracked_bytes": 8269380,
+  "approval_ref": "operator-confirmation:github-repository-1186624390:2026-07-29",
+  "approval_scope": "final-v0.4.0-archive-refresh-only",
+  "approved_by": "repository operator",
+  "approved_family_digest": "05e508b815d653442b1e0b42e062641127e9716e2786439b0a3b8a2879557065",
+  "approved_source_tree_digest": "dcdcce74f594bcc6a793a4f51f247fb12241590acf7d61eb4bda279c6e49e291",
+  "archive_target_repository_id": 1186624390,
+  "base_ref": "19c2629a207978a118f7db81d89f44748b2e5235",
+  "changed_generated_bytes": 7130462,
+  "changed_generated_files": 295,
+  "decision_ref": "aoa-kag:docs/decisions/AOA-KAG-D-0017-portable-content-addressed-repository-family.md",
+  "default_limit_bytes": 1048576,
+  "head_family_digest": "05e508b815d653442b1e0b42e062641127e9716e2786439b0a3b8a2879557065",
+  "reason": "Final v0.4.0 retires the predecessor source-home, all nested mechanic routes, and the local KAG owner-return packet after SDK consumer-zero; the portable family is regenerated from the exact approved HEAD source tree and sealed by the immutable one-time archive approval for repository 1186624390.",
+  "repo": "aoa-routing",
+  "schema_version": "aoa-repo-local-kag-budget-receipt-v1",
+  "scope": "generated_delta",
+  "tracked_bytes": 8269380,
+  "tracked_bytes_max": 9437184
+}
