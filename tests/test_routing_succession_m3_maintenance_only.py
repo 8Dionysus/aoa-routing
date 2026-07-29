@@ -420,6 +420,19 @@ def test_m3_budget_receipt_must_match_validated_family_digest() -> None:
         )
 
 
+def test_m3_archive_kag_approval_is_exact_and_one_time() -> None:
+    verifier = _load_verifier()
+
+    assert verifier.KAG_ARCHIVE_APPROVAL_REF == (
+        "operator-confirmation:github-repository-1186624390:2026-07-29"
+    )
+    assert (
+        verifier.KAG_ARCHIVE_APPROVAL_SCOPE
+        == "final-v0.4.0-archive-refresh-only"
+    )
+    assert verifier.KAG_ARCHIVE_TARGET_REPOSITORY_ID == 1186624390
+
+
 def test_m3_rejects_unapproved_retained_source_modification() -> None:
     verifier = _load_verifier()
     evidence = verifier.load_evidence()

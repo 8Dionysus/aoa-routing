@@ -44,6 +44,11 @@ KAG_BUDGET_RECEIPT_PATTERN = re.compile(
 )
 KAG_PORTABLE_SCHEMA_VERSION = "aoa-repo-local-kag-family-manifest-v3"
 KAG_BUDGET_RECEIPT_SCHEMA_VERSION = "aoa-repo-local-kag-budget-receipt-v1"
+KAG_ARCHIVE_APPROVAL_REF = (
+    "operator-confirmation:github-repository-1186624390:2026-07-29"
+)
+KAG_ARCHIVE_APPROVAL_SCOPE = "final-v0.4.0-archive-refresh-only"
+KAG_ARCHIVE_TARGET_REPOSITORY_ID = 1186624390
 ZERO_DIGEST = "0" * 64
 MAINTENANCE_CONTROL_PATHS = {
     ".github/workflows/repo-validation.yml",
@@ -310,6 +315,7 @@ def _validate_kag_portable_index_integrity() -> str:
     shard_bytes = 0
     record_counts: dict[str, int] = {}
     canonical_records = 0
+    source_blobs: dict[str, str] = {}
     for descriptor in shards:
         if not isinstance(descriptor, dict):
             raise RuntimeError("portable KAG shard descriptor must be an object")
@@ -354,6 +360,23 @@ def _validate_kag_portable_index_integrity() -> str:
                 raise RuntimeError(
                     f"{relative}:{line_number} record kind does not match"
                 )
+            if kind == "source":
+                row_identity = row.get("identity")
+                if not isinstance(row_identity, dict):
+                    raise RuntimeError(
+                        f"{relative}:{line_number} source identity is missing"
+                    )
+                source_path = row_identity.get("path")
+                source_blob = row_identity.get("git_blob_id")
+                if (
+                    not isinstance(source_path, str)
+                    or not isinstance(source_blob, str)
+                    or source_path in source_blobs
+                ):
+                    raise RuntimeError(
+                        f"{relative}:{line_number} source identity is invalid"
+                    )
+                source_blobs[source_path] = source_blob
         record_counts[kind] = record_counts.get(kind, 0) + len(rows)
         canonical_records += len(rows)
         shard_bytes += len(content)
@@ -366,6 +389,36 @@ def _validate_kag_portable_index_integrity() -> str:
     }
     if actual_paths != expected_paths:
         raise RuntimeError("portable KAG shard inventory does not match manifest")
+
+    tracked_paths = set(_git("ls-files").stdout.splitlines())
+    expected_source_paths = {
+        path
+        for path in tracked_paths
+        if not _is_kag_portable_index_path(path)
+        and not _is_kag_budget_receipt_path(path)
+    }
+    if set(source_blobs) != expected_source_paths:
+        raise RuntimeError(
+            "portable KAG source inventory does not match tracked source tree"
+        )
+    approved_source_rows: list[dict[str, str]] = []
+    for source_path in sorted(source_blobs):
+        head_blob = _head_blob_id(source_path)
+        if source_blobs[source_path] != head_blob:
+            raise RuntimeError(
+                "portable KAG source blob does not match HEAD: "
+                f"{source_path}"
+            )
+        approved_source_rows.append(
+            {
+                "path": source_path,
+                "git_blob_id": head_blob,
+            }
+        )
+    source_tree_digest = hashlib.sha256(
+        _canonical_json_bytes(approved_source_rows)
+    ).hexdigest()
+
     if (
         summary.get("shards") != len(shards)
         or summary.get("shard_bytes") != shard_bytes
@@ -412,6 +465,11 @@ def _validate_kag_portable_index_integrity() -> str:
         "default_limit_bytes": budgets.get("changed_generated_bytes_max"),
         "tracked_bytes": summary.get("tracked_bytes"),
         "tracked_bytes_max": budgets.get("tracked_bytes_max"),
+        "approval_ref": KAG_ARCHIVE_APPROVAL_REF,
+        "approval_scope": KAG_ARCHIVE_APPROVAL_SCOPE,
+        "archive_target_repository_id": KAG_ARCHIVE_TARGET_REPOSITORY_ID,
+        "approved_family_digest": family_digest,
+        "approved_source_tree_digest": source_tree_digest,
     }
     mismatched = [
         field
@@ -424,8 +482,7 @@ def _validate_kag_portable_index_integrity() -> str:
             + ", ".join(mismatched)
         )
     if (
-        not isinstance(receipt.get("approved_by"), str)
-        or not receipt["approved_by"].strip()
+        receipt.get("approved_by") != "repository operator"
         or not isinstance(receipt.get("reason"), str)
         or not receipt["reason"].strip()
         or receipt.get("allowed_bytes", -1) < changed_bytes
