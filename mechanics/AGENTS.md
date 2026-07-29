@@ -13,6 +13,10 @@ participated in shared OS Abyss mechanics.
 It is not an active source-home or mechanic route. Current routing and Agent OS
 pressure routes to `aoa-sdk` or the stronger source owner.
 
+Historical validators call this the `active operation atlas`; that phrase
+describes the preserved pre-archive topology and does not grant current
+authority.
+
 ## Operating Card
 
 | Field | Route |
@@ -36,6 +40,10 @@ pressure routes to `aoa-sdk` or the stronger source owner.
   owns operation law and validation posture, not the source-record district.
 - Interpret active/owner language in retained payloads at its historical
   observation stage; it does not reopen a current predecessor lane.
+- Keep active routes out of `legacy/`; after retirement there are no active
+  predecessor routes to place there.
+- Preserved root districts are historical lookup surfaces, not current
+  implementation homes.
 - Route all current routing mechanics to `aoa-sdk` or the stronger source
   owner.
 

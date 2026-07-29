@@ -48,7 +48,9 @@ def test_m3_receipt_is_strict_and_keeps_archive_forbidden() -> None:
         == "97f60de1b5992ef6bf5ff0f051bd452d940d9a85"
     )
     assert result["changed_path_count"] > 0
-    assert result["approved_retained_source_paths"] == []
+    assert result["approved_retained_source_paths"] == [
+        "routing/source_home.manifest.json"
+    ]
     assert result["consumer_zero"] is False
     assert result["archive_ready"] is False
     assert result["archive_authorized"] is False
