@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -58,6 +59,18 @@ def test_m3_receipt_is_strict_and_keeps_archive_forbidden() -> None:
         "kag/receipts/validation_receipt.json",
         "routing/source_home.manifest.json",
     ]
+    manifest = json.loads(
+        (
+            REPO_ROOT / "kag" / "indexes" / "index_family.manifest.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert result["portable_kag_family_digest"] == (
+        manifest["family_identity"]["content_digest"]
+    )
+    assert re.fullmatch(
+        r"[0-9a-f]{64}",
+        result["portable_kag_family_digest"],
+    )
     assert result["consumer_zero"] is False
     assert result["archive_ready"] is False
     assert result["archive_authorized"] is False
@@ -326,6 +339,7 @@ def test_m3_allows_only_modification_of_existing_portable_index_path() -> None:
         (),
         evidence=evidence,
         base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        portable_family_digest="a" * 64,
     ) == ()
 
     with pytest.raises(
@@ -342,6 +356,67 @@ def test_m3_allows_only_modification_of_existing_portable_index_path() -> None:
             (),
             evidence=evidence,
             base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+            portable_family_digest="a" * 64,
+        )
+
+
+def test_m3_portable_index_requires_validated_family_digest() -> None:
+    verifier = _load_verifier()
+    evidence = verifier.load_evidence()
+
+    with pytest.raises(
+        RuntimeError,
+        match="new, structural, or generated predecessor implementation",
+    ):
+        verifier._validate_change_boundary(
+            (
+                verifier.ChangedPath(
+                    status="M",
+                    path="kag/indexes/index_family.manifest.json",
+                ),
+            ),
+            (),
+            evidence=evidence,
+            base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        )
+
+
+def test_m3_budget_receipt_must_match_validated_family_digest() -> None:
+    verifier = _load_verifier()
+    evidence = verifier.load_evidence()
+    digest = "a" * 64
+
+    assert verifier._validate_change_boundary(
+        (
+            verifier.ChangedPath(
+                status="A",
+                path=f"kag/receipts/index_family_budget/{digest}.json",
+            ),
+        ),
+        (),
+        evidence=evidence,
+        base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+        portable_family_digest=digest,
+    ) == ()
+
+    with pytest.raises(
+        RuntimeError,
+        match="new, structural, or generated predecessor implementation",
+    ):
+        verifier._validate_change_boundary(
+            (
+                verifier.ChangedPath(
+                    status="A",
+                    path=(
+                        "kag/receipts/index_family_budget/"
+                        f"{'b' * 64}.json"
+                    ),
+                ),
+            ),
+            (),
+            evidence=evidence,
+            base_ref=evidence["pins"]["predecessor"]["maintenance_base_ref"],
+            portable_family_digest=digest,
         )
 
 
