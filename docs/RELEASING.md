@@ -15,11 +15,12 @@ this document owns release-readiness shape and closeout expectations.
 | next route | `CHANGELOG.md`, `README.md`, `ROADMAP.md`, `scripts/release_check.py`, GitHub PR and Release |
 | validation | root release gate, Repo Validation, landed-main rerun, release audit |
 
-## Maintenance Publication Shape
+## Historical Pre-Archive Maintenance Publication Shape
 
-Ordinary paired routing releases ended at G5. A rare predecessor maintenance
-publication is ready only when a compatibility, security, rollback, or
-deprecation need is named explicitly and:
+Ordinary paired routing releases ended at G5. Before the final `v0.4.0`
+boundary, a rare predecessor maintenance publication was admissible only when
+a compatibility, security, rollback, or deprecation need was named explicitly
+and:
 
 - `CHANGELOG.md` has a dated section with Summary, Validation, and Notes;
 - the M3 maintenance-only validator accepts the exact SDK owner receipt,
@@ -63,9 +64,10 @@ Artifact identity and a trust-gate verdict prove the bounded routing readmodel
 handoff named by the manifest. They do not certify the upstream objects to
 which the router points.
 
-The M1 shadow release and M2 conditional handoff are immutable historical
-evidence. They do not authorize a new paired release or reopen predecessor
-producer ownership. The M3 packet is the active release boundary.
+The M1 shadow release, M2 conditional handoff, and M3 maintenance-only packet
+are immutable historical evidence. They do not authorize a new paired or
+maintenance release, reopen predecessor producer ownership, or supersede the
+final `v0.4.0` archive boundary.
 
 ## Version Surfaces
 
