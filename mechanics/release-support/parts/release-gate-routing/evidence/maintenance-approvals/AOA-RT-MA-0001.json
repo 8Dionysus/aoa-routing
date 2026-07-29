@@ -14,8 +14,36 @@
       {
         "path": "routing/source_home.manifest.json",
         "git_blob_id": "8ba956f38f739571a4f543a9f1c912014aaf79d0"
+      },
+      {
+        "path": "kag/manifest.json",
+        "git_blob_id": "890f9c67d36c30acd42360bb4312e979bbbc93a7"
+      },
+      {
+        "path": "kag/nodes/routing-source-home.json",
+        "git_blob_id": "2f1f151aa75acd74e46835f80be59748b4f94ae3"
+      },
+      {
+        "path": "kag/nodes/routing-source-route.json",
+        "git_blob_id": "1283245cb285fd2cf41363c5a6d7678a015c5f9a"
+      },
+      {
+        "path": "kag/edges/source_returns_to_owner.json",
+        "git_blob_id": "6e107fd0815fcf8648fb320cd0f492a7b6a7af5b"
+      },
+      {
+        "path": "kag/indexes/provider_readiness_index.json",
+        "git_blob_id": "215e91e689f81e95424a8553eb1b4a8803d4e37d"
+      },
+      {
+        "path": "kag/projections/mcp_source_return.json",
+        "git_blob_id": "e902195cbf66b47046c825483a74e3ba4aabd2ce"
+      },
+      {
+        "path": "kag/receipts/validation_receipt.json",
+        "git_blob_id": "cb05082f9a063509d0996314fe5531a504e816a5"
       }
     ]
   },
-  "claim_limit": "Authorizes only the exact deprecation edit that retires the machine-readable predecessor core route for the final v0.4.0 archive boundary; it does not authorize routing behavior, future maintenance, publication, unarchive, deletion, or rename."
+  "claim_limit": "Authorizes only the exact deprecation edits that retire the machine-readable predecessor core route and its local KAG provider packet for the final v0.4.0 archive boundary; it does not authorize routing behavior, future maintenance, publication, unarchive, deletion, or rename."
 }

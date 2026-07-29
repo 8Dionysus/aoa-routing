@@ -37,10 +37,10 @@
   "provenance_mode": "strict_source_linked",
   "derived_method": "source-linked local KAG projection over routing source home and cross-repo route registry",
   "generated_or_authored": "generated_from_source",
-  "status": "active",
+  "status": "archived",
   "owner_return_route": {
     "repo": "aoa-routing",
-    "surface": "routing/README.md",
+    "surface": "README.md",
     "route_kind": "routing"
   },
   "freshness": {
@@ -49,7 +49,7 @@
     "checked_ref": "routing/source_home.manifest.json"
   },
   "builder": {
-    "route": "router builders",
+    "route": "historical router builders",
     "surface": "scripts/build_router.py"
   },
   "validator": {
@@ -61,7 +61,7 @@
     "payload_class": "projection",
     "runtime_route": "source-repo"
   },
-  "consumer_route": "aoa-kag-mcp resource",
+  "consumer_route": "aoa-kag-mcp archival resource; active routing returns to aoa-sdk",
   "projection_kind": "source_return_view",
   "source_record_ids": [
     "node:routing:routing-source-home",
@@ -69,5 +69,5 @@
     "edge:routing:source-returns-to-owner",
     "index:routing:source-surfaces"
   ],
-  "consumer_shape": "resources expose route registry rows, dispatch surface handles, and source-return routes; tools keep navigation below source meaning"
+  "consumer_shape": "resources expose historical predecessor records and return all active routing work to aoa-sdk; tools keep navigation below source meaning"
 }
