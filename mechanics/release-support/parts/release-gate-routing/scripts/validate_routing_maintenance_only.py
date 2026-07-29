@@ -49,6 +49,12 @@ KAG_ARCHIVE_APPROVAL_REF = (
 )
 KAG_ARCHIVE_APPROVAL_SCOPE = "final-v0.4.0-archive-refresh-only"
 KAG_ARCHIVE_TARGET_REPOSITORY_ID = 1186624390
+KAG_ARCHIVE_APPROVAL_PATH = (
+    "kag/receipts/index_family_budget/archive-v0.4.0-approval.json"
+)
+KAG_ARCHIVE_APPROVAL_SCHEMA_VERSION = (
+    "aoa-routing-kag-archive-approval-v1"
+)
 ZERO_DIGEST = "0" * 64
 MAINTENANCE_CONTROL_PATHS = {
     ".github/workflows/repo-validation.yml",
@@ -216,6 +222,7 @@ def _is_maintenance_control_path(path: str) -> bool:
     approval_path = Path(path)
     return (
         path in MAINTENANCE_CONTROL_PATHS
+        or path == KAG_ARCHIVE_APPROVAL_PATH
         or KAG_BUDGET_RECEIPT_PATTERN.fullmatch(path) is not None
         or (
             path.startswith(MAINTENANCE_APPROVAL_PREFIX)
@@ -228,6 +235,10 @@ def _is_maintenance_control_path(path: str) -> bool:
 
 def _is_kag_budget_receipt_path(path: str) -> bool:
     return KAG_BUDGET_RECEIPT_PATTERN.fullmatch(path) is not None
+
+
+def _is_kag_archive_approval_path(path: str) -> bool:
+    return path == KAG_ARCHIVE_APPROVAL_PATH
 
 
 def _is_kag_portable_index_path(path: str) -> bool:
@@ -396,6 +407,7 @@ def _validate_kag_portable_index_integrity() -> str:
         for path in tracked_paths
         if not _is_kag_portable_index_path(path)
         and not _is_kag_budget_receipt_path(path)
+        and not _is_kag_archive_approval_path(path)
     }
     if set(source_blobs) != expected_source_paths:
         raise RuntimeError(
@@ -419,6 +431,34 @@ def _validate_kag_portable_index_integrity() -> str:
         _canonical_json_bytes(approved_source_rows)
     ).hexdigest()
 
+    archive_approval = _read_json(REPO_ROOT / KAG_ARCHIVE_APPROVAL_PATH)
+    expected_archive_approval = {
+        "schema_version": KAG_ARCHIVE_APPROVAL_SCHEMA_VERSION,
+        "approval_id": "AOA-RT-KAG-ARCHIVE-0001",
+        "approval_ref": KAG_ARCHIVE_APPROVAL_REF,
+        "approval_scope": KAG_ARCHIVE_APPROVAL_SCOPE,
+        "approved_by": "repository operator",
+        "approved_on": "2026-07-29",
+        "archive_target_repository_id": KAG_ARCHIVE_TARGET_REPOSITORY_ID,
+        "approved_family_digest": family_digest,
+        "approved_source_tree_digest": source_tree_digest,
+    }
+    mismatched = [
+        field
+        for field, expected in expected_archive_approval.items()
+        if archive_approval.get(field) != expected
+    ]
+    if mismatched:
+        raise RuntimeError(
+            "portable KAG archive approval does not match current family: "
+            + ", ".join(mismatched)
+        )
+    if (
+        not isinstance(archive_approval.get("claim_limit"), str)
+        or not archive_approval["claim_limit"].strip()
+    ):
+        raise RuntimeError("portable KAG archive approval claim limit is missing")
+
     if (
         summary.get("shards") != len(shards)
         or summary.get("shard_bytes") != shard_bytes
@@ -441,6 +481,18 @@ def _validate_kag_portable_index_integrity() -> str:
     resolved_base = _git("rev-parse", base_ref).stdout.strip()
     if resolved_base != base_ref:
         raise RuntimeError("portable KAG budget receipt base_ref is not immutable")
+    approval_history = _git(
+        "log",
+        "--format=%H",
+        f"{base_ref}..HEAD",
+        "--",
+        KAG_ARCHIVE_APPROVAL_PATH,
+    ).stdout.splitlines()
+    if len(approval_history) != 1:
+        raise RuntimeError(
+            "portable KAG archive approval must be created once and remain "
+            "immutable"
+        )
 
     head_paths = {KAG_PORTABLE_INDEX_MANIFEST, *expected_paths}
     base_paths = _portable_paths_at_ref(base_ref)
@@ -465,11 +517,17 @@ def _validate_kag_portable_index_integrity() -> str:
         "default_limit_bytes": budgets.get("changed_generated_bytes_max"),
         "tracked_bytes": summary.get("tracked_bytes"),
         "tracked_bytes_max": budgets.get("tracked_bytes_max"),
-        "approval_ref": KAG_ARCHIVE_APPROVAL_REF,
-        "approval_scope": KAG_ARCHIVE_APPROVAL_SCOPE,
-        "archive_target_repository_id": KAG_ARCHIVE_TARGET_REPOSITORY_ID,
-        "approved_family_digest": family_digest,
-        "approved_source_tree_digest": source_tree_digest,
+        "approval_ref": archive_approval["approval_ref"],
+        "approval_scope": archive_approval["approval_scope"],
+        "archive_target_repository_id": (
+            archive_approval["archive_target_repository_id"]
+        ),
+        "approved_family_digest": (
+            archive_approval["approved_family_digest"]
+        ),
+        "approved_source_tree_digest": (
+            archive_approval["approved_source_tree_digest"]
+        ),
     }
     mismatched = [
         field
@@ -601,6 +659,17 @@ def _validate_change_boundary(
                 status_code == "A"
                 and len(budget_receipt_paths) == len(paths)
                 and entry.path == expected_receipt
+            ):
+                continue
+            forbidden.append(f"{entry.status}:{' -> '.join(paths)}")
+            continue
+        archive_approval_paths = tuple(
+            path for path in paths if _is_kag_archive_approval_path(path)
+        )
+        if archive_approval_paths:
+            if (
+                status_code == "A"
+                and len(archive_approval_paths) == len(paths)
             ):
                 continue
             forbidden.append(f"{entry.status}:{' -> '.join(paths)}")

@@ -274,6 +274,11 @@ def test_m3_rejects_new_producer_or_publication_entrypoint() -> None:
             "f943c80f1075715c0ae9e8df6b5522adcdbfc0ab4b0186b69b757af6db17ef20.json",
             False,
         ),
+        (
+            "kag/receipts/index_family_budget/"
+            "archive-v0.4.0-approval.json",
+            True,
+        ),
     ],
 )
 def test_m3_maintenance_control_exemption_is_exact(
@@ -431,6 +436,10 @@ def test_m3_archive_kag_approval_is_exact_and_one_time() -> None:
         == "final-v0.4.0-archive-refresh-only"
     )
     assert verifier.KAG_ARCHIVE_TARGET_REPOSITORY_ID == 1186624390
+    assert verifier.KAG_ARCHIVE_APPROVAL_PATH == (
+        "kag/receipts/index_family_budget/"
+        "archive-v0.4.0-approval.json"
+    )
 
 
 def test_m3_rejects_unapproved_retained_source_modification() -> None:
